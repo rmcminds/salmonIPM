@@ -144,7 +144,7 @@ parameters {
   real<lower=0> sigma_log_phi;          # hyper-SD of brood year log productivity anomalies
   vector[N_year_all] log_phi_z;         # log brood year productivity anomalies (Z-scores)
   real<lower=0> sigma_proc;             # unique process error SD
-  simplex[N_age] mu_p;                  # mean of cohort age distributions
+  simplex[N_age] mu_p;                  # among-pop mean of age distributions
   vector<lower=0>[N_age-1] sigma_gamma; # among-pop SD of mean log-ratio age distributions
   cholesky_factor_corr[N_age-1] L_gamma; # Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
   matrix[N_pop,N_age-1] gamma_z;        # population mean log-ratio age distributions (Z-scores)
@@ -175,7 +175,7 @@ transformed parameters {
   vector<lower=0>[N] R_tot;           # true recruit abundance (not density) by brood year
   vector<lower=0,upper=1>[N] B_rate_all; # true broodstock take rate in all years
   
-  # Multivariate Matt trick for [log(a), log(b)]
+  # Multivariate Matt trick for [log(a), log(Rmax)]
   {
     matrix[2,2] L_log_aRmax;    # temp variable: Cholesky factor of correlation matrix of log(a) and log(Rmax)
     matrix[N_pop,2] aRmax;      # temp variable: matrix of a and Rmax
@@ -220,22 +220,25 @@ transformed parameters {
   {
     row_vector[N_age] exp_p; # temp variable: exp(p[i,])
     row_vector[N_age] S_W;   # temp variable: true wild spawners by age
+    int ii;                  # temp variable: index into S_tot_init and q_init
     
     # Inverse log-ratio transform of cohort age distn
     # (built-in softmax function doesn't accept row vectors)
     exp_p = exp(p[i,]);
     p[i,] = exp_p/sum(exp_p);
+    ii = (pop[i] - 1)*max_age + pop_year_indx[i];
     
     if(pop_year_indx[i] <= max_age)
     {
       # Use initial values
-      S_W_tot[i] = S_tot_init[(pop[i]-1)*max_age+pop_year_indx[i]]*(1 - p_HOS_all[i]);        
-      S_H_tot[i] = S_tot_init[(pop[i]-1)*max_age+pop_year_indx[i]]*p_HOS_all[i];
-      q[i,1:N_age] = to_row_vector(q_init[(pop[i]-1)*max_age+pop_year_indx[i],1:N_age]);
+      S_W_tot[i] = S_tot_init[ii]*(1 - p_HOS_all[i]);        
+      S_H_tot[i] = S_tot_init[ii]*p_HOS_all[i];
+      q[i,1:N_age] = to_row_vector(q_init[ii, 1:N_age]);
       S_W = S_W_tot[i]*q[i,];
     }
     else
     {
+      # Use recruitment process model
       for(j in 1:N_age)
         S_W[j] = R_tot[i-ages[j]]*p[i-ages[j],j];
       for(j in 2:N_age)  # catch and broodstock removal (assumes no take of age 1)
