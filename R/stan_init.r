@@ -19,6 +19,7 @@ stan_init <- function(data, chains, model, pool_pops = TRUE)
       if(N_S_obs < N)
         S_tot_obs[-which_S_obs] <- NA
       p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
+      p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
       if(N_H > 0)
         p_HOS_all[which_H] <- p_HOS_obs
