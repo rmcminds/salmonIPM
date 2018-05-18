@@ -169,7 +169,7 @@ stan_init <- function(data, chains, model, pool_pops = TRUE)
              sigma_alr_p = array(runif(N_age-1,0.5,1), dim = N_age-1),
              alr_p_z = alr_p_z,
              S_tot_init = rep(median(S_tot_obs_noNA), max_age*max(pop)),
-             q_init = matrix(colMeans(q_obs), max_age*max(pop), 3, byrow = T),
+             q_init = matrix(colMeans(q_obs), max_age*max(pop), N_age, byrow = T),
              p_HOS = p_HOS_obs,
              log_R_tot_z = as.vector(scale(log(R_tot)))*0.1,
              c1 = rnorm(1,0,0.5), c2 = 0,
