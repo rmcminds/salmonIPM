@@ -55,7 +55,7 @@ stan_init <- function(data, chains, model, pool_pops = TRUE)
       alr_p <- sweep(log(p[, 1:(N_age-1), drop = FALSE]), 1, log(p[,N_age]), "-")
       alr_p_z <- apply(alr_p, 2, scale)
       exp_gamma <- aggregate(p, list(pop), mean)
-      gamma_z <- aggregate(alr_p, list(pop), mean)[,-1]
+      gamma_z <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
       gamma_z <- apply(gamma_z, 2, scale)
       
       if(pool_pops)
@@ -147,7 +147,7 @@ stan_init <- function(data, chains, model, pool_pops = TRUE)
       alr_p <- sweep(log(p[,1:(N_age-1), drop = FALSE]), 1, log(p[,N_age]), "-")
       alr_p_z <- apply(alr_p, 2, scale)
       exp_gamma <- aggregate(p, list(pop), mean)
-      gamma_z <- aggregate(alr_p, list(pop), mean)[,-1]
+      gamma_z <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
       gamma_z <- apply(gamma_z, 2, scale)
       
       return(lapply(1:chains, function(i)
