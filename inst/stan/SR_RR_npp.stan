@@ -8,7 +8,7 @@ functions {
     else if(SR_fun == 2) # Beverton-Holt
       R = a*S/(A + a*S/Rmax);
     else if(SR_fun == 3) # Ricker
-      R = a*S*exp(a*S/(e()*Rmax));
+      R = a*S*exp(-a*S/(e()*Rmax));
     
     return(R);
   }
