@@ -189,27 +189,25 @@ model {
 }
 
 generated quantities {
-  # vector[N_pop] Rmax;                  # asymptotic recruitment
   corr_matrix[N_age-1] R_alr_p[N_pop]; # correlation matrices of within-pop cohort log-ratio age distns
-  # vector[N] ll_S_tot_obs;  # pointwise log-likelihood of total spawners
-  # vector[N_H] ll_n_H_obs;  # pointwise log-likelihood of hatchery vs. wild frequencies
-  # vector[N] ll_n_age_obs;  # pointwise log-likelihood of wild age frequencies
-
-  # Rmax = a ./ b;
+  vector[N] LL_S_tot_obs;                     # pointwise log-likelihood of total spawners
+  vector[N_H] LL_n_H_obs;                     # pointwise log-likelihood of hatchery vs. wild frequencies
+  vector[N] LL_n_age_obs;                     # pointwise log-likelihood of wild age frequencies
+  vector[N] LL;                               # total pointwise log-likelihood                              
   
   for(j in 1:N_pop)
     R_alr_p[j] = multiply_lower_tri_self_transpose(L_alr_p[j]);
-  # ll_S_tot_obs = rep_vector(0,N);
-  # for(i in 1:N_S_obs)
-  #   ll_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]],
-  #                                                 log(S_tot[which_S_obs[i]]),
-  #                                                 sigma_obs[pop[which_S_obs[i]]]);
-  # 
-  # if(N_H > 0)
-  # {
-  #   for(i in 1:N_H)
-  #     ll_n_H_obs[i] = binomial_lpmf(n_H_obs[i], n_HW_tot_obs[i], p_HOS[i]);
-  # }
-  # 
-  # ll_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+    
+  LL_S_tot_obs = rep_vector(0,N);
+  for(i in 1:N_S_obs)
+    LL_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]],
+                                                  log(S_tot[which_S_obs[i]]), sigma_obs); 
+  LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+  if(N_H > 0)
+  {
+    for(i in 1:N_H)
+      LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i], n_HW_tot_obs[i], p_HOS[i]);
+  }
+  LL = LL_S_tot_obs + LL_n_age_obs;
+  LL[which_H] += LL_n_H_obs;
 }
