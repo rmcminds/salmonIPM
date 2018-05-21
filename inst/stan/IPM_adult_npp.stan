@@ -200,13 +200,13 @@ generated quantities {
     
   LL_S_tot_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
-    LL_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]],
+    LL_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]] |
                                                   log(S_tot[which_S_obs[i]]), sigma_obs); 
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
   if(N_H > 0)
   {
     for(i in 1:N_H)
-      LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i], n_HW_tot_obs[i], p_HOS[i]);
+      LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_tot_obs[i], p_HOS[i]);
   }
   LL = LL_S_tot_obs + LL_n_age_obs;
   LL[which_H] += LL_n_H_obs;
