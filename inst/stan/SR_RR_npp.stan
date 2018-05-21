@@ -1,8 +1,15 @@
 functions {
   # spawner-recruit functions
-  real SR(real a, real Rmax, real S, real A) {
+  real SR(int SR_fun, real a, real Rmax, real S, real A) {
     real R;
-    R = a*S/(A + a*S/Rmax);
+    
+    if(SR_fun == 1)      # discrete exponential
+      R = a*S;
+    else if(SR_fun == 2) # Beverton-Holt
+      R = a*S/(A + a*S/Rmax);
+    else if(SR_fun == 3) # Ricker
+      R = a*S*exp(a/(e()*Rmax));
+    
     return(R);
   }
   
@@ -13,6 +20,7 @@ functions {
 }
 
 data {
+  int<lower=1> SR_fun;                 # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;               # total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];  # population identifier
   int<lower=1,upper=N> year[N]; # brood year identifier
@@ -58,7 +66,8 @@ transformed parameters {
     
   for(i in 1:N_fit)
   {
-    R_hat[which_fit[i]] = A[which_fit[i]] * SR(a[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], S[which_fit[i]], A[which_fit[i]]);
+    R_hat[which_fit[i]] = A[which_fit[i]] * SR(SR_fun, a[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
+                                               S[which_fit[i]], A[which_fit[i]]);
     if(i==1 || pop[which_fit[i-1]] != pop[which_fit[i]])
     {
       R_ar1[which_fit[i]] = R_hat[which_fit[i]];
@@ -123,6 +132,6 @@ generated quantities {
       err_sim[i] = normal_rng(rho[pop[i]]*err_sim[i-1], sigma[pop[i]]);
     
     if(R_NA[i] == 1)
-      R_sim[i] = A[i]*SR(a[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
+      R_sim[i] = A[i] * SR(SR_fun, a[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
   }
 }

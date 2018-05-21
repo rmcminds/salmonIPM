@@ -1,8 +1,15 @@
 functions {
   # spawner-recruit functions
-  real SR(real a, real Rmax, real S, real A) {
+  real SR(int SR_fun, real a, real Rmax, real S, real A) {
     real R;
-    R = a*S/(A + a*S/Rmax);
+    
+    if(SR_fun == 1)      # discrete exponential
+      R = a*S;
+    else if(SR_fun == 2) # Beverton-Holt
+      R = a*S/(A + a*S/Rmax);
+    else if(SR_fun == 3) # Ricker
+      R = a*S*exp(a/(e()*Rmax));
+    
     return(R);
   }
   
@@ -61,6 +68,7 @@ functions {
 }
 
 data {
+  int<lower=1> SR_fun;                 # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;                      # total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];         # population identifier
   int<lower=1,upper=N> year[N];        # brood year identifier
@@ -249,7 +257,7 @@ transformed parameters {
     }
     
     S_tot[i] = S_W_tot[i] + S_H_tot[i];
-    R_tot_hat[i] = A[i]*SR(a[pop[i]], Rmax[pop[i]], S_tot[i], A[i]);
+    R_tot_hat[i] = A[i] * SR(SR_fun, a[pop[i]], Rmax[pop[i]], S_tot[i], A[i]);
     R_tot[i] = R_tot_hat[i]*phi[year[i]]*exp(sigma_proc*log_R_tot_z[i]);
   }
 }
@@ -354,7 +362,7 @@ generated quantities {
     S_H_tot_fwd[i] = S_W_tot_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
     q_fwd[i,] = S_W_fwd/S_W_tot_fwd[i];
     S_tot_fwd[i] = S_W_tot_fwd[i] + S_H_tot_fwd[i];
-    R_tot_hat_fwd[i] = A_fwd[i]*SR(a[pop_fwd[i]], Rmax[pop_fwd[i]], S_tot_fwd[i], A_fwd[i]);
+    R_tot_hat_fwd[i] = A_fwd[i] * SR(SR_fun, a[pop_fwd[i]], Rmax[pop_fwd[i]], S_tot_fwd[i], A_fwd[i]);
     R_tot_fwd[i] = lognormal_rng(log(R_tot_hat_fwd[i]) + log(phi[year_fwd[i]]), sigma_proc);
   }
   

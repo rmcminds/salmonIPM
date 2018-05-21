@@ -30,12 +30,13 @@
 #' \item{\code{C_obs}}{Total catch.}
 #' }
 #' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.
+#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.
 #' 
 #' @return A named list that can be passed to \code{stan} as the \code{data} argument. 
 #' 
 #' @export
 
-stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model)
+stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, SR_fun = "BH")
 {
   fish_data <- as.data.frame(fish_data)
   
@@ -213,7 +214,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
     p <- aggregate(recon_dat[,grep("p_age", names(recon_dat))], list(pop = recon_dat$pop), mean, na.rm = TRUE)[,-1]
     
     with(recon_dat, {
-      dat <- list(N = length(S),
+      dat <- list(SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  N = length(S),
                   pop = pop, 
                   year = year,
                   N_fit = N_fit,

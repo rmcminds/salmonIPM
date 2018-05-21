@@ -25,6 +25,7 @@
 #' @param env_data Optional data frame whose variables are time-varying environmental covariates, sequentially ordered with each row corresponding to a unique year in fish_data.
 #' @param catch_data Only if model == "IPM_F", a data frame with numeric columns
 #' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.
+#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not to treat the different populations as hierarchical rather than fixed/independent. Must be TRUE if model == "IPM_F".
 #' @param init A list of named lists of initial values to be passed to \code{stan}. If \code{NULL}, initial values will be automatically generated from the supplied data using \code{stan_init}. 
 #' @param pars A vector of character strings specifying parameters to monitor. If NULL, default values are used. If a non-default value is supplied, it is the user's responsibility to make sure the parameters requested appear in the model configuration specified.
@@ -40,10 +41,10 @@
 #' @importFrom rstan stan
 #'
 #' @export
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, pool_pops = TRUE, 
-                      init = NULL, pars = NULL, chains, iter, warmup, thin = 1, cores = 3, ...)
+salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, SR_fun = "BH",
+                      pool_pops = TRUE, init = NULL, pars = NULL, chains, iter, warmup, thin = 1, cores = 3, ...)
 {
-  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, model)
+  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, model, SR_fun)
   if(is.null(pars))
     pars <- switch(model, 
                    IPM = switch(ifelse(pool_pops, "Y", "N"),
