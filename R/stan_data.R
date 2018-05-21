@@ -112,7 +112,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   if(model == "IPM")
   {
     with(fish_data, {  
-      dat <- list(N = nrow(fish_data),
+      dat <- list(SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  N = nrow(fish_data),
                   pop = pop, 
                   year = year,
                   N_X = ncol(env_data), 
@@ -164,7 +165,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   } else if(model == "IPM_F")
   {
     with(fish_data, {  
-      dat <- list(N = nrow(fish_data),
+      dat <- list(SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  N = nrow(fish_data),
                   pop = pop, 
                   year = year,
                   N_X = ncol(env_data), 
