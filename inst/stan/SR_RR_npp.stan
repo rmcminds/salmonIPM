@@ -4,11 +4,11 @@ functions {
     real R;
     
     if(SR_fun == 1)      # discrete exponential
-      R = a*S;
+      R = a*S/A;
     else if(SR_fun == 2) # Beverton-Holt
       R = a*S/(A + a*S/Rmax);
     else if(SR_fun == 3) # Ricker
-      R = a*S*exp(-a*S/(A*e()*Rmax));
+      R = a*(S/A)*exp(-a*S/(A*e()*Rmax));
     
     return(R);
   }
