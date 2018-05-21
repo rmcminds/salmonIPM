@@ -323,9 +323,10 @@ generated quantities {
   matrix<lower=0,upper=1>[N_fwd,N_age] q_fwd; # spawner age distributions in forward simulations
   vector<lower=0>[N_fwd] R_tot_hat_fwd;       # expected recruit abundance by brood year in forward simulations
   vector<lower=0>[N_fwd] R_tot_fwd;           # true recruit abundance by brood year in forward simulations
-  vector[N] ll_S_tot_obs;                     # pointwise log-likelihood of total spawners
-  vector[N_H] ll_n_H_obs;                     # pointwise log-likelihood of hatchery vs. wild frequencies
-  vector[N] ll_n_age_obs;                     # pointwise log-likelihood of wild age frequencies
+  vector[N] LL_S_tot_obs;                     # pointwise log-likelihood of total spawners
+  vector[N_H] LL_n_H_obs;                     # pointwise log-likelihood of hatchery vs. wild frequencies
+  vector[N] LL_n_age_obs;                     # pointwise log-likelihood of wild age frequencies
+  vector[N] LL;                               # total pointwise log-likelihood                              
   
   R_gamma = multiply_lower_tri_self_transpose(L_gamma);
   R_alr_p = multiply_lower_tri_self_transpose(L_alr_p);
@@ -366,16 +367,16 @@ generated quantities {
     R_tot_fwd[i] = lognormal_rng(log(R_tot_hat_fwd[i]) + log(phi[year_fwd[i]]), sigma_proc);
   }
   
-  # ll_S_tot_obs = rep_vector(0,N);
-  # for(i in 1:N_S_obs)
-  #   ll_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]],
-  #                                                 log(S_tot[which_S_obs[i]]), sigma_obs);
-  # 
-  # if(N_H > 0)
-  # {
-  #   for(i in 1:N_H)
-  #     ll_n_H_obs[i] = binomial_lpmf(n_H_obs[i], n_HW_tot_obs[i], p_HOS[i]);
-  # }
-  # 
-  # ll_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+  LL_S_tot_obs = rep_vector(0,N);
+  for(i in 1:N_S_obs)
+    LL_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]],
+                                                  log(S_tot[which_S_obs[i]]), sigma_obs); 
+  LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+  if(N_H > 0)
+  {
+    for(i in 1:N_H)
+      LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i], n_HW_tot_obs[i], p_HOS[i]);
+  }
+  LL = LL_S_tot_obs + LL_n_age_obs;
+  LL[which_H] += LL_n_H_obs;
 }
