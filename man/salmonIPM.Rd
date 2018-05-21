@@ -5,8 +5,9 @@
 \title{Fits an integrated or run-reconstruction spawner-recruit model.}
 \usage{
 salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  catch_data = NULL, model, pool_pops = TRUE, init = NULL, pars = NULL,
-  chains, iter, warmup, thin = 1, cores = 3, ...)
+  catch_data = NULL, model, SR_fun = "BH", pool_pops = TRUE,
+  init = NULL, pars = NULL, chains, iter, warmup, thin = 1, cores = 3,
+  ...)
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following \code{colnames}, in no particular order except where noted:
@@ -38,6 +39,8 @@ salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
 \item{catch_data}{Only if model == "IPM_F", a data frame with numeric columns}
 
 \item{model}{One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.}
+
+\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.}
 
 \item{pool_pops}{Logical, with default \code{TRUE}, indicating whether or not to treat the different populations as hierarchical rather than fixed/independent. Must be TRUE if model == "IPM_F".}
 

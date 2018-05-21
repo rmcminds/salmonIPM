@@ -5,7 +5,7 @@
 \title{Assemble input data for integrated or run-reconstruction spawner-recruit models.}
 \usage{
 stan_data(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  catch_data = NULL, model)
+  catch_data = NULL, model, SR_fun = "BH")
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following \code{colnames}, in no particular order except where noted:
@@ -42,6 +42,8 @@ stan_data(fish_data, fish_data_fwd = NULL, env_data = NULL,
 }}
 
 \item{model}{One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.}
+
+\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.}
 }
 \value{
 A named list that can be passed to \code{stan} as the \code{data} argument.
