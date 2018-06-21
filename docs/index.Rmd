@@ -29,7 +29,7 @@ _Fish Ecology Division, Northwest Fisheries Science Center, National Marine Fish
 [__James T. Thorson__](https://sites.google.com/site/thorsonresearch/)  
 _Fishery Resource Analysis and Monitoring Division, Northwest Fisheries Science Center, National Marine Fisheries Service, National Oceanic and Atmospheric Administration, Seattle, WA USA, james.thorson@noaa.gov_
 
-### Version
+***
 
 This is version `r paste0('0.',format(Sys.time(), '%y.%m.%d'))`.
 
