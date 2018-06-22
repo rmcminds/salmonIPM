@@ -29,6 +29,7 @@
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not to treat the different populations as hierarchical rather than fixed/independent. Must be TRUE if model == "IPM_F".
 #' @param init A list of named lists of initial values to be passed to \code{stan}. If \code{NULL}, initial values will be automatically generated from the supplied data using \code{stan_init}. 
 #' @param pars A vector of character strings specifying parameters to monitor. If NULL, default values are used. If a non-default value is supplied, it is the user's responsibility to make sure the parameters requested appear in the model configuration specified.
+#' @param log_lik A logical indicator as to whether the pointwise log-likelihood should be returned for later analysis with `loo`. 
 #' @param chains A positive integer specifying the number of Markov chains.
 #' @param iter A positive integer specifying the number of iterations for each chain (including warmup).
 #' @param warmup A positive integer specifying the number of warmup (aka burnin) iterations per chain. If step-size adaptation is on (which it is by default), this also controls the number of iterations for which adaptation is run (and hence these warmup samples should not be used for inference). The number of warmup iterations should not be larger than \code{iter}
@@ -42,7 +43,7 @@
 #'
 #' @export
 salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, SR_fun = "BH",
-                      pool_pops = TRUE, init = NULL, pars = NULL, chains, iter, warmup, thin = 1, cores = 3, ...)
+                      pool_pops = TRUE, init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
 {
   dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, model, SR_fun)
   if(is.null(pars))
@@ -73,6 +74,8 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                                      "rho_log_phi","sigma_log_phi","phi","sigma",
                                      "R_hat","S_sim","R_sim"),
                                N = c("a","Rmax","rho","sigma","R_hat","S_sim","R_sim")))
+  
+  if(log_lik == TRUE) { pars <- c(pars, "LL")}
   
   stan_path <- file.path(path.package("salmonIPM"), "stan")
   
