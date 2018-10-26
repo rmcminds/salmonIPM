@@ -372,6 +372,7 @@ generated quantities {
     LL_S_tot_obs[which_S_obs[i]] = lognormal_lpdf(S_tot_obs[which_S_obs[i]] |
                                                   log(S_tot[which_S_obs[i]]), sigma_obs); 
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+  LL_n_H_obs = rep_vector(0,N_H);
   if(N_H > 0)
   {
     for(i in 1:N_H)
