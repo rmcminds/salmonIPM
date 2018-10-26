@@ -20,6 +20,7 @@ functions {
 }
 
 data {
+  int<lower=1> SR_fun;                 # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;                      # total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];         # population identifier
   int<lower=1,upper=N> year[N];        # brood year identifier

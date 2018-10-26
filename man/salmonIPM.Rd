@@ -6,8 +6,8 @@
 \usage{
 salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
   catch_data = NULL, model, SR_fun = "BH", pool_pops = TRUE,
-  init = NULL, pars = NULL, chains, iter, warmup, thin = 1, cores = 3,
-  ...)
+  init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup,
+  thin = 1, cores = 3, ...)
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following \code{colnames}, in no particular order except where noted:
@@ -47,6 +47,8 @@ salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
 \item{init}{A list of named lists of initial values to be passed to \code{stan}. If \code{NULL}, initial values will be automatically generated from the supplied data using \code{stan_init}.}
 
 \item{pars}{A vector of character strings specifying parameters to monitor. If NULL, default values are used. If a non-default value is supplied, it is the user's responsibility to make sure the parameters requested appear in the model configuration specified.}
+
+\item{log_lik}{A logical indicator as to whether the pointwise log-likelihood should be returned for later analysis with `loo`.}
 
 \item{chains}{A positive integer specifying the number of Markov chains.}
 
