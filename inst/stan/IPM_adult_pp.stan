@@ -324,7 +324,7 @@ generated quantities {
   vector<lower=0>[N_fwd] R_tot_hat_fwd;       # expected recruit abundance by brood year in forward simulations
   vector<lower=0>[N_fwd] R_tot_fwd;           # true recruit abundance by brood year in forward simulations
   vector[N] LL_S_tot_obs;                     # pointwise log-likelihood of total spawners
-  vector[N_H] LL_n_H_obs;                     # pointwise log-likelihood of hatchery vs. wild frequencies
+  vector[max(N_H,1)] LL_n_H_obs;              # pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL_n_age_obs;                     # pointwise log-likelihood of wild age frequencies
   vector[N] LL;                               # total pointwise log-likelihood                              
   

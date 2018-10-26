@@ -192,7 +192,7 @@ model {
 generated quantities {
   corr_matrix[N_age-1] R_alr_p[N_pop]; # correlation matrices of within-pop cohort log-ratio age distns
   vector[N] LL_S_tot_obs;                     # pointwise log-likelihood of total spawners
-  vector[N_H] LL_n_H_obs;                     # pointwise log-likelihood of hatchery vs. wild frequencies
+  vector[max(N_H,1)] LL_n_H_obs;              # pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL_n_age_obs;                     # pointwise log-likelihood of wild age frequencies
   vector[N] LL;                               # total pointwise log-likelihood                              
   
