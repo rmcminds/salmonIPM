@@ -38,7 +38,7 @@ run_recon <- function(fish_data)
         qq[pop==i & rowSums(nn)==0,] <- rep(colMeans(qq[pop==i & rowSums(nn) > 0,]),
                                             each = sum(pop==i & rowSums(nn)==0))
     substr(names(qq), 1, 1) <- "p" 
-    p_HOS <- n_H_obs/(n_H_obs + n_W_obs)
+    p_HOS <- ifelse(fit_p_HOS==1, n_H_obs/(n_H_obs + n_W_obs), 0)
     recon_dat <- cbind(pop = pop, A, year = year, S = S_tot_obs, qq, p_HOS = p_HOS, 
                        F_rate = F_rate, B_take_obs = B_take_obs, R = NA)
     R <- matrix(NA, nrow(recon_dat), length(age_range))
