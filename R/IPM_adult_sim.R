@@ -12,8 +12,8 @@
 #' @param F_rate Harvest rate.
 #' @param B_rate Broodstock take rate.
 #' @param SR_func Character code for the type of stocl-recruit model to fit. At present, only 'BH' for "Beverton-Holt' is allowed.
-#' @param n_age_tot_obs Number of adults for age comp.
-#' @param n_HW_tot_obs Number of adults for H vs W origin.
+#' @param n_age_obs Number of adults for age comp.
+#' @param n_HW_obs Number of adults for H vs W origin.
 #' 
 #' @return A list with initial starting values for all of the parameters and states in the Stan model.
 #' 
@@ -21,12 +21,12 @@
 #' 
 #' @export
 IPM_adult_sim <- function(pars, pop, year, X = NULL, N_age, max_age, A, 
-                          F_rate, B_rate, SR_func = "BH", n_age_tot_obs, n_HW_tot_obs)
+                          F_rate, B_rate, SR_func = "BH", n_age_obs, n_HW_obs)
 {
   # spawner-recruit functions
-  BH <- function(a, Rmax, S, A) 
+  BH <- function(alpha, Rmax, S, A) 
   {
-    R <- a*S/(A + a*S/Rmax)
+    R <- alpha*S/(A + alpha*S/Rmax)
     return(R)
   }
   
@@ -38,18 +38,18 @@ IPM_adult_sim <- function(pars, pop, year, X = NULL, N_age, max_age, A,
   
   with(pars, {
     # parameters
-    Sigma_log_aRmax <- diag(c(sigma_log_a, sigma_log_Rmax)^2)
-    Sigma_log_aRmax[1,2] <- rho_log_aRmax*sigma_log_a*sigma_log_Rmax
-    Sigma_log_aRmax[2,1] <- Sigma_log_aRmax[1,2]
-    aRmax <- exp(mvrnorm(N_pop, c(mu_log_a, mu_log_Rmax), Sigma_log_aRmax))
-    a <- aRmax[,1]
+    Sigma_alphaRmax <- diag(c(sigma_alpha, sigma_Rmax)^2)
+    Sigma_alphaRmax[1,2] <- rho_alphaRmax*sigma_alpha*sigma_Rmax
+    Sigma_alphaRmax[2,1] <- Sigma_alphaRmax[1,2]
+    aRmax <- exp(mvrnorm(N_pop, c(mu_alpha, mu_Rmax), Sigma_alphaRmax))
+    alpha <- aRmax[,1]
     Rmax <- aRmax[,2]
-    K <- (a - 1)*Rmax/a
-    log_phi <- rep(NA, max(year))
-    log_phi[1] <- rnorm(1, 0, sigma_log_phi/sqrt(1 - rho_log_phi^2))
-    for(i in 2:length(log_phi))
-      log_phi[i] <- rnorm(1, rho_log_phi*log_phi[i-1], sigma_log_phi)
-    phi <- exp(log_phi + X %*% beta_log_phi)
+    K <- (alpha - 1)*Rmax/alpha
+    phi <- rep(NA, max(year))
+    phi[1] <- rnorm(1, 0, sigma_phi/sqrt(1 - rho_phi^2))
+    for(i in 2:length(phi))
+      phi[i] <- rnorm(1, rho_phi*phi[i-1], sigma_phi)
+    phi <- phi + X %*% beta_phi
     mu_alr_p <- log(mu_p[1:(N_age-1)]) - log(mu_p[N_age])
     Sigma_gamma <-  diag(sigma_gamma^2) * (L_gamma %*% t(L_gamma))
     gamma <- mvrnorm(N_pop, mu_alr_p, Sigma_gamma)
@@ -57,60 +57,60 @@ IPM_adult_sim <- function(pars, pop, year, X = NULL, N_age, max_age, A,
     alr_p <- t(apply(gamma[pop,], 1, function(x) mvrnorm(1, x, Sigma_alr_p)))
     e_alr_p <- exp(cbind(alr_p, 0))
     p <- sweep(e_alr_p, 1, rowSums(e_alr_p), "/")
-    R_tot_init <- data.frame(pop = rep(1:N_pop, each = max_age), year = NA, R_tot = NA)
+    R_init <- data.frame(pop = rep(1:N_pop, each = max_age), year = NA, R = NA)
     for(i in 1:N_pop)
-      R_tot_init$year[R_tot_init$pop==i] <- min(year[pop==i]) - (max_age:1)
-    R_tot_init$R_tot <- rlnorm(nrow(R_tot_init), log((A_pop*K)[R_tot_init$pop]), sigma_proc)
-    alr_p_init <- t(apply(gamma[R_tot_init$pop,], 1, function(x) mvrnorm(1, x, Sigma_alr_p)))
+      R_init$year[R_init$pop==i] <- min(year[pop==i]) - (max_age:1)
+    R_init$R <- rlnorm(nrow(R_init), log((A_pop*K)[R_init$pop]), sigma_proc)
+    alr_p_init <- t(apply(gamma[R_init$pop,], 1, function(x) mvrnorm(1, x, Sigma_alr_p)))
     e_alr_p_init <- exp(cbind(alr_p_init, 0))
     p_init <- sweep(e_alr_p_init, 1, rowSums(e_alr_p_init), "/")
-    R_init <- sweep(p_init, 1, R_tot_init$R_tot, "*")
+    R_init <- sweep(p_init, 1, R_init$R, "*")
     
     # Simulate recruits and calculate total spawners
     # and spawner age distributions
-    S_W <- matrix(NA, N, N_age)        # true wild spawners by age  
-    S_W_tot <- vector("numeric",N)     # true total wild spawners
-    S_H_tot <- vector("numeric",N)     # true total hatchery spawners
-    S_tot <- vector("numeric",N)       # true total spawners
-    R_tot_hat <- vector("numeric",N)   # expected recruits
-    R_tot <- vector("numeric",N)       # true recruits
-    B_take <- vector("numeric",N)      # adult broodstock removals
+    S_W_a <- matrix(NA, N, N_age)  # true wild spawners by age  
+    S_W <- vector("numeric",N)     # true total wild spawners
+    S_H <- vector("numeric",N)     # true total hatchery spawners
+    S <- vector("numeric",N)       # true total spawners
+    R_hat <- vector("numeric",N)   # expected recruits
+    R <- vector("numeric",N)       # true recruits
+    B_take <- vector("numeric",N)  # adult broodstock removals
     
     for(i in 1:N)
     {
       for(j in 1:N_age)
         if(year[i] - ages[j] < min(year[pop==pop[i]])) # initialize years 1:max_age
         {
-          S_W[i,j] <- R_init[R_tot_init$pop==pop[i] & R_tot_init$year==year[i]-ages[j], j]
+          S_W_a[i,j] <- R_init[R_init$pop==pop[i] & R_init$year==year[i]-ages[j], j]
         } else
         {
-          S_W[i,j] <- R_tot[i-ages[j]]*p[i-ages[j],j]
+          S_W_a[i,j] <- R[i-ages[j]]*p[i-ages[j],j]
         }
-      S_W[i,-1] <- S_W[i,-1]*(1 - F_rate[i])     # catch (assumes no take of age 1)
-      B_take[i] <- B_rate[i]*sum(S_W[i,-1])
-      S_W[i,-1] <- S_W[i,-1]*(1 - B_rate[i])     # broodstock removal (assumes no take of age 1)
-      S_W_tot[i] <- sum(S_W[i,])
-      S_H_tot[i] <- S_W_tot[i]*p_HOS[i]/(1 - p_HOS[i])
-      S_tot[i] <- S_W_tot[i] + S_H_tot[i]
-      R_tot_hat[i] <- switch(SR_func,
-                             BH = A[i]*BH(a[pop[i]], Rmax[pop[i]], S_tot[i], A[i]))
-      R_tot[i] <- rlnorm(1, log(R_tot_hat[i]), sigma_proc)*phi[year[i]]
+      S_W_a[i,-1] <- S_W_a[i,-1]*(1 - F_rate[i])     # catch (assumes no take of age 1)
+      B_take[i] <- B_rate[i]*sum(S_W_a[i,-1])
+      S_W_a[i,-1] <- S_W_a[i,-1]*(1 - B_rate[i])     # broodstock removal (assumes no take of age 1)
+      S_W[i] <- sum(S_W_a[i,])
+      S_H[i] <- S_W[i]*p_HOS[i]/(1 - p_HOS[i])
+      S[i] <- S_W[i] + S_H[i]
+      R_hat[i] <- switch(SR_func,
+                             BH = A[i]*BH(alpha[pop[i]], Rmax[pop[i]], S[i], A[i]))
+      R[i] <- rlnorm(1, log(R_hat[i]) + phi[year[i]], sigma_proc)
     }
     
-    S_tot_obs <- rlnorm(N, log(S_tot), sigma_obs)           # obs total spawners
-    q <- sweep(S_W, 1, S_W_tot, "/")                        # true spawner age distn 
-    n_age_tot_obs <- pmax(round(pmin(n_age_tot_obs, S_tot)), 1)  # cap age samples at pop size
-    n_HW_tot_obs <- pmax(round(pmin(n_HW_tot_obs, S_tot)), 1)    # cap H/W samples at pop size
-    n_age_obs <- t(sapply(1:N, function(i) rmultinom(1, n_age_tot_obs[i], q[i,]))) # obs wild age frequencies
+    S_obs <- rlnorm(N, log(S), sigma_obs)            # obs total spawners
+    q <- sweep(S_W_a, 1, S_W, "/")                   # true spawner age distn 
+    n_age_obs <- pmax(round(pmin(n_age_obs, S)), 1)  # cap age samples at pop size
+    n_HW_obs <- pmax(round(pmin(n_HW_obs, S)), 1)    # cap H/W samples at pop size
+    n_age_obs <- t(sapply(1:N, function(i) rmultinom(1, n_age_obs[i], q[i,]))) # obs wild age frequencies
     dimnames(n_age_obs)[[2]] <- paste0("n_age", ages, "_obs")
-    n_H_obs <- rbinom(N, n_HW_tot_obs, p_HOS)               # obs count of hatchery spawners
-    n_W_obs <- n_HW_tot_obs - n_H_obs                       # obs count of wild spawners
+    n_H_obs <- rbinom(N, n_HW_obs, p_HOS)            # obs count of hatchery spawners
+    n_W_obs <- n_HW_obs - n_H_obs                    # obs count of wild spawners
     
     return(list(sim_dat = data.frame(pop = pop, A = A, year = year, fit_p_HOS = p_HOS > 0,
-                                     S_tot_obs = S_tot_obs, n_age_obs, 
+                                     S_obs = S_obs, n_age_obs, 
                                      n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
                                      B_take_obs = B_take, F_rate = F_rate),
-                pars_out = c(pars, list(S_W = S_W, a = a, Rmax = Rmax, phi = phi, gamma = gamma, alr_p = alr_p,
-                                        p_HOS = p_HOS, p = p, R_tot_hat = R_tot_hat, R_tot = R_tot))))
+                pars_out = c(pars, list(S_W_a = S_W_a, alpha = alpha, Rmax = Rmax, phi = phi, gamma = gamma, alr_p = alr_p,
+                                        p_HOS = p_HOS, p = p, R_hat = R_hat, R = R))))
   })
 }
