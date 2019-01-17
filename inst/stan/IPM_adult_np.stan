@@ -127,10 +127,10 @@ transformed parameters {
     if(pop_year_indx[i] <= max_age)
     {
       # use initial values
-      S_W[i] = S_init[(pop[i]-1)*max_age+pop_year_indx[i]]*(1 - p_HOS_all[i]);        
-      S_H[i] = S_init[(pop[i]-1)*max_age+pop_year_indx[i]]*p_HOS_all[i];
-      q[i,1:N_age] = to_row_vector(q_init[(pop[i]-1)*max_age+pop_year_indx[i],1:N_age]);
-      S_W = S_W[i]*q[i,];
+      S_W[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*(1 - p_HOS_all[i]);        
+      S_H[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*p_HOS_all[i];
+      q[i,1:N_age] = to_row_vector(q_init[(pop[i]-1)*max_age + pop_year_indx[i],1:N_age]);
+      S_W_a = S_W[i]*q[i,];
     }
     else
     {
