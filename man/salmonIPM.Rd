@@ -15,7 +15,7 @@ salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
 \item{\code{pop}}{Numeric or character population ID.}
 \item{\code{year}}{Numeric variable giving the year the fish spawned (i.e., the brood year).}
 \item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-\item{\code{S_tot_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
+\item{\code{S_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
 \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of observed spawner age frequencies (i.e., counts), where [min_age] is the numeral age in years (total, not ocean age) of the youngest spawners.}
 \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
 \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}

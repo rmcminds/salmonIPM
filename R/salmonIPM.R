@@ -5,7 +5,7 @@
 #' \item{\code{pop}}{Numeric or character population ID.}
 #' \item{\code{year}}{Numeric variable giving the year the fish spawned (i.e., the brood year).}
 #' \item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-#' \item{\code{S_tot_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
+#' \item{\code{S_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
 #' \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of observed spawner age frequencies (i.e., counts), where [min_age] is the numeral age in years (total, not ocean age) of the youngest spawners.}
 #' \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
 #' \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
@@ -49,40 +49,38 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   if(is.null(pars))
     pars <- switch(model, 
                    IPM = switch(ifelse(pool_pops, "Y", "N"),
-                                Y = c("mu_log_a","sigma_log_a","a",
-                                      "mu_log_Rmax","sigma_log_Rmax","Rmax","rho_log_aRmax",
-                                      "beta_log_phi","sigma_log_phi","rho_log_phi","phi",
+                                Y = c("mu_alpha","sigma_alpha","alpha",
+                                      "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
+                                      "beta_phi","sigma_phi","rho_phi","phi",
                                       "mu_p","sigma_gamma","R_gamma","gamma",
-                                      "sigma_alr_p","R_alr_p","p",
+                                      "sigma_p","R_p","p",
                                       "p_HOS","B_rate_all",
-                                      "sigma_proc","sigma_obs",
-                                      "S_tot","R_tot","q"),
-                                N = c("a","Rmax","beta_proc","rho_proc","sigma_proc",
-                                      "gamma","sigma_alr_p","R_alr_p","p",
-                                      "p_HOS","B_rate_all","sigma_obs","S_tot","R_tot","q")),
-                   IPM_F = c("mu_log_a","sigma_log_a","a",
-                                      "mu_log_Rmax","sigma_log_Rmax","Rmax","rho_log_aRmax",
-                                      "beta_log_phi","sigma_log_phi","rho_log_phi","phi",
+                                      "sigma","tau","S","R","q"),
+                                N = c("alpha","Rmax","beta","rho","sigma",
+                                      "gamma","sigma_p","R_p","p",
+                                      "p_HOS","B_rate_all","tau","S","R","q")),
+                   IPM_F = c("mu_alpha","sigma_alpha","alpha",
+                                      "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
+                                      "beta_phi","sigma_phi","rho_phi","phi",
                                       "mu_p","sigma_gamma","R_gamma","gamma",
-                                      "sigma_alr_p","R_alr_p","p",
-                                      "p_HOS","c1","c2","F_rate","sigma_log_C","B_rate_all",
-                                      "sigma_proc","sigma_obs",
-                                      "S_tot","R_tot","q"),
+                                      "sigma_p","R_p","p",
+                                      "p_HOS","c1","c2","F_rate","sigma_C","B_rate_all",
+                                      "sigma","tau","S","R","q"),
                    RR = switch(ifelse(pool_pops, "Y", "N"),
-                               Y = c("mu_log_a","sigma_log_a","a",
-                                     "mu_log_Rmax","sigma_log_Rmax","Rmax","rho_log_aRmax",
-                                     "rho_log_phi","sigma_log_phi","phi","sigma",
+                               Y = c("mu_alpha","sigma_alpha","alpha",
+                                     "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
+                                     "rho_phi","sigma_phi","phi","sigma",
                                      "R_hat","S_sim","R_sim"),
-                               N = c("a","Rmax","rho","sigma","R_hat","S_sim","R_sim")))
+                               N = c("alpha","Rmax","rho","sigma","R_hat","S_sim","R_sim")))
   
   if(log_lik == TRUE) { pars <- c(pars, "LL")}
   
   stan_path <- file.path(path.package("salmonIPM"), "stan")
   
   fit <- stan(file = switch(model,
-                            IPM = file.path(stan_path, ifelse(pool_pops, "IPM_adult_pp.stan", "IPM_adult_npp.stan")),
-                            IPM_F = file.path(stan_path, ifelse(pool_pops, "IPM_adult_pp_F.stan", "IPM_adult_npp.stan")),
-                            RR = file.path(stan_path, ifelse(pool_pops, "SR_RR_pp.stan", "SR_RR_npp.stan"))),
+                            IPM = file.path(stan_path, ifelse(pool_pops, "IPM_adult_pp.stan", "IPM_adult_np.stan")),
+                            IPM_F = file.path(stan_path, ifelse(pool_pops, "IPM_adult_pp_F.stan", "IPM_adult_np.stan")),
+                            RR = file.path(stan_path, ifelse(pool_pops, "SR_RR_pp.stan", "SR_RR_np.stan"))),
               data = dat, 
               init = stan_init(dat, chains, model, pool_pops), 
               pars = pars,

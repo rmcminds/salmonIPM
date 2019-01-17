@@ -1,14 +1,14 @@
 functions {
   # spawner-recruit functions
-  real SR(int SR_fun, real a, real Rmax, real S, real A) {
+  real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
     real R;
     
     if(SR_fun == 1)      # discrete exponential
-      R = a*S/A;
+      R = alpha*S/A;
     else if(SR_fun == 2) # Beverton-Holt
-      R = a*S/(A + a*S/Rmax);
+      R = alpha*S/(A + alpha*S/Rmax);
     else if(SR_fun == 3) # Ricker
-      R = a*(S/A)*exp(-a*S/(A*e()*Rmax));
+      R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
@@ -20,7 +20,7 @@ functions {
 }
 
 data {
-  int<lower=1> SR_fun;                 # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=1> SR_fun;          # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;               # total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];  # population identifier
   int<lower=1,upper=N> year[N]; # brood year identifier
@@ -37,27 +37,27 @@ data {
 }
 
 transformed data {
-  int<lower=1,upper=N> N_pop;          # number of populations
-  int<lower=1,upper=N> N_year;         # number of years
-  int<lower=2> ages[N_age];              # adult ages
+  int<lower=1,upper=N> N_pop;  # number of populations
+  int<lower=1,upper=N> N_year; # number of years
+  int<lower=2> ages[N_age];    # adult ages
   
   N_pop = max(pop);
   N_year = max(year);
-  for(j in 1:N_age)
-    ages[j] = max_age - N_age + j;
+  for(a in 1:N_age)
+    ages[a] = max_age - N_age + a;
 }
 
 parameters {
-  vector<lower=0>[N_pop] a;             # intrinsic productivity
+  vector<lower=0>[N_pop] alpha;         # intrinsic productivity
   vector<lower=0>[N_pop] Rmax;          # asymptotic recruitment
   vector<lower=-1,upper=1>[N_pop] rho;  # AR(1) coefs of residuals
   vector<lower=0>[N_pop] sigma;         # residual error SD
 }
 
 transformed parameters {
-  vector<lower=0>[N] R_hat;             # expected recruit abundance (not density) by brood year
-  vector<lower=0>[N] R_ar1;             # expected recruit abundance, taking AR(1) errors into account
-  vector<lower=0>[N] sigma_ar1;         # residual error SD for each observation
+  vector<lower=0>[N] R_hat;     # expected recruit abundance (not density) by brood year
+  vector<lower=0>[N] R_ar1;     # expected recruit abundance, taking AR(1) errors into account
+  vector<lower=0>[N] sigma_ar1; # residual error SD for each observation
   
   # Predict recruitment
   R_hat = rep_vector(0,N);
@@ -66,7 +66,7 @@ transformed parameters {
     
   for(i in 1:N_fit)
   {
-    R_hat[which_fit[i]] = A[which_fit[i]] * SR(SR_fun, a[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
+    R_hat[which_fit[i]] = A[which_fit[i]] * SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
                                                S[which_fit[i]], A[which_fit[i]]);
     if(i==1 || pop[which_fit[i-1]] != pop[which_fit[i]])
     {
@@ -93,7 +93,7 @@ transformed parameters {
 
 model {
   # Priors
-  a ~ lognormal(2,2);
+  alpha ~ lognormal(2,2);
   Rmax ~ lognormal(2,3);
   for(i in 1:N_pop)
   {
@@ -121,8 +121,8 @@ generated quantities {
       if(i >= max_age && pop[i-max_age] == pop[i])
       {
         S_sim[i] = 0;
-        for(j in 1:N_age)
-          S_sim[i] = S_sim[i] + R_sim[i-ages[j]]*p[pop[i],j];
+        for(a in 1:N_age)
+          S_sim[i] = S_sim[i] + R_sim[i-ages[a]]*p[pop[i],a];
       }
     }
     
@@ -132,6 +132,6 @@ generated quantities {
       err_sim[i] = normal_rng(rho[pop[i]]*err_sim[i-1], sigma[pop[i]]);
     
     if(R_NA[i] == 1)
-      R_sim[i] = A[i] * SR(SR_fun, a[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
+      R_sim[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
   }
 }
