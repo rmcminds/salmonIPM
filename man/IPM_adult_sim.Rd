@@ -5,7 +5,7 @@
 \title{Simulate data under adult-to-adult integrated population model}
 \usage{
 IPM_adult_sim(pars, pop, year, X = NULL, N_age, max_age, A, F_rate,
-  B_rate, SR_func = "BH", n_age_tot_obs, n_HW_tot_obs)
+  B_rate, SR_func = "BH", n_age_obs, n_HW_obs)
 }
 \arguments{
 \item{pars}{Model parameters to be used for simulations.}
@@ -28,9 +28,9 @@ IPM_adult_sim(pars, pop, year, X = NULL, N_age, max_age, A, F_rate,
 
 \item{SR_func}{Character code for the type of stocl-recruit model to fit. At present, only 'BH' for "Beverton-Holt' is allowed.}
 
-\item{n_age_tot_obs}{Number of adults for age comp.}
+\item{n_age_obs}{Number of adults for age comp.}
 
-\item{n_HW_tot_obs}{Number of adults for H vs W origin.}
+\item{n_HW_obs}{Number of adults for H vs W origin.}
 }
 \value{
 A list with initial starting values for all of the parameters and states in the Stan model.
