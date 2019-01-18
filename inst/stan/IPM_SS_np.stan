@@ -77,8 +77,8 @@ parameters {
   matrix<lower=0>[N_pop,N_age-1] sigma_p; # log-ratio cohort age distribution SDs
   cholesky_factor_corr[N_age-1] L_p[N_pop]; # Cholesky factors of correlation matrices of cohort log-ratio age distributions
   matrix[N,N_age-1] epsilon_p_z;          # log-ratio cohort age distribution errors (Z-scores)
-  vector<lower=0>[max_age*N_pop] S_init;  # true total spawner abundance in years 1-max_age
-  simplex[N_age] q_init[max_age*N_pop];   # true wild spawner age distributions in years 1-max_age
+  vector<lower=0>[max_age*N_pop] S_init;  # true total spawner abundance in years 1:max_age
+  simplex[N_age] q_init[max_age*N_pop];   # true wild spawner age distributions in years 1:max_age
   vector<lower=0,upper=1>[max(N_H,1)] p_HOS; # true p_HOS in years which_H
   vector[N] epsilon_R_z;                  # recruitment process errors (z-scored)
   vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
@@ -201,8 +201,7 @@ generated quantities {
     
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
-    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] |
-                                                  log(S[which_S_obs[i]]), tau); 
+    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau); 
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
   LL_n_H_obs = rep_vector(0,max(N_H,1));
   if(N_H > 0)

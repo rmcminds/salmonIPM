@@ -78,8 +78,8 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   stan_path <- file.path(path.package("salmonIPM"), "stan")
   
   fit <- stan(file = switch(model,
-                            IPM = file.path(stan_path, ifelse(pool_pops, "IPM_adult_pp.stan", "IPM_adult_np.stan")),
-                            IPM_F = file.path(stan_path, ifelse(pool_pops, "IPM_adult_pp_F.stan", "IPM_adult_np.stan")),
+                            IPM = file.path(stan_path, ifelse(pool_pops, "IPM_SS_pp.stan", "IPM_SS_np.stan")),
+                            IPM_F = file.path(stan_path, ifelse(pool_pops, "IPM_SS_F_pp.stan", "")),
                             RR = file.path(stan_path, ifelse(pool_pops, "SR_RR_pp.stan", "SR_RR_np.stan"))),
               data = dat, 
               init = stan_init(dat, chains, model, pool_pops), 
