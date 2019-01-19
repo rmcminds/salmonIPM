@@ -57,7 +57,7 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                                       "p_HOS","B_rate_all",
                                       "sigma","tau","S","R","q"),
                                 N = c("alpha","Rmax","beta","rho","sigma",
-                                      "gamma","sigma_p","R_p","p",
+                                      "mu_p","sigma_p","R_p","p",
                                       "p_HOS","B_rate_all","tau","S","R","q")),
                    IPM_F = c("mu_alpha","sigma_alpha","alpha",
                                       "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
