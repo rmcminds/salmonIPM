@@ -1,48 +1,87 @@
 #' Fits an integrated or run-reconstruction spawner-recruit model.
 #'
-#' @param fish_data Data frame that includes the following \code{colnames}, in no particular order except where noted:
-#' \describe{
-#' \item{\code{pop}}{Numeric or character population ID.}
-#' \item{\code{year}}{Numeric variable giving the year the fish spawned (i.e., the brood year).}
-#' \item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-#' \item{\code{S_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
-#' \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of observed spawner age frequencies (i.e., counts), where [min_age] is the numeral age in years (total, not ocean age) of the youngest spawners.}
-#' \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
-#' \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
-#' \item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data whether the model should estimate p_HOS > 0. This is only required if model == "IPM".}
-#' \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish.}
-#' \item{\code{B_take_obs}}{Number of adults taken for hatchery broodstock.}
-#' }
-#' @param fish_data_fwd Only if model == "IPM", optional data frame with the following \code{colnames}, representing "forward" or "future" simulations. Unlike \code{fish_data}, a given combination of population and year may occur multiple times, perhaps to facilitate comparisons across scenarios or "branches" with different inputs (e.g., harvest rate). In this case, all branches are subjected to the same sequence of process errors in recruitment and age structure. 
-#' \describe{
-#' \item{\code{pop}}{Numeric or character population ID. All values must also appear in \code{fish_data$pop}.}
-#' \item{\code{year}}{Integer variable giving the year the fish spawned (i.e., the brood year). For each population in \code{fish_data_fwd$pop}, the first year appearing in \code{fish_data_fwd$year} must be one greater than the last year appearing in \code{fish_data$year}, i.e., \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) == max(fish_data$year[fish_data$pop==j]) + 1}.}
-#' \item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-#' \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish.}
-#' \item{\code{B_rate}}{Total broodstock removal rate (proportion) of natural-origin fish.}
-#' \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.}
-#' }
-#' @param env_data Optional data frame whose variables are time-varying environmental covariates, sequentially ordered with each row corresponding to a unique year in fish_data.
+#' @param fish_data Data frame that includes the following \code{colnames}, in
+#'   no particular order except where noted: \describe{
+#'   \item{\code{pop}}{Numeric or character population ID.}
+#'   \item{\code{year}}{Numeric variable giving the year the fish spawned (i.e.,
+#'   the brood year).} \item{\code{A}}{Spawning habitat size (either stream
+#'   length or area). Will usually be time-invariant within a population, but
+#'   need not be.} \item{\code{S_obs}}{Total number (not density) of wild and
+#'   hatchery-origin spawners.}
+#'   \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
+#'   observed spawner age frequencies (i.e., counts), where [min_age] is the
+#'   numeral age in years (total, not ocean age) of the youngest spawners.}
+#'   \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
+#'   \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
+#'   \item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data
+#'   whether the model should estimate p_HOS > 0. This is only required if model
+#'   == "IPM".} \item{\code{F_rate}}{Total harvest rate (proportion) of
+#'   natural-origin fish.} \item{\code{B_take_obs}}{Number of adults taken for
+#'   hatchery broodstock.} }
+#' @param fish_data_fwd Only if model == "IPM", optional data frame with the
+#'   following \code{colnames}, representing "forward" or "future" simulations.
+#'   Unlike \code{fish_data}, a given combination of population and year may
+#'   occur multiple times, perhaps to facilitate comparisons across scenarios or
+#'   "branches" with different inputs (e.g., harvest rate). In this case, all
+#'   branches are subjected to the same sequence of process errors in
+#'   recruitment and age structure. \describe{ \item{\code{pop}}{Numeric or
+#'   character population ID. All values must also appear in
+#'   \code{fish_data$pop}.} \item{\code{year}}{Integer variable giving the year
+#'   the fish spawned (i.e., the brood year). For each population in
+#'   \code{fish_data_fwd$pop}, the first year appearing in
+#'   \code{fish_data_fwd$year} must be one greater than the last year appearing
+#'   in \code{fish_data$year}, i.e.,
+#'   \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
+#'   max(fish_data$year[fish_data$pop==j]) + 1}.} \item{\code{A}}{Spawning
+#'   habitat size (either stream length or area). Will usually be time-invariant
+#'   within a population, but need not be.} \item{\code{F_rate}}{Total harvest
+#'   rate (proportion) of natural-origin fish.} \item{\code{B_rate}}{Total
+#'   broodstock removal rate (proportion) of natural-origin fish.}
+#'   \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.} }
+#' @param env_data Optional data frame whose variables are time-varying
+#'   environmental covariates, sequentially ordered with each row corresponding
+#'   to a unique year in fish_data.
 #' @param catch_data Only if model == "IPM_F", a data frame with numeric columns
-#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.
-#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.
-#' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not to treat the different populations as hierarchical rather than fixed/independent. Must be TRUE if model == "IPM_F".
-#' @param init A list of named lists of initial values to be passed to \code{stan}. If \code{NULL}, initial values will be automatically generated from the supplied data using \code{stan_init}. 
-#' @param pars A vector of character strings specifying parameters to monitor. If NULL, default values are used. If a non-default value is supplied, it is the user's responsibility to make sure the parameters requested appear in the model configuration specified.
-#' @param log_lik A logical indicator as to whether the pointwise log-likelihood should be returned for later analysis with `loo`. 
+#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating
+#'   whether the data are intended for an integrated or run-reconstruction model
+#'   or the integrated "harvest" model.
+#' @param life_cycle Character string indicating which life-cycle model to fit.
+#'   Available options are spawner-to-spawner (\code{"SS"}, the default) or
+#'   spawner-smolt-spawner (\code{"SMS"}).
+#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
+#'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
+#' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
+#'   to treat the different populations as hierarchical rather than
+#'   fixed/independent. Must be TRUE if model == "IPM_F".
+#' @param init A list of named lists of initial values to be passed to
+#'   \code{rstan::stan}. If \code{NULL}, initial values will be automatically generated
+#'   from the supplied data using \code{salmonIPM::stan_init}.
+#' @param pars A vector of character strings specifying parameters to monitor.
+#'   If NULL, default values are used. If a non-default value is supplied, it is
+#'   the user's responsibility to make sure the parameters requested appear in
+#'   the model configuration specified.
+#' @param log_lik A logical indicator as to whether the pointwise log-likelihood
+#'   should be returned for later analysis with \code{loo:loo}.
 #' @param chains A positive integer specifying the number of Markov chains.
-#' @param iter A positive integer specifying the number of iterations for each chain (including warmup).
-#' @param warmup A positive integer specifying the number of warmup (aka burnin) iterations per chain. If step-size adaptation is on (which it is by default), this also controls the number of iterations for which adaptation is run (and hence these warmup samples should not be used for inference). The number of warmup iterations should not be larger than \code{iter}
-#' @param thin A positive integer specifying the period for saving samples. The default is 1, which is usually the recommended value.
-#' @param cores Number of cores to use when executing the chains in parallel. Defaults to 3.
-#' @param ... Additional arguments to pass to \code{stan}. 
-#' #' 
-#' @return An object of class \code{stanfit} representing the fitted model. See \code{rstan::stan} for details.
-#' 
+#' @param iter A positive integer specifying the number of iterations for each
+#'   chain (including warmup).
+#' @param warmup A positive integer specifying the number of warmup (aka burnin)
+#'   iterations per chain. If step-size adaptation is on (which it is by
+#'   default), this also controls the number of iterations for which adaptation
+#'   is run (and hence these warmup samples should not be used for inference).
+#'   The number of warmup iterations should not be larger than \code{iter}
+#' @param thin A positive integer specifying the period for saving samples. The
+#'   default is 1, which is usually the recommended value.
+#' @param cores Number of cores to use when executing the chains in parallel.
+#'   Defaults to 3.
+#' @param ... Additional arguments to pass to \code{stan}.
+#' @return An object of class \code{stanfit} representing the fitted model. See
+#'   \code{rstan::stan} for details.
+#'
 #' @importFrom rstan stan
 #'
 #' @export
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, SR_fun = "BH",
+salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, life_cycle = "SS", SR_fun = "BH",
                       pool_pops = TRUE, init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
 {
   dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, model, SR_fun)

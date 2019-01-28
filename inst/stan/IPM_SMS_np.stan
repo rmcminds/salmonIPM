@@ -23,11 +23,11 @@ data {
   int<lower=1> SR_fun;                 # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;                      # total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];         # population identifier
-  int<lower=1,upper=N> year[N];        # brood year identifier
+  int<lower=1,upper=N> year[N];        # calendar year identifier
   int<lower=1> N_X_M;                  # number of spawner-smolt productivity covariates
-  matrix[max(year),N_X_M] X_M;         # brood-year spawner-smolt covariates (if none, use vector of zeros)
+  matrix[max(year),N_X_M] X_M;         # spawner-smolt covariates (if none, use vector of zeros)
   int<lower=1> N_X_MS;                 # number of SAR productivity covariates
-  matrix[max(year),N_X_MS] X_MS;       # brood-year SAR covariates (if none, use vector of ones)
+  matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of ones)
   int<lower=0,upper=max(pop)> N_pop_H; # number of populations with hatchery input
   int<lower=1,upper=max(pop)> which_pop_H[max(N_pop_H,1)]; # populations with hatchery input
   int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 

@@ -1,14 +1,22 @@
-#' Generate initial values for fitting either integrated or run-reconstruction spawner-recruit models in Stan.
+#' Generate initial values for fitting either integrated or run-reconstruction
+#' spawner-recruit models in Stan.
 #'
-#' @param data Named list of input data for fitting either an integrated or run-reconstruction spawner-recruit model in \code{stan}, as returned by \code{stan_data}.
+#' @param data Named list of input data for fitting either an integrated or
+#'   run-reconstruction spawner-recruit model in \code{stan}, as returned by
+#'   \code{stan_data}.
 #' @param chains A positive integer specifying the number of Markov chains.
-#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.
-#' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not to treat the different populations as hierarchical rather than fixed/independent. Must be TRUE if model == "IPM_F".
-#' 
+#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating
+#'   whether the data are intended for an integrated or run-reconstruction model
+#'   or the integrated "harvest" model.
+#' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
+#'   to treat the different populations as hierarchical rather than
+#'   fixed/independent. Must be TRUE if model == "IPM_F".
+#'
 #' @importFrom stats aggregate na.omit
-#' 
-#' @return A list with initial starting values for all of the parameters and states in the Stan model.
-#' 
+#'
+#' @return A list with initial starting values for all of the parameters and
+#'   states in the Stan model.
+#'
 #' @export
 stan_init <- function(data, chains, model, pool_pops = TRUE) 
 {

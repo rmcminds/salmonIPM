@@ -1,49 +1,82 @@
-#' Assemble input data for integrated or run-reconstruction spawner-recruit models.
+#' Assemble input data for integrated or run-reconstruction spawner-recruit
+#' models.
 #'
-#' @param fish_data Data frame that includes the following \code{colnames}, in no particular order except where noted:
-#' \describe{
-#' \item{\code{pop}}{Numeric or character population ID.}
-#' \item{\code{year}}{Integer variable giving the year the fish spawned (i.e., the brood year).}
-#' \item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-#' \item{\code{S_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
-#' \item{\code{n_age_minAge...n_age_maxAge}}{Multiple columns of observed spawner age frequencies (i.e., counts), where minAge (maxAge) is the numeral age in years (total, not ocean age) of the youngest (oldest) spawners.}
-#' \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
-#' \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
-#' \item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data whether the model should estimate p_HOS > 0. This is only required if model == "IPM".}
-#' \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish, only if model != "IPM_F".}
-#' \item{\code{B_take_obs}}{Number of adults taken for hatchery broodstock.}
-#' }
-#' @param fish_data_fwd Only if model == "IPM", optional data frame with the following \code{colnames}, representing "forward" or "future" simulations. Unlike \code{fish_data}, a given combination of population and year may occur multiple times, perhaps to facilitate comparisons across scenarios or "branches" with different inputs (e.g., harvest rate). In this case, all branches are subjected to the same sequence of process errors in recruitment and age structure. 
-#' \describe{
-#' \item{\code{pop}}{Numeric or character population ID. All values must also appear in \code{fish_data$pop}.}
-#' \item{\code{year}}{Integer variable giving the year the fish spawned (i.e., the brood year). For each population in \code{fish_data_fwd$pop}, the first year appearing in \code{fish_data_fwd$year} must be one greater than the last year appearing in \code{fish_data$year}, i.e., \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) == max(fish_data$year[fish_data$pop==j]) + 1}.}
-#' \item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-#' \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish.}
-#' \item{\code{B_rate}}{Total broodstock removal rate (proportion) of natural-origin fish.}
-#' \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.}
-#' }
-#' @param env_data Optional data frame whose variables are time-varying environmental covariates, sequentially ordered with each row corresponding to a unique year in \code{fish_data} (and \code{fish_data_fwd}, if not \code{NULL}).
+#' @param fish_data Data frame that includes the following \code{colnames}, in
+#'   no particular order except where noted: \describe{
+#'   \item{\code{pop}}{Numeric or character population ID.}
+#'   \item{\code{year}}{Integer variable giving the year the fish spawned (i.e.,
+#'   the brood year).}
+#'   \item{\code{A}}{Spawning habitat size (either stream length or area). Will
+#'   usually be time-invariant within a population, but need not be.}
+#'   \item{\code{S_obs}}{Total number (not density) of wild and hatchery-origin
+#'   spawners.}
+#'   \item{\code{n_age_minAge...n_age_maxAge}}{Multiple columns of observed
+#'   spawner age frequencies (i.e., counts), where minAge (maxAge) is the
+#'   numeral age in years (total, not ocean age) of the youngest (oldest)
+#'   spawners.}
+#'   \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
+#'   \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
+#'   \item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data
+#'   whether the model should estimate p_HOS > 0. This is only required if model
+#'   == "IPM".}
+#'   \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin
+#'   fish, only if model != "IPM_F".}
+#'   \item{\code{B_take_obs}}{Number of adults taken for hatchery broodstock.} }
+#' @param fish_data_fwd Only if model == "IPM", optional data frame with the
+#'   following \code{colnames}, representing "forward" or "future" simulations.
+#'   Unlike \code{fish_data}, a given combination of population and year may
+#'   occur multiple times, perhaps to facilitate comparisons across scenarios or
+#'   "branches" with different inputs (e.g., harvest rate). In this case, all
+#'   branches are subjected to the same sequence of process errors in
+#'   recruitment and age structure. \describe{ 
+#'   \item{\code{pop}}{Numeric or character population ID. All values must also
+#'   appear in \code{fish_data$pop}.}
+#'   \item{\code{year}}{Integer variable giving the year the fish spawned (i.e.,
+#'   the brood year). For each population in \code{fish_data_fwd$pop}, the first
+#'   year appearing in \code{fish_data_fwd$year} must be one greater than the
+#'   last year appearing in \code{fish_data$year}, i.e.,
+#'   \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
+#'   max(fish_data$year[fish_data$pop==j]) + 1}.}
+#'   \item{\code{A}}{Spawning habitat size (either stream length or area). Will
+#'   usually be time-invariant within a population, but need not be.}
+#'   \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin
+#'   fish.}
+#'   \item{\code{B_rate}}{Total broodstock removal rate (proportion) of
+#'   natural-origin fish.}
+#'   \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.} }
+#' @param env_data Optional data frame whose variables are time-varying
+#'   environmental covariates, sequentially ordered with each row corresponding
+#'   to a unique year in \code{fish_data} (and \code{fish_data_fwd}, if not
+#'   \code{NULL}).
 #' @param catch_data Only if model == "IPM_F", a data frame with numeric columns
-#' \describe{
-#' \item{\code{year}}{Year for fishery data. Must be identical to \code{unique(fish_data$year)}.}
-#' \item{\code{R_F_obs}}{Total recruits to the fishery.}
-#' \item{\code{C_obs}}{Total catch.}
-#' }
-#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.
-#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.
-#' 
-#' @return A named list that can be passed to \code{stan} as the \code{data} argument. 
-#' 
+#'   \describe{ 
+#'   \item{\code{year}}{Year for fishery data. Must be identical to
+#'   \code{unique(fish_data$year)}.}
+#'   \item{\code{R_F_obs}}{Total recruits to the fishery.}
+#'   \item{\code{C_obs}}{Total catch.} }
+#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating
+#'   whether the data are intended for an integrated or run-reconstruction model
+#'   or the integrated "harvest" model.
+#' @param life_cycle Character string indicating which life-cycle model to fit.
+#'   Available options are spawner-to-spawner (\code{"SS"}, the default) or
+#'   spawner-smolt-spawner (\code{"SMS"}).
+#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
+#'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
+#'
+#' @return A named list that can be passed to \code{stan} as the \code{data}
+#'   argument.
+#'
 #' @export
 
-stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, SR_fun = "BH")
+stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, 
+                      model, life_cycle = "SS", SR_fun = "BH")
 {
   fish_data <- as.data.frame(fish_data)
   
   if(!is.null(fish_data_fwd))
   {
-    if(model != "IPM")
-      stop("Argument fish_data_fwd can only be specified if model == 'IPM'.\n")
+    if(!(model == "IPM" & life_cycle == "SS"))
+      warning("Argument fish_data_fwd is ignored unless model == 'IPM' and life_cycle == 'SS'.\n")
     N_fwd <- nrow(fish_data_fwd)
     fish_data_fwd <- as.data.frame(fish_data_fwd)
     fish_data_fwd$pop <- factor(fish_data_fwd$pop, levels = levels(factor(fish_data$pop)))
