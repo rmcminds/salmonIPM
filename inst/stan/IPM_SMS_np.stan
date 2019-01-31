@@ -54,14 +54,14 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop;         # number of populations
   int<lower=1,upper=N> N_year;        # number of years
-  int<lower=2> ages[N_age];           # adult ages
+  int<lower=2> ocean_ages[N_age];     # ocean ages
   int<lower=1> pop_year_indx[N];      # index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[max(N_H,1)];  # total sample sizes for H/W frequencies
   
   N_pop = max(pop);
   N_year = max(year);
   for(a in 1:N_age)
-    ages[a] = max_age - N_age + a;
+    ocean_ages[a] = max_age - smolt_age - N_age + a;
   pop_year_indx[1] = 1;
   for(i in 1:N)
   {
@@ -102,15 +102,15 @@ transformed parameters {
   vector[N] S_H;                         # true total hatchery spawner abundance (can == 0)
   vector<lower=0>[N] S;                  # true total spawner abundance
   matrix[N_pop,N_age-1] gamma;           # population mean log ratio age distributions
-  matrix<lower=0,upper=1>[N,N_age] p;    # cohort age distributions
+  matrix<lower=0,upper=1>[N,N_age] p;    # true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    # true spawner age distributions
   vector[N] p_HOS_all;                   # true p_HOS in all years (can == 0)
   vector<lower=0>[N] M_hat;              # expected smolt abundance (not density) by brood year
   vector[N] epsilon_M;                   # process error in smolt abundance by brood year 
   vector<lower=0>[N] M0;                 # true smolt abundance (not density) by brood year
-  vector<lower=0>[N] M;                  # true smolt abundance (not density) by migration year
-  vector[N] epsilon_MS;                  # process error in SAR by brood year 
-  vector<lower=0>[N] s_MS;               # true SAR by brood year
+  vector<lower=0>[N] M;                  # true smolt abundance (not density) by outmigration year
+  vector[N] epsilon_MS;                  # process error in SAR by outmigration year 
+  vector<lower=0>[N] s_MS;               # true SAR by outmigration year
   vector<lower=0,upper=1>[N] B_rate_all; # true broodstock take rate in all years
   
   # Pad p_HOS and B_rate
@@ -157,7 +157,7 @@ transformed parameters {
     else
     {
       for(a in 1:N_age)
-        S_W_a[a] = M[i - ages[a] + smolt_age]*s_MS[i-ages[a]]*p[i-ages[a],a];
+        S_W_a[a] = M[i - ocean_ages[a]]*s_MS[i - ocean_ages[a]]*p[i - ocean_ages[a],a];
       for(a in 2:N_age)  # catch and broodstock removal (assumes no take of age 1)
         S_W_a[a] = S_W_a[a]*(1 - F_rate[i])*(1 - B_rate_all[i]);
       S_W[i] = sum(S_W_a);
@@ -180,8 +180,8 @@ transformed parameters {
       epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
     }
     epsilon_M[i] = dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i];
-    M0[i] = M_hat[i]*exp(epsilon_M[i]);  # smolts produced from this brood year
-    s_MS[i] = inv_logit(dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # SAR
+    M0[i] = M_hat[i]*exp(epsilon_M[i]);  # smolts produced from brood year i
+    s_MS[i] = inv_logit(dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
   }
 }
 
