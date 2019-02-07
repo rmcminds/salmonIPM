@@ -50,12 +50,14 @@
 #'   spawner-smolt-spawner (\code{"SMS"}).
 #' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
 #'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
+#' @param ages If model != "SS", a named list giving the fixed ages in years of
+#'   all subadult life stages.
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent. Must be TRUE if model == "IPM_F".
 #' @param init A list of named lists of initial values to be passed to
-#'   \code{rstan::stan}. If \code{NULL}, initial values will be automatically generated
-#'   from the supplied data using \code{salmonIPM::stan_init}.
+#'   \code{rstan::stan}. If \code{NULL}, initial values will be automatically
+#'   generated from the supplied data using \code{salmonIPM::stan_init}.
 #' @param pars A vector of character strings specifying parameters to monitor.
 #'   If NULL, default values are used. If a non-default value is supplied, it is
 #'   the user's responsibility to make sure the parameters requested appear in
@@ -81,10 +83,13 @@
 #' @importFrom rstan stan
 #'
 #' @export
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, life_cycle = "SS", SR_fun = "BH",
-                      pool_pops = TRUE, init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
+salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, pool_pops = TRUE, life_cycle = "SS", 
+                      SR_fun = "BH", ages = NULL, init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
 {
-  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, model, SR_fun)
+  stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
+  stan_path <- file.path(path.package("salmonIPM"), "stan")
+  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, stan_model, SR_fun)
+  
   if(is.null(pars))
     pars <- switch(model, 
                    IPM = switch(ifelse(pool_pops, "Y", "N"),
@@ -114,12 +119,8 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   
   if(log_lik == TRUE) { pars <- c(pars, "LL")}
   
-  stan_path <- file.path(path.package("salmonIPM"), "stan")
   
-  fit <- stan(file = switch(model,
-                            IPM = file.path(stan_path, ifelse(pool_pops, "IPM_SS_pp.stan", "IPM_SS_np.stan")),
-                            IPM_F = file.path(stan_path, ifelse(pool_pops, "IPM_SS_F_pp.stan", "")),
-                            RR = file.path(stan_path, ifelse(pool_pops, "SR_RR_pp.stan", "SR_RR_np.stan"))),
+  fit <- stan(file = stan_model,
               data = dat, 
               init = stan_init(dat, chains, model, pool_pops), 
               pars = pars,

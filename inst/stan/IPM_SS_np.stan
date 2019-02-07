@@ -149,8 +149,7 @@ transformed parameters {
       epsilon_R[i] = epsilon_R_z[i]*sigma[pop[i]]/sqrt(1 - rho[pop[i]]^2);
     else
       epsilon_R[i] = rho[pop[i]]*epsilon_R[i-1] + epsilon_R_z[i]*sigma[pop[i]];
-    epsilon_R[i] = dot_product(X[year[i],], beta[pop[i],]) + epsilon_R[i];
-    R[i] = R_hat[i]*exp(epsilon_R[i]);
+    R[i] = R_hat[i]*exp(dot_product(X[year[i],], beta[pop[i],]) + epsilon_R[i]);
   }
 }
 

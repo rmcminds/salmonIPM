@@ -179,8 +179,7 @@ transformed parameters {
       epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
       epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
     }
-    epsilon_M[i] = dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i];
-    M0[i] = M_hat[i]*exp(epsilon_M[i]);  # smolts produced from brood year i
+    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
     s_MS[i] = inv_logit(dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
   }
 }
@@ -217,8 +216,8 @@ model {
   to_vector(epsilon_p_z) ~ normal(0,1);
   
   # Process model
-  epsilon_M_z ~ normal(0,1);  # total smolts: M ~ lognormal(log(M_hat), sigma_M)
-  epsilon_MS_z ~ normal(0,1); # SAR: logit(s_MS) ~ lognormal(logit(s_MS_hat), sigma_MS)
+  epsilon_M_z ~ normal(0,1);  # total smolts: log(M) ~ normal(log(M_hat), sigma_M)
+  epsilon_MS_z ~ normal(0,1); # SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
   
   # Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  # observed smolts
