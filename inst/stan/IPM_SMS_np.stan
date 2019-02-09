@@ -27,14 +27,14 @@ data {
   int<lower=1> N_X_M;                  # number of spawner-smolt productivity covariates
   matrix[max(year),N_X_M] X_M;         # spawner-smolt covariates (if none, use vector of zeros)
   int<lower=1> N_X_MS;                 # number of SAR productivity covariates
-  matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of ones)
+  matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of zeros)
   int<lower=0,upper=max(pop)> N_pop_H; # number of populations with hatchery input
   int<lower=1,upper=max(pop)> which_pop_H[max(N_pop_H,1)]; # populations with hatchery input
   int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
+  vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
   int<lower=1,upper=N> N_M_obs;        # number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; # cases with non-missing smolt abundance obs
-  vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
   vector<lower=0>[N] M_obs;            # observed annual smolt abundance (not density)
   int<lower=1> smolt_age;              # smolt age
   int<lower=2> N_age;                  # number of adult age classes
@@ -79,6 +79,7 @@ parameters {
   matrix[N_pop,N_X_M] beta_M;                 # regression coefs for spawner-smolt productivity 
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
+  real<lower=0,upper=1> mu_MS;                # mean SAR
   matrix[N_pop,N_X_MS] beta_MS;               # regression coefs for SAR 
   vector<lower=-1,upper=1>[N_pop] rho_MS;     # AR(1) coefs for SAR
   vector<lower=0>[N_pop] sigma_MS;            # SAR process error SDs
@@ -180,7 +181,7 @@ transformed parameters {
       epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
     }
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
-    s_MS[i] = inv_logit(dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
+    s_MS[i] = inv_logit(logit(mu_MS) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
   }
 }
 

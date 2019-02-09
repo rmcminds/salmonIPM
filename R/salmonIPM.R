@@ -38,23 +38,27 @@
 #'   rate (proportion) of natural-origin fish.} \item{\code{B_rate}}{Total
 #'   broodstock removal rate (proportion) of natural-origin fish.}
 #'   \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.} }
-#' @param env_data Optional data frame whose variables are time-varying
-#'   environmental covariates, sequentially ordered with each row corresponding
-#'   to a unique year in fish_data.
-#' @param catch_data Only if model == "IPM_F", a data frame with numeric columns
-#' @param model One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating
-#'   whether the data are intended for an integrated or run-reconstruction model
-#'   or the integrated "harvest" model.
+#' @param env_data Optional data frame or named list of data frames whose
+#'   variables are time-varying environmental covariates, sequentially ordered
+#'   with each row corresponding to a unique year in fish_data. If a named list,
+#'   element names correspond to stage- or transition-specific covariate
+#'   matrices defined in the Stan model being used. (This is required if
+#'   \code{life_cycle != "SS"}.)
+#' @param catch_data Only if \code{model == "IPM_F"}, a data frame with numeric
+#'   columns
+#' @param ages If \code{life_cycle != "SS"}, a named list giving the fixed ages
+#'   in years of all subadult life stages.
+#' @param model Either \code{"IPM"} or \code{"RR"}, indicating whether the data
+#'   are intended for an integrated or run-reconstruction model.
 #' @param life_cycle Character string indicating which life-cycle model to fit.
-#'   Available options are spawner-to-spawner (\code{"SS"}, the default) or
+#'   Currently available options are spawner-to-spawner (\code{"SS"}, the
+#'   default), spawner-to-spawner "harvest model" (\code{"SS_F"}), or
 #'   spawner-smolt-spawner (\code{"SMS"}).
-#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
-#'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
-#' @param ages If model != "SS", a named list giving the fixed ages in years of
-#'   all subadult life stages.
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent. Must be TRUE if model == "IPM_F".
+#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
+#'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
 #' @param init A list of named lists of initial values to be passed to
 #'   \code{rstan::stan}. If \code{NULL}, initial values will be automatically
 #'   generated from the supplied data using \code{salmonIPM::stan_init}.
@@ -83,46 +87,48 @@
 #' @importFrom rstan stan
 #'
 #' @export
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, model, pool_pops = TRUE, life_cycle = "SS", 
-                      SR_fun = "BH", ages = NULL, init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
+
+salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, ages = NULL, 
+                      model, life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH", 
+                      init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
 {
   stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
-  stan_path <- file.path(path.package("salmonIPM"), "stan")
-  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, stan_model, SR_fun)
+  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, ages, stan_model, SR_fun)
   
   if(is.null(pars))
-    pars <- switch(model, 
-                   IPM = switch(ifelse(pool_pops, "Y", "N"),
-                                Y = c("mu_alpha","sigma_alpha","alpha",
-                                      "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
-                                      "beta_phi","sigma_phi","rho_phi","phi",
-                                      "mu_p","sigma_gamma","R_gamma","gamma",
-                                      "sigma_p","R_p","p",
-                                      "p_HOS","B_rate_all",
-                                      "sigma","tau","S","R","q"),
-                                N = c("alpha","Rmax","beta","rho","sigma",
-                                      "mu_p","sigma_p","R_p","p",
-                                      "p_HOS","B_rate_all","tau","S","R","q")),
-                   IPM_F = c("mu_alpha","sigma_alpha","alpha",
-                                      "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
-                                      "beta_phi","sigma_phi","rho_phi","phi",
-                                      "mu_p","sigma_gamma","R_gamma","gamma",
-                                      "sigma_p","R_p","p",
-                                      "p_HOS","c1","c2","F_rate","sigma_C","B_rate_all",
-                                      "sigma","tau","S","R","q"),
-                   RR = switch(ifelse(pool_pops, "Y", "N"),
-                               Y = c("mu_alpha","sigma_alpha","alpha",
-                                     "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
-                                     "rho_phi","sigma_phi","phi","sigma",
-                                     "R_hat","S_sim","R_sim"),
-                               N = c("alpha","Rmax","rho","sigma","R_hat","S_sim","R_sim")))
+    pars <- switch(stan_model, 
+                   IPM_SS_np = c("alpha","Rmax","beta","rho","sigma",
+                                 "mu_p","sigma_p","R_p","p",
+                                 "p_HOS","B_rate_all","tau","S","R","q"),
+                   IPM_SS_pp = c("mu_alpha","sigma_alpha","alpha",
+                                 "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
+                                 "beta_phi","sigma_phi","rho_phi","phi",
+                                 "mu_p","sigma_gamma","R_gamma","gamma",
+                                 "sigma_p","R_p","p",
+                                 "p_HOS","B_rate_all",
+                                 "sigma","tau","S","R","q"),
+                   IPM_SS_F_pp = c("mu_alpha","sigma_alpha","alpha",
+                                   "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
+                                   "beta_phi","sigma_phi","rho_phi","phi",
+                                   "mu_p","sigma_gamma","R_gamma","gamma",
+                                   "sigma_p","R_p","p",
+                             "p_HOS","c1","c2","F_rate","sigma_C","B_rate_all",
+                             "sigma","tau","S","R","q"),
+                   IPM_SMS_np = c("alpha","Rmax","beta_M","rho_M","sigma_M",
+                                  "mu_MS","beta_MS","rho_MS","sigma_MS",
+                                  "mu_p","sigma_p","R_p","p","p_HOS","B_rate_all",
+                                  "tau_M","tau_S","S","M","s_MS","q"),
+                   RR_SS_np = c("alpha","Rmax","rho","sigma","R_hat","S_sim","R_sim"),
+                   RR_SS_pp = c("mu_alpha","sigma_alpha","alpha",
+                                "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
+                                "rho_phi","sigma_phi","phi","sigma",
+                                "R_hat","S_sim","R_sim"))
   
-  if(log_lik == TRUE) { pars <- c(pars, "LL")}
+  if(log_lik) pars <- c(pars, "LL")
   
-  
-  fit <- stan(file = stan_model,
+  fit <- stan(file = file.path(path.package("salmonIPM"), "stan", stan_model),
               data = dat, 
-              init = stan_init(dat, chains, model, pool_pops), 
+              init = stan_init(dat, stan_model, chains), 
               pars = pars,
               chains = chains, iter = iter, warmup = warmup, thin = thin, 
               cores = cores, ...)
