@@ -19,7 +19,7 @@
 #'   required if model == "IPM".} \item{\code{F_rate}}{Total harvest rate
 #'   (proportion) of natural-origin fish, only if model != "IPM_F".}
 #'   \item{\code{B_take_obs}}{Number of adults taken for hatchery broodstock.} }
-#' @param fish_data_fwd Only if model == "IPM", optional data frame with the
+#' @param fish_data_fwd Only if model == "IPM", life_cycle == "SS", and pool_pops == TRUE, optional data frame with the
 #'   following \code{colnames}, representing "forward" or "future" simulations.
 #'   Unlike \code{fish_data}, a given combination of population and year may
 #'   occur multiple times, perhaps to facilitate comparisons across scenarios or
@@ -106,13 +106,14 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   
   if(is.null(env_data))
     env_data <- switch(life_cycle,
-                       SS = matrix(0, max(fish_data$year, fish_data_fwd$year)),
-                       SMS = list(M = matrix(0, max(fish_data$year)),
-                                  MS = matrix(0, max(fish_data$year))))
+                       SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 1)),
+                       SMS = list(M = matrix(0, max(fish_data$year), 1),
+                                  MS = matrix(0, max(fish_data$year), 1)))
+  if(is.matrix(env_data) | is.data.frame(env_data)) env_data <- list(env_data)
 
-  if(any(sapply(env_data), nrow) != max(fish_data$year, fish_data_fwd$year)) 
+  if(any(sapply(env_data, nrow) != max(fish_data$year, fish_data_fwd$year)))
     stop("Length of environmental time series does not equal number of brood years.\n")
-  
+
   if(any(sapply(env_data, is.na)))
     stop("Missing values are not allowed in environmental covariates.\n")
   
@@ -140,7 +141,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))), "\n"))
   
   if(!stan_model %in% c("IPM_SS_np", "IPM_SS_pp","IPM_SS_F_pp","IPM_SMS_np", "RR_SS_np","RR_SS_pp"))
-    stop(paste("Stan model", stan_model, "does not exist.\n")
+    stop(paste("Stan model", stan_model, "does not exist.\n"))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp"))
   {
@@ -149,8 +150,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   N = nrow(fish_data),
                   pop = pop, 
                   year = year,
-                  N_X = ncol(env_data), 
-                  X = as.matrix(env_data),
+                  N_X = ncol(env_data[[1]]), 
+                  X = as.matrix(env_data[[1]]),
                   N_pop_H = length(unique(pop[fit_p_HOS])),
                   which_pop_H = array(unique(pop[fit_p_HOS]), dim = length(unique(pop[fit_p_HOS]))),
                   N_S_obs = sum(!is.na(S_obs)),
@@ -202,8 +203,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   N = nrow(fish_data),
                   pop = pop, 
                   year = year,
-                  N_X = ncol(env_data), 
-                  X = as.matrix(env_data),
+                  N_X = ncol(env_data[[1]]), 
+                  X = as.matrix(env_data[[1]]),
                   N_pop_H = length(unique(pop[fit_p_HOS])),
                   which_pop_H = array(unique(pop[fit_p_HOS]), dim = length(unique(pop[fit_p_HOS]))),
                   N_S_obs = sum(!is.na(S_obs)),

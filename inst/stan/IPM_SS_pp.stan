@@ -170,7 +170,7 @@ parameters {
 transformed parameters {
   vector<lower=0>[N_pop] alpha;          # intrinsic productivity 
   vector<lower=0>[N_pop] Rmax;           # asymptotic recruitment 
-  vector<lower=0>[N_year_all] phi;       # log brood year productivity anomalies
+  vector[N_year_all] phi;                # log brood year productivity anomalies
   vector<lower=0>[N] S_W;                # true total wild spawner abundance
   vector[N] S_H;                         # true total hatchery spawner abundance (can == 0)
   vector<lower=0>[N] S;                  # true total spawner abundance
@@ -186,19 +186,20 @@ transformed parameters {
   # Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
     matrix[2,2] L_alphaRmax;       # temp variable: Cholesky factor of corr matrix of log(alpha), log(Rmax)
-    matrix[N_pop,2] log_alphaRmax; # temp variable: matrix of [log(alpha), log(Rmax)]
+    matrix[N_pop,2] epsilon_alphaRmax_z; # temp variable [log(alpha), log(Rmax)] random effects (z-scored)
+    matrix[N_pop,2] epsilon_alphaRmax; # temp variable: [log(alpha), log(Rmax)] random effects
     vector[2] sigma_alphaRmax;     # temp variable: SD vector of [log(alpha), log(Rmax)]
     
     L_alphaRmax[1,1] = 1;
     L_alphaRmax[2,1] = rho_alphaRmax;
     L_alphaRmax[1,2] = 0;
     L_alphaRmax[2,2] = sqrt(1 - rho_alphaRmax^2);
-    log_alphaRmax = append_col(epsilon_alpha_z, epsilon_Rmax_z);
     sigma_alphaRmax[1] = sigma_alpha;
     sigma_alphaRmax[2] = sigma_Rmax;
-    log_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * log_alphaRmax')';
-    alpha = exp(mu_alpha + col(alphaRmax,1));
-    Rmax = exp(mu_Rmax + col(alphaRmax,2));
+    epsilon_alphaRmax_z = append_col(epsilon_alpha_z, epsilon_Rmax_z);
+    epsilon_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * epsilon_alphaRmax_z')';
+    alpha = exp(mu_alpha + col(epsilon_alphaRmax,1));
+    Rmax = exp(mu_Rmax + col(epsilon_alphaRmax,2));
   }
   
   # AR(1) model for phi
@@ -337,7 +338,7 @@ generated quantities {
   for(i in 1:N_fwd)
   {
     vector[N_age-1] alr_p_fwd;   # temp variable: alr(p_fwd[i,])'
-    row_vector[N_age] S_W_fwd;   # temp variable: true wild spawners by age
+    row_vector[N_age] S_W_a_fwd;   # temp variable: true wild spawners by age
 
     # Inverse log-ratio transform of cohort age distn
     alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
@@ -348,20 +349,20 @@ generated quantities {
       if(fwd_init_indx[i,a] != 0)
       {
         # Use estimated values from previous cohorts
-        S_W_fwd[a] = R[fwd_init_indx[i,a]]*p[fwd_init_indx[i,a],a];
+        S_W_a_fwd[a] = R[fwd_init_indx[i,a]]*p[fwd_init_indx[i,a],a];
       }
       else
       {
-        S_W_fwd[a] = R_fwd[i-ages[a]]*p_fwd[i-ages[a],a];
+        S_W_a_fwd[a] = R_fwd[i-ages[a]]*p_fwd[i-ages[a],a];
       }
     }
 
     for(a in 2:N_age)  # catch and broodstock removal (assumes no take of age 1)
-      S_W_fwd[a] = S_W_fwd[a]*(1 - F_rate_fwd[i])*(1 - B_rate_fwd[i]);
+      S_W_a_fwd[a] = S_W_a_fwd[a]*(1 - F_rate_fwd[i])*(1 - B_rate_fwd[i]);
 
-    S_W_fwd[i] = sum(S_W_fwd);
+    S_W_fwd[i] = sum(S_W_a_fwd);
     S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
-    q_fwd[i,] = S_W_fwd/S_W_fwd[i];
+    q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
     S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
     R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
     R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);

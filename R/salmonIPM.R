@@ -18,17 +18,17 @@
 #'   == "IPM".} \item{\code{F_rate}}{Total harvest rate (proportion) of
 #'   natural-origin fish.} \item{\code{B_take_obs}}{Number of adults taken for
 #'   hatchery broodstock.} }
-#' @param fish_data_fwd Only if model == "IPM", optional data frame with the
-#'   following \code{colnames}, representing "forward" or "future" simulations.
-#'   Unlike \code{fish_data}, a given combination of population and year may
-#'   occur multiple times, perhaps to facilitate comparisons across scenarios or
-#'   "branches" with different inputs (e.g., harvest rate). In this case, all
-#'   branches are subjected to the same sequence of process errors in
-#'   recruitment and age structure. \describe{ \item{\code{pop}}{Numeric or
-#'   character population ID. All values must also appear in
-#'   \code{fish_data$pop}.} \item{\code{year}}{Integer variable giving the year
-#'   the fish spawned (i.e., the brood year). For each population in
-#'   \code{fish_data_fwd$pop}, the first year appearing in
+#' @param fish_data_fwd Only if model == "IPM", life_cycle == "SS", and
+#'   pool_pops == TRUE, optional data frame with the following \code{colnames},
+#'   representing "forward" or "future" simulations. Unlike \code{fish_data}, a
+#'   given combination of population and year may occur multiple times, perhaps
+#'   to facilitate comparisons across scenarios or "branches" with different
+#'   inputs (e.g., harvest rate). In this case, all branches are subjected to
+#'   the same sequence of process errors in recruitment and age structure.
+#'   \describe{ \item{\code{pop}}{Numeric or character population ID. All values
+#'   must also appear in \code{fish_data$pop}.} \item{\code{year}}{Integer
+#'   variable giving the year the fish spawned (i.e., the brood year). For each
+#'   population in \code{fish_data_fwd$pop}, the first year appearing in
 #'   \code{fish_data_fwd$year} must be one greater than the last year appearing
 #'   in \code{fish_data$year}, i.e.,
 #'   \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
@@ -57,6 +57,10 @@
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent. Must be TRUE if model == "IPM_F".
+#' @param stan_model Character string giving the name of the Stan model being
+#'   fit (".stan" filetype extension is not included). If provided,
+#'   \code{"stan_model"} overrides \code{"model"}, \code{"life_cycle"}, and
+#'   \code{"pool_pops"}.
 #' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
 #'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
 #' @param init A list of named lists of initial values to be passed to
@@ -89,10 +93,18 @@
 #' @export
 
 salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, ages = NULL, 
-                      model, life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH", 
+                      model, life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", 
                       init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
 {
-  stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
+  if(is.null(stan_model)) 
+  {
+    stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
+  } else {
+    mlp <- strsplit(stan_model, "_")[[1]]
+    model <- mlp[1]
+    life_cycle <- mlp[2]
+    pool_pops <- mlp[3]
+  }
   dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, ages, stan_model, SR_fun)
   
   if(is.null(pars))
@@ -126,7 +138,7 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   
   if(log_lik) pars <- c(pars, "LL")
   
-  fit <- stan(file = file.path(path.package("salmonIPM"), "stan", stan_model),
+  fit <- stan(file = file.path(path.package("salmonIPM"), "stan", paste0(stan_model, ".stan")),
               data = dat, 
               init = stan_init(dat, stan_model, chains), 
               pars = pars,
