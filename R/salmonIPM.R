@@ -7,7 +7,8 @@
 #'   the brood year).} \item{\code{A}}{Spawning habitat size (either stream
 #'   length or area). Will usually be time-invariant within a population, but
 #'   need not be.} \item{\code{S_obs}}{Total number (not density) of wild and
-#'   hatchery-origin spawners.}
+#'   hatchery-origin spawners.} \item{\code{M_obs}}{Total number of wild-origin
+#'   smolts (only needed for models including smolt stage).}
 #'   \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
 #'   observed spawner age frequencies (i.e., counts), where [min_age] is the
 #'   numeral age in years (total, not ocean age) of the youngest spawners.}
