@@ -2,13 +2,29 @@
 % Please edit documentation in R/IPM_adult_sim.R
 \name{IPM_adult_sim}
 \alias{IPM_adult_sim}
-\title{Simulate data under adult-to-adult integrated population model}
+\title{Simulate data under an integrated population model}
 \usage{
 IPM_adult_sim(pars, pop, year, X = NULL, N_age, max_age, A, F_rate,
   B_rate, SR_func = "BH", n_age_obs, n_HW_obs)
 }
 \arguments{
-\item{pars}{Model parameters to be used for simulations.}
+\item{pars}{Named list of (hyper-) parameters to be used for simulations:
+\describe{\item{\code{mu_alpha}}{Hyper-mean of log intrinsic productivity}
+\item{\code{sigma_alpha}}{Hyper-SD of log intrinsic productivity}
+\item{\code{mu_Rmax}}{Hyper-mean of log asymptotic recruitment}
+\item{\code{sigma_Rmax}}{Hyper-SD of log asymptotic recruitment}
+\item{\code{rho_alphaRmax}}{Correlation between log(alpha) and log(Rmax)}
+\item{\code{beta_phi}}{Vector of regression coefficients for log
+productivity anomalies} \item{\code{rho_phi}}{AR(1) coefficient for log
+productivity anomalies} \item{\code{sigma_phi}}{Hyper-SD of brood year log
+productivity anomalies} \item{\code{sigma}}{Unique recruitment process
+error SD} \item{\code{mu_p}}{Among-population mean simplex of age
+distributions} \item{\code{sigma_gamma}}{Vector of among-population SDs of
+mean log-ratio age distributions} \item{\code{R_gamma}}{Among-population
+correlation matrix of mean log-ratio age distributions}
+\item{\code{sigma_gamma}}{Vector of SDs of log-ratio cohort age
+distributions} \item{\code{R_gamma}}{Correlation matrix of cohort log-ratio
+age distributions} \item{\code{S_init}}{}   }}
 
 \item{pop}{Population ID.}
 
@@ -26,15 +42,18 @@ IPM_adult_sim(pars, pop, year, X = NULL, N_age, max_age, A, F_rate,
 
 \item{B_rate}{Broodstock take rate.}
 
-\item{SR_func}{Character code for the type of stocl-recruit model to fit. At present, only 'BH' for "Beverton-Holt' is allowed.}
+\item{SR_func}{Character code for the type of stock-recruit model to fit. At
+present, only 'BH' for "Beverton-Holt' is allowed.}
 
-\item{n_age_obs}{Number of adults for age comp.}
+\item{n_age_obs}{Number of adults sampled for age composition.}
 
-\item{n_HW_obs}{Number of adults for H vs W origin.}
+\item{n_HW_obs}{Number of adults sampled for H vs W origin.}
 }
 \value{
-A list with initial starting values for all of the parameters and states in the Stan model.
+A list with initial starting values for all of the parameters and
+  states in the Stan model.
 }
 \description{
-\code{IPM_adult_sim} simulates initial values for parameters and states in Stan.
+\code{IPM_adult_sim} simulates initial values for parameters and states in
+Stan.
 }
