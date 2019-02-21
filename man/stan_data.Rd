@@ -2,52 +2,80 @@
 % Please edit documentation in R/stan_data.R
 \name{stan_data}
 \alias{stan_data}
-\title{Assemble input data for integrated or run-reconstruction spawner-recruit models.}
+\title{Assemble input data for integrated or run-reconstruction spawner-recruit
+models.}
 \usage{
 stan_data(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  catch_data = NULL, model, SR_fun = "BH")
+  catch_data = NULL, ages = NULL, stan_model, SR_fun = "BH")
 }
 \arguments{
-\item{fish_data}{Data frame that includes the following \code{colnames}, in no particular order except where noted:
-\describe{
+\item{fish_data}{Data frame that includes the following \code{colnames}, in
+no particular order except where noted: \describe{
 \item{\code{pop}}{Numeric or character population ID.}
-\item{\code{year}}{Integer variable giving the year the fish spawned (i.e., the brood year).}
-\item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-\item{\code{S_tot_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
-\item{\code{n_age_minAge...n_age_maxAge}}{Multiple columns of observed spawner age frequencies (i.e., counts), where minAge (maxAge) is the numeral age in years (total, not ocean age) of the youngest (oldest) spawners.}
+\item{\code{year}}{Numeric variable giving the year the fish spawned (i.e.,
+the brood year).} \item{\code{A}}{Spawning habitat size (either stream
+length or area). Will usually be time-invariant within a population, but
+need not be.} \item{\code{S_obs}}{Total number (not density) of wild and
+hatchery-origin spawners.} \item{\code{M_obs}}{Total number of wild-origin
+smolts (only needed for models including smolt stage).}
+\item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
+observed spawner age frequencies (i.e., counts), where [min_age] is the
+numeral age in years (total, not ocean age) of the youngest spawners.}
 \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
 \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
-\item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data whether the model should estimate p_HOS > 0. This is only required if model == "IPM".}
-\item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish, only if model != "IPM_F".}
-\item{\code{B_take_obs}}{Number of adults taken for hatchery broodstock.}
-}}
+\item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data
+whether the model should estimate p_HOS > 0. This is only required if model
+== "IPM".} \item{\code{F_rate}}{Total harvest rate (proportion) of
+natural-origin fish.} \item{\code{B_take_obs}}{Number of adults taken for
+hatchery broodstock.} }}
 
-\item{fish_data_fwd}{Only if model == "IPM", optional data frame with the following \code{colnames}, representing "forward" or "future" simulations. Unlike \code{fish_data}, a given combination of population and year may occur multiple times, perhaps to facilitate comparisons across scenarios or "branches" with different inputs (e.g., harvest rate). In this case, all branches are subjected to the same sequence of process errors in recruitment and age structure. 
-\describe{
-\item{\code{pop}}{Numeric or character population ID. All values must also appear in \code{fish_data$pop}.}
-\item{\code{year}}{Integer variable giving the year the fish spawned (i.e., the brood year). For each population in \code{fish_data_fwd$pop}, the first year appearing in \code{fish_data_fwd$year} must be one greater than the last year appearing in \code{fish_data$year}, i.e., \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) == max(fish_data$year[fish_data$pop==j]) + 1}.}
-\item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-\item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish.}
-\item{\code{B_rate}}{Total broodstock removal rate (proportion) of natural-origin fish.}
-\item{\code{p_HOS}}{Proportion of hatchery-origin spawners.}
-}}
+\item{fish_data_fwd}{Only if model == "IPM", life_cycle == "SS", and pool_pops == TRUE, optional data frame with the
+following \code{colnames}, representing "forward" or "future" simulations.
+Unlike \code{fish_data}, a given combination of population and year may
+occur multiple times, perhaps to facilitate comparisons across scenarios or
+"branches" with different inputs (e.g., harvest rate). In this case, all
+branches are subjected to the same sequence of process errors in
+recruitment and age structure. \describe{ \item{\code{pop}}{Numeric or
+character population ID. All values must also appear in
+\code{fish_data$pop}.} \item{\code{year}}{Integer variable giving the year
+the fish spawned (i.e., the brood year). For each population in
+\code{fish_data_fwd$pop}, the first year appearing in
+\code{fish_data_fwd$year} must be one greater than the last year appearing
+in \code{fish_data$year}, i.e.,
+\code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
+max(fish_data$year[fish_data$pop==j]) + 1}.} \item{\code{A}}{Spawning
+habitat size (either stream length or area). Will usually be time-invariant
+within a population, but need not be.} \item{\code{F_rate}}{Total harvest
+rate (proportion) of natural-origin fish.} \item{\code{B_rate}}{Total
+broodstock removal rate (proportion) of natural-origin fish.}
+\item{\code{p_HOS}}{Proportion of hatchery-origin spawners.} }}
 
-\item{env_data}{Optional data frame whose variables are time-varying environmental covariates, sequentially ordered with each row corresponding to a unique year in \code{fish_data} (and \code{fish_data_fwd}, if not \code{NULL}).}
+\item{env_data}{Optional data frame or named list of data frames whose
+variables are time-varying environmental covariates, sequentially ordered
+with each row corresponding to a unique year in fish_data. If a named list,
+element names correspond to stage- or transition-specific covariate
+matrices defined in the Stan model being used. (This is required for
+multi-stage models.)}
 
 \item{catch_data}{Only if model == "IPM_F", a data frame with numeric columns
-\describe{
-\item{\code{year}}{Year for fishery data. Must be identical to \code{unique(fish_data$year)}.}
-\item{\code{R_F_obs}}{Total recruits to the fishery.}
-\item{\code{C_obs}}{Total catch.}
-}}
+\describe{ \item{\code{year}}{Year for fishery data. Must be identical to
+\code{unique(fish_data$year)}.} \item{\code{R_F_obs}}{Total recruits to the
+fishery.} \item{\code{C_obs}}{Total catch.} }}
 
-\item{model}{One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.}
+\item{ages}{For multi-stage models, a named list giving the fixed ages in
+years of all subadult life stages.}
 
-\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"}, indicating which spawner-recruit function to fit.}
+\item{stan_model}{Character string giving the name of the Stan model being
+fit (".stan" filetype extension is not included).}
+
+\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or
+\code{"Ricker"}, indicating which spawner-recruit function to fit.}
 }
 \value{
-A named list that can be passed to \code{stan} as the \code{data} argument.
+A named list that can be passed to \code{stan} as the \code{data}
+  argument.
 }
 \description{
-Assemble input data for integrated or run-reconstruction spawner-recruit models.
+Assemble input data for integrated or run-reconstruction spawner-recruit
+models.
 }

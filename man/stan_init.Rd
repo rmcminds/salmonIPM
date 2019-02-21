@@ -2,22 +2,26 @@
 % Please edit documentation in R/stan_init.r
 \name{stan_init}
 \alias{stan_init}
-\title{Generate initial values for fitting either integrated or run-reconstruction spawner-recruit models in Stan.}
+\title{Generate initial values for fitting either integrated or run-reconstruction
+spawner-recruit models in Stan.}
 \usage{
-stan_init(data, chains, model, pool_pops = TRUE)
+stan_init(data, stan_model, chains)
 }
 \arguments{
-\item{data}{Named list of input data for fitting either an integrated or run-reconstruction spawner-recruit model in \code{stan}, as returned by \code{stan_data}.}
+\item{data}{Named list of input data for fitting either an integrated or
+run-reconstruction spawner-recruit model in \code{stan}, as returned by
+\code{stan_data}.}
+
+\item{stan_model}{Character string giving the name of the Stan model being
+fit (".stan" filetype extension is not included).}
 
 \item{chains}{A positive integer specifying the number of Markov chains.}
-
-\item{model}{One of \code{"IPM"}, \code{"RR"}, or \code{"IPM_F"}, indicating whether the data are intended for an integrated or run-reconstruction model or the integrated "harvest" model.}
-
-\item{pool_pops}{Logical, with default \code{TRUE}, indicating whether or not to treat the different populations as hierarchical rather than fixed/independent. Must be TRUE if model == "IPM_F".}
 }
 \value{
-A list with initial starting values for all of the parameters and states in the Stan model.
+A list with initial starting values for all of the parameters and
+  states in the Stan model.
 }
 \description{
-Generate initial values for fitting either integrated or run-reconstruction spawner-recruit models in Stan.
+Generate initial values for fitting either integrated or run-reconstruction
+spawner-recruit models in Stan.
 }
