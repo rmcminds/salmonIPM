@@ -158,7 +158,7 @@ stan_init <- function(data, stan_model, chains)
                mu_p = mu_p,
                sigma_p = matrix(runif(max(pop)*(N_age-1),0.5,1), max(pop), N_age-1),
                epsilon_p_z = epsilon_p_z,
-               M_init = rep(median(M_obs_noNA), smolt_age*max(pop)),
+               M_init = rep(median(M_obs), smolt_age*max(pop)),
                S_init = rep(median(S_obs_noNA), max_age*max(pop)),
                q_init = matrix(colMeans(q_obs), max_age*max(pop), N_age, byrow = T),
                p_HOS = p_HOS_obs,
