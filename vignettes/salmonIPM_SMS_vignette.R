@@ -20,7 +20,7 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 5, sigma_alpha = 1, mu_Rmax = 9, sigma
 # Fit model
 ipm_fit <- salmonIPM(fish_data = sim_out$sim_dat, ages = list(M = 2), stan_model = "IPM_SMS_np", 
                      chains = 3, iter = 1500, warmup = 500, 
-                     control = list(adapt_delta = 0.95, max_treedepth = 13))
+                     control = list(adapt_delta = 0.99))
 
 print(ipm_fit, pars = c("p","p_HOS","B_rate_all","S","M","s_MS","q"), include = FALSE)
 launch_shinystan(ipm_fit)
