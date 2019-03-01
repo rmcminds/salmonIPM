@@ -31,11 +31,12 @@ data {
   vector<lower=0>[N] M_obs;            # observed annual smolt abundance (not density)
   int<lower=2> N_smolt_age;            # number of smolt age classes
   int<lower=2> max_smolt_age;          # maximum smolt age
-  matrix<lower=0>[N,N_smolt_age] n_smolt_age_obs;  # observed smolt age frequencies (all zero row = NA)  
+  matrix<lower=0>[N,N_smolt_age] n_smolt_age_obs; # observed smolt age frequencies (all zero row = NA)  
   int<lower=1> N_X_MS;                 # number of SAR productivity covariates
   matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of zeros)
   int<lower=2> N_ocean_age;            # number of ocean age classes
   int<lower=2> max_ocean_age;          # maximum ocean age
+  matrix<lower=0>[N,N_ocean_age] n_ocean_age_obs; # observed ocean age frequencies (all zero row = NA)  
   int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
