@@ -95,6 +95,9 @@ parameters {
   matrix<lower=0>[N_pop,N_smolt_age-1] sigma_p_M; # log-ratio cohort smolt age distribution SDs
   cholesky_factor_corr[N_smolt_age-1] L_p_M[N_pop]; # Cholesky-factored corr matrices of log-ratio smolt age distns
   matrix[N,N_smolt_age-1] epsilon_p_M_z;      # log-ratio cohort smolt age distn errors (Z-scored)
+  vector<lower=0>[max_smolt_age*N_pop] M_init; # true smolt abundance in years 1:max_smolt_age
+  simplex[N_smolt_age] q_M_init[max_smolt_age*N_pop]; # true smolt age distns in years 1:max_smolt_age
+  vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
   matrix<lower=0,upper=1>[N_pop,N_smolt_age] mu_MS; # mean SAR for each smolt age
   matrix[N_pop,N_X_MS] beta_MS;               # regression coefs for SAR
   vector<lower=-1,upper=1>[N_pop,N_smolt_age] rho_MS; # AR(1) coefs of SAR for each smolt age
@@ -105,14 +108,11 @@ parameters {
   matrix<lower=0>[N_pop,N_smolt_age*(N_ocean_age-1)] sigma_p_MS; # log-ratio ocean age SDs for each smolt age
   cholesky_factor_corr[N_smolt_age*(N_ocean_age-1)] L_p_MS[N_pop]; # Cholesky-factored corr matrices of log-ratio ocean age
   matrix[N,N_smolt_age*(N_ocean_age-1)] epsilon_p_MS_z; # log-ratio ocean age errors (Z-scored)
-  vector<lower=0>[max_smolt_age*N_pop] M_init; # true smolt abundance in years 1:max_smolt_age
-  simplex[N_smolt_age] q_M_init[max_smolt_age*N_pop]; # true smolt age distns in years 1:max_smolt_age
   vector<lower=0>[max_age*N_pop] S_init;      # true total spawner abundance in years 1:max_age
   simplex[N_age] q_init[max_age*N_pop];       # true wild spawner age distns in years 1:max_age
+  vector<lower=0>[N_pop] tau_S;               # spawner observation error SDs
   vector<lower=0,upper=1>[max(N_H,1)] p_HOS;  # true p_HOS in years which_H
   vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
-  vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
-  vector<lower=0>[N_pop] tau_S;               # spawner observation error SDs
 }
 
 transformed parameters {
