@@ -26,20 +26,24 @@ data {
   int<lower=1,upper=N> year[N];        # calendar year identifier
   int<lower=1> N_X_M;                  # number of spawner-smolt productivity covariates
   matrix[max(year),N_X_M] X_M;         # spawner-smolt covariates (if none, use vector of zeros)
-  int<lower=1> N_X_MS;                 # number of SAR productivity covariates
-  matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of zeros)
-  int<lower=0,upper=max(pop)> N_pop_H; # number of populations with hatchery input
-  int<lower=1,upper=max(pop)> which_pop_H[max(N_pop_H,1)]; # populations with hatchery input
-  int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
-  int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
-  vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
   int<lower=1,upper=N> N_M_obs;        # number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; # cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;            # observed annual smolt abundance (not density)
-  int<lower=1> smolt_age;              # smolt age
+  int<lower=2> N_smolt_age;            # number of smolt age classes
+  int<lower=2> max_smolt_age;          # maximum smolt age
+  matrix<lower=0>[N,N_smolt_age] n_smolt_age_obs;  # observed smolt age frequencies (all zero row = NA)  
+  int<lower=1> N_X_MS;                 # number of SAR productivity covariates
+  matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of zeros)
+  int<lower=2> N_ocean_age;            # number of ocean age classes
+  int<lower=2> max_ocean_age;          # maximum ocean age
+  int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
+  int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
+  vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
   int<lower=2> N_age;                  # number of adult age classes
   int<lower=2> max_age;                # maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  # observed wild spawner age frequencies (all zero row = NA)  
+  int<lower=0,upper=max(pop)> N_pop_H; # number of populations with hatchery input
+  int<lower=1,upper=max(pop)> which_pop_H[max(N_pop_H,1)]; # populations with hatchery input
   int<lower=0,upper=N> N_H;            # number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[max(N_H,1)]; # years with p_HOS > 0
   int<lower=0> n_W_obs[max(N_H,1)];    # count of wild spawners in samples (assumes no NAs)
@@ -52,16 +56,22 @@ data {
 }
 
 transformed data {
-  int<lower=1,upper=N> N_pop;         # number of populations
-  int<lower=1,upper=N> N_year;        # number of years
-  int<lower=1> ocean_ages[N_age];     # ocean ages
-  int<lower=1> pop_year_indx[N];      # index of years within each pop, starting at 1
-  int<lower=0> n_HW_obs[max(N_H,1)];  # total sample sizes for H/W frequencies
+  int<lower=1,upper=N> N_pop;           # number of populations
+  int<lower=1,upper=N> N_year;          # number of years
+  int<lower=1> smolt_ages[N_smolt_age]; # smolt ages
+  int<lower=1> ocean_ages[N_ocean_age]; # ocean ages
+  int<lower=2> ages[N_age];             # adult ages
+  int<lower=1> pop_year_indx[N];        # index of years within each pop, starting at 1
+  int<lower=0> n_HW_obs[max(N_H,1)];    # total sample sizes for H/W frequencies
   
   N_pop = max(pop);
   N_year = max(year);
+  for(a in 1:N_smolt_age)
+    smolt_ages[a] = max_smolt_age - N_smolt_age + a;
+  for(a in 1:N_ocean_age)
+    ocean_ages[a] = max_ocean_age - N_ocean_age + a;
   for(a in 1:N_age)
-    ocean_ages[a] = max_age - smolt_age - N_age + a;
+    ages[a] = max_age - N_age + a;
   pop_year_indx[1] = 1;
   for(i in 1:N)
   {
