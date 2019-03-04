@@ -250,8 +250,8 @@ transformed parameters {
       # Use recruitment process model
       for(a in 1:N_age)
         S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a];
-      for(a in 2:N_age)  # catch and broodstock removal (assumes no take of age 1)
-        S_W_a[a] = S_W_a[a]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+      # catch and broodstock removal (assumes no take of age 1)
+      S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
       S_W[i] = sum(S_W_a);
       S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
       q[i,] = S_W_a/S_W[i];
