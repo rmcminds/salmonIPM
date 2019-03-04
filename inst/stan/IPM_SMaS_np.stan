@@ -91,46 +91,48 @@ transformed data {
 }
 
 parameters {
+  #?# indicates params that could be arrays instead of matrices
   vector<lower=0>[N_pop] alpha;               # intrinsic spawner-smolt productivity
   vector<lower=0>[N_pop] Rmax;                # asymptotic smolt recruitment
-  matrix[N_pop,N_X_M] beta_M;                 # regression coefs for spawner-smolt productivity 
+  matrix[N_pop,N_X_M] beta_M;                 #?# regression coefs for spawner-smolt productivity 
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
   vector[N] epsilon_M_z;                      # smolt recruitment process errors (z-scored)
   simplex[N_smolt_age] mu_p_M[N_pop];         # population mean smolt age distributions
-  matrix<lower=0>[N_pop,N_smolt_age-1] sigma_p_M; # log-ratio cohort smolt age distribution SDs
+  matrix<lower=0>[N_pop,N_smolt_age-1] sigma_p_M; #?# log-ratio cohort smolt age distribution SDs
   cholesky_factor_corr[N_smolt_age-1] L_p_M[N_pop]; # Cholesky-factored corr matrices of log-ratio smolt age distns
-  matrix[N,N_smolt_age-1] epsilon_p_M_z;      # log-ratio cohort smolt age distn errors (Z-scored)
+  matrix[N,N_smolt_age-1] epsilon_p_M_z;      #?# log-ratio cohort smolt age distn errors (Z-scored)
   vector<lower=0>[max_smolt_age*N_pop] M_init; # true smolt abundance in years 1:max_smolt_age
   simplex[N_smolt_age] q_M_init[max_smolt_age*N_pop]; # true smolt age distns in years 1:max_smolt_age
   vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
-  matrix<lower=0,upper=1>[N_pop,N_smolt_age] mu_MS; # mean SAR for each smolt age
-  matrix[N_pop,N_X_MS] beta_MS;               # regression coefs for SAR
-  vector<lower=-1,upper=1>[N_pop,N_smolt_age] rho_MS; # AR(1) coefs of SAR for each smolt age
-  vector<lower=0>[N_pop,N_smolt_age] sigma_MS; # SAR process error SDs for each smolt age
+  matrix<lower=0,upper=1>[N_pop,N_smolt_age] mu_MS; #?# mean SAR for each smolt age
+  matrix[N_pop,N_X_MS] beta_MS;               #?# regression coefs for SAR
+  matrix<lower=-1,upper=1>[N_pop,N_smolt_age] rho_MS; #?# AR(1) coefs of SAR for each smolt age
+  matrix<lower=0>[N_pop,N_smolt_age] sigma_MS; #?# SAR process error SDs for each smolt age
   cholesky_factor_corr[N_smolt_age] L_MS[N_pop]; # Cholesky-factored corr matrices of SAR across smolt ages
-  matrix[N,N_smolt_age] epsilon_MS_z;         # SAR process errors for each smolt age (z-scored)
+  matrix[N,N_smolt_age] epsilon_MS_z;         #?# SAR process errors for each smolt age (z-scored)
   simplex[N_ocean_age] mu_p_MS[N_pop,N_smolt_age]; # pop mean ocean age distributions for each smolt age
   vector<lower=0>[N_ocean_age-1] sigma_p_MS[N_pop,N_smolt_age]; # log-ratio ocean age SDs for each smolt age
   cholesky_factor_corr[N_smolt_age*(N_ocean_age-1)] L_p_MS[N_pop]; # Cholesky-factored corr matrices of log-ratio ocean age
-  matrix[N,N_smolt_age*(N_ocean_age-1)] epsilon_p_MS_z; # log-ratio ocean age errors (Z-scored)
+  matrix[N,N_smolt_age*(N_ocean_age-1)] epsilon_p_MS_z; #?# log-ratio ocean age errors (Z-scored)
   vector<lower=0>[max_age*N_pop] S_init;      # true total spawner abundance in years 1:max_age
-  simplex[N_GR_age] q_init[max_age*N_pop];       # true wild spawner age distns in years 1:max_age
+  simplex[N_GR_age] q_GR_init[max_age*N_pop]; # true wild spawner age distns in years 1:max_age
   vector<lower=0>[N_pop] tau_S;               # spawner observation error SDs
   vector<lower=0,upper=1>[max(N_H,1)] p_HOS;  # true p_HOS in years which_H
   vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
 }
 
 transformed parameters {
+  #?# indicates transformed params that could be arrays instead of matrices
   vector<lower=0>[N] M_hat;              # expected smolt abundance (not density) by brood year
   vector[N] epsilon_M;                   # process error in smolt abundance by brood year 
   vector<lower=0>[N] M0;                 # true smolt abundance (not density) by brood year
   vector<lower=0>[N] M;                  # true smolt abundance (not density) by outmigration year
-  matrix[N_pop,N_smolt_age-1] gamma_M;   # population mean log ratio smolt age distributions
-  matrix<lower=0,upper=1>[N,N_smolt_age] p_M; # true smolt age distributions by brood year
+  matrix[N_pop,N_smolt_age-1] gamma_M;   #?# population mean log ratio smolt age distributions
+  matrix<lower=0,upper=1>[N,N_smolt_age] p_M; #?# true smolt age distributions by brood year
   matrix<lower=0,upper=1>[N,N_smolt_age] q_M; # true smolt age distributions by calendar year
-  matrix[N,N_smolt_age] epsilon_MS;      # SAR process errors by smolt age and outmigration year 
-  matrix<lower=0>[N,N_smolt_age] s_MS;   # true SAR by smolt age and outmigration year
+  matrix[N,N_smolt_age] epsilon_MS;      #?# SAR process errors by smolt age and outmigration year 
+  matrix<lower=0>[N,N_smolt_age] s_MS;   #?# true SAR by smolt age and outmigration year
   vector[N_ocean_age-1] gamma_MS[N_pop,N_smolt_age]; # population mean log ratio age distributions
   vector<lower=0,upper=1>[N_ocean_age] p_MS[N,N_smolt_age]; # true ocean age distns by outmigration year
   vector<lower=0>[N] S_W;                # true total wild spawner abundance
@@ -159,19 +161,19 @@ transformed parameters {
     # Ocean age
     for(a in 1:N_smolt_age)
     {
-      gamma_MS[j,a,] = to_vector(log(mu_p_MS[j,a,1:(N_ocean_age-1)]) - log(mu_p_MS[j,a,N_ocean_age]));
+      gamma_MS[j,a] = log(mu_p_MS[j,a,1:(N_ocean_age-1)]) - log(mu_p_MS[j,a,N_ocean_age]);
     }
   }
   
-  # Calculate true total wild and hatchery spawners, spawner age distribution, and smolts,
+  # Calculate true smolts and total wild and hatchery spawners by age,
   # and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
     row_vector[N_smolt_age] alr_p_M; # temp: alr(p_M[i,])
     row_vector[N_smolt_age] M_a; # temp: true smolts by age
-    row_vector[N_smolt_age*(N_ocean_age-1)] gamma_MS_i; # temp: gamma_MS[i,,] 
+    vector[N_smolt_age*(N_ocean_age-1)] gamma_MS_i; # temp: gamma_MS[i,,] 
     vector[N_smolt_age*(N_ocean_age-1)] sigma_p_MS_i; # temp: sigma_p_MS[i,,]
-    row_vector[N_smolt_age*(N_ocean_age-1)] alr_p_MS; # temp: alr(p_MS[i,])    
+    vector[N_smolt_age*(N_ocean_age-1)] alr_p_MS; # temp: alr(p_MS[i,])    
     matrix[N_smolt_age,N_ocean_age] S_W_a; # temp: true W spawners by smolt and ocean age
     
     # Multivariate Matt trick for within-pop, time-varying age vectors
@@ -183,18 +185,18 @@ transformed parameters {
     p_M[i,] = alr_p_M/sum(alr_p_M);
     
     # Ocean age
-    # assemble mean and SD vectors
+    # assemble mean and SD vectors by flattening across smolt age
     for(a in 1:N_smolt_age)
     {
-      gamma_MS_i[((a-1)*(N_ocean_age-1)):(a*(N_ocean_age-1))] = to_row_vector(gamma_MS[pop[i],a]);
+      gamma_MS_i[((a-1)*(N_ocean_age-1)):(a*(N_ocean_age-1))] = gamma_MS[pop[i],a];
       sigma_p_MS_i[((a-1)*(N_ocean_age-1)):(a*(N_ocean_age-1))] = sigma_p_MS[pop[i],a];
     }
     # multivariate Matt trick
-    alr_p_MS = gamma_MS_i + to_row_vector(diag_matrix(sigma_p_MS_i) * L_p_MS[pop[i]] * to_vector(epsilon_p_MS_z[i,]));
+    alr_p_MS = gamma_MS_i + diag_matrix(sigma_p_MS_i) * L_p_MS[pop[i]] * to_vector(epsilon_p_MS_z[i,]);
     # inverse log-ratio transform and assign back to array
     for(a in 1:N_smolt_age)
     {
-      p_MS[i,a] = exp(append_col(alr_p_MS[((a-1)*(N_ocean_age-1) + 1):(a*(N_ocean_age-1))], 0));
+      p_MS[i,a] = exp(append_row(alr_p_MS[((a-1)*(N_ocean_age-1) + 1):(a*(N_ocean_age-1))], 0));
       p_MS[i,a] = p_MS[i,a]/sum(p_MS[i,a]);
     }
     
@@ -203,12 +205,13 @@ transformed parameters {
     {
       # use initial values
       M[i] = M_init[(pop[i]-1)*max_smolt_age + pop_year_indx[i]];  
-      q_M[i,1:N_smolt_age] = to_row_vector(q_M_init[(pop[i]-1)*max_smolt_age + pop_year_indx[i],1:N_smolt_age]);
+      q_M[i,] = to_row_vector(q_M_init[(pop[i]-1)*max_smolt_age + pop_year_indx[i],]);
     }
     else
     {
       for(a in 1:N_smolt_age)
-        M_a[a] = M0[i-smolt_ages[a],a];  # smolts from appropriate brood year
+        # age-a smolts from appropriate brood year
+        M_a[a] = M0[i-smolt_ages[a],a]*p_M[i-smolt_ages[a],a];  
       M[i] = sum(M_a);
       q_M[i,] = M_a/M[i];
     }
@@ -219,23 +222,23 @@ transformed parameters {
       # use initial values
       S_W[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*(1 - p_HOS_all[i]);        
       S_H[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*p_HOS_all[i];
-      q_GR[i,1:N_GR_age] = to_row_vector(q_init[(pop[i]-1)*max_age + pop_year_indx[i],1:N_GR_age]);
-      S_W_a = to_matrix(S_W[i]*q_GR[i,1:N_GR_age],N_smolt_age,N_ocean_age,0);
-      q_MS[i,1:N_ocean_age] = col_sums(to_matrix(q_GR[i,1:N_GR_age],N_smolt_age,N_ocean_age,0));
+      q_GR[i,] = to_row_vector(q_GR_init[(pop[i]-1)*max_age + pop_year_indx[i],]);
+      S_W_a = to_matrix(S_W[i]*q_GR[i,], N_smolt_age, N_ocean_age, 0);
+      q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_smolt_age, N_ocean_age, 0));
     }
     else
     {
       for(sa in 1:N_smolt_age)
       {
         for(oa in 1:N_ocean_age)
-          S_W_a[sa,oa] = M[i - ocean_ages[oa]]*q_M[i - ocean_ages[oa],sa]*s_MS[i - ocean_ages[oa],sa]*p_MS[i - ocean_ages[oa],sa,oa];
+          S_W_a[sa,oa] = M[i-ocean_ages[oa]]*q_M[i-ocean_ages[oa],sa]*s_MS[i-ocean_ages[oa],sa]*p_MS[i-ocean_ages[oa],sa,oa];
       }
       # catch and broodstock removal (assumes no take of ocean age 1)
       S_W_a[,2:N_ocean_age] = S_W_a[,2:N_ocean_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
       S_W[i] = sum(S_W_a);
       S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
-      q_GR[i,1:N_GR_age] = to_row_vector(S_W_a')/S_W[i]; #'
-      q_MS[i,1:N_ocean_age] = col_sums(to_matrix(q_GR[i,1:N_GR_age],N_smolt_age,N_ocean_age,0));                                
+      q_GR[i,] = to_row_vector(S_W_a')/S_W[i]; #'
+      q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_smolt_age, N_ocean_age, 0));                                
     }
     
     S[i] = S_W[i] + S_H[i];
@@ -245,16 +248,19 @@ transformed parameters {
     if(pop_year_indx[i] == 1) # initial process error
     {
       epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
-      # cheat: doesn't use MAR(1) stationary distribution
+      # cheat: doesn't use MAR(1) stationary covariance
       epsilon_MS[i,] = epsilon_MS_z[i,] .* sigma_MS[pop[i],] ./ sqrt(1 - rho_MS[pop[i],]^2);
     }
     else
     {
       epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
-      epsilon_MS[i] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + epsilon_MS_z[i,] .* sigma_MS[pop[i]];
+      epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + 
+                       to_row_vector(diag_matrix(sigma_MS[pop[i],]) * L_MS[pop[i]] * to_vector(epsilon_MS_z[i,]));
     }
-    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
-    s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]); # outmig year i SAR
+    # smolts from brood year i
+    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
+    # SAR for outmigration year i
+    s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]); 
   }
 }
 
@@ -269,7 +275,7 @@ model {
   for(j in 1:N_pop)
   {
     rho_M[j] ~ pexp(0,0.85,20);   # mildly regularize rho to ensure stationarity
-    sigma_M[j] ~ pexp(0,1,10);
+    sigma_M[j] ~ normal(0,5);
     L_p_M[j] ~ lkj_corr_cholesky(1);
     tau_M[j] ~ pexp(1,0.85,30);   # rule out tau < 0.1 to avoid divergences 
     for(a in 1:N_smolt_age)
@@ -282,14 +288,13 @@ model {
     tau_S[j] ~ pexp(1,0.85,30);   # rule out tau < 0.1 to avoid divergences 
   }
   to_vector(sigma_p_M) ~ normal(0,5);
-  sigma_MS ~ normal(0,5);
-  
+  to_vector(sigma_MS) ~ normal(0,5);
   M_init ~ lognormal(0,5);
   S_init ~ lognormal(0,5);
-  if(N_B > 0)
+  if(N_B > 0)  # penalty to force pred and obs broodstock take to match 
   {
     B_take = B_rate .* S_W[which_B] .* (1 - q_MS[which_B,1]) ./ (1 - B_rate);
-    B_take_obs ~ lognormal(log(B_take), 0.1); # penalty to force pred and obs broodstock take to match 
+    B_take_obs ~ lognormal(log(B_take), 0.1); 
   }
   
   # Hierarchical priors
@@ -308,9 +313,9 @@ model {
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  # observed smolts
   target += sum(n_smolt_age_obs .* log(q_M));  # obs wild age freq: n_smolt_age_obs[i] ~ multinomial(q_M[i])
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[pop[which_S_obs]]);  # observed spawners
-  if(N_H > 0) n_H_obs ~ binomial(n_HW_obs, p_HOS);  # observed counts of hatchery vs. wild spawners
   target += sum(n_ocean_age_obs .* log(q_MS));  # obs wild age freq: n_ocean_age_obs[i] ~ multinomial(q_MS[i])
   target += sum(n_GR_age_obs .* log(q_GR));  # obs wild age freq: n_age_obs[i] ~ multinomial(q_GR[i])
+  if(N_H > 0) n_H_obs ~ binomial(n_HW_obs, p_HOS);  # observed counts of hatchery vs. wild spawners
 }
 
 generated quantities {
@@ -320,9 +325,9 @@ generated quantities {
   vector[N] LL_M_obs;              # pointwise log-likelihood of smolts
   vector[N] LL_n_smolt_age_obs;    # pointwise log-likelihood of smolt age frequencies
   vector[N] LL_S_obs;              # pointwise log-likelihood of spawners
-  vector[max(N_H,1)] LL_n_H_obs;   # pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL_n_ocean_age_obs;    # pointwise log-likelihood of ocean age frequencies
   vector[N] LL_n_GR_age_obs;       # pointwise log-likelihood of Gilbert-Rich age frequencies
+  vector[max(N_H,1)] LL_n_H_obs;   # pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL;                    # total pointwise log-likelihood                              
   
   for(j in 1:N_pop)
