@@ -10,5 +10,5 @@
 #' @export
 dgnorm <- function(x, mu = 0, sigma = 1, shape = 2)
 {
-  (shape/2*sigma*gamma(1/shape))*exp(-(abs(x - mu)/sigma)^shape)
+  (shape/(2*sigma*gamma(1/shape)))*exp(-(abs(x - mu)/sigma)^shape)
 }
