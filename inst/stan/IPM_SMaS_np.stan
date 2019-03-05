@@ -42,7 +42,7 @@ data {
   int<lower=1> N_X_MS;                 # number of SAR productivity covariates
   matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of zeros)
   int<lower=2> N_MSage;                # number of ocean age classes
-  int<lower=2> max_MSage;              # maximum ocean age
+  int<lower=1> max_MSage;              # maximum ocean age
   matrix<lower=0>[N,N_MSage] n_MSage_obs; # observed ocean age frequencies (all zero row = NA)  
   int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
@@ -64,8 +64,8 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop;        # number of populations
   int<lower=1,upper=N> N_year;       # number of years
-  int<lower=1> smolt_ages[N_Mage];   # smolt ages
-  int<lower=1> ocean_ages[N_MSage];  # ocean ages
+  int<lower=0> smolt_ages[N_Mage];   # smolt ages
+  int<lower=0> ocean_ages[N_MSage];  # ocean ages
   int<lower=2> max_age;              # maximum adult age
   int<lower=2> N_GRage;              # number of Gilbert-Rich age classes
   int<lower=1> pop_year_indx[N];     # index of years within each pop, starting at 1
