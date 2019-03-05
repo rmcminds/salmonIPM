@@ -6,19 +6,37 @@
 #'   \item{\code{year}}{Numeric variable giving the year the fish spawned (i.e.,
 #'   the brood year).} \item{\code{A}}{Spawning habitat size (either stream
 #'   length or area). Will usually be time-invariant within a population, but
-#'   need not be.} \item{\code{S_obs}}{Total number (not density) of wild and
-#'   hatchery-origin spawners.} \item{\code{M_obs}}{Total number of wild-origin
-#'   smolts (only needed for models including smolt stage).}
+#'   need not be.} \item{\code{M_obs}}{Total number of wild-origin smolts (only
+#'   needed for models including smolt stage).}
+#'   \item{\code{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}}{If
+#'   \code{life_cycle=="SMaS"}, multiple columns of observed smolt age
+#'   frequencies (i.e., counts), where \code{[min_Mage]} and \code{[max_Mage]}
+#'   are the numeral age in years of the youngest and oldest smolts,
+#'   respectively. Note that age is measured in calendar years from the brood
+#'   year (i.e., the Gilbert-Rich system).} \item{\code{S_obs}}{Total number
+#'   (not density) of wild and hatchery-origin spawners.}
 #'   \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
-#'   observed spawner age frequencies (i.e., counts), where [min_age] is the
-#'   numeral age in years (total, not ocean age) of the youngest spawners.}
-#'   \item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
-#'   \item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
-#'   \item{\code{fit_p_HOS}}{Logical or 0/1 indicating for each row in fish_data
-#'   whether the model should estimate p_HOS > 0. This is only required if model
-#'   == "IPM".} \item{\code{F_rate}}{Total harvest rate (proportion) of
-#'   natural-origin fish.} \item{\code{B_take_obs}}{Number of adults taken for
-#'   hatchery broodstock.} }
+#'   observed spawner age frequencies (i.e., counts), where \code{[min_age]} and
+#'   \code{[max_age]} are the numeral age in years (total, not ocean age) of the
+#'   youngest and oldest spawners, respectively.}
+#'   \item{\code{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}}{If
+#'   \code{life_cycle=="SMaS"}, multiple columns of observed ocean age
+#'   frequencies (i.e., counts), where \code{[min_MSage]} and \code{[max_MSage]}
+#'   are the youngest and oldest ocean age in years, respectively.}
+#'   \item{\code{n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs}}{If
+#'    \code{life_cycle=="SMaS"}, multiple columns of observed Gilbert-Rich age
+#'   frequencies, sorted first by smolt age (\code{min_Mage:max_Mage}) and then
+#'   by total age \code{min_age:max_age}. For example, a life history with
+#'   subyearling or yearling smolts and ocean ages 2:3 would have column names
+#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs",
+#'   "n_GRage_5_2_obs")} \item{\code{n_W_obs}}{Observed frequency of
+#'   natural-origin spawners.} \item{\code{n_H_obs}}{Observed frequency of
+#'   hatchery-origin spawners.} \item{\code{fit_p_HOS}}{Logical or 0/1
+#'   indicating for each row in fish_data whether the model should estimate
+#'   \code{p_HOS > 0}. This is only required if \code{model == "IPM"}.}
+#'   \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin
+#'   fish.} \item{\code{B_take_obs}}{Number of adults taken for hatchery
+#'   broodstock.} }
 #' @param fish_data_fwd Only if model == "IPM", life_cycle == "SS", and
 #'   pool_pops == TRUE, optional data frame with the following \code{colnames},
 #'   representing "forward" or "future" simulations. Unlike \code{fish_data}, a
@@ -128,9 +146,14 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                              "p_HOS","c1","c2","F_rate","sigma_C","B_rate_all",
                              "sigma","tau","S","R","q"),
                    IPM_SMS_np = c("alpha","Rmax","beta_M","rho_M","sigma_M",
-                                  "mu_MS","beta_MS","rho_MS","sigma_MS",
+                                  "mu_MS","beta_MS","rho_MS","sigma_MS","s_MS",
                                   "mu_p","sigma_p","R_p","p","p_HOS","B_rate_all",
                                   "tau_M","tau_S","S","M","s_MS","q"),
+                   IPM_SMaS_np = c("alpha","Rmax","beta_M","rho_M","sigma_M","tau_M","M",
+                                   "mu_p_M","sigma_p_M","R_p_M","p_M","q_M",
+                                   "mu_MS","beta_MS","rho_MS","sigma_MS","R_MS","s_MS",
+                                   "mu_p_MS","sigma_p_MS","R_p_MS","p_MS","q_MS",
+                                   "q_GR","tau_S","S"),
                    RR_SS_np = c("alpha","Rmax","rho","sigma","R_hat","S_sim","R_sim"),
                    RR_SS_pp = c("mu_alpha","sigma_alpha","alpha",
                                 "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",

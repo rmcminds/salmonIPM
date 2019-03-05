@@ -2,7 +2,7 @@
 #' spawner-recruit models in Stan.
 #'
 #' @param data Named list of input data for fitting either an integrated or
-#'   run-reconstruction spawner-recruit model in \code{stan}, as returned by
+#'   run-reconstruction spawner-recruit model in Stan, as returned by
 #'   \code{stan_data}.
 #' @param chains A positive integer specifying the number of Markov chains.
 #' @param stan_model Character string giving the name of the Stan model being
@@ -10,8 +10,8 @@
 #'
 #' @importFrom stats aggregate na.omit
 #'
-#' @return A list with initial starting values for all of the parameters and
-#'   states in the Stan model.
+#' @return A list with initial starting values for the parameters and states in
+#'   the Stan model.
 #'
 #' @export
 stan_init <- function(data, stan_model, chains) 
@@ -19,6 +19,8 @@ stan_init <- function(data, stan_model, chains)
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SS_F_pp","IPM_SMS_np"))
   {
     with(data, {
+      N_pop <- max(pop)
+      N_year <- max(year)
       S_obs_noNA <- S_obs
       if(N_S_obs < N)
         S_obs[-which_S_obs] <- NA
@@ -78,17 +80,17 @@ stan_init <- function(data, stan_model, chains)
       
       if(stan_model == "IPM_SS_np") {
         return(lapply(1:chains, function(i)
-          list(alpha = array(exp(runif(max(pop), 1, 3)), dim = max(pop)),
-               Rmax = array(rlnorm(max(pop), log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = max(pop)),
-               beta = matrix(rnorm(N_X*max(pop), 0,1), max(pop), N_X),
-               rho = array(runif(max(pop), 0.1, 0.7), dim = max(pop)),
-               sigma = array(runif(max(pop), 0.05, 2), dim = max(pop)), 
-               tau = array(runif(max(pop), 0.5, 1), dim = max(pop)),
+          list(alpha = array(exp(runif(N_pop, 1, 3)), dim = N_pop),
+               Rmax = array(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = N_pop),
+               beta = matrix(rnorm(N_X*N_pop, 0,1), N_pop, N_X),
+               rho = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
+               sigma = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+               tau = array(runif(N_pop, 0.5, 1), dim = N_pop),
                mu_p = mu_p,
-               sigma_p = matrix(runif(max(pop)*(N_age-1), 0.5, 1), max(pop), N_age-1),
+               sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age-1),
                epsilon_p_z = epsilon_p_z,
-               S_init = rep(median(S_obs_noNA), max_age*max(pop)),
-               q_init = matrix(colMeans(q_obs), max_age*max(pop), N_age, byrow = T),
+               S_init = rep(median(S_obs_noNA), max_age*N_pop),
+               q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
                epsilon_R_z = as.vector(scale(log(R)))*0.1,
                B_rate = B_rate)))
@@ -96,23 +98,23 @@ stan_init <- function(data, stan_model, chains)
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 1, 3),
                sigma_alpha = runif(1, 0.1, 0.5),
-               epsilon_alpha_z = array(runif(max(pop), -1, 1), dim = max(pop)),
+               epsilon_alpha_z = array(runif(N_pop, -1, 1), dim = N_pop),
                mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
                sigma_Rmax = runif(1, 0.1, 0.5),
-               epsilon_Rmax_z = array(runif(max(pop),-1,1), dim = max(pop)),
+               epsilon_Rmax_z = array(runif(N_pop,-1,1), dim = N_pop),
                rho_alphaRmax = runif(1, -0.5, 0.5),
                beta_phi = array(rnorm(N_X, 0, 1), dim = N_X),
                rho_phi = runif(1, 0.1, 0.7),
                sigma_phi = runif(1, 0.1, 0.5),
-               epsilon_phi_z = array(rnorm(max(year), 0, 0.1), dim = max(year,year_fwd)),
+               epsilon_phi_z = array(rnorm(N_year, 0, 0.1), dim = max(year,year_fwd)),
                sigma = runif(1, 0.5, 1),
                tau = runif(1, 0.5, 1),
                mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
                epsilon_gamma_z = epsilon_gamma_z,
                sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
                epsilon_p_z = epsilon_p_z,
-               S_init = rep(median(S_obs_noNA), max_age*max(pop)),
-               q_init = matrix(colMeans(q_obs), max_age*max(pop), N_age, byrow = T),
+               S_init = rep(median(S_obs_noNA), max_age*N_pop),
+               q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
                epsilon_R_z = as.vector(scale(log(R)))*0.1,
                B_rate = B_rate)))
@@ -120,23 +122,23 @@ stan_init <- function(data, stan_model, chains)
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 1, 3),
                sigma_alpha = runif(1, 0.1, 0.5),
-               epsilon_alpha_z = array(runif(max(pop), -1, 1), dim = max(pop)),
+               epsilon_alpha_z = array(runif(N_pop, -1, 1), dim = N_pop),
                mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
                sigma_Rmax = runif(1, 0.1, 0.5),
-               epsilon_Rmax_z = array(runif(max(pop), -1, 1), dim = max(pop)),
+               epsilon_Rmax_z = array(runif(N_pop, -1, 1), dim = N_pop),
                rho_alphaRmax = runif(1, -0.5, 0.5),
                beta_phi = array(rnorm(N_X, 0, 1), dim = N_X),
                rho_phi = runif(1, 0.1, 0.7),
                sigma_phi = runif(1, 0.1, 0.5),
-               epsilon_phi_z = array(rnorm(max(year), 0, 0.1), dim = max(year)),
+               epsilon_phi_z = array(rnorm(N_year, 0, 0.1), dim = N_year),
                sigma = runif(1, 0.5, 1),
                tau = runif(1, 0.5, 1),
                mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
                epsilon_gamma_z = epsilon_gamma_z,
                sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
                epsilon_p_z = epsilon_p_z,
-               S_init = rep(median(S_obs_noNA), max_age*max(pop)),
-               q_init = matrix(colMeans(q_obs), max_age*max(pop), N_age, byrow = T),
+               S_init = rep(median(S_obs_noNA), max_age*N_pop),
+               q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
                epsilon_R_z = as.vector(scale(log(R)))*0.1,
                c1 = rnorm(1, 0, 0.5), c2 = 0,
@@ -144,52 +146,91 @@ stan_init <- function(data, stan_model, chains)
                B_rate = B_rate)))
       } else if(stan_model == "IPM_SMS_np") {
         return(lapply(1:chains, function(i)
-          list(alpha = array(exp(runif(max(pop),1,3)), dim = max(pop)),
-               Rmax = array(rlnorm(max(pop), log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = max(pop)),
-               beta_M = matrix(rnorm(N_X_M*max(pop),0,1), max(pop), N_X_M),
-               rho_M = array(runif(max(pop), 0.1, 0.7), dim = max(pop)),
-               sigma_M = array(runif(max(pop), 0.05, 2), dim = max(pop)), 
-               mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
-               beta_MS = matrix(rnorm(N_X_MS*max(pop),0,1), max(pop), N_X_MS),
-               rho_MS = array(runif(max(pop), 0.1, 0.7), dim = max(pop)),
-               sigma_MS = array(runif(max(pop), 0.05, 2), dim = max(pop)), 
-               tau_M = array(runif(max(pop), 0.5, 1), dim = max(pop)),
-               tau_S = array(runif(max(pop), 0.5, 1), dim = max(pop)),
+          list(alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
+               Rmax = array(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = N_pop),
+               beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
+               rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
+               sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+               mu_MS = plogis(rnorm(N_pop, mean(qlogis(s_MS)), 0.5)),
+               beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
+               rho_MS = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
+               sigma_MS = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+               tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
+               tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop),
                mu_p = mu_p,
-               sigma_p = matrix(runif(max(pop)*(N_age-1),0.5,1), max(pop), N_age-1),
+               sigma_p = matrix(runif(N_pop*(N_age-1),0.5,1), N_pop, N_age-1),
                epsilon_p_z = epsilon_p_z,
-               M_init = rep(median(M_obs), smolt_age*max(pop)),
-               S_init = rep(median(S_obs_noNA), max_age*max(pop)),
-               q_init = matrix(colMeans(q_obs), max_age*max(pop), N_age, byrow = T),
+               M_init = rep(median(M_obs), smolt_age*N_pop),
+               S_init = rep(median(S_obs_noNA), max_age*N_pop),
+               q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
                epsilon_M_z = as.vector(scale(log(M_obs)))*0.1,
                epsilon_MS_z = as.vector(scale(qlogis(s_MS))),
                B_rate = B_rate)))
       }
     })
+  } else if(stan_model == "IPM_SMaS_np") {
+    with(data, {
+      # This is a bit of a hack to avoid tedious age-structured run reconstuction
+      N_pop <- max(pop)
+      N_year <- max(year)
+      N_GRage <- N_Mage*N_MSage
+      max_age <- max_Mage + max_MSage
+      q_M_obs <- sweep(n_Mage_obs, 1, rowSums(n_Mage_obs), "/")
+      q_MS_obs <- sweep(n_MSage_obs, 1, rowSums(n_MSage_obs), "/")
+      q_GR_obs <- sweep(n_GRage_obs, 1, rowSums(n_GRage_obs), "/")
+      s_MS <- mean(S_obs/M_obs, na.rm = TRUE)
+      
+      return(lapply(1:chains, function(i)
+        list(alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
+             Rmax = array(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5), dim = N_pop),
+             beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
+             rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
+             sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+             epsilon_M_z = as.vector(scale(log(M_obs)))*0.1,
+             M_init = rep(median(M_obs), smolt_age*N_pop),
+             q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
+             tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
+             mu_MS = matrix(plogis(rnorm(N_pop*N_Mage, qlogis(s_MS), 0.5)), N_pop, N_Mage),
+             beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
+             rho_MS = matrix(runif(N_pop, 0.1, 0.7), N_pop, N_Mage),
+             sigma_MS = matrix(runif(N_pop, 0.05, 2), N_pop, N_Mage), 
+             epsilon_MS_z = matrix(rnorm(N*N_Mage, 0, 0.5), N, N_Mage),
+             ## mu_p_MS not initialized
+             ## sigma_p_MS not initialized
+             epsilon_p_MS_z = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, NMage*(N_MSage - 1)),
+             S_init = rep(median(S_obs, na.rm = TRUE), N_pop*max_age),
+             q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_age*N_pop, N_GRage, byrow = T),
+             tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop),
+             p_HOS = p_HOS_obs,
+             B_rate = B_rate)))
+    })
   } else if(stan_model %in% c("RR_SS_np","RR_SS_pp")) {
     with(data, {
+      N_pop <- max(pop)
+      N_year <- max(year)
+      
       if(pool_pops)
       {
         # This is currently not based on the input data
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 3, 6), 
                sigma_alpha = runif(1, 0.1, 0.5),
-               epsilon_alpha_z = array(runif(max(pop), -1, 1), dim = max(pop)), 
+               epsilon_alpha_z = array(runif(N_pop, -1, 1), dim = N_pop), 
                mu_Rmax = rnorm(1, log(quantile(S/A, 0.9, na.rm = T)), 0.5),
                sigma_Rmax = runif(1, 0.1, 0.5),
-               epsilon_Rmax_z = array(runif(max(pop), -1, 1), dim = max(pop)), 
+               epsilon_Rmax_z = array(runif(N_pop, -1, 1), dim = N_pop), 
                rho_alphaRmax = runif(1, -0.5, 0.5),
                rho_phi = runif(1, 0.1, 0.7),
                sigma_phi = runif(1, 0.1, 0.5), 
-               epsilon_phi_z = array(rnorm(max(year), 0, 0.1), dim = max(year)),
+               epsilon_phi_z = array(rnorm(N_year, 0, 0.1), dim = N_year),
                sigma = runif(1, 0.1, 2))))
       } else {
         return(lapply(1:chains, function(i)
-          list(alpha = array(exp(runif(max(pop), 1, 3)), dim = max(pop)),
-               Rmax = array(exp(runif(max(pop), -1, 0)), dim = max(pop)),
-               rho = array(runif(max(pop), 0.1, 0.7), dim = max(pop)),
-               sigma = array(runif(max(pop), 0.5, 1), dim = max(pop)))))
+          list(alpha = array(exp(runif(N_pop, 1, 3)), dim = N_pop),
+               Rmax = array(exp(runif(N_pop, -1, 0)), dim = N_pop),
+               rho = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
+               sigma = array(runif(N_pop, 0.5, 1), dim = N_pop))))
       }
     })
   }
