@@ -2,7 +2,6 @@
 
 export(IPM_sim)
 export(dgnorm)
-export(dgnorm_std)
 export(extract1)
 export(run_recon)
 export(salmonIPM)

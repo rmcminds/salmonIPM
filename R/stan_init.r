@@ -180,6 +180,14 @@ stan_init <- function(data, stan_model, chains)
       q_MS_obs <- sweep(n_MSage_obs, 1, rowSums(n_MSage_obs), "/")
       q_GR_obs <- sweep(n_GRage_obs, 1, rowSums(n_GRage_obs), "/")
       s_MS <- mean(S_obs/M_obs, na.rm = TRUE)
+      p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
+      p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
+      p_HOS_all <- rep(0,N)
+      if(N_H > 0)
+        p_HOS_all[which_H] <- p_HOS_obs
+      S_W_obs <- S_obs*(1 - p_HOS_all)
+      B_rate <- pmin(pmax(B_take_obs/(S_W_obs[which_B] + B_take_obs), 0.01), 0.99)
+      B_rate[is.na(B_rate)] <- 0.1
       
       return(lapply(1:chains, function(i)
         list(alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
@@ -187,8 +195,8 @@ stan_init <- function(data, stan_model, chains)
              beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
              rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
              sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
-             epsilon_M_z = as.vector(scale(log(M_obs)))*0.1,
-             M_init = rep(median(M_obs), smolt_age*N_pop),
+             epsilon_M_z = rnorm(N,0,0.1), #as.vector(scale(log(M_obs)))*0.1,
+             M_init = rep(median(M_obs), max_Mage*N_pop),
              q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
              tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
              mu_MS = matrix(plogis(rnorm(N_pop*N_Mage, qlogis(s_MS), 0.5)), N_pop, N_Mage),
@@ -198,7 +206,7 @@ stan_init <- function(data, stan_model, chains)
              epsilon_MS_z = matrix(rnorm(N*N_Mage, 0, 0.5), N, N_Mage),
              ## mu_p_MS not initialized
              ## sigma_p_MS not initialized
-             epsilon_p_MS_z = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, NMage*(N_MSage - 1)),
+             epsilon_p_MS_z = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, N_Mage*(N_MSage - 1)),
              S_init = rep(median(S_obs, na.rm = TRUE), N_pop*max_age),
              q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_age*N_pop, N_GRage, byrow = T),
              tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop),

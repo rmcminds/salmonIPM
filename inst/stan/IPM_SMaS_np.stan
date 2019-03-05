@@ -21,7 +21,7 @@ functions {
   # Column sums of matrix
   row_vector col_sums(matrix X) {
     row_vector[cols(X)] s;
-    s <- rep_row_vector(1, rows(X)) * X;
+    s = rep_row_vector(1, rows(X)) * X;
     return s;
   }
 }
@@ -125,13 +125,13 @@ parameters {
 transformed parameters {
   #?# indicates transformed params that could be arrays instead of matrices
   vector<lower=0>[N] M_hat;              # expected smolt abundance (not density) by brood year
-  vector[N] epsilon_M;                   # process error in smolt abundance by brood year 
+  vector[N] epsilon_M;                   # process error in smolt abundance by brood year
   vector<lower=0>[N] M0;                 # true smolt abundance (not density) by brood year
   vector<lower=0>[N] M;                  # true smolt abundance (not density) by outmigration year
   matrix[N_pop,N_Mage-1] gamma_M;        #?# population mean log ratio smolt age distributions
   matrix<lower=0,upper=1>[N,N_Mage] p_M; #?# true smolt age distributions by brood year
   matrix<lower=0,upper=1>[N,N_Mage] q_M; # true smolt age distributions by calendar year
-  matrix[N,N_Mage] epsilon_MS;           #?# SAR process errors by smolt age and outmigration year 
+  matrix[N,N_Mage] epsilon_MS;           #?# SAR process errors by smolt age and outmigration year
   matrix<lower=0>[N,N_Mage] s_MS;        #?# true SAR by smolt age and outmigration year
   vector[N_MSage-1] gamma_MS[N_pop,N_Mage]; # population mean log ratio age distributions
   vector<lower=0,upper=1>[N_MSage] p_MS[N,N_Mage]; # true ocean age distns by outmigration year
@@ -142,7 +142,7 @@ transformed parameters {
   matrix<lower=0,upper=1>[N,N_MSage] q_MS; # true ocean age distns of spawners
   vector[N] p_HOS_all;                   # true p_HOS in all years (can == 0)
   vector<lower=0,upper=1>[N] B_rate_all; # true broodstock take rate in all years
-  
+
   # Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
   if(N_H > 0)
@@ -167,7 +167,7 @@ transformed parameters {
   
   # Calculate true smolts and total wild and hatchery spawners by age,
   # and predict smolt recruitment from brood year i
-  for(i in 1:N)
+  for(i in 1:5)
   {
     row_vector[N_Mage] alr_p_M;              # temp: alr(p_M[i,])
     row_vector[N_Mage] M_a;                  # temp: true smolts by age
@@ -188,8 +188,8 @@ transformed parameters {
     # assemble mean and SD vectors by flattening across smolt age
     for(a in 1:N_Mage)
     {
-      gamma_MS_i[((a-1)*(N_MSage-1)):(a*(N_MSage-1))] = gamma_MS[pop[i],a];
-      sigma_p_MS_i[((a-1)*(N_MSage-1)):(a*(N_MSage-1))] = sigma_p_MS[pop[i],a];
+      gamma_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = gamma_MS[pop[i],a];
+      sigma_p_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = sigma_p_MS[pop[i],a];
     }
     # multivariate Matt trick
     alr_p_MS = gamma_MS_i + diag_matrix(sigma_p_MS_i) * L_p_MS[pop[i]] * to_vector(epsilon_p_MS_z[i,]);
@@ -212,7 +212,7 @@ transformed parameters {
       for(a in 1:N_Mage)
       {
         # age-a smolts from appropriate brood year
-        M_a[a] = M0[i-smolt_ages[a],a]*p_M[i-smolt_ages[a],a]; 
+        M_a[a] = M0[i-smolt_ages[a]]*p_M[i-smolt_ages[a],a]; 
       }
       M[i] = sum(M_a);
       q_M[i,] = M_a/M[i];
@@ -251,13 +251,13 @@ transformed parameters {
     {
       epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
       # cheat: doesn't use MAR(1) stationary covariance
-      epsilon_MS[i,] = epsilon_MS_z[i,] .* sigma_MS[pop[i],] ./ sqrt(1 - rho_MS[pop[i],]^2);
+      epsilon_MS[i,] = epsilon_MS_z[i,] .* sigma_MS[pop[i],] ./ sqrt(1 - square(rho_MS[pop[i],]));
     }
     else
     {
       epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
       epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + 
-                       to_row_vector(diag_matrix(sigma_MS[pop[i],]) * L_MS[pop[i]] * to_vector(epsilon_MS_z[i,]));
+                       to_row_vector(diag_matrix(to_vector(sigma_MS[pop[i],])) * L_MS[pop[i]] * to_vector(epsilon_MS_z[i,]));
     }
     # smolts from brood year i
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
