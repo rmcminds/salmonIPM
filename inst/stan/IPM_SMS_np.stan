@@ -79,10 +79,12 @@ parameters {
   matrix[N_pop,N_X_M] beta_M;                 # regression coefs for spawner-smolt productivity 
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
-  real<lower=0,upper=1> mu_MS;                # mean SAR
+  vector[N] epsilon_M_z;                      # smolt recruitment process errors (z-scored)
+  vector<lower=0,upper=1>[N_pop] mu_MS;       # mean SAR
   matrix[N_pop,N_X_MS] beta_MS;               # regression coefs for SAR 
   vector<lower=-1,upper=1>[N_pop] rho_MS;     # AR(1) coefs for SAR
   vector<lower=0>[N_pop] sigma_MS;            # SAR process error SDs
+  vector[N] epsilon_MS_z;                     # SAR process errors (z-scored)
   simplex[N_age] mu_p[N_pop];                 # population mean age distributions
   matrix<lower=0>[N_pop,N_age-1] sigma_p;     # log-ratio cohort age distribution SDs
   cholesky_factor_corr[N_age-1] L_p[N_pop];   # Cholesky factors of correlation matrices of cohort log-ratio age distributions
@@ -91,8 +93,6 @@ parameters {
   vector<lower=0>[max_age*N_pop] S_init;      # true total spawner abundance in years 1:max_age
   simplex[N_age] q_init[max_age*N_pop];       # true wild spawner age distributions in years 1:max_age
   vector<lower=0,upper=1>[max(N_H,1)] p_HOS;  # true p_HOS in years which_H
-  vector[N] epsilon_M_z;                      # smolt recruitment process errors (z-scored)
-  vector[N] epsilon_MS_z;                     # SAR process errors (z-scored)
   vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
   vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
   vector<lower=0>[N_pop] tau_S;               # spawner observation error SDs
@@ -159,8 +159,8 @@ transformed parameters {
     {
       for(a in 1:N_age)
         S_W_a[a] = M[i - ocean_ages[a]]*s_MS[i - ocean_ages[a]]*p[i - ocean_ages[a],a];
-      for(a in 2:N_age)  # catch and broodstock removal (assumes no take of age 1)
-        S_W_a[a] = S_W_a[a]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+      # catch and broodstock removal (assumes no take of age 1)
+      S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
       S_W[i] = sum(S_W_a);
       S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
       q[i,] = S_W_a/S_W[i];
@@ -181,7 +181,7 @@ transformed parameters {
       epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
     }
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
-    s_MS[i] = inv_logit(logit(mu_MS) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
+    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
   }
 }
 
