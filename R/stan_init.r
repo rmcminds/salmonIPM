@@ -177,9 +177,16 @@ stan_init <- function(data, stan_model, chains)
       N_GRage <- N_Mage*N_MSage
       max_age <- max_Mage + max_MSage
       q_M_obs <- sweep(n_Mage_obs, 1, rowSums(n_Mage_obs), "/")
-      q_MS_obs <- sweep(n_MSage_obs, 1, rowSums(n_MSage_obs), "/")
-      q_GR_obs <- sweep(n_GRage_obs, 1, rowSums(n_GRage_obs), "/")
       s_MS <- mean(S_obs/M_obs, na.rm = TRUE)
+      q_MS_obs <- sweep(n_MSage_obs, 1, rowSums(n_MSage_obs), "/")
+      q_MS_obs_NA <- apply(is.na(q_MS_obs), 1, any)
+      q_MS_obs[q_MS_obs_NA,] <- rep(colMeans(na.omit(q_MS_obs)), each = sum(q_MS_obs_NA))
+      q_MS_pop <- as.matrix(aggregate(q_MS_obs, list(pop), mean))[,-1,drop=FALSE]
+      mu_q_MS <- array(0, c(N_pop,N_Mage,N_MSage))
+      for(i in 1:N_pop)
+        for(j in 1:N_Mage)
+          mu_q_MS[i,j,] <- as.vector(q_MS_pop[i,])
+      q_GR_obs <- sweep(n_GRage_obs, 1, rowSums(n_GRage_obs), "/")
       p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
       p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
@@ -190,12 +197,15 @@ stan_init <- function(data, stan_model, chains)
       B_rate[is.na(B_rate)] <- 0.1
       
       return(lapply(1:chains, function(i)
-        list(alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
+        list(alpha = array(rlnorm(N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1), dim = N_pop),
              Rmax = array(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5), dim = N_pop),
              beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
              rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
              sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
              epsilon_M_z = rnorm(N,0,0.1), #as.vector(scale(log(M_obs)))*0.1,
+             mu_p_M = aggregate(q_M_obs, list(pop), mean, na.rm = TRUE),
+             sigma_p_M = matrix(runif(N_pop*(N_Mage - 1), 0.05, 2), N_pop, N_Mage - 1),
+             epsilon_p_M_z = matrix(rnorm(N*(N_Mage - 1), 0, 0.1), N, N_Mage - 1),
              M_init = rep(median(M_obs), max_Mage*N_pop),
              q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
              tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
@@ -203,9 +213,10 @@ stan_init <- function(data, stan_model, chains)
              beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
              rho_MS = matrix(runif(N_pop, 0.1, 0.7), N_pop, N_Mage),
              sigma_MS = matrix(runif(N_pop, 0.05, 2), N_pop, N_Mage), 
-             epsilon_MS_z = matrix(rnorm(N*N_Mage, 0, 0.5), N, N_Mage),
-             ## mu_p_MS not initialized
-             ## sigma_p_MS not initialized
+             epsilon_MS_z = matrix(rnorm(N*N_Mage, 0, 0.1), N, N_Mage),
+             mu_p_MS = mu_q_MS,
+             sigma_p_MS = array(runif(N_pop*N_Mage*(N_MSage - 1), 0.05, 2), 
+                                c(N_pop, N_Mage, N_MSage - 1)), 
              epsilon_p_MS_z = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, N_Mage*(N_MSage - 1)),
              S_init = rep(median(S_obs, na.rm = TRUE), N_pop*max_age),
              q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_age*N_pop, N_GRage, byrow = T),

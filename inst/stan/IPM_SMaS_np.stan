@@ -134,7 +134,7 @@ transformed parameters {
   matrix[N,N_Mage] epsilon_MS;           #?# SAR process errors by smolt age and outmigration year
   matrix<lower=0>[N,N_Mage] s_MS;        #?# true SAR by smolt age and outmigration year
   vector[N_MSage-1] gamma_MS[N_pop,N_Mage]; # population mean log ratio age distributions
-  vector<lower=0,upper=1>[N_MSage] p_MS[N,N_Mage]; # true ocean age distns by outmigration year
+  simplex[N_MSage] p_MS[N,N_Mage];       # true ocean age distns by outmigration year
   vector<lower=0>[N] S_W;                # true total wild spawner abundance
   vector[N] S_H;                         # true total hatchery spawner abundance (can == 0)
   vector<lower=0>[N] S;                  # true total spawner abundance
@@ -167,7 +167,7 @@ transformed parameters {
   
   # Calculate true smolts and total wild and hatchery spawners by age,
   # and predict smolt recruitment from brood year i
-  for(i in 1:5)
+  for(i in 1:N)
   {
     row_vector[N_Mage] alr_p_M;              # temp: alr(p_M[i,])
     row_vector[N_Mage] M_a;                  # temp: true smolts by age
