@@ -132,7 +132,7 @@ transformed parameters {
   matrix<lower=0,upper=1>[N,N_Mage] p_M; #?# true smolt age distributions by brood year
   matrix<lower=0,upper=1>[N,N_Mage] q_M; # true smolt age distributions by calendar year
   matrix[N,N_Mage] epsilon_MS;           #?# SAR process errors by smolt age and outmigration year
-  matrix<lower=0>[N,N_Mage] s_MS;        #?# true SAR by smolt age and outmigration year
+  matrix<lower=0,upper=1>[N,N_Mage] s_MS; #?# true SAR by smolt age and outmigration year
   vector[N_MSage-1] gamma_MS[N_pop,N_Mage]; # population mean log ratio age distributions
   simplex[N_MSage] p_MS[N,N_Mage];       # true ocean age distns by outmigration year
   vector<lower=0>[N] S_W;                # true total wild spawner abundance
