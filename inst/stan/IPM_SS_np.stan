@@ -76,11 +76,11 @@ parameters {
   simplex[N_age] mu_p[N_pop];             # population mean age distributions
   matrix<lower=0>[N_pop,N_age-1] sigma_p; # log-ratio cohort age distribution SDs
   cholesky_factor_corr[N_age-1] L_p[N_pop]; # Cholesky factors of correlation matrices of cohort log-ratio age distributions
-  matrix[N,N_age-1] epsilon_p_z;          # log-ratio cohort age distribution errors (Z-scores)
+  matrix[N,N_age-1] zeta_p;               # log-ratio cohort age distribution errors (Z-scores)
   vector<lower=0>[max_age*N_pop] S_init;  # true total spawner abundance in years 1:max_age
   simplex[N_age] q_init[max_age*N_pop];   # true wild spawner age distributions in years 1:max_age
   vector<lower=0,upper=1>[max(N_H,1)] p_HOS; # true p_HOS in years which_H
-  vector[N] epsilon_R_z;                  # recruitment process errors (z-scored)
+  vector[N] zeta_R;                       # recruitment process errors (z-scored)
   vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
   vector<lower=0>[N_pop] tau;             # observation error SDs of total spawners
 }
@@ -120,7 +120,7 @@ transformed parameters {
 
     # Multivariate Matt trick for within-pop, time-varying age vectors
     alr_p = rep_row_vector(0,N_age);
-    alr_p[1:(N_age-1)] = gamma[pop[i],] + to_row_vector(diag_matrix(to_vector(sigma_p[pop[i],])) * L_p[pop[i]] * to_vector(epsilon_p_z[i,]));
+    alr_p[1:(N_age-1)] = gamma[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
     
@@ -146,9 +146,9 @@ transformed parameters {
     S[i] = S_W[i] + S_H[i];
     R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     if(pop_year_indx[i] == 1) # initial process error
-      epsilon_R[i] = epsilon_R_z[i]*sigma[pop[i]]/sqrt(1 - rho[pop[i]]^2);
+      epsilon_R[i] = zeta_R[i]*sigma[pop[i]]/sqrt(1 - rho[pop[i]]^2);
     else
-      epsilon_R[i] = rho[pop[i]]*epsilon_R[i-1] + epsilon_R_z[i]*sigma[pop[i]];
+      epsilon_R[i] = rho[pop[i]]*epsilon_R[i-1] + zeta_R[i]*sigma[pop[i]];
     R[i] = R_hat[i]*exp(dot_product(X[year[i],], beta[pop[i],]) + epsilon_R[i]);
   }
 }
@@ -177,10 +177,10 @@ model {
   
   # Hierarchical priors
   # age probs logistic MVN: alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
-  to_vector(epsilon_p_z) ~ normal(0,1);
+  to_vector(zeta_p) ~ normal(0,1);
   
   # Process model
-  epsilon_R_z ~ normal(0,1); # total recruits: R ~ lognormal(log(R_hat), sigma)
+  zeta_R ~ normal(0,1); # total recruits: R ~ lognormal(log(R_hat), sigma)
 
   # Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau[pop[which_S_obs]]);  # observed total spawners

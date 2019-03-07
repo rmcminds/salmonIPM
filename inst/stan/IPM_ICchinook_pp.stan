@@ -143,27 +143,27 @@ transformed data {
 parameters {
   real mu_alpha;                         # hyper-mean log intrinsic productivity
   real<lower=0> sigma_alpha;             # hyper-SD log intrinsic productivity
-  vector[N_pop] epsilon_alpha_z;         # log intrinsic prod (Z-scores)
+  vector[N_pop] zeta_alpha;              # log intrinsic prod (Z-scores)
   real mu_Rmax;                          # hyper-mean log asymptotic recruitment
   real<lower=0> sigma_Rmax;              # hyper-SD log asymptotic recruitment
-  vector[N_pop] epsilon_Rmax_z;          # log asymptotic recruitment (Z-scores)
+  vector[N_pop] zeta_Rmax;               # log asymptotic recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaRmax;  # correlation between log(alpha) and log(Rmax)
   vector[N_X] beta_phi;                  # regression coefs for log productivity anomalies
   real<lower=-1,upper=1> rho_phi;        # AR(1) coef for log productivity anomalies
   real<lower=0> sigma_phi;               # hyper-SD of brood year log productivity anomalies
-  vector[N_year_all] epsilon_phi_z;      # log brood year productivity anomalies (Z-scores)
+  vector[N_year_all] zeta_phi;           # log brood year productivity anomalies (Z-scores)
   real<lower=0> sigma;                   # unique process error SD
   simplex[N_age] mu_p;                   # among-pop mean of age distributions
   vector<lower=0>[N_age-1] sigma_gamma;  # among-pop SD of mean log-ratio age distributions
   cholesky_factor_corr[N_age-1] L_gamma; # Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
-  matrix[N_pop,N_age-1] epsilon_gamma_z; # population mean log-ratio age distributions (Z-scores)
+  matrix[N_pop,N_age-1] zeta_gamma;      # population mean log-ratio age distributions (Z-scores)
   vector<lower=0>[N_age-1] sigma_p;      # SD of log-ratio cohort age distributions
   cholesky_factor_corr[N_age-1] L_p;     # Cholesky factor of correlation matrix of cohort log-ratio age distributions
-  matrix[N,N_age-1] epsilon_p_z;         # log-ratio cohort age distributions (Z-scores)
+  matrix[N,N_age-1] zeta_p;              # log-ratio cohort age distributions (Z-scores)
   vector<lower=0>[max_age*N_pop] S_init; # true total spawner abundance in years 1-max_age
   simplex[N_age] q_init[max_age*N_pop];  # true wild spawner age distributions in years 1-max_age
   vector<lower=0,upper=1>[max(N_H,1)] p_HOS; # true p_HOS in years which_H
-  vector[N] epsilon_R_z;                 # log true recruit abundance (not density) by brood year (z-scores)
+  vector[N] zeta_R;                      # log true recruit abundance (not density) by brood year (z-scores)
   vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
   real<lower=0> tau;                     # observation error SD of total spawners
 }
@@ -186,10 +186,10 @@ transformed parameters {
   
   # Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
-    matrix[2,2] L_alphaRmax;       # temp variable: Cholesky factor of corr matrix of log(alpha), log(Rmax)
-    matrix[N_pop,2] epsilon_alphaRmax_z; # temp variable [log(alpha), log(Rmax)] random effects (z-scored)
+    matrix[2,2] L_alphaRmax;           # temp variable: Cholesky factor of corr matrix of log(alpha), log(Rmax)
+    matrix[N_pop,2] zeta_alphaRmax;    # temp variable [log(alpha), log(Rmax)] random effects (z-scored)
     matrix[N_pop,2] epsilon_alphaRmax; # temp variable: [log(alpha), log(Rmax)] random effects
-    vector[2] sigma_alphaRmax;     # temp variable: SD vector of [log(alpha), log(Rmax)]
+    vector[2] sigma_alphaRmax;         # temp variable: SD vector of [log(alpha), log(Rmax)]
     
     L_alphaRmax[1,1] = 1;
     L_alphaRmax[2,1] = rho_alphaRmax;
@@ -197,16 +197,16 @@ transformed parameters {
     L_alphaRmax[2,2] = sqrt(1 - rho_alphaRmax^2);
     sigma_alphaRmax[1] = sigma_alpha;
     sigma_alphaRmax[2] = sigma_Rmax;
-    epsilon_alphaRmax_z = append_col(epsilon_alpha_z, epsilon_Rmax_z);
-    epsilon_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * epsilon_alphaRmax_z')';
+    zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
+    epsilon_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * zeta_alphaRmax')';
     alpha = exp(mu_alpha + col(epsilon_alphaRmax,1));
     Rmax = exp(mu_Rmax + col(epsilon_alphaRmax,2));
   }
   
   # AR(1) model for phi
-  phi[1] = epsilon_phi_z[1]*sigma_phi/sqrt(1 - rho_phi^2); # initial anomaly
+  phi[1] = zeta_phi[1]*sigma_phi/sqrt(1 - rho_phi^2); # initial anomaly
   for(i in 2:N_year_all)
-    phi[i] = rho_phi*phi[i-1] + epsilon_phi_z[i]*sigma_phi;
+    phi[i] = rho_phi*phi[i-1] + zeta_phi[i]*sigma_phi;
   # constrain "fitted" log anomalies to sum to 0 (X should be centered)
   phi = phi - mean(phi[1:N_year]) + X*beta_phi;
   
@@ -221,8 +221,8 @@ transformed parameters {
   
   # Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
-  gamma = rep_matrix(mu_gamma,N_pop) + (diag_matrix(sigma_gamma) * L_gamma * epsilon_gamma_z')';
-  p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * epsilon_p_z')', rep_vector(0,N));
+  gamma = rep_matrix(mu_gamma,N_pop) + (diag_matrix(sigma_gamma) * L_gamma * zeta_gamma')';
+  p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * zeta_p')', rep_vector(0,N));
   
   # Calculate true total wild and hatchery spawners and spawner age distribution
   # and predict recruitment from brood year i
@@ -260,7 +260,7 @@ transformed parameters {
     
     S[i] = S_W[i] + S_H[i];
     R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    R[i] = R_hat[i]*exp(phi[year[i]] + sigma*epsilon_R_z[i]);
+    R[i] = R_hat[i]*exp(phi[year[i]] + sigma*zeta_R[i]);
   }
 }
 
@@ -294,20 +294,20 @@ model {
   # Hierarchical priors
   # [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D), 
   # where D = diag_matrix(sigma_alpha, sigma_Rmax)
-  epsilon_alpha_z ~ normal(0,1);
-  epsilon_Rmax_z ~ normal(0,1);
-  epsilon_phi_z ~ normal(0,1);   # phi[i] ~ N(rho_phi*phi[i-1], sigma_phi)
+  zeta_alpha ~ normal(0,1);
+  zeta_Rmax ~ normal(0,1);
+  zeta_phi ~ normal(0,1);   # phi[i] ~ N(rho_phi*phi[i-1], sigma_phi)
   # pop mean age probs logistic MVN: 
   # gamma[i,] ~ MVN(mu_gamma,D*R_gamma*D), 
   # where D = diag_matrix(sigma_gamma)
-  to_vector(epsilon_gamma_z) ~ normal(0,1);
+  to_vector(zeta_gamma) ~ normal(0,1);
   
   # Process model
   # age probs logistic MVN: 
   # alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), 
   # where D = diag_matrix(sigma_p)
-  to_vector(epsilon_p_z) ~ normal(0,1);
-  epsilon_R_z ~ normal(0,1); # total recruits: R ~ lognormal(log(R_hat), sigma)
+  to_vector(zeta_p) ~ normal(0,1);
+  zeta_R ~ normal(0,1); # total recruits: R ~ lognormal(log(R_hat), sigma)
   
   # Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau);  # observed total spawners

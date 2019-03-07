@@ -79,16 +79,16 @@ parameters {
   matrix[N_pop,N_X_M] beta_M;                 # regression coefs for spawner-smolt productivity 
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
-  vector[N] epsilon_M_z;                      # smolt recruitment process errors (z-scored)
+  vector[N] zeta_M;                           # smolt recruitment process errors (z-scored)
   vector<lower=0,upper=1>[N_pop] mu_MS;       # mean SAR
   matrix[N_pop,N_X_MS] beta_MS;               # regression coefs for SAR 
   vector<lower=-1,upper=1>[N_pop] rho_MS;     # AR(1) coefs for SAR
   vector<lower=0>[N_pop] sigma_MS;            # SAR process error SDs
-  vector[N] epsilon_MS_z;                     # SAR process errors (z-scored)
+  vector[N] zeta_MS;                          # SAR process errors (z-scored)
   simplex[N_age] mu_p[N_pop];                 # population mean age distributions
   matrix<lower=0>[N_pop,N_age-1] sigma_p;     # log-ratio cohort age distribution SDs
   cholesky_factor_corr[N_age-1] L_p[N_pop];   # Cholesky factors of correlation matrices of cohort log-ratio age distributions
-  matrix[N,N_age-1] epsilon_p_z;              # log-ratio cohort age distribution errors (Z-scores)
+  matrix[N,N_age-1] zeta_p;                   # log-ratio cohort age distribution errors (Z-scores)
   vector<lower=0>[smolt_age*N_pop] M_init;    # true smolt abundance in years 1:smolt_age
   vector<lower=0>[max_age*N_pop] S_init;      # true total spawner abundance in years 1:max_age
   simplex[N_age] q_init[max_age*N_pop];       # true wild spawner age distributions in years 1:max_age
@@ -137,7 +137,7 @@ transformed parameters {
     # Within-pop, time-varying IID age vectors
     # (multivariate Matt trick)
     alr_p = rep_row_vector(0,N_age);
-    alr_p[1:(N_age-1)] = gamma[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * epsilon_p_z[i,]')';
+    alr_p[1:(N_age-1)] = gamma[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
     
@@ -145,13 +145,13 @@ transformed parameters {
     # MAR(1) SAR process errors  
     if(pop_year_indx[i] == 1) # initial process error
     {
-      epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
-      epsilon_MS[i] = epsilon_MS_z[i]*sigma_MS[pop[i]]/sqrt(1 - rho_MS[pop[i]]^2);
+      epsilon_M[i] = zeta_M[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
+      epsilon_MS[i] = zeta_MS[i]*sigma_MS[pop[i]]/sqrt(1 - rho_MS[pop[i]]^2);
     }
     else
     {
-      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
-      epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
+      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + zeta_M[i]*sigma_M[pop[i]];
+      epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + zeta_MS[i]*sigma_MS[pop[i]];
     }
     # SAR for outmigration year i
     s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); 
@@ -220,11 +220,11 @@ model {
   
   # Hierarchical priors
   # age probs logistic MVN: alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
-  to_vector(epsilon_p_z) ~ normal(0,1);
+  to_vector(zeta_p) ~ normal(0,1);
   
   # Process model
-  epsilon_M_z ~ normal(0,1);  # total smolts: log(M) ~ normal(log(M_hat), sigma_M)
-  epsilon_MS_z ~ normal(0,1); # SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
+  zeta_M ~ normal(0,1);  # total smolts: log(M) ~ normal(log(M_hat), sigma_M)
+  zeta_MS ~ normal(0,1); # SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
   
   # Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  # observed smolts

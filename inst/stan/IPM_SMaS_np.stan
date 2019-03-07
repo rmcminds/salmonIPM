@@ -97,11 +97,11 @@ parameters {
   matrix[N_pop,N_X_M] beta_M;                 #?# regression coefs for spawner-smolt productivity 
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
-  vector[N] epsilon_M_z;                      # smolt recruitment process errors (z-scored)
+  vector[N] zeta_M;                           # smolt recruitment process errors (z-scored)
   simplex[N_Mage] mu_p_M[N_pop];              # population mean smolt age distributions
   matrix<lower=0>[N_pop,N_Mage-1] sigma_p_M;  #?# log-ratio cohort smolt age distribution SDs
   cholesky_factor_corr[N_Mage-1] L_p_M[N_pop]; # Cholesky-factored corr matrices of log-ratio smolt age distns
-  matrix[N,N_Mage-1] epsilon_p_M_z;           #?# log-ratio cohort smolt age distn errors (Z-scored)
+  matrix[N,N_Mage-1] zeta_p_M;                #?# log-ratio cohort smolt age distn errors (Z-scored)
   vector<lower=0>[max_Mage*N_pop] M_init;     # true smolt abundance in years 1:max_Mage
   simplex[N_Mage] q_M_init[max_Mage*N_pop];   # true smolt age distns in years 1:max_Mage
   vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
@@ -110,11 +110,11 @@ parameters {
   matrix<lower=-1,upper=1>[N_pop,N_Mage] rho_MS; #?# AR(1) coefs of SAR for each smolt age
   matrix<lower=0>[N_pop,N_Mage] sigma_MS;     #?# SAR process error SDs for each smolt age
   cholesky_factor_corr[N_Mage] L_MS[N_pop];   # Cholesky-factored corr matrices of SAR across smolt ages
-  matrix[N,N_Mage] epsilon_MS_z;              #?# SAR process errors for each smolt age (z-scored)
+  matrix[N,N_Mage] zeta_MS;                   #?# SAR process errors for each smolt age (z-scored)
   simplex[N_MSage] mu_p_MS[N_pop,N_Mage];     # pop mean ocean age distributions for each smolt age
   vector<lower=0>[N_MSage-1] sigma_p_MS[N_pop,N_Mage]; # log-ratio ocean age SDs for each smolt age
   cholesky_factor_corr[N_Mage*(N_MSage-1)] L_p_MS[N_pop]; # Cholesky-factored corr matrices of log-ratio ocean age
-  matrix[N,N_Mage*(N_MSage-1)] epsilon_p_MS_z; #?# log-ratio ocean age errors (Z-scored)
+  matrix[N,N_Mage*(N_MSage-1)] zeta_p_MS;     #?# log-ratio ocean age errors (Z-scored)
   vector<lower=0>[max_age*N_pop] S_init;      # true total spawner abundance in years 1:max_age
   simplex[N_GRage] q_GR_init[max_age*N_pop];  # true wild spawner age distns in years 1:max_age
   vector<lower=0>[N_pop] tau_S;               # spawner observation error SDs
@@ -179,7 +179,7 @@ transformed parameters {
     # Time-varying IID age vectors (multivariate Matt trick)
     # Smolt age
     alr_p_M = rep_row_vector(0,N_Mage);
-    alr_p_M[1:(N_Mage-1)] = gamma_M[pop[i],] + sigma_p_M[pop[i],] .* (L_p_M[pop[i]] * epsilon_p_M_z[i,]')';
+    alr_p_M[1:(N_Mage-1)] = gamma_M[pop[i],] + sigma_p_M[pop[i],] .* (L_p_M[pop[i]] * zeta_p_M[i,]')';
     alr_p_M = exp(alr_p_M);
     p_M[i,] = alr_p_M/sum(alr_p_M);
     
@@ -190,7 +190,7 @@ transformed parameters {
       gamma_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = gamma_MS[pop[i],a];
       sigma_p_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = sigma_p_MS[pop[i],a];
     }
-    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * epsilon_p_MS_z[i,]')';
+    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * zeta_p_MS[i,]')';
     # inverse log-ratio transform and assign back to array
     for(a in 1:N_Mage)
     {
@@ -202,14 +202,14 @@ transformed parameters {
     # MAR(1) SAR process errors  
     if(pop_year_indx[i] == 1) # initial process error
     {
-      epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
+      epsilon_M[i] = zeta_M[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
       # cheat: doesn't use MAR(1) stationary covariance
-      epsilon_MS[i,] = epsilon_MS_z[i,] .* sigma_MS[pop[i],] ./ sqrt(1 - square(rho_MS[pop[i],]));
+      epsilon_MS[i,] = zeta_MS[i,] .* sigma_MS[pop[i],] ./ sqrt(1 - square(rho_MS[pop[i],]));
     }
     else
     {
-      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
-      epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + sigma_MS[pop[i],] .* (L_MS[pop[i]] * epsilon_MS_z[i,]')';
+      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + zeta_M[i]*sigma_M[pop[i]];
+      epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + sigma_MS[pop[i],] .* (L_MS[pop[i]] * zeta_MS[i,]')';
     }
     # SAR for outmigration year i
     s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]); 
@@ -302,14 +302,14 @@ model {
   # Hierarchical priors
   # smolt age probs logistic MVN: 
   # alr(p_M[i,]) ~ MVN(gamma_M[pop[i],], D*R_p_M*D), where D = diag_matrix(sigma_p_M[pop[i],])
-  to_vector(epsilon_p_M_z) ~ normal(0,1);
+  to_vector(zeta_p_M) ~ normal(0,1);
   # ocean age probs logistic MVN: 
   # alr(p_MS[i,]) ~ MVN(gamma_MS[pop[i],,], D*R_p_MS*D), where D = diag_matrix(sigma_p_MS[pop[i],,])
-  to_vector(epsilon_p_MS_z) ~ normal(0,1);
+  to_vector(zeta_p_MS) ~ normal(0,1);
   
   # Process model
-  epsilon_M_z ~ normal(0,1);  # total smolts: log(M) ~ normal(log(M_hat), sigma_M)
-  to_vector(epsilon_MS_z) ~ normal(0,1); # SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
+  zeta_M ~ normal(0,1);  # total smolts: log(M) ~ normal(log(M_hat), sigma_M)
+  to_vector(zeta_MS) ~ normal(0,1); # SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
   
   # Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  # observed smolts
