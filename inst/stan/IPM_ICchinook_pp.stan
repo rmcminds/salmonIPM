@@ -77,6 +77,7 @@ data {
   int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
+  int<lower=1> smolt_age;              # smolt age
   int<lower=2> N_age;                  # number of adult age classes
   int<lower=2> max_age;                # maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  # observed wild spawner age frequencies (all zero row = NA)  
