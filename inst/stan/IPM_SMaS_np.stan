@@ -179,7 +179,7 @@ transformed parameters {
     # Time-varying IID age vectors (multivariate Matt trick)
     # Smolt age
     alr_p_M = rep_row_vector(0,N_Mage);
-    alr_p_M[1:(N_Mage-1)] = gamma_M[pop[i],] + to_row_vector(diag_matrix(to_vector(sigma_p_M[pop[i],])) * L_p_M[pop[i]] * to_vector(epsilon_p_M_z[i,]));
+    alr_p_M[1:(N_Mage-1)] = gamma_M[pop[i],] + sigma_p_M[pop[i],] .* (L_p_M[pop[i]] * epsilon_p_M_z[i,]')';
     alr_p_M = exp(alr_p_M);
     p_M[i,] = alr_p_M/sum(alr_p_M);
     
@@ -190,7 +190,7 @@ transformed parameters {
       gamma_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = gamma_MS[pop[i],a];
       sigma_p_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = sigma_p_MS[pop[i],a];
     }
-    alr_p_MS = gamma_MS_i + diag_matrix(sigma_p_MS_i) * L_p_MS[pop[i]] * to_vector(epsilon_p_MS_z[i,]);
+    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * epsilon_p_MS_z[i,]')';
     # inverse log-ratio transform and assign back to array
     for(a in 1:N_Mage)
     {
@@ -209,13 +209,12 @@ transformed parameters {
     else
     {
       epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
-      epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + 
-        to_row_vector(diag_matrix(to_vector(sigma_MS[pop[i],])) * L_MS[pop[i]] * to_vector(epsilon_MS_z[i,]));
+      epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + sigma_MS[pop[i],] .* (L_MS[pop[i]] * epsilon_MS_z[i,]')';
     }
     # SAR for outmigration year i
     s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]); 
     
-    # Smolts
+    # Smolt recruitment
     if(pop_year_indx[i] <= max_Mage)
     {
       # use initial values
@@ -260,7 +259,7 @@ transformed parameters {
     
     S[i] = S_W[i] + S_H[i];
     
-    # Smolt recruitment
+    # Smolt production
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     # smolts from brood year i
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 

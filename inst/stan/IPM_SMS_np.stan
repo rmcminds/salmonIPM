@@ -134,13 +134,29 @@ transformed parameters {
     row_vector[N_age] alr_p; # temp variable: alr(p[i,])
     row_vector[N_age] S_W_a; # temp variable: true wild spawners by age
     
-    # Multivariate Matt trick for within-pop, time-varying age vectors
+    # Within-pop, time-varying IID age vectors
+    # (multivariate Matt trick)
     alr_p = rep_row_vector(0,N_age);
-    alr_p[1:(N_age-1)] = gamma[pop[i],] + to_row_vector(diag_matrix(to_vector(sigma_p[pop[i],])) * L_p[pop[i]] * to_vector(epsilon_p_z[i,]));
+    alr_p[1:(N_age-1)] = gamma[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * epsilon_p_z[i,]')';
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
     
-    # Smolts
+    # AR(1) smolt recruitment process errors 
+    # MAR(1) SAR process errors  
+    if(pop_year_indx[i] == 1) # initial process error
+    {
+      epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
+      epsilon_MS[i] = epsilon_MS_z[i]*sigma_MS[pop[i]]/sqrt(1 - rho_MS[pop[i]]^2);
+    }
+    else
+    {
+      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
+      epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
+    }
+    # SAR for outmigration year i
+    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); 
+    
+    # Smolt recruitment
     if(pop_year_indx[i] <= smolt_age)
       M[i] = M_init[(pop[i]-1)*smolt_age + pop_year_indx[i]];  # use initial values
     else
@@ -168,20 +184,10 @@ transformed parameters {
     
     S[i] = S_W[i] + S_H[i];
     
-    # Smolt recruitment and SAR
+    # Smolt production
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    if(pop_year_indx[i] == 1) # initial process error
-    {
-      epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
-      epsilon_MS[i] = epsilon_MS_z[i]*sigma_MS[pop[i]]/sqrt(1 - rho_MS[pop[i]]^2);
-    }
-    else
-    {
-      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
-      epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
-    }
+    # smolts from brood year i
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
-    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
   }
 }
 
