@@ -110,6 +110,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   {
     N_fwd <- 0
     fish_data_fwd <- data.frame(pop = 1, year = 1, A = 0, F_rate = 0, B_rate = 0, p_HOS = 0)
+    fish_data_fwd <- fish_data_fwd[c(),]
   }
   
   fish_data$pop <- as.numeric(factor(fish_data$pop))
@@ -125,11 +126,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   
   if(is.null(env_data))
     env_data <- switch(life_cycle,
-                       SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 1)),
-                       SMS = list(M = matrix(0, max(fish_data$year), 1),
-                                  MS = matrix(0, max(fish_data$year), 1)),
-                       SMaS = list(M = matrix(0, max(fish_data$year), 1),
-                                   MS = matrix(0, max(fish_data$year), 1)))
+                       SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 0)),
+                       SMS = list(M = matrix(0, max(fish_data$year), 0),
+                                  MS = matrix(0, max(fish_data$year), 0)),
+                       SMaS = list(M = matrix(0, max(fish_data$year), 0),
+                                   MS = matrix(0, max(fish_data$year), 0)))
   if(is.matrix(env_data) | is.data.frame(env_data)) env_data <- list(env_data)
 
   if(any(sapply(env_data, nrow) != max(fish_data$year, fish_data_fwd$year)))
@@ -181,8 +182,6 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   year = year,
                   N_X = ncol(env_data[[1]]), 
                   X = as.matrix(env_data[[1]]),
-                  N_pop_H = length(unique(pop[fit_p_HOS])),
-                  which_pop_H = array(unique(pop[fit_p_HOS]), dim = length(unique(pop[fit_p_HOS]))),
                   N_S_obs = sum(!is.na(S_obs)),
                   which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
@@ -190,13 +189,13 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   max_age = max_age,
                   n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
                   N_H = sum(fit_p_HOS),
-                  which_H = array(which(fit_p_HOS), dim = max(sum(fit_p_HOS), 1)),
-                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
-                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
+                  which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
+                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
                   A = A,
                   F_rate = replace(F_rate, is.na(F_rate), 0),
                   N_B = sum(B_take_obs > 0),
-                  which_B = array(which(B_take_obs > 0), dim = max(sum(B_take_obs > 0), 1)),
+                  which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
                   B_take_obs = B_take_obs[B_take_obs > 0],
                   N_fwd = N_fwd,
                   pop_fwd = array(fish_data_fwd$pop, dim = nrow(fish_data_fwd)),
@@ -206,66 +205,6 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   F_rate_fwd = array(fish_data_fwd$F_rate, dim = nrow(fish_data_fwd)),
                   p_HOS_fwd = array(fish_data_fwd$p_HOS, dim = nrow(fish_data_fwd)))
       
-      if(dat$N_pop_H == 0) dat$which_pop_H <- array(1, dim = 1)
-      if(dat$N_H == 0) 
-      {
-        dat$which_H <- array(1, dim = 1)
-        dat$n_W_obs <- array(1, dim = 1)
-        dat$n_H_obs <- array(1, dim = 1)
-      }
-      if(dat$N_B == 0)
-      {
-        dat$which_B <- array(1, dim = 1)
-        dat$B_take_obs <- array(0, dim = 1)
-      }
-
-      dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
-      dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
-      dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
-      
-      return(dat)
-    })
-  } else if(stan_model == "IPM_SS_F_pp")
-  {
-    with(fish_data, {  
-      dat <- list(SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                  N = nrow(fish_data),
-                  pop = pop, 
-                  year = year,
-                  N_X = ncol(env_data[[1]]), 
-                  X = as.matrix(env_data[[1]]),
-                  N_pop_H = length(unique(pop[fit_p_HOS])),
-                  which_pop_H = array(unique(pop[fit_p_HOS]), dim = length(unique(pop[fit_p_HOS]))),
-                  N_S_obs = sum(!is.na(S_obs)),
-                  which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
-                  S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
-                  N_age = sum(grepl("n_age", names(fish_data))), 
-                  max_age = max(as.numeric(substring(names(fish_data)[grep("n_age", names(fish_data))], 6, 6))),
-                  n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
-                  N_H = sum(fit_p_HOS),
-                  which_H = array(which(fit_p_HOS), dim = max(sum(fit_p_HOS), 1)),
-                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
-                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
-                  A = A,
-                  R_F_obs = array(catch_data$R_F_obs, dim = nrow(catch_data)),
-                  C_obs = array(catch_data$C_obs, dim = nrow(catch_data)),
-                  N_B = sum(B_take_obs > 0),
-                  which_B = array(which(B_take_obs > 0), dim = max(sum(B_take_obs > 0), 1)),
-                  B_take_obs = B_take_obs[B_take_obs > 0])
-      
-      if(dat$N_pop_H == 0) dat$which_pop_H <- array(1, dim = 1)
-      if(dat$N_H == 0) 
-      {
-        dat$which_H <- array(1, dim = 1)
-        dat$n_W_obs <- array(1, dim = 1)
-        dat$n_H_obs <- array(1, dim = 1)
-      }
-      if(dat$N_B == 0)
-      {
-        dat$which_B <- array(1, dim = 1)
-        dat$B_take_obs <- array(0, dim = 1)
-      }
-
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
       dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
       dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
@@ -282,8 +221,6 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   X_M = as.matrix(env_data$M),
                   N_X_MS = ncol(env_data$MS), 
                   X_MS = as.matrix(env_data$MS),
-                  N_pop_H = length(unique(pop[fit_p_HOS])),
-                  which_pop_H = array(unique(pop[fit_p_HOS]), dim = length(unique(pop[fit_p_HOS]))),
                   N_S_obs = sum(!is.na(S_obs)),
                   which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
@@ -295,27 +232,14 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   max_age = max_age,
                   n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
                   N_H = sum(fit_p_HOS),
-                  which_H = array(which(fit_p_HOS), dim = max(sum(fit_p_HOS), 1)),
-                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
-                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
+                  which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
+                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
                   A = A,
                   F_rate = replace(F_rate, is.na(F_rate), 0),
                   N_B = sum(B_take_obs > 0),
-                  which_B = array(which(B_take_obs > 0), dim = max(sum(B_take_obs > 0), 1)),
+                  which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
                   B_take_obs = B_take_obs[B_take_obs > 0])
-      
-      if(dat$N_pop_H == 0) dat$which_pop_H <- array(1, dim = 1)
-      if(dat$N_H == 0) 
-      {
-        dat$which_H <- array(1, dim = 1)
-        dat$n_W_obs <- array(1, dim = 1)
-        dat$n_H_obs <- array(1, dim = 1)
-      }
-      if(dat$N_B == 0)
-      {
-        dat$which_B <- array(1, dim = 1)
-        dat$B_take_obs <- array(0, dim = 1)
-      }
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
       dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
@@ -346,30 +270,15 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
                   n_GRage_obs = as.matrix(fish_data[,grep("n_GRage", names(fish_data))]),
-                  N_pop_H = length(unique(pop[fit_p_HOS])),
-                  which_pop_H = array(unique(pop[fit_p_HOS]), dim = length(unique(pop[fit_p_HOS]))),
                   N_H = sum(fit_p_HOS),
-                  which_H = array(which(fit_p_HOS), dim = max(sum(fit_p_HOS), 1)),
-                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
-                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = max(sum(fit_p_HOS), 1)),
+                  which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
+                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
                   A = A,
                   F_rate = replace(F_rate, is.na(F_rate), 0),
                   N_B = sum(B_take_obs > 0),
-                  which_B = array(which(B_take_obs > 0), dim = max(sum(B_take_obs > 0), 1)),
+                  which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
                   B_take_obs = B_take_obs[B_take_obs > 0])
-      
-      if(dat$N_pop_H == 0) dat$which_pop_H <- array(1, dim = 1)
-      if(dat$N_H == 0) 
-      {
-        dat$which_H <- array(1, dim = 1)
-        dat$n_W_obs <- array(1, dim = 1)
-        dat$n_H_obs <- array(1, dim = 1)
-      }
-      if(dat$N_B == 0)
-      {
-        dat$which_B <- array(1, dim = 1)
-        dat$B_take_obs <- array(0, dim = 1)
-      }
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
       dat$n_H_obs[is.na(dat$n_H_obs)] <- 0

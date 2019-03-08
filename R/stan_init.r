@@ -22,13 +22,11 @@ stan_init <- function(data, stan_model, chains)
       N_pop <- max(pop)
       N_year <- max(year)
       S_obs_noNA <- S_obs
-      if(N_S_obs < N)
-        S_obs[-which_S_obs] <- NA
+      S_obs[-which_S_obs] <- NA
       p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
       p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
-      if(N_H > 0)
-        p_HOS_all[which_H] <- p_HOS_obs
+      p_HOS_all[which_H] <- p_HOS_obs
       min_age <- max_age - N_age + 1
       adult_ages <- min_age:max_age
       q_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
@@ -118,32 +116,6 @@ stan_init <- function(data, stan_model, chains)
                p_HOS = p_HOS_obs,
                zeta_R = as.vector(scale(log(R)))*0.1,
                B_rate = B_rate)))
-      } else if(stan_model == "IPM_SS_F_pp") {
-        return(lapply(1:chains, function(i)
-          list(mu_alpha = runif(1, 1, 3),
-               sigma_alpha = runif(1, 0.1, 0.5),
-               zeta_alpha = array(runif(N_pop, -1, 1), dim = N_pop),
-               mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
-               sigma_Rmax = runif(1, 0.1, 0.5),
-               zeta_Rmax = array(runif(N_pop, -1, 1), dim = N_pop),
-               rho_alphaRmax = runif(1, -0.5, 0.5),
-               beta_phi = array(rnorm(N_X, 0, 1), dim = N_X),
-               rho_phi = runif(1, 0.1, 0.7),
-               sigma_phi = runif(1, 0.1, 0.5),
-               zeta_phi = array(rnorm(N_year, 0, 0.1), dim = N_year),
-               sigma = runif(1, 0.5, 1),
-               tau = runif(1, 0.5, 1),
-               mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
-               zeta_gamma = zeta_gamma,
-               sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
-               zeta_p = zeta_p,
-               S_init = rep(median(S_obs_noNA), max_age*N_pop),
-               q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
-               p_HOS = p_HOS_obs,
-               zeta_R = as.vector(scale(log(R)))*0.1,
-               c1 = rnorm(1, 0, 0.5), c2 = 0,
-               sigma_log_C = runif(1, 0.1, 0.5),
-               B_rate = B_rate)))
       } else if(stan_model == "IPM_SMS_np") {
         return(lapply(1:chains, function(i)
           list(alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
@@ -190,8 +162,7 @@ stan_init <- function(data, stan_model, chains)
       p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
       p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
-      if(N_H > 0)
-        p_HOS_all[which_H] <- p_HOS_obs
+      p_HOS_all[which_H] <- p_HOS_obs
       S_W_obs <- S_obs*(1 - p_HOS_all)
       B_rate <- pmin(pmax(B_take_obs/(S_W_obs[which_B] + B_take_obs), 0.01), 0.99)
       B_rate[is.na(B_rate)] <- 0.1

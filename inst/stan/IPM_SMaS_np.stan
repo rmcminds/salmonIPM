@@ -32,7 +32,7 @@ data {
   int<lower=1,upper=N> pop[N];         # population identifier
   int<lower=1,upper=N> year[N];        # calendar year identifier
   vector[N] A;                         # habitat area associated with each spawner abundance obs
-  int<lower=1> N_X_M;                  # number of spawner-smolt productivity covariates
+  int<lower=0> N_X_M;                  # number of spawner-smolt productivity covariates
   matrix[max(year),N_X_M] X_M;         # spawner-smolt covariates (if none, use vector of zeros)
   int<lower=1,upper=N> N_M_obs;        # number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; # cases with non-missing smolt abundance obs
@@ -40,7 +40,7 @@ data {
   int<lower=2> N_Mage;                 # number of smolt age classes
   int<lower=2> max_Mage;               # maximum smolt age
   matrix<lower=0>[N,N_Mage] n_Mage_obs; # observed smolt age frequencies (all zero row = NA)  
-  int<lower=1> N_X_MS;                 # number of SAR productivity covariates
+  int<lower=0> N_X_MS;                 # number of SAR productivity covariates
   matrix[max(year),N_X_MS] X_MS;       # SAR covariates (if none, use vector of zeros)
   int<lower=2> N_MSage;                # number of ocean age classes
   int<lower=1> max_MSage;              # maximum ocean age
@@ -49,16 +49,14 @@ data {
   int<lower=1,upper=N> which_S_obs[N_S_obs]; # cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
   matrix<lower=0>[N,N_Mage*N_MSage] n_GRage_obs;  # obs W spawner Gilbert-Rich age freqs (all zero row = NA)  
-  int<lower=0,upper=max(pop)> N_pop_H; # number of populations with hatchery input
-  int<lower=1,upper=max(pop)> which_pop_H[max(N_pop_H,1)]; # populations with hatchery input
   int<lower=0,upper=N> N_H;            # number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[max(N_H,1)]; # years with p_HOS > 0
-  int<lower=0> n_W_obs[max(N_H,1)];    # count of wild spawners in samples (assumes no NAs)
-  int<lower=0> n_H_obs[max(N_H,1)];    # count of hatchery spawners in samples (assumes no NAs)
+  int<lower=0> n_W_obs[N_H];           # count of wild spawners in samples (assumes no NAs)
+  int<lower=0> n_H_obs[N_H];           # count of hatchery spawners in samples (assumes no NAs)
   vector[N] F_rate;                    # fishing mortality rate of wild adults (no fishing on jacks)
   int<lower=0,upper=N> N_B;            # number of years with B_take > 0
-  int<lower=1,upper=N> which_B[max(N_B,1)]; # years with B_take > 0
-  vector[max(N_B,1)] B_take_obs;       # observed broodstock take of wild adults
+  int<lower=1,upper=N> which_B[N_B];   # years with B_take > 0
+  vector[N_B] B_take_obs;              # observed broodstock take of wild adults
 }
 
 transformed data {
@@ -69,7 +67,7 @@ transformed data {
   int<lower=2> max_age;              # maximum adult age
   int<lower=2> N_GRage;              # number of Gilbert-Rich age classes
   int<lower=1> pop_year_indx[N];     # index of years within each pop, starting at 1
-  int<lower=0> n_HW_obs[max(N_H,1)]; # total sample sizes for H/W frequencies
+  int<lower=0> n_HW_obs[N_H];        # total sample sizes for H/W frequencies
   
   N_pop = max(pop);
   N_year = max(year);
@@ -87,7 +85,7 @@ transformed data {
     else
       pop_year_indx[i] = pop_year_indx[i-1] + 1;
   }
-  for(i in 1:max(N_H,1)) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
+  for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
 }
 
 parameters {
@@ -118,8 +116,8 @@ parameters {
   vector<lower=0>[max_age*N_pop] S_init;      # true total spawner abundance in years 1:max_age
   simplex[N_GRage] q_GR_init[max_age*N_pop];  # true wild spawner age distns in years 1:max_age
   vector<lower=0>[N_pop] tau_S;               # spawner observation error SDs
-  vector<lower=0,upper=1>[max(N_H,1)] p_HOS;  # true p_HOS in years which_H
-  vector<lower=0,upper=1>[max(N_B,1)] B_rate; # true broodstock take rate when B_take > 0
+  vector<lower=0,upper=1>[N_H] p_HOS;         # true p_HOS in years which_H
+  vector<lower=0,upper=1>[N_B] B_rate;        # true broodstock take rate when B_take > 0
 }
 
 transformed parameters {
@@ -145,12 +143,9 @@ transformed parameters {
   
   # Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
-  if(N_H > 0)
-    p_HOS_all[which_H] = p_HOS;
-  
+  p_HOS_all[which_H] = p_HOS;
   B_rate_all = rep_vector(0,N);
-  if(N_B > 0)
-    B_rate_all[which_B] = B_rate;
+  B_rate_all[which_B] = B_rate;
   
   # Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
@@ -269,7 +264,7 @@ transformed parameters {
 }
 
 model {
-  vector[max(N_B,1)] B_take; # true broodstock take when B_take_obs > 0
+  vector[N_B] B_take; # true broodstock take when B_take_obs > 0
   
   # Priors
   alpha ~ lognormal(2,2);
@@ -295,11 +290,8 @@ model {
   to_vector(sigma_MS) ~ normal(0,5);
   M_init ~ lognormal(0,5);
   S_init ~ lognormal(0,5);
-  if(N_B > 0)  # penalty to force pred and obs broodstock take to match 
-  {
-    B_take = B_rate .* S_W[which_B] .* (1 - q_MS[which_B,1]) ./ (1 - B_rate);
-    B_take_obs ~ lognormal(log(B_take), 0.1); 
-  }
+  B_take = B_rate .* S_W[which_B] .* (1 - q_MS[which_B,1]) ./ (1 - B_rate);
+  B_take_obs ~ lognormal(log(B_take), 0.1); # penalty to force pred and obs broodstock take to match 
   
   # Hierarchical priors
   # smolt age probs logistic MVN: 
@@ -319,20 +311,20 @@ model {
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[pop[which_S_obs]]);  # observed spawners
   target += sum(n_MSage_obs .* log(q_MS));  # obs wild age freq: n_MSage_obs[i] ~ multinomial(q_MS[i])
   target += sum(n_GRage_obs .* log(q_GR));  # obs wild age freq: n_age_obs[i] ~ multinomial(q_GR[i])
-  if(N_H > 0) n_H_obs ~ binomial(n_HW_obs, p_HOS);  # observed counts of hatchery vs. wild spawners
+  n_H_obs ~ binomial(n_HW_obs, p_HOS);  # observed counts of hatchery vs. wild spawners
 }
 
 generated quantities {
   corr_matrix[N_Mage-1] R_p_M[N_pop]; # correlation matrices of log-ratio smolt age distns
   corr_matrix[N_Mage] R_MS[N_pop]; # correlation matrices of logit SAR by smolt age
   corr_matrix[N_MSage-1] R_p_MS[N_pop]; # correlation matrices of log-ratio ocean age distns
-  vector[N] LL_M_obs;              # pointwise log-likelihood of smolts
-  vector[N] LL_n_smolt_age_obs;    # pointwise log-likelihood of smolt age frequencies
-  vector[N] LL_S_obs;              # pointwise log-likelihood of spawners
-  vector[N] LL_n_ocean_age_obs;    # pointwise log-likelihood of ocean age frequencies
-  vector[N] LL_n_GR_age_obs;       # pointwise log-likelihood of Gilbert-Rich age frequencies
-  vector[max(N_H,1)] LL_n_H_obs;   # pointwise log-likelihood of hatchery vs. wild frequencies
-  vector[N] LL;                    # total pointwise log-likelihood                              
+  vector[N] LL_M_obs;           # pointwise log-likelihood of smolts
+  vector[N] LL_n_smolt_age_obs; # pointwise log-likelihood of smolt age frequencies
+  vector[N] LL_S_obs;           # pointwise log-likelihood of spawners
+  vector[N] LL_n_ocean_age_obs; # pointwise log-likelihood of ocean age frequencies
+  vector[N] LL_n_GR_age_obs;    # pointwise log-likelihood of Gilbert-Rich age frequencies
+  vector[N_H] LL_n_H_obs;       # pointwise log-likelihood of hatchery vs. wild frequencies
+  vector[N] LL;                 # total pointwise log-likelihood                              
   
   for(j in 1:N_pop)
   {
@@ -350,12 +342,9 @@ generated quantities {
     LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau_S); 
   LL_n_ocean_age_obs = (n_MSage_obs .* log(q_MS)) * rep_vector(1,N_MSage);
   LL_n_GR_age_obs = (n_GRage_obs .* log(q_GR)) * rep_vector(1,N_GRage);
-  LL_n_H_obs = rep_vector(0,max(N_H,1));
-  if(N_H > 0)
-  {
-    for(i in 1:N_H)
-      LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-  }
+  LL_n_H_obs = rep_vector(0,N_H);
+  for(i in 1:N_H)
+    LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
   LL = LL_M_obs + LL_n_smolt_age_obs + LL_S_obs + LL_n_ocean_age_obs + LL_n_GR_age_obs;
   LL[which_H] = LL[which_H] + LL_n_H_obs;
 }
