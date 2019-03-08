@@ -124,6 +124,16 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   if(any(is.na(fish_data_fwd)))
     stop("Missing values not allowed in fish_data_fwd.\n")
   
+  if(is.matrix(env_data) | is.data.frame(env_data)) env_data <- list(env_data)
+  if(!is.null(env_data))
+  {
+    if(any(sapply(env_data, nrow) != max(fish_data$year, fish_data_fwd$year)))
+      stop("Length of environmental time series does not equal number of brood years.\n")
+    
+    if(any(sapply(env_data, is.na)))
+      stop("Missing values are not allowed in environmental covariates.\n")
+  }
+
   if(is.null(env_data))
     env_data <- switch(life_cycle,
                        SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 0)),
@@ -131,13 +141,6 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                                   MS = matrix(0, max(fish_data$year), 0)),
                        SMaS = list(M = matrix(0, max(fish_data$year), 0),
                                    MS = matrix(0, max(fish_data$year), 0)))
-  if(is.matrix(env_data) | is.data.frame(env_data)) env_data <- list(env_data)
-
-  if(any(sapply(env_data, nrow) != max(fish_data$year, fish_data_fwd$year)))
-    stop("Length of environmental time series does not equal number of brood years.\n")
-
-  if(any(sapply(env_data, is.na)))
-    stop("Missing values are not allowed in environmental covariates.\n")
   
   if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.\n")

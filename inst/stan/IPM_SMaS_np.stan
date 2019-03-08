@@ -50,7 +50,7 @@ data {
   vector<lower=0>[N] S_obs;            # observed annual total spawner abundance (not density)
   matrix<lower=0>[N,N_Mage*N_MSage] n_GRage_obs;  # obs W spawner Gilbert-Rich age freqs (all zero row = NA)  
   int<lower=0,upper=N> N_H;            # number of years with p_HOS > 0
-  int<lower=1,upper=N> which_H[max(N_H,1)]; # years with p_HOS > 0
+  int<lower=1,upper=N> which_H[N_H];   # years with p_HOS > 0
   int<lower=0> n_W_obs[N_H];           # count of wild spawners in samples (assumes no NAs)
   int<lower=0> n_H_obs[N_H];           # count of hatchery spawners in samples (assumes no NAs)
   vector[N] F_rate;                    # fishing mortality rate of wild adults (no fishing on jacks)
@@ -186,7 +186,7 @@ transformed parameters {
       gamma_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = gamma_MS[pop[i],a];
       sigma_p_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = sigma_p_MS[pop[i],a];
     }
-    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * zeta_p_MS[i,]')';
+    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * zeta_p_MS[i,]'); #'
     # inverse log-ratio transform and assign back to array
     for(a in 1:N_Mage)
     {

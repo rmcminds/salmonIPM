@@ -65,6 +65,15 @@ functions {
         which_cond = i;
       return(which_cond);
   }
+  
+  # Left multiply vector by matrix
+  # works even if size is zero
+  vector mat_lmult(matrix X, vector v)
+  {
+    vector[rows(X)] Xv;
+    Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
+    return(Xv); 
+  }
 }
 
 data {
@@ -85,14 +94,14 @@ data {
   # smolt production
   int<lower=1> smolt_age;              # smolt age
   int<lower=0> N_X_M;                  # number of spawner-smolt productivity covariates
-  matrix[max(max(year),max(year_fwd)),N_X_M] X_M; # spawner-smolt covariates (if none, use vector of zeros)
+  matrix[max(append_array(year,year_fwd)),N_X_M] X_M; # spawner-smolt covariates (if none, use vector of zeros)
   # downstream, SAR, upstream survival
   int<lower=0> N_X_D;                  # number of juvenile downstream survival covariates
-  matrix[max(max(year),max(year_fwd)),N_X_D] X_D; # downstream survival covariates (if none, use vector of zeros)
+  matrix[max(append_array(year,year_fwd)),N_X_D] X_D; # downstream survival covariates (if none, use vector of zeros)
   int<lower=0> N_X_SAR;                  # number of smolt-to-adult survival (SAR) covariates
-  matrix[max(max(year),max(year_fwd)),N_X_SAR] X_SAR; # SAR covariates (if none, use vector of zeros)
+  matrix[max(append_array(year,year_fwd)),N_X_SAR] X_SAR; # SAR covariates (if none, use vector of zeros)
   int<lower=0> N_X_U;                  # number of adult upstream survival covariates
-  matrix[max(max(year),max(year_fwd)),N_X_U] X_U; # upstream survival covariates (if none, use vector of zeros)
+  matrix[max(append_array(year,year_fwd)),N_X_U] X_U; # upstream survival covariates (if none, use vector of zeros)
   ### priors for survival from CJS go here ###
   # spawner abundance
   int<lower=1,upper=N> N_S_obs;        # number of cases with non-missing spawner abundance obs 
@@ -127,7 +136,7 @@ transformed data {
   
   N_pop = max(pop);
   N_year = max(year);
-  N_year_all = max(max(year), max(year_fwd));
+  N_year_all = max(append_array(year, year_fwd));
   for(a in 1:N_age)
   {
     ages[a] = max_age - N_age + a;
@@ -247,7 +256,7 @@ transformed parameters {
     alpha = exp(mu_alpha + col(epsilon_alphaRmax,1));
     Rmax = exp(mu_Rmax + col(epsilon_alphaRmax,2));
   }
-  
+
   # AR(1) models for downstream, SAR, upstream survival
   epsilon_D[1] = zeta_D[1]*sigma_D/sqrt(1 - rho_D^2); 
   epsilon_SAR[1] = zeta_SAR[1]*sigma_SAR/sqrt(1 - rho_SAR^2); 
@@ -259,9 +268,9 @@ transformed parameters {
     epsilon_U[i] = rho_U*epsilon_U[i-1] + zeta_U[i]*sigma_U;
   }
   # constrain process errors to sum to 0 (columns of X should be centered)
-  s_D = inv_logit(logit(mu_D) + X_D*beta_D + epsilon_D - mean(epsilon_D[1:N_year]));
-  SAR = inv_logit(logit(mu_SAR) + X_SAR*beta_SAR + epsilon_SAR - mean(epsilon_SAR[1:N_year]));
-  s_U = inv_logit(logit(mu_U) + X_U*beta_U + epsilon_U - mean(epsilon_U[1:N_year]));
+  s_D = inv_logit(logit(mu_D) + mat_lmult(X_D,beta_D) + epsilon_D - mean(epsilon_D[1:N_year]));
+  SAR = inv_logit(logit(mu_SAR) + mat_lmult(X_SAR,beta_SAR) + epsilon_SAR - mean(epsilon_SAR[1:N_year]));
+  s_U = inv_logit(logit(mu_U) + mat_lmult(X_U,beta_U) + epsilon_U - mean(epsilon_U[1:N_year]));
   
   # Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);

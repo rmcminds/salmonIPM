@@ -65,6 +65,15 @@ functions {
         which_cond = i;
       return(which_cond);
   }
+  
+  # Left multiply vector by matrix
+  # works even if size is zero
+  vector mat_lmult(matrix X, vector v)
+  {
+    vector[rows(X)] Xv;
+    Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
+    return(Xv); 
+  }
 }
 
 data {
@@ -95,7 +104,7 @@ data {
   vector<lower=0,upper=1>[N_fwd] B_rate_fwd; # broodstock take rate for forward simulations
   vector<lower=0,upper=1>[N_fwd] p_HOS_fwd; # p_HOS for forward simulations
   int<lower=0> N_X;                    # number of productivity covariates
-  matrix[max(max(year),max(year_fwd)),N_X] X; # brood-year productivity covariates
+  matrix[max(append_array(year,year_fwd)),N_X] X; # brood-year productivity covariates
 }
 
 transformed data {
@@ -109,7 +118,7 @@ transformed data {
   
   N_pop = max(pop);
   N_year = max(year);
-  N_year_all = max(max(year), max(year_fwd));
+  N_year_all = max(append_array(year, year_fwd));
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
@@ -202,7 +211,7 @@ transformed parameters {
   for(i in 2:N_year_all)
     phi[i] = rho_phi*phi[i-1] + zeta_phi[i]*sigma_phi;
   # constrain "fitted" log anomalies to sum to 0 (X should be centered)
-  phi = phi - mean(phi[1:N_year]) + X*beta_phi;
+  phi = phi - mean(phi[1:N_year]) + mat_lmult(X,beta_phi);
   
   # Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -213,7 +222,7 @@ transformed parameters {
   # Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
   gamma = rep_matrix(mu_gamma,N_pop) + (diag_matrix(sigma_gamma) * L_gamma * zeta_gamma')';
-                                        p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * zeta_p')', rep_vector(0,N));
+  p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * zeta_p')', rep_vector(0,N));
   
   # Calculate true total wild and hatchery spawners and spawner age distribution
   # and predict recruitment from brood year i
