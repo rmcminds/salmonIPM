@@ -133,6 +133,7 @@ transformed parameters {
   {
     row_vector[N_age] alr_p; # temp variable: alr(p[i,])
     row_vector[N_age] S_W_a; # temp variable: true wild spawners by age
+    int ii;                  # temp variable: index into S_init and q_init
     
     # Within-pop, time-varying IID age vectors
     # (multivariate Matt trick)
@@ -141,8 +142,7 @@ transformed parameters {
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
     
-    # AR(1) smolt recruitment process errors 
-    # MAR(1) SAR process errors  
+    # AR(1) smolt recruitment and SAR process errors  
     if(pop_year_indx[i] == 1) # initial process error
     {
       epsilon_M[i] = zeta_M[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
@@ -166,9 +166,10 @@ transformed parameters {
     if(pop_year_indx[i] <= max_age)
     {
       # use initial values
-      S_W[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*(1 - p_HOS_all[i]);        
-      S_H[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*p_HOS_all[i];
-      q[i,1:N_age] = to_row_vector(q_init[(pop[i]-1)*max_age + pop_year_indx[i],1:N_age]);
+      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
+      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
+      S_H[i] = S_init[ii]*p_HOS_all[i];
+      q[i,1:N_age] = to_row_vector(q_init[ii,1:N_age]);
       S_W_a = S_W[i]*q[i,];
     }
     else
@@ -184,10 +185,9 @@ transformed parameters {
     
     S[i] = S_W[i] + S_H[i];
     
-    # Smolt production
+    # Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    # smolts from brood year i
-    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
+    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
   }
 }
 

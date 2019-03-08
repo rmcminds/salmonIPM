@@ -31,6 +31,7 @@ data {
   int<lower=1> N;                      # total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];         # population identifier
   int<lower=1,upper=N> year[N];        # calendar year identifier
+  vector[N] A;                         # habitat area associated with each spawner abundance obs
   int<lower=1> N_X_M;                  # number of spawner-smolt productivity covariates
   matrix[max(year),N_X_M] X_M;         # spawner-smolt covariates (if none, use vector of zeros)
   int<lower=1,upper=N> N_M_obs;        # number of cases with non-missing smolt abundance obs 
@@ -54,7 +55,6 @@ data {
   int<lower=1,upper=N> which_H[max(N_H,1)]; # years with p_HOS > 0
   int<lower=0> n_W_obs[max(N_H,1)];    # count of wild spawners in samples (assumes no NAs)
   int<lower=0> n_H_obs[max(N_H,1)];    # count of hatchery spawners in samples (assumes no NAs)
-  vector[N] A;                         # habitat area associated with each spawner abundance obs
   vector[N] F_rate;                    # fishing mortality rate of wild adults (no fishing on jacks)
   int<lower=0,upper=N> N_B;            # number of years with B_take > 0
   int<lower=1,upper=N> which_B[max(N_B,1)]; # years with B_take > 0
@@ -175,6 +175,7 @@ transformed parameters {
     vector[N_Mage*(N_MSage-1)] sigma_p_MS_i; # temp: sigma_p_MS[i,,]
     vector[N_Mage*(N_MSage-1)] alr_p_MS;     # temp: alr(p_MS[i,])    
     matrix[N_Mage,N_MSage] S_W_a;            # temp: true W spawners by smolt and ocean age
+    int ii;                                  # temp variable: index into M_init, S_init and q_init
     
     # Time-varying IID age vectors (multivariate Matt trick)
     # Smolt age
@@ -218,8 +219,9 @@ transformed parameters {
     if(pop_year_indx[i] <= max_Mage)
     {
       # use initial values
-      M[i] = M_init[(pop[i]-1)*max_Mage + pop_year_indx[i]];  
-      q_M[i,] = to_row_vector(q_M_init[(pop[i]-1)*max_Mage + pop_year_indx[i],]);
+      ii = (pop[i] - 1)*max_Mage + pop_year_indx[i];
+      M[i] = M_init[ii];  
+      q_M[i,] = to_row_vector(q_M_init[ii,]);
     }
     else
     {
@@ -236,9 +238,10 @@ transformed parameters {
     if(pop_year_indx[i] <= max_age)
     {
       # use initial values
-      S_W[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*(1 - p_HOS_all[i]);        
-      S_H[i] = S_init[(pop[i]-1)*max_age + pop_year_indx[i]]*p_HOS_all[i];
-      q_GR[i,] = to_row_vector(q_GR_init[(pop[i]-1)*max_age + pop_year_indx[i],]);
+      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
+      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
+      S_H[i] = S_init[ii]*p_HOS_all[i];
+      q_GR[i,] = to_row_vector(q_GR_init[ii,]);
       S_W_a = to_matrix(S_W[i]*q_GR[i,], N_Mage, N_MSage, 0);
       q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));
     }
@@ -254,14 +257,13 @@ transformed parameters {
       S_W[i] = sum(S_W_a);
       S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
       q_GR[i,] = to_row_vector(S_W_a')/S_W[i]; #'
-                               q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));                                
+      q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));                                
     }
     
     S[i] = S_W[i] + S_H[i];
     
-    # Smolt production
+    # Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    # smolts from brood year i
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
   }
 }

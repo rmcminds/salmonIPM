@@ -235,14 +235,14 @@ transformed parameters {
     # (built-in softmax function doesn't accept row vectors)
     exp_p = exp(p[i,]);
     p[i,] = exp_p/sum(exp_p);
-    ii = (pop[i] - 1)*max_age + pop_year_indx[i];
     
     if(pop_year_indx[i] <= max_age)
     {
       # Use initial values
+      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
       S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
       S_H[i] = S_init[ii]*p_HOS_all[i];
-      q[i,1:N_age] = to_row_vector(q_init[ii, 1:N_age]);
+      q[i,] = to_row_vector(q_init[ii,]);
       S_W_a = S_W[i]*q[i,];
     }
     else
