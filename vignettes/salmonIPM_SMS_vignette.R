@@ -2,6 +2,7 @@
 
 
 # Simulate data 
+set.seed(123)
 N <- 50
 test_data <- data.frame(pop = rep(1,N), year =  1:N, A = 1, p_HOS = 0, 
                         F_rate = runif(N, 0.3, 0.6), B_rate = 0,

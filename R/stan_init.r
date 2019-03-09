@@ -75,7 +75,7 @@ stan_init <- function(data, stan_model, chains)
         if(N_M_obs < N)
           M_obs[-which_M_obs] <- median(M_obs[which_M_obs])
         M0 <- c(M_obs[-(1:smolt_age)], rep(median(M_obs), smolt_age))
-        s_MS <- R/M0
+        s_MS <- pmin(S_obs_noNA/M0, 1 - 1e-4)
       }
       
       if(stan_model == "IPM_SS_np") {
@@ -160,7 +160,7 @@ stan_init <- function(data, stan_model, chains)
                mu_p = mu_p,
                sigma_p = matrix(runif(N_pop*(N_age-1),0.5,1), N_pop, N_age-1),
                epsilon_p_z = epsilon_p_z,
-               M_init = rep(median(M_obs), smolt_age*N_pop),
+               M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
                S_init = rep(median(S_obs_noNA), max_age*N_pop),
                q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,

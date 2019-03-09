@@ -54,7 +54,7 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop;         # number of populations
   int<lower=1,upper=N> N_year;        # number of years
-  int<lower=1> ocean_ages[N_age];     # ocean ages
+  int<lower=0> ocean_ages[N_age];     # ocean ages
   int<lower=1> pop_year_indx[N];      # index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[max(N_H,1)];  # total sample sizes for H/W frequencies
   
@@ -140,6 +140,19 @@ transformed parameters {
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
     
+    # Smolt recruitment and SAR
+    if(pop_year_indx[i] == 1) # initial process error
+    {
+      epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
+      epsilon_MS[i] = epsilon_MS_z[i]*sigma_MS[pop[i]]/sqrt(1 - rho_MS[pop[i]]^2);
+    }
+    else
+    {
+      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
+      epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
+    }
+    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
+    
     # Smolts
     if(pop_year_indx[i] <= smolt_age)
       M[i] = M_init[(pop[i]-1)*smolt_age + pop_year_indx[i]];  # use initial values
@@ -167,21 +180,8 @@ transformed parameters {
     }
     
     S[i] = S_W[i] + S_H[i];
-    
-    # Smolt recruitment and SAR
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    if(pop_year_indx[i] == 1) # initial process error
-    {
-      epsilon_M[i] = epsilon_M_z[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
-      epsilon_MS[i] = epsilon_MS_z[i]*sigma_MS[pop[i]]/sqrt(1 - rho_MS[pop[i]]^2);
-    }
-    else
-    {
-      epsilon_M[i] = rho_M[pop[i]]*epsilon_M[i-1] + epsilon_M_z[i]*sigma_M[pop[i]];
-      epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + epsilon_MS_z[i]*sigma_MS[pop[i]];
-    }
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); # smolts from brood year i
-    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); # outmig year i SAR
   }
 }
 
