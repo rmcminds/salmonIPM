@@ -73,7 +73,7 @@ stan_init <- function(data, stan_model, chains)
         if(N_M_obs < N)
           M_obs[-which_M_obs] <- median(M_obs[which_M_obs])
         M0 <- c(M_obs[-(1:smolt_age)], rep(median(M_obs), smolt_age))
-        s_MS <- R/M0
+        s_MS <- pmin(S_obs_noNA/M0, 0.99)
       }
       
       if(stan_model == "IPM_SS_np") {
@@ -132,7 +132,7 @@ stan_init <- function(data, stan_model, chains)
                mu_p = mu_p,
                sigma_p = matrix(runif(N_pop*(N_age-1),0.5,1), N_pop, N_age-1),
                zeta_p = zeta_p,
-               M_init = rep(median(M_obs), smolt_age*N_pop),
+               M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
                S_init = rep(median(S_obs_noNA), max_age*N_pop),
                q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
@@ -149,7 +149,7 @@ stan_init <- function(data, stan_model, chains)
       N_GRage <- N_Mage*N_MSage
       max_age <- max_Mage + max_MSage
       q_M_obs <- sweep(n_Mage_obs, 1, rowSums(n_Mage_obs), "/")
-      s_MS <- mean(S_obs/M_obs, na.rm = TRUE)
+      s_MS <- mean(pmin(S_obs/M_obs, 0.99), na.rm = TRUE)
       q_MS_obs <- sweep(n_MSage_obs, 1, rowSums(n_MSage_obs), "/")
       q_MS_obs_NA <- apply(is.na(q_MS_obs), 1, any)
       q_MS_obs[q_MS_obs_NA,] <- rep(colMeans(na.omit(q_MS_obs)), each = sum(q_MS_obs_NA))
