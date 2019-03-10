@@ -19,8 +19,11 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 5, sigma_alpha = 1, mu_Rmax = 9, sigma
                    N_age = 3, max_age = 5, ages = list(M = 2), SR_fun = "BH")
 
 # Fit model
-ipm_fit <- salmonIPM(fish_data = sim_out$sim_dat, ages = list(M = 2), stan_model = "IPM_SMS_np", 
-                     chains = 3, cores = 1, iter = 1500, warmup = 500, 
+ipm_fit <- salmonIPM(fish_data = sim_out$sim_dat, 
+                     # env_data = list(M = matrix(0,nrow(test_data),1),
+                     #                 MS = matrix(0,nrow(test_data),1)),
+                     ages = list(M = 2), stan_model = "IPM_SMS_np", 
+                     chains = 3, cores = 3, iter = 1500, warmup = 500, 
                      control = list(adapt_delta = 0.99))
 
 print(ipm_fit, pars = c("p","p_HOS","B_rate_all","S","M","s_MS","q"), include = FALSE)

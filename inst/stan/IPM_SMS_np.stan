@@ -74,12 +74,12 @@ transformed data {
 parameters {
   vector<lower=0>[N_pop] alpha;             # intrinsic spawner-smolt productivity
   vector<lower=0>[N_pop] Rmax;              # asymptotic smolt recruitment
-  matrix[N_pop,N_X_M] beta_M;               # regression coefs for spawner-smolt productivity 
+  matrix[N_pop,N_X_M] beta_M;               # regression coefs for spawner-smolt productivity
   vector<lower=-1,upper=1>[N_pop] rho_M;    # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;           # spawner-smolt process error SDs
   vector[N] zeta_M;                         # smolt recruitment process errors (z-scored)
   vector<lower=0,upper=1>[N_pop] mu_MS;     # mean SAR
-  matrix[N_pop,N_X_MS] beta_MS;             # regression coefs for SAR 
+  matrix[N_pop,N_X_MS] beta_MS;             # regression coefs for SAR
   vector<lower=-1,upper=1>[N_pop] rho_MS;   # AR(1) coefs for SAR
   vector<lower=0>[N_pop] sigma_MS;          # SAR process error SDs
   vector[N] zeta_MS;                        # SAR process errors (z-scored)
@@ -94,6 +94,7 @@ parameters {
   vector<lower=0,upper=1>[N_B] B_rate;      # true broodstock take rate when B_take > 0
   vector<lower=0>[N_pop] tau_M;             # smolt observation error SDs
   vector<lower=0>[N_pop] tau_S;             # spawner observation error SDs
+  real<lower=0,upper=1> WTF;                # DO NOT DELETE OR COMMENT OUT: code will not run
 }
 
 transformed parameters {
@@ -149,7 +150,8 @@ transformed parameters {
       epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + zeta_MS[i]*sigma_MS[pop[i]];
     }
     # SAR for outmigration year i
-    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); 
+    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + epsilon_MS[i]); 
+    # s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); 
     
     # Smolt recruitment
     if(pop_year_indx[i] <= smolt_age)
@@ -182,7 +184,8 @@ transformed parameters {
     
     # Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
+    M0[i] = M_hat[i]*exp(epsilon_M[i]); 
+    # M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
   }
 }
 
