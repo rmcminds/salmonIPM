@@ -92,7 +92,9 @@ parameters {
   #?# indicates params that could be arrays instead of matrices
   vector<lower=0>[N_pop] alpha;               # intrinsic spawner-smolt productivity
   vector<lower=0>[N_pop] Rmax;                # asymptotic smolt recruitment
-  matrix[N_pop,N_X_M] beta_M;                 #?# regression coefs for spawner-smolt productivity 
+  real<lower=0,upper=1> WTF[1,0];
+  real<lower=0,upper=1> OMFG[1];
+  # matrix[N_pop,N_X_M] beta_M;                 #?# regression coefs for spawner-smolt productivity
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
   vector[N] zeta_M;                           # smolt recruitment process errors (z-scored)
@@ -104,7 +106,7 @@ parameters {
   simplex[N_Mage] q_M_init[max_Mage*N_pop];   # true smolt age distns in years 1:max_Mage
   vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
   matrix<lower=0,upper=1>[N_pop,N_Mage] mu_MS; #?# mean SAR for each smolt age
-  matrix[N_pop,N_X_MS] beta_MS;               #?# regression coefs for SAR
+  # matrix[N_pop,N_X_MS] beta_MS;               #?# regression coefs for SAR
   matrix<lower=-1,upper=1>[N_pop,N_Mage] rho_MS; #?# AR(1) coefs of SAR for each smolt age
   matrix<lower=0>[N_pop,N_Mage] sigma_MS;     #?# SAR process error SDs for each smolt age
   cholesky_factor_corr[N_Mage] L_MS[N_pop];   # Cholesky-factored corr matrices of SAR across smolt ages
@@ -208,7 +210,8 @@ transformed parameters {
       epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + sigma_MS[pop[i],] .* (L_MS[pop[i]] * zeta_MS[i,]')';
     }
     # SAR for outmigration year i
-    s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]); 
+    s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + epsilon_MS[i,]); 
+    # s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]); 
     
     # Smolt recruitment
     if(pop_year_indx[i] <= max_Mage)
@@ -259,7 +262,8 @@ transformed parameters {
     
     # Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
+    M0[i] = M_hat[i]*exp(epsilon_M[i]); 
+    # M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
   }
 }
 
@@ -269,8 +273,8 @@ model {
   # Priors
   alpha ~ lognormal(2,2);
   Rmax ~ lognormal(2,3);
-  to_vector(beta_M) ~ normal(0,5);
-  to_vector(beta_MS) ~ normal(0,5);
+  # to_vector(beta_M) ~ normal(0,5);
+  # to_vector(beta_MS) ~ normal(0,5);
   for(j in 1:N_pop)
   {
     rho_M[j] ~ pexp(0,0.85,20);   # mildly regularize rho to ensure stationarity

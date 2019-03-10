@@ -170,7 +170,7 @@ stan_init <- function(data, stan_model, chains)
       return(lapply(1:chains, function(i)
         list(alpha = array(rlnorm(N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1), dim = N_pop),
              Rmax = array(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5), dim = N_pop),
-             beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
+             # beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
              rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
              sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
              zeta_M = rnorm(N,0,0.1), #as.vector(scale(log(M_obs)))*0.1,
@@ -181,7 +181,7 @@ stan_init <- function(data, stan_model, chains)
              q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
              tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
              mu_MS = matrix(plogis(rnorm(N_pop*N_Mage, qlogis(s_MS), 0.5)), N_pop, N_Mage),
-             beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
+             # beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
              rho_MS = matrix(runif(N_pop, 0.1, 0.7), N_pop, N_Mage),
              sigma_MS = matrix(runif(N_pop, 0.05, 2), N_pop, N_Mage), 
              zeta_MS = matrix(rnorm(N*N_Mage, 0, 0.1), N, N_Mage),
