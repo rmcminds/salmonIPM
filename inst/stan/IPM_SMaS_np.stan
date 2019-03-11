@@ -324,7 +324,7 @@ model {
 generated quantities {
   corr_matrix[N_Mage-1] R_p_M[N_pop]; # correlation matrices of log-ratio smolt age distns
   corr_matrix[N_Mage] R_MS[N_pop]; # correlation matrices of logit SAR by smolt age
-  corr_matrix[N_MSage-1] R_p_MS[N_pop]; # correlation matrices of log-ratio ocean age distns
+  corr_matrix[N_Mage*(N_MSage-1)] R_p_MS[N_pop]; # correlation matrices of log-ratio ocean age distns
   vector[N] LL_M_obs;              # pointwise log-likelihood of smolts
   vector[N] LL_n_smolt_age_obs;    # pointwise log-likelihood of smolt age frequencies
   vector[N] LL_S_obs;              # pointwise log-likelihood of spawners
