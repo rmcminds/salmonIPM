@@ -4,8 +4,8 @@
 \alias{IPM_sim}
 \title{Simulate data under an integrated population model}
 \usage{
-IPM_sim(pars, fish_data, env_data = NULL, life_cycle = "SS", N_age, max_age,
-  ages = NULL, SR_fun = "BH")
+IPM_sim(pars, fish_data, env_data = NULL, life_cycle = "SS", N_age,
+  max_age, ages = NULL, SR_fun = "BH")
 }
 \arguments{
 \item{pars}{Named list of (hyper-) parameters to be used for simulations:
