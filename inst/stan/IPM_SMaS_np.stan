@@ -92,9 +92,7 @@ parameters {
   #?# indicates params that could be arrays instead of matrices
   vector<lower=0>[N_pop] alpha;               # intrinsic spawner-smolt productivity
   vector<lower=0>[N_pop] Rmax;                # asymptotic smolt recruitment
-  real<lower=0,upper=1> WTF[1,0];
-  real<lower=0,upper=1> OMFG[1];
-  # matrix[N_pop,N_X_M] beta_M;                 #?# regression coefs for spawner-smolt productivity
+  matrix[N_pop,N_X_M] beta_M;                 #?# regression coefs for spawner-smolt productivity
   vector<lower=-1,upper=1>[N_pop] rho_M;      # AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             # spawner-smolt process error SDs
   vector[N] zeta_M;                           # smolt recruitment process errors (z-scored)
@@ -106,7 +104,7 @@ parameters {
   simplex[N_Mage] q_M_init[max_Mage*N_pop];   # true smolt age distns in years 1:max_Mage
   vector<lower=0>[N_pop] tau_M;               # smolt observation error SDs
   matrix<lower=0,upper=1>[N_pop,N_Mage] mu_MS; #?# mean SAR for each smolt age
-  # matrix[N_pop,N_X_MS] beta_MS;               #?# regression coefs for SAR
+  matrix[N_pop,N_X_MS] beta_MS;               #?# regression coefs for SAR
   matrix<lower=-1,upper=1>[N_pop,N_Mage] rho_MS; #?# AR(1) coefs of SAR for each smolt age
   matrix<lower=0>[N_pop,N_Mage] sigma_MS;     #?# SAR process error SDs for each smolt age
   cholesky_factor_corr[N_Mage] L_MS[N_pop];   # Cholesky-factored corr matrices of SAR across smolt ages
@@ -321,7 +319,7 @@ model {
 generated quantities {
   corr_matrix[N_Mage-1] R_p_M[N_pop]; # correlation matrices of log-ratio smolt age distns
   corr_matrix[N_Mage] R_MS[N_pop]; # correlation matrices of logit SAR by smolt age
-  corr_matrix[N_MSage-1] R_p_MS[N_pop]; # correlation matrices of log-ratio ocean age distns
+  corr_matrix[N_Mage*(N_MSage-1)] R_p_MS[N_pop]; # correlation matrices of log-ratio ocean age distns
   vector[N] LL_M_obs;           # pointwise log-likelihood of smolts
   vector[N] LL_n_smolt_age_obs; # pointwise log-likelihood of smolt age frequencies
   vector[N] LL_S_obs;           # pointwise log-likelihood of spawners
