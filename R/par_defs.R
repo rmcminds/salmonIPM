@@ -55,7 +55,7 @@ par_defs <- function(stan_model = NULL) {
     c("R_MS", "(N_Mage x N_Mage) x N_pop", "Correlation matrices of logit SAR by smolt age"),
     c("mu_p_MS", "N_MSage x N_pop x N_Mage", "Popn mean ocean age distributions for each smolt age"),
     c("sigma_p_MS", "(N_MSage-1) x N_pop x N_Mage", "SDs of log-ratio ocean age for each smolt age"),
-    c("R_p_MS", "[(N_Mage * (N_MSage-1)) x (N_Mage * (N_MSage-1))] x N_pop", "Correlation matrices of log-ratio ocean age distns"),
+    c("R_p_MS", "[(N_Mage*(N_MSage-1)) x (N_Mage*(N_MSage-1))] x N_pop", "Correlation matrices of log-ratio ocean age distns"),
     c("p_MS", "N_MSage x N x N_Mage", "True ocean age distns by outmigration year"),
     c("q_MS", "N x N_MSage", "True ocean age distns of spawners"),
     c("q_GR", "N x N_MSage", "true Gilbert-Rich age distns of spawners"),
