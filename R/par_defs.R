@@ -1,19 +1,19 @@
-#' Returns a list of the parameters returned by default for the specified
-#' model.
+#' Returns a table of the parameters and their descriptions, as returned by
+#' default for the specified model.
 #'
 #' @param stan_model One of two options:
 #' \enumerate{
 #'   \item A \code{character} string giving the name of the Stan model being fit
 #'   (without the ".stan" filetype extension)
 #'   \item An object of class \code{stanfit} as returned by a call to
-#'   \code{\link{salmonIPM}}:
+#'   \code{\link{salmonIPM}}
 #' }
 #' 
 #' The default argument \code{stan_model = NULL} returns a list of all of the 
 #' parameters returned by default, across all model forms.
 #'
-#' @return Data frame with columns for parameter name, its dimensions, and its
-#' definition
+#' @return Data frame with 3 columns listing the parameters, their dimensions,
+#' and their definition.
 #' 
 #' @export
 par_defs <- function(stan_model = NULL) {
