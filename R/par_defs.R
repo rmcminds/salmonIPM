@@ -1,10 +1,16 @@
-#' Generates a table of model parameters, their dimensions, and their 
-#' definitions.
+#' Returns a list of the parameters returned by default for the specified
+#' model.
 #'
-#' @param stan_model Character string giving the name of the Stan model being
-#'   fit (".stan" filetype extension is not included). The default argument
-#'   \code{stan_model = NULL} returns a list of all possible parameters across
-#'   all model forms.
+#' @param stan_model One of two options:
+#' \enumerate{
+#'   \item A \code{character} string giving the name of the Stan model being fit
+#'   (without the ".stan" filetype extension)
+#'   \item An object of class \code{stanfit} as returned by a call to
+#'   \code{\link{salmonIPM}}:
+#' }
+#' 
+#' The default argument \code{stan_model = NULL} returns a list of all of the 
+#' parameters returned by default, across all model forms.
 #'
 #' @return Data frame with columns for parameter name, its dimensions, and its
 #' definition
@@ -71,7 +77,18 @@ par_defs <- function(stan_model = NULL) {
   if(is.null(stan_model)) {
     full_tbl <- full_tbl
   } else {
-    idx <- full_tbl[,"Parameter/state"] %in% stan_pars(stan_model)
+    cls <- class(stan_model)
+    if(cls == "character") {
+      idx <- full_tbl[,"Parameter/state"] %in% stan_pars(stan_model)
+    } else {
+      if(cls == "stanfit") {
+        idx <- full_tbl[,"Parameter/state"] %in% stan_pars(stan_model@model_name)
+      } else {
+        stop("stan_model must be a character string or stanfit object, but was ",
+             capture.output(dput(cls)),
+             call. = TRUE)
+      }
+    }
     full_tbl <- full_tbl[idx,]
   }
   return(print(full_tbl, quote = FALSE))
