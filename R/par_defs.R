@@ -2,12 +2,14 @@
 #' definitions.
 #'
 #' @param stan_model Character string giving the name of the Stan model being
-#'   fit (".stan" filetype extension is not included).   
+#'   fit (".stan" filetype extension is not included). The default argument
+#'   \code{stan_model = NULL} returns a list of all possible parameters across
+#'   all model forms.
 #'
 #' @return Data frame with columns for parameter name, its dimensions, and its
 #' definition
 #' 
-par_defs <- function(stan_model) {
+par_defs <- function(stan_model = NULL) {
   par_list <- list(
     c("alpha", "N_pop x 1", "Intrinsic productivity"),
     c("mu_alpha", "scalar", "Hyper-mean of log intrinsic productivity"),
@@ -23,7 +25,7 @@ par_defs <- function(stan_model) {
     c("sigma_p", "N_pop x (N_age-1)", "SDs of log-ratio cohort age distribution"),
     c("R_p", "N_pop x N_pop", "Correlation matrix of within-popn cohort log-ratio age distns"),
     c("p", "(N_pop x N_year) x N_age", "Year-specific cohort age distributions"),
-    c("p_HOS", "N_H x 1", "True prop of HOS in years in with H fish present"),
+    c("p_HOS", "N_H x 1", "True prop of hatchery-origin spawners (HOS) in years with H fish present"),
     c("B_rate_all", "(N_pop x N_year) x 1", "True broodstock take rate in all years"),
     c("tau", "(N_pop x N_year) x 1", "SD of observation errors of total spawners"),
     c("S", "(N_pop x N_year) x 1", "True total spawner abundance"),
@@ -64,7 +66,12 @@ par_defs <- function(stan_model) {
     c("phi", "N_year_all x 1", "log of productivity anomalies by brood year")
   )
   full_tbl <- do.call(rbind, par_list)
-  colnames(full_tbl) <- c("Param", "Dims", "Defn")
-  idx <- full_tbl[,"Param"] %in% stan_pars(stan_model)
-  return(print(full_tbl[idx,], quote = FALSE))
+  colnames(full_tbl) <- c("Parameter/state", "Dimensions", "Definition")
+  if(is.null(stan_model)) {
+    full_tbl <- full_tbl
+  } else {
+    idx <- full_tbl[,"Parameter/state"] %in% stan_pars(stan_model)
+    full_tbl <- full_tbl[idx,]
+  }
+  return(print(full_tbl, quote = FALSE))
 }
