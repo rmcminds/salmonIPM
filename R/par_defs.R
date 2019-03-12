@@ -9,6 +9,7 @@
 #' @return Data frame with columns for parameter name, its dimensions, and its
 #' definition
 #' 
+#' @export
 par_defs <- function(stan_model = NULL) {
   par_list <- list(
     c("alpha", "N_pop x 1", "Intrinsic productivity"),
