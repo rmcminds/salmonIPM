@@ -13,6 +13,7 @@ par_defs <- function(stan_model) {
     c("Rmax", "N_pops x 1", "Asymptotic recruitment"),
     c("mu_Rmax", "scalar", "Hyper-mean of log asymptotic recruitment"),
     c("sigma_Rmax", "scalar", "Hyper-SD of log asymptotic recruitment"),
+    c("rho_alphaRmax", "scalar", "Correlation between log(alpha) and log(Rmax)"),
     c("beta", "N_pop x N_X", "Regression coefs for log productivity anomalies"),
     c("rho", "N_pop x 1", "AR(1) coefs for log productivity anomalies"),
     c("sigma", "N_pop x 1", "SD of process errors"),
@@ -26,7 +27,11 @@ par_defs <- function(stan_model) {
     c("S", "(N_pop x N_year) x 1", "True total spawner abundance"),
     c("R", "(N_pop x N_year) x 1", "True recruit abundance (not density) by brood year"),
     c("q", "(N_pop x N_year) x N_age", "True spawner age distributions"),
-    c("", "", ""),
+    c("beta_phi", "N_X x 1", "Regression coefs for log productivity anomalies"),
+    c("sigma_phi", "scalar", "Hyper-SD of brood year log productivity anomalies"),
+    c("rho_phi", "scalar", "AR(1) coef for log productivity anomalies"),
+    c("sigma_gamma", "(N_age-1) x 1", "Among-pop SD of mean log-ratio age distributions"),
+    c("R_gamma", "(N_age-1) x (N_age-1)", "Among-pop correlation matrix of mean log-ratio age distns"),
     c("", "", ""),
   )
   idx <- stan_pars(stan_model)
