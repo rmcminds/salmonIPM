@@ -52,7 +52,7 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop;         # number of populations
   int<lower=1,upper=N> N_year;        # number of years
-  int<lower=1> ocean_ages[N_age];     # ocean ages
+  int<lower=0> ocean_ages[N_age];     # ocean ages
   int<lower=1> pop_year_indx[N];      # index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];  # total sample sizes for H/W frequencies
   
