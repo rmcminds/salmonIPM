@@ -4,13 +4,15 @@
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included).   
 #'
+#' @return Data frame with columns for parameter name, its dimensions, and its
+#' definition
+#' 
 par_defs <- function(stan_model) {
-  hdrs <- c("Param", "Dims", "Defn")
-  full_tbl <- list(
-    c("alpha", "N_pops x 1", "Intrinsic productivity"),
+  par_list <- list(
+    c("alpha", "N_pop x 1", "Intrinsic productivity"),
     c("mu_alpha", "scalar", "Hyper-mean of log intrinsic productivity"),
     c("sigma_alpha", "scalar", "Hyper-SD of log intrinsic productivity"),
-    c("Rmax", "N_pops x 1", "Asymptotic recruitment"),
+    c("Rmax", "N_pop x 1", "Asymptotic recruitment"),
     c("mu_Rmax", "scalar", "Hyper-mean of log asymptotic recruitment"),
     c("sigma_Rmax", "scalar", "Hyper-SD of log asymptotic recruitment"),
     c("rho_alphaRmax", "scalar", "Correlation between log(alpha) and log(Rmax)"),
@@ -51,7 +53,7 @@ par_defs <- function(stan_model) {
     c("R_MS", "(N_Mage x N_Mage) x N_pop", "Correlation matrices of logit SAR by smolt age"),
     c("mu_p_MS", "N_MSage x N_pop x N_Mage", "Popn mean ocean age distributions for each smolt age"),
     c("sigma_p_MS", "(N_MSage-1) x N_pop x N_Mage", "SDs of log-ratio ocean age for each smolt age"),
-    c("R_p_MS", "[N_Mage*(N_MSage-1) x N_Mage*(N_MSage-1)] x N_pop", "Correlation matrices of log-ratio ocean age distns"),
+    c("R_p_MS", "[(N_Mage x (N_MSage-1)) x (N_Mage x (N_MSage-1))] x N_pop", "Correlation matrices of log-ratio ocean age distns"),
     c("p_MS", "N_MSage x (N_pop x N_year) x N_Mage", "True ocean age distns by outmigration year"),
     c("q_MS", "(N_pop x N_year) x N_MSage", "True ocean age distns of spawners"),
     c("q_GR", "(N_pop x N_year) x N_MSage", "true Gilbert-Rich age distns of spawners"),
@@ -61,5 +63,8 @@ par_defs <- function(stan_model) {
     c("gamma", "N_pop x (N_age-1)", "Popn mean log-ratio age distributions"),
     c("phi", "N_year_all x 1", "log of productivity anomalies by brood year")
   )
-  idx <- stan_pars(stan_model)
+  full_tbl <- do.call(rbind, par_list)
+  colnames(full_tbl) <- c("Param", "Dims", "Defn")
+  idx <- full_tbl[,"Param"] %in% stan_pars(stan_model)
+  return(print(full_tbl[idx,], quote = FALSE))
 }
