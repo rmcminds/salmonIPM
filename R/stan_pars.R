@@ -18,7 +18,7 @@ stan_pars <- function(stan_model) {
     IPM_SMS_np = c("alpha","Rmax","beta_M","rho_M","sigma_M",
                    "mu_MS","beta_MS","rho_MS","sigma_MS","s_MS",
                    "mu_p","sigma_p","R_p","p","p_HOS","B_rate_all",
-                   "tau_M","tau_S","S","M","s_MS","q"),
+                   "tau_M","tau_S","S","M","q"),
     IPM_SMaS_np = c("alpha","Rmax","beta_M","rho_M","sigma_M","tau_M","M",
                     "mu_p_M","sigma_p_M","R_p_M","p_M","q_M",
                     "mu_MS","beta_MS","rho_MS","sigma_MS","R_MS","s_MS",
