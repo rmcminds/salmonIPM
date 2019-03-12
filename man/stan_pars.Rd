@@ -10,6 +10,10 @@ stan_pars(stan_model)
 \item{stan_model}{Character string giving the name of the Stan model being
 fit (".stan" filetype extension is not included).}
 }
+\value{
+Character vector with names of parameters and states that Stan will
+return.
+}
 \description{
 Fits an integrated or run-reconstruction spawner-recruit model.
 }
