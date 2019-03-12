@@ -1,4 +1,5 @@
-#' Fits an integrated or run-reconstruction spawner-recruit model.
+#' Helper function that returns the parameters and states that a given
+#' model should return.
 #'
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included).   

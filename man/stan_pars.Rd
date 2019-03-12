@@ -2,7 +2,8 @@
 % Please edit documentation in R/stan_pars.R
 \name{stan_pars}
 \alias{stan_pars}
-\title{Fits an integrated or run-reconstruction spawner-recruit model.}
+\title{Helper function that returns the parameters and states that a given
+model should return.}
 \usage{
 stan_pars(stan_model)
 }
@@ -15,5 +16,6 @@ Character vector with names of parameters and states that Stan will
 return.
 }
 \description{
-Fits an integrated or run-reconstruction spawner-recruit model.
+Helper function that returns the parameters and states that a given
+model should return.
 }
