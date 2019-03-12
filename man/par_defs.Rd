@@ -2,8 +2,8 @@
 % Please edit documentation in R/par_defs.R
 \name{par_defs}
 \alias{par_defs}
-\title{Returns a list of the parameters returned by default for the specified
-model.}
+\title{Returns a table of the parameters and their descriptions, as returned by
+default for the specified model.}
 \usage{
 par_defs(stan_model = NULL)
 }
@@ -13,17 +13,17 @@ par_defs(stan_model = NULL)
   \item A \code{character} string giving the name of the Stan model being fit
   (without the ".stan" filetype extension)
   \item An object of class \code{stanfit} as returned by a call to
-  \code{\link{salmonIPM}}:
+  \code{\link{salmonIPM}}
 }
 
 The default argument \code{stan_model = NULL} returns a list of all of the 
 parameters returned by default, across all model forms.}
 }
 \value{
-Data frame with columns for parameter name, its dimensions, and its
-definition
+Data frame with 3 columns listing the parameters, their dimensions,
+and their definition.
 }
 \description{
-Returns a list of the parameters returned by default for the specified
-model.
+Returns a table of the parameters and their descriptions, as returned by
+default for the specified model.
 }
