@@ -3,6 +3,9 @@
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included).   
 #'
+#' @return Character vector with names of parameters and states that Stan will
+#' return.
+#' 
 stan_pars <- function(stan_model) {
   pars <- list( 
     IPM_SS_np = c("alpha","Rmax","beta","rho","sigma",
