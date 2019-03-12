@@ -58,10 +58,8 @@ par_defs <- function(stan_model) {
     c("R_hat", "(N_pop x N_year) x 1", "Expected recruit abundance (not density) by brood year"),
     c("S_sim", "(N_pop x N_year) x 1", "Simulated number of spawners"),
     c("R_sim", "(N_pop x N_year) x 1", "Simulated number of recruits"),
-    c("", "", ""),
-    c("", "", ""),
-    c("", "", ""),
-    c("", "", ""),
+    c("gamma", "N_pop x (N_age-1)", "Popn mean log-ratio age distributions"),
+    c("phi", "N_year_all x 1", "log of productivity anomalies by brood year")
   )
   idx <- stan_pars(stan_model)
 }
