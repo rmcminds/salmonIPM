@@ -179,7 +179,7 @@ stan_init <- function(data, stan_model, chains)
              zeta_p_M = matrix(rnorm(N*(N_Mage - 1), 0, 0.1), N, N_Mage - 1),
              M_init = rep(median(M_obs), max_Mage*N_pop),
              q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
-             tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
+             tau_M = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
              mu_MS = matrix(plogis(rnorm(N_pop*N_Mage, qlogis(s_MS), 0.5)), N_pop, N_Mage),
              beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
              rho_MS = matrix(runif(N_pop, 0.1, 0.7), N_pop, N_Mage),
@@ -191,7 +191,7 @@ stan_init <- function(data, stan_model, chains)
              zeta_p_MS = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, N_Mage*(N_MSage - 1)),
              S_init = rep(median(S_obs, na.rm = TRUE), N_pop*max_age),
              q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_age*N_pop, N_GRage, byrow = T),
-             tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop),
+             tau_S = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
              p_HOS = p_HOS_obs,
              B_rate = B_rate)))
     })

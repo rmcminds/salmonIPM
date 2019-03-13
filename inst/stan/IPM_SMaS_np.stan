@@ -279,7 +279,7 @@ model {
     sigma_M[j] ~ normal(0,5);
     L_p_M[j] ~ lkj_corr_cholesky(1);
     # tau_M[j] ~ pexp(1,0.85,30);   # rule out tau < 0.1 to avoid divergences 
-    tau_M[j] ~ lognormal(1,2);
+    tau_M[j] ~ lognormal(-3,0.2);
     for(a in 1:N_Mage)
     {
       rho_MS[j,a] ~ pexp(0,0.85,20);  # mildly regularize rho to ensure stationarity
@@ -288,7 +288,7 @@ model {
     L_MS[j] ~ lkj_corr_cholesky(1);
     L_p_MS[j] ~ lkj_corr_cholesky(1);
     # tau_S[j] ~ pexp(1,0.85,30);   # rule out tau < 0.1 to avoid divergences 
-    tau_S[j] ~ lognormal(1,2);
+    tau_S[j] ~ lognormal(-3,0.2);
   }
   to_vector(sigma_p_M) ~ normal(0,5);
   to_vector(sigma_MS) ~ normal(0,5);

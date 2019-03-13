@@ -80,8 +80,8 @@
 #'
 #' @export
 
-stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, ages = NULL,
-                      stan_model, SR_fun = "BH")
+stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, 
+                      ages = NULL, stan_model, SR_fun = "BH")
 {
   fish_data <- as.data.frame(fish_data)
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
@@ -130,7 +130,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
     if(any(sapply(env_data, nrow) != max(fish_data$year, fish_data_fwd$year)))
       stop("Length of environmental time series does not equal number of brood years.\n")
     
-    if(any(sapply(env_data, is.na)))
+    if(any(unlist(sapply(env_data, is.na))))
       stop("Missing values are not allowed in environmental covariates.\n")
   }
 
