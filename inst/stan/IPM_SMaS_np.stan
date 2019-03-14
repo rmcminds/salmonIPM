@@ -208,7 +208,7 @@ transformed parameters {
       epsilon_MS[i,] = rho_MS[pop[i],] .* epsilon_MS[i-1,] + sigma_MS[pop[i],] .* (L_MS[pop[i]] * zeta_MS[i,]')';
     }
     # SAR for outmigration year i
-    # s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + epsilon_MS[i,]); 
+    # s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + epsilon_MS[i,]);
     s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]);
     
     # Smolt recruitment
@@ -260,7 +260,7 @@ transformed parameters {
     
     # Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    # M0[i] = M_hat[i]*exp(epsilon_M[i]); 
+    # M0[i] = M_hat[i]*exp(epsilon_M[i]);
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]);
   }
 }

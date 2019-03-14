@@ -173,7 +173,7 @@ stan_init <- function(data, stan_model, chains)
              beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
              rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
              sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
-             zeta_M = rnorm(N,0,0.1), #as.vector(scale(log(M_obs)))*0.1,
+             zeta_M = rnorm(N,0,0.1), 
              mu_p_M = aggregate(q_M_obs, list(pop), mean, na.rm = TRUE),
              sigma_p_M = matrix(runif(N_pop*(N_Mage - 1), 0.05, 2), N_pop, N_Mage - 1),
              zeta_p_M = matrix(rnorm(N*(N_Mage - 1), 0, 0.1), N, N_Mage - 1),
