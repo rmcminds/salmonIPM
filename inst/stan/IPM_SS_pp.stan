@@ -223,7 +223,7 @@ transformed parameters {
   mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
   gamma = rep_matrix(mu_gamma,N_pop) + (diag_matrix(sigma_gamma) * L_gamma * zeta_gamma')';
   p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * zeta_p')', rep_vector(0,N));
-  
+    
   # Calculate true total wild and hatchery spawners and spawner age distribution
   # and predict recruitment from brood year i
   for(i in 1:N)
@@ -236,7 +236,6 @@ transformed parameters {
     # (built-in softmax function doesn't accept row vectors)
     exp_p = exp(p[i,]);
     p[i,] = exp_p/sum(exp_p);
-    
     if(pop_year_indx[i] <= max_age)
     {
       # Use initial values

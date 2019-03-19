@@ -242,7 +242,7 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
   n_W_obs <- n_HW_obs - n_H_obs                    # obs count of wild spawners
   
   return(list(sim_dat = data.frame(pop = pop, A = A, year = year, fit_p_HOS = p_HOS > 0,
-                                   S_obs = S_obs, M_obs = switch(life_cycle, SS = NULL, SMS = M_obs),
+                                   S_obs = S_obs, M_obs = switch(life_cycle, SS = NA, SMS = M_obs),
                                    n_age_obs, n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
                                    B_take_obs = B_take, F_rate = F_rate),
               pars_out = c(pars, list(S_W_a = S_W_a, alpha = alpha, Rmax = Rmax, 
