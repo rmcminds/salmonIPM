@@ -31,12 +31,12 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sig
 
 # No pooling across populations
 fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
-                    chains = 3, iter = 2000, warmup = 1000, thin = 1, cores = 3,
+                    chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
 # Partial pooling across populations
 fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
-                    chains = 3, iter = 2000, warmup = 1000, thin = 1, cores = 3,
+                    chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
 

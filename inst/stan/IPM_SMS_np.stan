@@ -94,7 +94,6 @@ parameters {
   vector<lower=0,upper=1>[N_B] B_rate;      # true broodstock take rate when B_take > 0
   vector<lower=0>[N_pop] tau_M;             # smolt observation error SDs
   vector<lower=0>[N_pop] tau_S;             # spawner observation error SDs
-  real<lower=0,upper=1> WTF;                # DO NOT DELETE OR COMMENT OUT: code will not run
 }
 
 transformed parameters {
@@ -150,8 +149,7 @@ transformed parameters {
       epsilon_MS[i] = rho_MS[pop[i]]*epsilon_MS[i-1] + zeta_MS[i]*sigma_MS[pop[i]];
     }
     # SAR for outmigration year i
-    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + epsilon_MS[i]); 
-    # s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]); 
+    s_MS[i] = inv_logit(logit(mu_MS[pop[i]]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i]);
     
     # Smolt recruitment
     if(pop_year_indx[i] <= smolt_age)
@@ -184,8 +182,7 @@ transformed parameters {
     
     # Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    M0[i] = M_hat[i]*exp(epsilon_M[i]); 
-    # M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
+    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]);
   }
 }
 

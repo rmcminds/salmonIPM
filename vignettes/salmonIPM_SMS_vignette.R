@@ -20,8 +20,6 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 5, sigma_alpha = 1, mu_Rmax = 9, sigma
 
 # Fit model
 ipm_fit <- salmonIPM(fish_data = sim_out$sim_dat, 
-                     # env_data = list(M = matrix(0,nrow(test_data),1),
-                     #                 MS = matrix(0,nrow(test_data),1)),
                      ages = list(M = 2), stan_model = "IPM_SMS_np", 
                      chains = 3, cores = 3, iter = 1500, warmup = 500, 
                      control = list(adapt_delta = 0.99))
