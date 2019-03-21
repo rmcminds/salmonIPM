@@ -120,11 +120,11 @@ stan_init <- function(data, stan_model, chains)
         return(lapply(1:chains, function(i)
           list(alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
                Rmax = array(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = N_pop),
-               # beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
+               beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
                rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
                sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
                mu_MS = array(plogis(rnorm(N_pop, mean(qlogis(s_MS)), 0.5)), dim = N_pop),
-               # beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
+               beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
                rho_MS = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
                sigma_MS = array(runif(N_pop, 0.05, 2), dim = N_pop), 
                tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),

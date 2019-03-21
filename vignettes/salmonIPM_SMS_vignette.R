@@ -2,6 +2,7 @@
 library(salmonIPM)
 
 # Simulate data 
+set.seed(123)
 N <- 50
 set.seed(123)
 test_data <- data.frame(pop = rep(1,N), year =  1:N, A = 1, p_HOS = 0, 
