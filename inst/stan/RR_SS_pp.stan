@@ -50,14 +50,14 @@ transformed data {
 parameters {
   real mu_alpha;                        # hyper-mean log intrinsic productivity of wild spawners
   real<lower=0> sigma_alpha;            # hyper-SD log intrinsic productivity
-  vector[N_pop] epsilon_alpha_z;        # log intrinsic prod of wild spawners (Z-scores)
+  vector[N_pop] zeta_alpha;             # log intrinsic prod of wild spawners (Z-scores)
   real mu_Rmax;                         # hyper-mean log asymptotic recruitment
   real<lower=0> sigma_Rmax;             # hyper-SD log asymptotic recruitment
-  vector[N_pop] epsilon_Rmax_z;         # log asymptotic recruitment (Z-scores)
+  vector[N_pop] zeta_Rmax;              # log asymptotic recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaRmax; # correlation between log(alpha) and log(Rmax)
   real<lower=-1,upper=1> rho_phi;       # AR(1) coef for brood year log productivity anomalies
   real<lower=0> sigma_phi;              # hyper-SD of brood year log productivity anomalies
-  vector[max(year)] epsilon_phi_z;      # log brood year productivity anomalies (Z-scores)
+  vector[max(year)] zeta_phi;           # log brood year productivity anomalies (Z-scores)
   real<lower=0> sigma;                  # residual error SD
 }
 
@@ -77,7 +77,7 @@ transformed parameters {
     L_alphaRmax[2,1] = rho_alphaRmax;
     L_alphaRmax[1,2] = 0;
     L_alphaRmax[2,2] = sqrt(1 - rho_alphaRmax^2);
-    log_alphaRmax = append_col(epsilon_alpha_z, epsilon_Rmax_z);
+    log_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
     sigma_alphaRmax[1] = sigma_alpha;
     sigma_alphaRmax[2] = sigma_Rmax;
     log_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * log_alphaRmax')';
@@ -86,9 +86,9 @@ transformed parameters {
   }
   
   # AR(1) model for phi
-  phi[1] = epsilon_phi_z[1]*sigma_phi/sqrt(1 - rho_phi^2); # initial anomaly
+  phi[1] = zeta_phi[1]*sigma_phi/sqrt(1 - rho_phi^2); # initial anomaly
   for(i in 2:N_year)
-    phi[i] = rho_phi*phi[i-1] + epsilon_phi_z[i]*sigma_phi;
+    phi[i] = rho_phi*phi[i-1] + zeta_phi[i]*sigma_phi;
   phi = phi - mean(phi);  # constrain log anomalies to sum to zero
 
   # Predict recruitment
@@ -111,9 +111,9 @@ model {
   
   # Hierarchical priors
   # [log(alpha), log(Rmax)] ~ MVN(0, D*R_log_aRmax*D), where D = diag_matrix(sigma_alpha, sigma_Rmax)
-  epsilon_alpha_z ~ normal(0,1);
-  epsilon_Rmax_z ~ normal(0,1);
-  epsilon_phi_z ~ normal(0,1);    # phi ~ N(0, sigma_phi)
+  zeta_alpha ~ normal(0,1);
+  zeta_Rmax ~ normal(0,1);
+  zeta_phi ~ normal(0,1);    # phi ~ N(0, sigma_phi)
   
   # Likelihood
   R[which_fit] ~ lognormal(log(R_hat[which_fit]) + phi[year[which_fit]], sigma);

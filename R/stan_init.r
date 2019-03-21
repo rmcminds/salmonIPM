@@ -22,13 +22,11 @@ stan_init <- function(data, stan_model, chains)
       N_pop <- max(pop)
       N_year <- max(year)
       S_obs_noNA <- S_obs
-      if(N_S_obs < N)
-        S_obs[-which_S_obs] <- NA
+      S_obs[-which_S_obs] <- NA
       p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
       p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
-      if(N_H > 0)
-        p_HOS_all[which_H] <- p_HOS_obs
+      p_HOS_all[which_H] <- p_HOS_obs
       min_age <- max_age - N_age + 1
       adult_ages <- min_age:max_age
       q_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
@@ -65,17 +63,17 @@ stan_init <- function(data, stan_model, chains)
       p_NA <- apply(is.na(p), 1, any)
       p[p_NA, ] <- rep(colMeans(na.omit(p)), each = sum(p_NA))
       alr_p <- sweep(log(p[, 1:(N_age-1), drop = FALSE]), 1, log(p[,N_age]), "-")
-      epsilon_p_z <- apply(alr_p, 2, scale)
+      zeta_p <- apply(alr_p, 2, scale)
       mu_p <- aggregate(p, list(pop), mean)
-      epsilon_gamma_z <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
-      epsilon_gamma_z <- apply(epsilon_gamma_z, 2, scale)
+      zeta_gamma <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
+      zeta_gamma <- apply(zeta_gamma, 2, scale)
       
       if(stan_model == "IPM_SMS_np") 
       {
         if(N_M_obs < N)
           M_obs[-which_M_obs] <- median(M_obs[which_M_obs])
         M0 <- c(M_obs[-(1:smolt_age)], rep(median(M_obs), smolt_age))
-        s_MS <- pmin(S_obs_noNA/M0, 1 - 1e-4)
+        s_MS <- pmin(S_obs_noNA/M0, 0.99)
       }
       
       if(stan_model == "IPM_SS_np") {
@@ -88,61 +86,35 @@ stan_init <- function(data, stan_model, chains)
                tau = array(runif(N_pop, 0.5, 1), dim = N_pop),
                mu_p = mu_p,
                sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age-1),
-               epsilon_p_z = epsilon_p_z,
+               zeta_p = zeta_p,
                S_init = rep(median(S_obs_noNA), max_age*N_pop),
                q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
-               epsilon_R_z = as.vector(scale(log(R)))*0.1,
+               zeta_R = as.vector(scale(log(R)))*0.1,
                B_rate = B_rate)))
       } else if(stan_model == "IPM_SS_pp") {
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 1, 3),
                sigma_alpha = runif(1, 0.1, 0.5),
-               epsilon_alpha_z = array(runif(N_pop, -1, 1), dim = N_pop),
+               zeta_alpha = array(runif(N_pop, -1, 1), dim = N_pop),
                mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
                sigma_Rmax = runif(1, 0.1, 0.5),
-               epsilon_Rmax_z = array(runif(N_pop,-1,1), dim = N_pop),
+               zeta_Rmax = array(runif(N_pop,-1,1), dim = N_pop),
                rho_alphaRmax = runif(1, -0.5, 0.5),
                beta_phi = array(rnorm(N_X, 0, 1), dim = N_X),
                rho_phi = runif(1, 0.1, 0.7),
                sigma_phi = runif(1, 0.1, 0.5),
-               epsilon_phi_z = array(rnorm(N_year, 0, 0.1), dim = max(year,year_fwd)),
+               zeta_phi = array(rnorm(N_year, 0, 0.1), dim = max(year,year_fwd)),
                sigma = runif(1, 0.5, 1),
                tau = runif(1, 0.5, 1),
                mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
-               epsilon_gamma_z = epsilon_gamma_z,
+               zeta_gamma = zeta_gamma,
                sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
-               epsilon_p_z = epsilon_p_z,
+               zeta_p = zeta_p,
                S_init = rep(median(S_obs_noNA), max_age*N_pop),
                q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
-               epsilon_R_z = as.vector(scale(log(R)))*0.1,
-               B_rate = B_rate)))
-      } else if(stan_model == "IPM_SS_F_pp") {
-        return(lapply(1:chains, function(i)
-          list(mu_alpha = runif(1, 1, 3),
-               sigma_alpha = runif(1, 0.1, 0.5),
-               epsilon_alpha_z = array(runif(N_pop, -1, 1), dim = N_pop),
-               mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
-               sigma_Rmax = runif(1, 0.1, 0.5),
-               epsilon_Rmax_z = array(runif(N_pop, -1, 1), dim = N_pop),
-               rho_alphaRmax = runif(1, -0.5, 0.5),
-               beta_phi = array(rnorm(N_X, 0, 1), dim = N_X),
-               rho_phi = runif(1, 0.1, 0.7),
-               sigma_phi = runif(1, 0.1, 0.5),
-               epsilon_phi_z = array(rnorm(N_year, 0, 0.1), dim = N_year),
-               sigma = runif(1, 0.5, 1),
-               tau = runif(1, 0.5, 1),
-               mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
-               epsilon_gamma_z = epsilon_gamma_z,
-               sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
-               epsilon_p_z = epsilon_p_z,
-               S_init = rep(median(S_obs_noNA), max_age*N_pop),
-               q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
-               p_HOS = p_HOS_obs,
-               epsilon_R_z = as.vector(scale(log(R)))*0.1,
-               c1 = rnorm(1, 0, 0.5), c2 = 0,
-               sigma_log_C = runif(1, 0.1, 0.5),
+               zeta_R = as.vector(scale(log(R)))*0.1,
                B_rate = B_rate)))
       } else if(stan_model == "IPM_SMS_np") {
         return(lapply(1:chains, function(i)
@@ -159,13 +131,13 @@ stan_init <- function(data, stan_model, chains)
                tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop),
                mu_p = mu_p,
                sigma_p = matrix(runif(N_pop*(N_age-1),0.5,1), N_pop, N_age-1),
-               epsilon_p_z = epsilon_p_z,
+               zeta_p = zeta_p,
                M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
                S_init = rep(median(S_obs_noNA), max_age*N_pop),
                q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
                p_HOS = p_HOS_obs,
-               epsilon_M_z = as.vector(scale(log(M_obs)))*0.1,
-               epsilon_MS_z = as.vector(scale(qlogis(s_MS))),
+               zeta_M = as.vector(scale(log(M_obs)))*0.1,
+               zeta_MS = as.vector(scale(qlogis(s_MS))),
                B_rate = B_rate)))
       }
     })
@@ -177,7 +149,7 @@ stan_init <- function(data, stan_model, chains)
       N_GRage <- N_Mage*N_MSage
       max_age <- max_Mage + max_MSage
       q_M_obs <- sweep(n_Mage_obs, 1, rowSums(n_Mage_obs), "/")
-      s_MS <- mean(S_obs/M_obs, na.rm = TRUE)
+      s_MS <- mean(pmin(S_obs/M_obs, 0.99), na.rm = TRUE)
       q_MS_obs <- sweep(n_MSage_obs, 1, rowSums(n_MSage_obs), "/")
       q_MS_obs_NA <- apply(is.na(q_MS_obs), 1, any)
       q_MS_obs[q_MS_obs_NA,] <- rep(colMeans(na.omit(q_MS_obs)), each = sum(q_MS_obs_NA))
@@ -190,8 +162,7 @@ stan_init <- function(data, stan_model, chains)
       p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
       p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
-      if(N_H > 0)
-        p_HOS_all[which_H] <- p_HOS_obs
+      p_HOS_all[which_H] <- p_HOS_obs
       S_W_obs <- S_obs*(1 - p_HOS_all)
       B_rate <- pmin(pmax(B_take_obs/(S_W_obs[which_B] + B_take_obs), 0.01), 0.99)
       B_rate[is.na(B_rate)] <- 0.1
@@ -202,25 +173,25 @@ stan_init <- function(data, stan_model, chains)
              beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
              rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
              sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
-             epsilon_M_z = rnorm(N,0,0.1), #as.vector(scale(log(M_obs)))*0.1,
+             zeta_M = rnorm(N,0,0.1), 
              mu_p_M = aggregate(q_M_obs, list(pop), mean, na.rm = TRUE),
              sigma_p_M = matrix(runif(N_pop*(N_Mage - 1), 0.05, 2), N_pop, N_Mage - 1),
-             epsilon_p_M_z = matrix(rnorm(N*(N_Mage - 1), 0, 0.1), N, N_Mage - 1),
+             zeta_p_M = matrix(rnorm(N*(N_Mage - 1), 0, 0.1), N, N_Mage - 1),
              M_init = rep(median(M_obs), max_Mage*N_pop),
              q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
-             tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
+             tau_M = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
              mu_MS = matrix(plogis(rnorm(N_pop*N_Mage, qlogis(s_MS), 0.5)), N_pop, N_Mage),
              beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
              rho_MS = matrix(runif(N_pop, 0.1, 0.7), N_pop, N_Mage),
              sigma_MS = matrix(runif(N_pop, 0.05, 2), N_pop, N_Mage), 
-             epsilon_MS_z = matrix(rnorm(N*N_Mage, 0, 0.1), N, N_Mage),
+             zeta_MS = matrix(rnorm(N*N_Mage, 0, 0.1), N, N_Mage),
              mu_p_MS = mu_q_MS,
              sigma_p_MS = array(runif(N_pop*N_Mage*(N_MSage - 1), 0.05, 2), 
                                 c(N_pop, N_Mage, N_MSage - 1)), 
-             epsilon_p_MS_z = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, N_Mage*(N_MSage - 1)),
+             zeta_p_MS = matrix(rnorm(N*N_Mage*(N_MSage - 1), 0, 0.5), N, N_Mage*(N_MSage - 1)),
              S_init = rep(median(S_obs, na.rm = TRUE), N_pop*max_age),
              q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_age*N_pop, N_GRage, byrow = T),
-             tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop),
+             tau_S = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
              p_HOS = p_HOS_obs,
              B_rate = B_rate)))
     })
@@ -235,14 +206,14 @@ stan_init <- function(data, stan_model, chains)
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 3, 6), 
                sigma_alpha = runif(1, 0.1, 0.5),
-               epsilon_alpha_z = array(runif(N_pop, -1, 1), dim = N_pop), 
+               zeta_alpha = array(runif(N_pop, -1, 1), dim = N_pop), 
                mu_Rmax = rnorm(1, log(quantile(S/A, 0.9, na.rm = T)), 0.5),
                sigma_Rmax = runif(1, 0.1, 0.5),
-               epsilon_Rmax_z = array(runif(N_pop, -1, 1), dim = N_pop), 
+               zeta_Rmax = array(runif(N_pop, -1, 1), dim = N_pop), 
                rho_alphaRmax = runif(1, -0.5, 0.5),
                rho_phi = runif(1, 0.1, 0.7),
                sigma_phi = runif(1, 0.1, 0.5), 
-               epsilon_phi_z = array(rnorm(N_year, 0, 0.1), dim = N_year),
+               zeta_phi = array(rnorm(N_year, 0, 0.1), dim = N_year),
                sigma = runif(1, 0.1, 2))))
       } else {
         return(lapply(1:chains, function(i)
