@@ -1,45 +1,45 @@
 functions {
-  # spawner-recruit functions
+  // spawner-recruit functions
   real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
     real R;
     
-    if(SR_fun == 1)      # discrete exponential
+    if(SR_fun == 1)      // discrete exponential
       R = alpha*S/A;
-    else if(SR_fun == 2) # Beverton-Holt
+    else if(SR_fun == 2) // Beverton-Holt
       R = alpha*S/(A + alpha*S/Rmax);
-    else if(SR_fun == 3) # Ricker
+    else if(SR_fun == 3) // Ricker
       R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
   
-  # Generalized normal (aka power-exponential) unnormalized log-probability
+  // Generalized normal (aka power-exponential) unnormalized log-probability
   real pexp_lpdf(real y, real mu, real sigma, real shape) {
     return(-(fabs(y - mu)/sigma)^shape);
   }
 }
 
 data {
-  int<lower=1> SR_fun;          # S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  int<lower=1> N;               # total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];  # population identifier
-  int<lower=1,upper=N> year[N]; # brood year identifier
-  int<lower=1,upper=N> N_fit;   # number of cases used in fitting (non-missing S and R)
-  int<lower=1,upper=N> which_fit[N_fit]; # cases used in fitting
-  vector<lower=0>[N] S;         # observed annual total spawner abundance (not density)
-  vector<lower=0>[N] R;         # total natural recruit abundance (not density), including harvest and broodstock removals
-  vector[N] A;                  # habitat area associated with each spawner abundance obs
-  int<lower=0,upper=1> S_NA[N]; # logical indicating whether S is missing and should be simulated
-  int<lower=0,upper=1> R_NA[N]; # logical indicating whether R is missing and should be simulated
-  int<lower=2> N_age;           # number of adult age classes
-  int<lower=2> max_age;         # maximum adult age
-  matrix<lower=0,upper=1>[max(pop),N_age] p;  # average recruit age distributions for each pop 
+  int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=1> N;               // total number of cases in all pops and years
+  int<lower=1,upper=N> pop[N];  // population identifier
+  int<lower=1,upper=N> year[N]; // brood year identifier
+  int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S and R)
+  int<lower=1,upper=N> which_fit[N_fit]; // cases used in fitting
+  vector<lower=0>[N] S;         // observed annual total spawner abundance (not density)
+  vector<lower=0>[N] R;         // total natural recruit abundance (not density), including harvest and broodstock removals
+  vector[N] A;                  // habitat area associated with each spawner abundance obs
+  int<lower=0,upper=1> S_NA[N]; // logical indicating whether S is missing and should be simulated
+  int<lower=0,upper=1> R_NA[N]; // logical indicating whether R is missing and should be simulated
+  int<lower=2> N_age;           // number of adult age classes
+  int<lower=2> max_age;         // maximum adult age
+  matrix<lower=0,upper=1>[max(pop),N_age] p;  // average recruit age distributions for each pop 
 }
 
 transformed data {
-  int<lower=1,upper=N> N_pop;  # number of populations
-  int<lower=1,upper=N> N_year; # number of years
-  int<lower=2> ages[N_age];    # adult ages
+  int<lower=1,upper=N> N_pop;  // number of populations
+  int<lower=1,upper=N> N_year; // number of years
+  int<lower=2> ages[N_age];    // adult ages
   
   N_pop = max(pop);
   N_year = max(year);
@@ -48,18 +48,18 @@ transformed data {
 }
 
 parameters {
-  vector<lower=0>[N_pop] alpha;         # intrinsic productivity
-  vector<lower=0>[N_pop] Rmax;          # asymptotic recruitment
-  vector<lower=-1,upper=1>[N_pop] rho;  # AR(1) coefs of residuals
-  vector<lower=0>[N_pop] sigma;         # residual error SD
+  vector<lower=0>[N_pop] alpha;         // intrinsic productivity
+  vector<lower=0>[N_pop] Rmax;          // asymptotic recruitment
+  vector<lower=-1,upper=1>[N_pop] rho;  // AR(1) coefs of residuals
+  vector<lower=0>[N_pop] sigma;         // residual error SD
 }
 
 transformed parameters {
-  vector<lower=0>[N] R_hat;     # expected recruit abundance (not density) by brood year
-  vector<lower=0>[N] R_ar1;     # expected recruit abundance, taking AR(1) errors into account
-  vector<lower=0>[N] sigma_ar1; # residual error SD for each observation
+  vector<lower=0>[N] R_hat;     // expected recruit abundance (not density) by brood year
+  vector<lower=0>[N] R_ar1;     // expected recruit abundance, taking AR(1) errors into account
+  vector<lower=0>[N] sigma_ar1; // residual error SD for each observation
   
-  # Predict recruitment
+  // Predict recruitment
   R_hat = rep_vector(0,N);
   R_ar1 = rep_vector(0,N);
   sigma_ar1 = rep_vector(0,N);
@@ -75,9 +75,9 @@ transformed parameters {
     }
     else
     {
-      real err;    # temp variable: residual at the last non-missing observation
-      int dt;      # temp variable: number of years since last non-missing observation
-      real rho2j;  # temp variable: sum of powers of rho
+      real err;    // temp variable: residual at the last non-missing observation
+      int dt;      // temp variable: number of years since last non-missing observation
+      real rho2j;  // temp variable: sum of powers of rho
       
       err = log(R[which_fit[i-1]]) - log(R_hat[which_fit[i-1]]);
       dt = which_fit[i] - which_fit[i-1];
@@ -92,23 +92,23 @@ transformed parameters {
 }
 
 model {
-  # Priors
+  // Priors
   alpha ~ lognormal(2,2);
   Rmax ~ lognormal(2,3);
   for(i in 1:N_pop)
   {
-    rho[i] ~ pexp(0,0.85,20);   # mildly regularize rho to ensure stationarity
+    rho[i] ~ pexp(0,0.85,20);   // mildly regularize rho to ensure stationarity
     sigma[i] ~ pexp(0,2,10);
   }
 
-  # Likelihood
+  // Likelihood
   R[which_fit] ~ lognormal(log(R_ar1[which_fit]), sigma_ar1[which_fit]);
 }
 
 generated quantities {
-  vector[N] S_sim;    # simulated spawners
-  vector[N] R_sim;    # simulated recruits
-  vector[N] err_sim;  # simulated AR(1) residual errors
+  vector[N] S_sim;    // simulated spawners
+  vector[N] R_sim;    // simulated recruits
+  vector[N] err_sim;  // simulated AR(1) residual errors
   
   S_sim = S;
   R_sim = R;
