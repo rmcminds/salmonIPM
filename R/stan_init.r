@@ -92,7 +92,7 @@ stan_init <- function(data, stan_model, chains)
                p_HOS = p_HOS_obs,
                zeta_R = as.vector(scale(log(R)))*0.1,
                B_rate = B_rate)))
-      } else if(stan_model == "IPM_SS_pp") {
+      } else if(stan_model %in% c("IPM_SS_pp","IPM_SSpa_pp")) {
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 1, 3),
                sigma_alpha = runif(1, 0.1, 0.5),
