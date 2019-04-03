@@ -217,8 +217,8 @@ stan_init <- function(data, stan_model, chains)
           q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
           S_init = rep(median(S_obs, na.rm = TRUE), N_pop*max_age),
           q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_age*N_pop, N_GRage, byrow = T),
-          tau_S = array(runif(N_pop, 0.01, 0.05), dim = N_pop)
-          tau_M = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
+          tau_S = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
+          tau_M = array(runif(N_pop, 0.01, 0.05), dim = N_pop)
         )
       ))
     })
