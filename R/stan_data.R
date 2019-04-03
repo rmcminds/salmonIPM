@@ -136,6 +136,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
   if(is.null(env_data))
     env_data <- switch(life_cycle,
                        SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 0)),
+                       SSpa = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 0)),
                        SMS = list(M = matrix(0, max(fish_data$year), 0),
                                   MS = matrix(0, max(fish_data$year), 0)),
                        SMaS = list(M = matrix(0, max(fish_data$year), 0),
