@@ -78,11 +78,9 @@ functions {
 
 data {
   // info for observed data
-  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;                      // total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];         // population identifier
   int<lower=1,upper=N> year[N];        // brood year identifier
-  vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   // info for forward simulations
   int<lower=0> N_fwd;                  // total number of cases in forward simulations
   int<lower=1,upper=N> pop_fwd[N_fwd]; // population identifier for forward simulations
@@ -92,6 +90,8 @@ data {
   vector<lower=0,upper=1>[N_fwd] B_rate_fwd; // broodstock take rate for forward simulations
   vector<lower=0,upper=1>[N_fwd] p_HOS_fwd;  // p_HOS for forward simulations
   // smolt production
+  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=1> smolt_age;              // smolt age
   int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
   matrix[max(append_array(year,year_fwd)),N_X_M] X_M; // spawner-smolt covariates (if none, use vector of zeros)
@@ -103,6 +103,11 @@ data {
   int<lower=0> N_X_U;                  // number of adult upstream survival covariates
   matrix[max(append_array(year,year_fwd)),N_X_U] X_U; // upstream survival covariates (if none, use vector of zeros)
   ////// priors for survival from CJS go here //////
+  // fishery and hatchery removals
+  vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
+  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
+  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
+  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -116,12 +121,6 @@ data {
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
   int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples (assumes no NAs)
   int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples (assumes no NAs)
-  // fishery and hatchery removals
-  vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
-  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
-  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
-
 }
 
 transformed data {
@@ -165,7 +164,7 @@ transformed data {
 }
 
 parameters {
-  // smolt production
+  // smolt recruitment
   real mu_alpha;                         // hyper-mean log intrinsic productivity
   real<lower=0> sigma_alpha;             // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;              // log intrinsic prod (Z-scores)
@@ -203,16 +202,17 @@ parameters {
   vector<lower=0>[N_age-1] sigma_p;      // SD of log-ratio cohort age distributions
   cholesky_factor_corr[N_age-1] L_p;     // Cholesky factor of correlation matrix of cohort log-ratio age distributions
   matrix[N,N_age-1] zeta_p;              // log-ratio cohort age distributions (Z-scores)
-  simplex[N_age] q_init[max_age*N_pop];  // true wild spawner age distributions in years 1-max_age
-  // initial spawners, observation error, removals
-  vector<lower=0>[max_age*N_pop] S_init; // true total spawner abundance in years 1-max_age
-  real<lower=0> tau_S;                   // observation error SD of total spawners
+  // H/W composition, removals
   vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
+  // initial spawners, observation error
+  vector<lower=0>[max_age*N_pop] S_init; // true total spawner abundance in years 1-max_age
+  simplex[N_age] q_init[max_age*N_pop];  // true wild spawner age distributions in years 1-max_age
+  real<lower=0> tau_S;                   // observation error SD of total spawners
 }
 
 transformed parameters {
-  // smolt production
+  // smolt recruitment
   vector<lower=0>[N_pop] alpha;          // intrinsic productivity 
   vector<lower=0>[N_pop] Rmax;           // asymptotic recruitment 
   vector<lower=0>[N] M_hat;              // expected smolt abundance (not density) by brood year
@@ -336,14 +336,15 @@ transformed parameters {
     
     // Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]); 
+    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M) + epsilon_M[i]); 
   }
 }
 
 model {
   vector[N_B] B_take; // true broodstock take when B_take_obs > 0
   
-  //// Priors
+  // Priors
+  
   // smolt production
   mu_alpha ~ normal(2,5);
   sigma_alpha ~ pexp(0,3,10);
@@ -427,7 +428,7 @@ generated quantities {
   for(i in 1:N_fwd)
   {
     vector[N_age-1] alr_p_fwd;   // temp variable: alr(p_fwd[i,])'
-    row_vector[N_age] S_W_a_fwd;   // temp variable: true wild spawners by age
+    row_vector[N_age] S_W_a_fwd; // temp variable: true wild spawners by age
 
     // Inverse log-ratio transform of cohort age distn
     alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
