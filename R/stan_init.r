@@ -39,9 +39,7 @@ stan_init <- function(data, stan_model, chains)
       B_rate[is.na(B_rate)] <- 0.1
       B_rate_all[which_B] <- B_rate
       year <- as.numeric(factor(year))
-      if(stan_model == "IPM_SS_F_pp")
-        F_rate_obs <- pmin(pmax(catch_data$C_obs/catch_data$R_F_obs, 0.01), 0.99)
-      
+
       # Maybe figure out a way to do this with a call to run_recon?
       for(i in 1:N)
         for(j in 1:N_age)
@@ -49,9 +47,7 @@ stan_init <- function(data, stan_model, chains)
           if(year[i] + adult_ages[j] <= max(year[pop==pop[i]]))
           {
             b <- ifelse(j==1, 0, B_rate_all[i+adult_ages[j]])
-            f <- ifelse(stan_model == "IPM_SS_F_pp",
-                        F_rate_obs[year[i] + adult_ages[j]],
-                        ifelse(j==1, 0, F_rate[i + adult_ages[j]]))
+            f <- ifelse(j==1, 0, F_rate[i + adult_ages[j]])
             R_a[i,j] <- S_W_obs[i + adult_ages[j]]*q_obs[i + adult_ages[j],j]/((1 - b)*(1 - f))
           }
         }
