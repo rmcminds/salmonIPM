@@ -38,17 +38,17 @@
 #'   \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin
 #'   fish.} \item{\code{B_take_obs}}{Number of adults taken for hatchery
 #'   broodstock.} }
-#' @param fish_data_fwd Only if model == "IPM", life_cycle == "SS", and
-#'   pool_pops == TRUE, optional data frame with the following \code{colnames},
-#'   representing "forward" or "future" simulations. Unlike \code{fish_data}, a
-#'   given combination of population and year may occur multiple times, perhaps
-#'   to facilitate comparisons across scenarios or "branches" with different
-#'   inputs (e.g., harvest rate). In this case, all branches are subjected to
-#'   the same sequence of process errors in recruitment and age structure.
-#'   \describe{ \item{\code{pop}}{Numeric or character population ID. All values
-#'   must also appear in \code{fish_data$pop}.} \item{\code{year}}{Integer
-#'   variable giving the year the fish spawned (i.e., the brood year). For each
-#'   population in \code{fish_data_fwd$pop}, the first year appearing in
+#' @param fish_data_fwd Only if `stan_model == "IPM_SS_pp"`, optional data frame
+#'   with the following \code{colnames}, representing "forward" or "future"
+#'   simulations. Unlike \code{fish_data}, a given combination of population and
+#'   year may occur multiple times, perhaps to facilitate comparisons across
+#'   scenarios or "branches" with different inputs (e.g., harvest rate). In this
+#'   case, all branches are subjected to the same sequence of process errors in
+#'   recruitment and age structure. \describe{ \item{\code{pop}}{Numeric or
+#'   character population ID. All values must also appear in
+#'   \code{fish_data$pop}.} \item{\code{year}}{Integer variable giving the year
+#'   the fish spawned (i.e., the brood year). For each population in
+#'   \code{fish_data_fwd$pop}, the first year appearing in
 #'   \code{fish_data_fwd$year} must be one greater than the last year appearing
 #'   in \code{fish_data$year}, i.e.,
 #'   \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
@@ -64,12 +64,11 @@
 #'   element names correspond to stage- or transition-specific covariate
 #'   matrices defined in the Stan model being used. (This is required for
 #'   multi-stage models.)
-#' @param catch_data Only if model == "IPM_F", a data frame with numeric columns
-#'   \describe{ \item{\code{year}}{Year for fishery data. Must be identical to
-#'   \code{unique(fish_data$year)}.} \item{\code{R_F_obs}}{Total recruits to the
-#'   fishery.} \item{\code{C_obs}}{Total catch.} }
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages.
+#' @param age_S_obs Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+#'   vector indicating, for each adult age, whether observed total spawner data
+#'   includes that age. The default is to treat `S_obs` as including spawners of all ages.
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included).
 #' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
@@ -81,7 +80,7 @@
 #' @export
 
 stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, 
-                      ages = NULL, stan_model, SR_fun = "BH")
+                      ages = NULL, age_S_obs = NULL, stan_model, SR_fun = "BH")
 {
   fish_data <- as.data.frame(fish_data)
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
@@ -142,14 +141,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                        SMaS = list(M = matrix(0, max(fish_data$year), 0),
                                    MS = matrix(0, max(fish_data$year), 0)))
   
+  if(stan_model == "IPM_SSpa_pp" & is.null(age_S_obs))
+    age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
+  age_S_obs <- as.numeric(age_S_obs)
+  
   if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.\n")
-  
-  if(stan_model == 'IPM_SS_F_pp') 
-  {
-    if(is.null(catch_data) | any(is.na(catch_data)))
-      stop("Missing values are not allowed in total run size and catch with stan_model == 'IPM_SS_F_pp'.\n")
-  }
   
   if(life_cycle == "SMaS")
   {
@@ -172,8 +169,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
     stop(paste("Conflicting NAs in age frequency data in rows", 
                which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))), "\n"))
   
-  if(!stan_model %in% c("IPM_SS_np", "IPM_SS_pp","IPM_SS_F_pp","IPM_SMS_np","IPM_SMaS_np", 
-                        "RR_SS_np","RR_SS_pp"))
+  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMaS_np","RR_SS_np","RR_SS_pp"))
     stop(paste("Stan model", stan_model, "does not exist.\n"))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp"))
@@ -190,6 +186,45 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
                   N_age = sum(grepl("n_age", names(fish_data))), 
                   max_age = max_age,
+                  n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                  N_H = sum(fit_p_HOS),
+                  which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
+                  n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+                  n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+                  A = A,
+                  F_rate = replace(F_rate, is.na(F_rate), 0),
+                  N_B = sum(B_take_obs > 0),
+                  which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+                  B_take_obs = B_take_obs[B_take_obs > 0],
+                  N_fwd = N_fwd,
+                  pop_fwd = array(fish_data_fwd$pop, dim = nrow(fish_data_fwd)),
+                  year_fwd = array(fish_data_fwd$year, dim = nrow(fish_data_fwd)),
+                  A_fwd = array(fish_data_fwd$A, dim = nrow(fish_data_fwd)),
+                  B_rate_fwd = array(fish_data_fwd$B_rate, dim = nrow(fish_data_fwd)),
+                  F_rate_fwd = array(fish_data_fwd$F_rate, dim = nrow(fish_data_fwd)),
+                  p_HOS_fwd = array(fish_data_fwd$p_HOS, dim = nrow(fish_data_fwd)))
+      
+      dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
+      dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
+      dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
+      
+      return(dat)
+    })
+  } else if(stan_model == "IPM_SSpa_pp")
+  {
+    with(fish_data, {  
+      dat <- list(SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  N = nrow(fish_data),
+                  pop = pop, 
+                  year = year,
+                  N_X = ncol(env_data[[1]]), 
+                  X = as.matrix(env_data[[1]]),
+                  N_S_obs = sum(!is.na(S_obs)),
+                  which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+                  S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
+                  N_age = sum(grepl("n_age", names(fish_data))), 
+                  max_age = max_age,
+                  age_S_obs = array(age_S_obs, dim = length(age_S_obs)),
                   n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
                   N_H = sum(fit_p_HOS),
                   which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),

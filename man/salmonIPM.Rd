@@ -5,10 +5,10 @@
 \title{Fits an integrated or run-reconstruction spawner-recruit model.}
 \usage{
 salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  catch_data = NULL, ages = NULL, model, life_cycle = "SS",
+  ages = NULL, age_S_obs = NULL, model, life_cycle = "SS",
   pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", init = NULL,
   pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1,
-  cores = 3, ...)
+  cores = parallel::detectCores() - 1, ...)
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following \code{colnames}, in
@@ -77,11 +77,12 @@ element names correspond to stage- or transition-specific covariate
 matrices defined in the Stan model being used. (This is required if
 \code{life_cycle != "SS"}.)}
 
-\item{catch_data}{Only if \code{model == "IPM_F"}, a data frame with numeric
-columns}
-
 \item{ages}{If \code{life_cycle != "SS"}, a named list giving the fixed ages
 in years of all subadult life stages.}
+
+\item{age_S_obs}{Only if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, a logical or numeric
+vector indicating, for each adult age, whether observed total spawner data
+includes that age. The default is to treat `S_obs` as including spawners of all ages.}
 
 \item{model}{Either \code{"IPM"} or \code{"RR"}, indicating whether the data
 are intended for an integrated or run-reconstruction model.}
@@ -130,7 +131,7 @@ The number of warmup iterations should not be larger than \code{iter}}
 default is 1, which is usually the recommended value.}
 
 \item{cores}{Number of cores to use when executing the chains in parallel.
-Defaults to 3.}
+Defaults to one less than the number of cores available.}
 
 \item{...}{Additional arguments to pass to \code{stan}.}
 }

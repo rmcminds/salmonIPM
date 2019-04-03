@@ -177,8 +177,8 @@ model {
   zeta_R ~ normal(0,1); // total recruits: R ~ lognormal(log(R_hat), sigma)
 
   // Observation model
-  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau[pop[which_S_obs]]);  // observed total spawners
-  n_H_obs ~ binomial(n_HW_obs, p_HOS); // observed counts of hatchery vs. wild spawners
+  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau);  // observed total spawners
+  n_H_obs ~ binomial(n_HW_obs, p_HOS); // obs counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
 

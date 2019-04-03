@@ -6,7 +6,8 @@
 models.}
 \usage{
 stan_data(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  catch_data = NULL, ages = NULL, stan_model, SR_fun = "BH")
+  catch_data = NULL, ages = NULL, age_S_obs = NULL, stan_model,
+  SR_fun = "BH")
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following \code{colnames}, in
@@ -47,17 +48,17 @@ indicating for each row in fish_data whether the model should estimate
 fish.} \item{\code{B_take_obs}}{Number of adults taken for hatchery
 broodstock.} }}
 
-\item{fish_data_fwd}{Only if model == "IPM", life_cycle == "SS", and
-pool_pops == TRUE, optional data frame with the following \code{colnames},
-representing "forward" or "future" simulations. Unlike \code{fish_data}, a
-given combination of population and year may occur multiple times, perhaps
-to facilitate comparisons across scenarios or "branches" with different
-inputs (e.g., harvest rate). In this case, all branches are subjected to
-the same sequence of process errors in recruitment and age structure.
-\describe{ \item{\code{pop}}{Numeric or character population ID. All values
-must also appear in \code{fish_data$pop}.} \item{\code{year}}{Integer
-variable giving the year the fish spawned (i.e., the brood year). For each
-population in \code{fish_data_fwd$pop}, the first year appearing in
+\item{fish_data_fwd}{Only if `stan_model == "IPM_SS_pp"`, optional data frame
+with the following \code{colnames}, representing "forward" or "future"
+simulations. Unlike \code{fish_data}, a given combination of population and
+year may occur multiple times, perhaps to facilitate comparisons across
+scenarios or "branches" with different inputs (e.g., harvest rate). In this
+case, all branches are subjected to the same sequence of process errors in
+recruitment and age structure. \describe{ \item{\code{pop}}{Numeric or
+character population ID. All values must also appear in
+\code{fish_data$pop}.} \item{\code{year}}{Integer variable giving the year
+the fish spawned (i.e., the brood year). For each population in
+\code{fish_data_fwd$pop}, the first year appearing in
 \code{fish_data_fwd$year} must be one greater than the last year appearing
 in \code{fish_data$year}, i.e.,
 \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
@@ -75,13 +76,12 @@ element names correspond to stage- or transition-specific covariate
 matrices defined in the Stan model being used. (This is required for
 multi-stage models.)}
 
-\item{catch_data}{Only if model == "IPM_F", a data frame with numeric columns
-\describe{ \item{\code{year}}{Year for fishery data. Must be identical to
-\code{unique(fish_data$year)}.} \item{\code{R_F_obs}}{Total recruits to the
-fishery.} \item{\code{C_obs}}{Total catch.} }}
-
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages.}
+
+\item{age_S_obs}{Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+vector indicating, for each adult age, whether observed total spawner data
+includes that age. The default is to treat `S_obs` as including spawners of all ages.}
 
 \item{stan_model}{Character string giving the name of the Stan model being
 fit (".stan" filetype extension is not included).}

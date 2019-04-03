@@ -63,10 +63,11 @@
 #'   element names correspond to stage- or transition-specific covariate
 #'   matrices defined in the Stan model being used. (This is required if
 #'   \code{life_cycle != "SS"}.)
-#' @param catch_data Only if \code{model == "IPM_F"}, a data frame with numeric
-#'   columns
 #' @param ages If \code{life_cycle != "SS"}, a named list giving the fixed ages
 #'   in years of all subadult life stages.
+#' @param age_S_obs Only if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, a logical or numeric
+#'   vector indicating, for each adult age, whether observed total spawner data
+#'   includes that age. The default is to treat `S_obs` as including spawners of all ages.
 #' @param model Either \code{"IPM"} or \code{"RR"}, indicating whether the data
 #'   are intended for an integrated or run-reconstruction model.
 #' @param life_cycle Character string indicating which life-cycle model to fit.
@@ -102,7 +103,7 @@
 #' @param thin A positive integer specifying the period for saving samples. The
 #'   default is 1, which is usually the recommended value.
 #' @param cores Number of cores to use when executing the chains in parallel.
-#'   Defaults to 3.
+#'   Defaults to one less than the number of cores available.
 #' @param ... Additional arguments to pass to \code{stan}.
 #' @return An object of class \code{stanfit} representing the fitted model. See
 #'   \code{rstan::stan} for details.
@@ -111,9 +112,10 @@
 #'
 #' @export
 
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, ages = NULL, 
+salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, ages = NULL, age_S_obs = NULL,  
                       model, life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", 
-                      init = NULL, pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1, cores = 3, ...)
+                      init = NULL, pars = NULL, log_lik = FALSE, 
+                      chains, iter, warmup, thin = 1, cores = parallel::detectCores() - 1, ...)
 {
   if(is.null(stan_model)) 
   {
@@ -124,10 +126,9 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
     life_cycle <- mlp[2]
     pool_pops <- mlp[3]
   }
-  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, ages, stan_model, SR_fun)
+  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, ages, age_S_obs, stan_model, SR_fun)
   
   if(is.null(pars)) pars <- stan_pars(stan_model)
-  
   if(log_lik) pars <- c(pars, "LL")
   
   fit <- stan(file = file.path(path.package("salmonIPM"), "stan", paste0(stan_model, ".stan")),
