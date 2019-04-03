@@ -68,7 +68,13 @@
 #'   years of all subadult life stages.
 #' @param age_S_obs Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
 #'   vector indicating, for each adult age, whether observed total spawner data
-#'   includes that age. The default is to treat `S_obs` as including spawners of all ages.
+#'   includes that age. The default is to treat `S_obs` as including spawners of
+#'   all ages.
+#' @param age_S_eff Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+#'   vector indicating, for each adult age, whether spawners of that age
+#'   contribute toward reproduction. This could be used, e.g., to exclude jacks
+#'   from the effective breeding population. The default is to include spawners
+#'   of all ages.
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included).
 #' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
@@ -80,7 +86,7 @@
 #' @export
 
 stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, 
-                      ages = NULL, age_S_obs = NULL, stan_model, SR_fun = "BH")
+                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, stan_model, SR_fun = "BH")
 {
   fish_data <- as.data.frame(fish_data)
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
@@ -146,7 +152,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
     age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_obs <- as.numeric(age_S_obs)
   
-  if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
+  if(stan_model == "IPM_SSpa_pp" & is.null(age_S_eff))
+    age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
+  age_S_eff <- as.numeric(age_S_eff)
+
+    if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.\n")
   
   if(life_cycle == "SMaS")
@@ -256,6 +266,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
         age_S_obs = array(age_S_obs, dim = length(age_S_obs)),
+        age_S_eff = array(age_S_eff, dim = length(age_S_eff)),
         # H/W composition
         N_H = sum(fit_p_HOS),
         which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),

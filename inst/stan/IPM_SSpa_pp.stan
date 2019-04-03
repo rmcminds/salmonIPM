@@ -108,6 +108,7 @@ data {
   int<lower=2> max_age;                // maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
   vector<lower=0,upper=1>[N_age] age_S_obs; // does S_obs include age a (1) or not (0)?
+  vector<lower=0,upper=1>[N_age] age_S_eff; // do age-a spawners contribute to reproduction (1) or not (0)?
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -273,8 +274,9 @@ transformed parameters {
     }
     
     S[i] = S_W[i] + S_H[i];
-    R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    R[i] = R_hat[i]*exp(phi[year[i]] + sigma*zeta_R[i]);
+    // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
+    R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i]*q[i,]*age_S_eff, A[i]);
+    R[i] = R_hat[i] * exp(phi[year[i]] + sigma*zeta_R[i]);
   }
 }
 
