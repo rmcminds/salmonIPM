@@ -16,7 +16,7 @@
 #' @export
 stan_init <- function(data, stan_model, chains) 
 {
-  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SS_F_pp","IPM_SMS_np"))
+  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SS_F_pp","IPM_SMS_np"))
   {
     with(data, {
       N_pop <- max(pop)
