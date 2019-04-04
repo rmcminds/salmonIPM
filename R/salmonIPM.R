@@ -132,7 +132,9 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
     life_cycle <- mlp[2]
     pool_pops <- mlp[3]
   }
-  dat <- stan_data(fish_data, fish_data_fwd, env_data, catch_data, ages, age_S_obs, stan_model, SR_fun)
+  dat <- stan_data(fish_data = fish_data, fish_data_fwd = fish_data_fwd, env_data = env_data, 
+                   ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   stan_model = stan_model, SR_fun = SR_fun)
   
   if(is.null(pars)) pars <- stan_pars(stan_model)
   if(log_lik) pars <- c(pars, "LL")

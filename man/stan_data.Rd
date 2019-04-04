@@ -6,7 +6,7 @@
 models.}
 \usage{
 stan_data(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  catch_data = NULL, ages = NULL, age_S_obs = NULL, stan_model,
+  ages = NULL, age_S_obs = NULL, age_S_eff = NULL, stan_model,
   SR_fun = "BH")
 }
 \arguments{
@@ -81,7 +81,14 @@ years of all subadult life stages.}
 
 \item{age_S_obs}{Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
 vector indicating, for each adult age, whether observed total spawner data
-includes that age. The default is to treat `S_obs` as including spawners of all ages.}
+includes that age. The default is to treat `S_obs` as including spawners of
+all ages.}
+
+\item{age_S_eff}{Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+vector indicating, for each adult age, whether spawners of that age
+contribute toward reproduction. This could be used, e.g., to exclude jacks
+from the effective breeding population. The default is to include spawners
+of all ages.}
 
 \item{stan_model}{Character string giving the name of the Stan model being
 fit (".stan" filetype extension is not included).}

@@ -85,8 +85,9 @@
 #'
 #' @export
 
-stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_data = NULL, 
-                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, stan_model, SR_fun = "BH")
+stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, 
+                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, 
+                      stan_model, SR_fun = "BH")
 {
   fish_data <- as.data.frame(fish_data)
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
@@ -156,7 +157,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, catch_da
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
 
-    if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
+  if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.\n")
   
   if(life_cycle == "SMaS")

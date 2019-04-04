@@ -5,10 +5,10 @@
 \title{Fits an integrated or run-reconstruction spawner-recruit model.}
 \usage{
 salmonIPM(fish_data, fish_data_fwd = NULL, env_data = NULL,
-  ages = NULL, age_S_obs = NULL, model, life_cycle = "SS",
-  pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", init = NULL,
-  pars = NULL, log_lik = FALSE, chains, iter, warmup, thin = 1,
-  cores = parallel::detectCores() - 1, ...)
+  ages = NULL, age_S_obs = NULL, age_S_eff = NULL, model,
+  life_cycle = "SS", pool_pops = TRUE, stan_model = NULL,
+  SR_fun = "BH", init = NULL, pars = NULL, log_lik = FALSE, chains,
+  iter, warmup, thin = 1, cores = parallel::detectCores() - 1, ...)
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following \code{colnames}, in
@@ -83,6 +83,12 @@ in years of all subadult life stages.}
 \item{age_S_obs}{Only if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, a logical or numeric
 vector indicating, for each adult age, whether observed total spawner data
 includes that age. The default is to treat `S_obs` as including spawners of all ages.}
+
+\item{age_S_eff}{Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+vector indicating, for each adult age, whether spawners of that age
+contribute toward reproduction. This could be used, e.g., to exclude jacks
+from the effective breeding population. The default is to include spawners
+of all ages.}
 
 \item{model}{Either \code{"IPM"} or \code{"RR"}, indicating whether the data
 are intended for an integrated or run-reconstruction model.}
