@@ -275,6 +275,7 @@ transformed parameters {
     
     S[i] = S_W[i] + S_H[i];
     // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
+    // (assumes age structure is the same for W and H spawners)
     R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i]*q[i,]*age_S_eff, A[i]);
     R[i] = R_hat[i] * exp(phi[year[i]] + sigma*zeta_R[i]);
   }
