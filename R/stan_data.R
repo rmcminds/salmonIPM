@@ -125,7 +125,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   
   if(any(unlist(tapply(fish_data$year, fish_data$pop, diff)) != 1))
     stop(paste0("Non-consecutive years not allowed in fish_data \n"))
-  
+
   for(i in c("pop","year","A","fit_p_HOS","B_take_obs"))
     if(any(is.na(fish_data[,i])))
       stop(paste0("Missing values not allowed in fish_data$", i, "\n"))
