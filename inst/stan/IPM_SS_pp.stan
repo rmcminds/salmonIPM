@@ -152,6 +152,8 @@ transformed data {
         R_a_init_indx[i,a] = ii;
         ii = ii + 1;
       }
+      else
+        R_a_init_indx[i,a] = 0;
   }
   
   fwd_init_indx = rep_array(0, N_fwd, N_age);
