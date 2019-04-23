@@ -122,7 +122,7 @@ transformed data {
   int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
   int<lower=1> N_R_a_init;           // number of initial "orphan" recruits-at-age states per pop
-  int<lower=1> R_a_init_indx[N,N_age]; // index into R_a_init for each initial year
+  int<lower=0> R_a_init_indx[N,N_age]; // index into R_a_init for each initial year
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   
   N_pop = max(pop);
