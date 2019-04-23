@@ -123,6 +123,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   fish_data$year <- as.numeric(factor(fish_data$year))
   fish_data$fit_p_HOS <- as.logical(fish_data$fit_p_HOS)
   
+  if(any(unlist(tapply(fish_data$year, fish_data$pop, diff)) != 1))
+    stop(paste0("Non-consecutive years not allowed in fish_data \n"))
+
   for(i in c("pop","year","A","fit_p_HOS","B_take_obs"))
     if(any(is.na(fish_data[,i])))
       stop(paste0("Missing values not allowed in fish_data$", i, "\n"))
@@ -139,7 +142,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
     if(any(unlist(sapply(env_data, is.na))))
       stop("Missing values are not allowed in environmental covariates.\n")
   }
-
+  
   if(is.null(env_data))
     env_data <- switch(life_cycle,
                        SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 0)),
@@ -156,7 +159,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   if(stan_model == "IPM_SSpa_pp" & is.null(age_S_eff))
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
-
+  
   if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.\n")
   

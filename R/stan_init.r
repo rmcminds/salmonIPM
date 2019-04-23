@@ -39,7 +39,7 @@ stan_init <- function(data, stan_model, chains)
       B_rate[is.na(B_rate)] <- 0.1
       B_rate_all[which_B] <- B_rate
       year <- as.numeric(factor(year))
-
+      
       # Maybe figure out a way to do this with a call to run_recon?
       for(i in 1:N)
         for(j in 1:N_age)
