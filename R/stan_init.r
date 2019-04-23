@@ -39,7 +39,7 @@ stan_init <- function(data, stan_model, chains)
       B_rate[is.na(B_rate)] <- 0.1
       B_rate_all[which_B] <- B_rate
       year <- as.numeric(factor(year))
-      N_R_a_init <- N_pop*N_age*(min_ages + (N_age - 1)/2) # total no. initial orphan recruit age classes
+      N_R_a_init <- N_pop*N_age*(min_age + (N_age - 1)/2) # total no. initial orphan recruit age classes
       
       # Maybe figure out a way to do this with a call to run_recon?
       for(i in 1:N)
