@@ -10,7 +10,7 @@ options(device=windows)
 
 # Simulate data
 N_pop <- 20
-N_year <- 25
+N_year <- 50
 N <- N_pop * N_year
 
 sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5,
