@@ -121,6 +121,8 @@ transformed data {
   int<lower=2> ages[N_age];          // adult ages
   int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
+  int<lower=1> N_R_a_init;           // number of initial "orphan" recruits-at-age states per pop
+  int<lower=1> R_a_init_indx[N,N_age]; // index into R_a_init for each initial year
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   
   N_pop = max(pop);
@@ -137,6 +139,19 @@ transformed data {
       pop_year_indx[i] = 1;
     else
       pop_year_indx[i] = pop_year_indx[i-1] + 1;
+  }
+  
+  N_R_a_init = N_age * (min(ages) + (N_age - 1)/2);
+  for(i in 1:N)
+  {
+    int ii = 1;  // temp: current index position
+    
+    for(a in 1:N_age)
+      if(pop_year_indx[i] - ages[a] < 1)  // if orphan age class
+      {
+        R_a_init_indx[i,a] = ii;
+        ii = ii + 1;
+      }
   }
   
   fwd_init_indx = rep_array(0, N_fwd, N_age);
@@ -177,8 +192,7 @@ parameters {
   vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
   // initial spawners, observation error
-  vector<lower=0>[max_age*N_pop] S_init; // true total spawner abundance in years 1-max_age
-  simplex[N_age] q_init[max_age*N_pop];  // true wild spawner age distributions in years 1-max_age
+  vector<lower=0>[N_pop*N_R_a_init] R_a_init; // true "orphan" recuruits-at-age abundance in years 1:max_age
   real<lower=0> tau;                     // observation error SD of total spawners
 }
 
@@ -244,33 +258,35 @@ transformed parameters {
   {
     row_vector[N_age] exp_p; // temp variable: exp(p[i,])
     row_vector[N_age] S_W_a; // temp variable: true wild spawners by age
-    int ii;                  // temp variable: index into S_init and q_init
-    
+
     // Inverse log-ratio transform of cohort age distn
     // (built-in softmax function doesn't accept row vectors)
     exp_p = exp(p[i,]);
     p[i,] = exp_p/sum(exp_p);
+    
     if(pop_year_indx[i] <= max_age)
     {
-      // Use initial values
-      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
-      S_H[i] = S_init[ii]*p_HOS_all[i];
-      q[i,] = to_row_vector(q_init[ii,]);
-      S_W_a = S_W[i]*q[i,];
+      // Use one or more initial values
+      for(a in 1:N_age)
+      {
+        if(i - ages[a] < 1)  
+          S_W_a[a] = R_a_init[R_a_init_indx[i,a]]*(1 - p_HOS_all[i]); // prior on orphan age classes
+        else  
+          S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a]; // from process model
+      }
     }
     else
     {
       // Use recruitment process model
       for(a in 1:N_age)
         S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a];
-      // catch and broodstock removal (assumes no take of age 1)
-      S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-      S_W[i] = sum(S_W_a);
-      S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
-      q[i,] = S_W_a/S_W[i];
     }
     
+    // catch and broodstock removal (assumes no take of age 1)
+    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_W[i] = sum(S_W_a);
+    S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
+    q[i,] = S_W_a/S_W[i];
     S[i] = S_W[i] + S_H[i];
     R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     R[i] = R_hat[i]*exp(phi[year[i]] + sigma*zeta_R[i]);
@@ -315,8 +331,8 @@ model {
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
-  // initial spawners, observation error
-  S_init ~ lognormal(0,10);
+  // initial recruits, observation error
+  R_a_init ~ gamma(2,0.01);  // implies orphan spawner age distn is q[t,] ~ Dir(2)
   tau ~ pexp(0,1,10);
   
   // Observation model
