@@ -10,7 +10,7 @@ options(device=windows)
 
 # Simulate data
 N_pop <- 20
-N_year <- 50
+N_year <- 30
 N <- N_pop * N_year
 
 sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5,
@@ -34,6 +34,12 @@ fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
+# "old priors" version of partial pooling
+fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
+                     age_S_obs = rep(1,3), age_S_eff = rep(1,3),
+                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
+                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+
 # Partial pooling across populations
 fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
@@ -53,7 +59,7 @@ library(yarrr)
 S_true <- rowSums(sim_out$pars_out$S_W_a) / (1 - sim_out$pars_out$p_HOS)
 
 graphics.off()
-windows(width = 10, height = 7)
+windows(width = 14, height = 10)
 par(mfrow=c(4,5), mar = c(4,4,2,1))
 
 for(i in 1:20) {
@@ -76,6 +82,24 @@ for(i in 1:20) {
   points(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
          pch = 16)
 }
+
+
+dev.new(width = 10, height = 7)
+par(mfrow = c(1,2))
+
+for(i in c(6,15)) {
+  hist(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1],
+       prob = TRUE, col = transparent("orange",0.8),
+       xlim = range(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1],
+                    extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1]),
+       xlab = "S", main = i)
+  curve(dlnorm(x,0,10), n = 500, col = "orange", add = TRUE)
+  hist(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1],
+       prob = TRUE, col = transparent("blue",0.8), add = TRUE)
+  curve(dgamma(x, 1/3*3, 0.001), n = 500, col = "blue", add = TRUE)
+  curve(dlnorm(x, log(S_true[sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1]), stan_mean(fit_pp1,"tau")), add = TRUE)
+}
+
 #####
 #####
 
