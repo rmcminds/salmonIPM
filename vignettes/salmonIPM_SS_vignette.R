@@ -44,6 +44,41 @@ fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
 # PLOTS
 #===========================================================================
 
+##############################################
+# temp: test new priors on initial states
+##############################################
+library(matrixStats)
+library(yarrr)
+
+S_true <- rowSums(sim_out$pars_out$S_W_a) / (1 - sim_out$pars_out$p_HOS)
+
+graphics.off()
+windows(width = 10, height = 7)
+par(mfrow=c(4,5), mar = c(4,4,2,1))
+
+for(i in 1:20) {
+  plot(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
+       pch = "", xlab = "year", ylab = "S", main = i, 
+       ylim = range(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = c(0.05,0.95))))
+  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], S_true[sim_out$sim_dat$pop==i])
+  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i]),
+        col = "orange", lwd = 2)
+  polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
+          c(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
+            rev(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
+          col = transparent("orange", 0.8), border = NA)
+  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i]),
+        col = "blue", lwd = 2)
+  polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
+          c(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
+            rev(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
+          col = transparent("blue", 0.8), border = NA)
+  points(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
+         pch = 16)
+}
+#####
+#####
+
 # Time series of observed and estimated S_tot under unpooled and partially pooled models, 
 # panel for each pop
 # png(filename="S_tot_simdata.png", width=16*0.6, height=10*0.6, units="in", res=200, type="cairo-png")
