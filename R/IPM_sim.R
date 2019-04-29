@@ -74,7 +74,7 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
     R <- switch(SR_fun,
                 exp = alpha*S/A,
                 BH = alpha*S/(A + alpha*S/Rmax),
-                Ricker = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax)))
+                Ricker = alpha*(S/A)*exp(-alpha*S/(A*exp(1)*Rmax)))
     return(R)
   }
   
