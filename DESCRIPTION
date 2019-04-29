@@ -14,7 +14,8 @@ Depends:
     rstan,
     shinystan,
     loo,
-    MASS
+    MASS,
+    stats
 Imports:
     gtools,
     lattice,
