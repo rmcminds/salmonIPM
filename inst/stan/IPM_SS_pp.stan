@@ -334,7 +334,7 @@ model {
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
   // initial recruits, observation error
-  R_a_init ~ gamma(1.0,0.005);  // implies orphan spawner age distn is q[t,] ~ Dir(1/N_age)
+  R_a_init ~ gamma(1.0/N_age,0.001);  // implies orphan spawner age distn is q[t,] ~ Dir(1/N_age)
   tau ~ pexp(0,1,10);
   
   // Observation model
