@@ -87,18 +87,39 @@ for(i in 1:20) {
 dev.new(width = 10, height = 7)
 par(mfrow = c(1,2))
 
-for(i in c(6,15)) {
-  hist(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1],
+yy <- 5
+for(i in c(16,18)) {
+  hist(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy],
        prob = TRUE, col = transparent("orange",0.8),
-       xlim = range(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1],
-                    extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1]),
+       xlim = range(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy],
+                    extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy]),
        xlab = "S", main = i)
   curve(dlnorm(x,0,10), n = 500, col = "orange", add = TRUE)
-  hist(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1],
+  hist(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy],
        prob = TRUE, col = transparent("blue",0.8), add = TRUE)
   curve(dgamma(x, 1/3*3, 0.001), n = 500, col = "blue", add = TRUE)
-  curve(dlnorm(x, log(S_true[sim_out$sim_dat$pop==i & sim_out$sim_dat$year==1]), stan_mean(fit_pp1,"tau")), add = TRUE)
+  curve(dlnorm(x, log(S_true[sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy]), 
+               stan_mean(fit_pp1,"tau")), add = TRUE)
 }
+
+
+dev.new(width = 10, height = 5)
+par(mfrow = c(1,3))
+
+pp <- 1
+yy <- 6
+
+for(i in 1:3) {
+  ii <- which(sim_out$sim_dat$pop==pp & sim_out$sim_dat$year==yy)
+  hist(extract1(fit_pp1,paste0("q[",ii,",",i,"]")), 20, prob = TRUE, 
+       col = transparent("orange",0.8), xlim = c(0,1), xlab = paste0("q[",yy,"]"), main = i)
+  curve(dunif(x,0,1), col = "blue", add = TRUE)
+  hist(extract1(fit_pp,paste0("q[",ii,",",i,"]")), 20, prob = TRUE, 
+       col = transparent("blue",0.8), add = TRUE)
+  curve(dbeta(x, 1/3, 1 - 1/3), col = "blue", add = TRUE)
+  abline(v = sim_out$pars_out$S_W_a[ii,i]/sum(sim_out$pars_out$S_W_a[ii,]), col = "red")
+}
+
 
 #####
 #####
