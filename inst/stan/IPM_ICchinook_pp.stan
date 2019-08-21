@@ -98,11 +98,22 @@ data {
   // downstream, SAR, upstream survival
   int<lower=0> N_X_D;                  // number of juvenile downstream survival covariates
   matrix[max(append_array(year,year_fwd)),N_X_D] X_D; // downstream survival covariates (if none, use vector of zeros)
+  int<lower=1,upper=max(year)> N_prior_D; // number of years with prior downstream survival
+  int<lower=1,upper=max(year)> which_prior_D[N_prior_D]; // which years with prior downstream survival
+  vector[N_prior_D] mu_prior_D;        // annual prior means of logit downstream survival
+  vector[N_prior_D] sigma_prior_D;     // annual prior SDs of logit downstream survival
   int<lower=0> N_X_SAR;                  // number of smolt-to-adult survival (SAR) covariates
   matrix[max(append_array(year,year_fwd)),N_X_SAR] X_SAR; // SAR covariates (if none, use vector of zeros)
+  int<lower=1,upper=max(year)> N_prior_SAR; // number of years with prior SAR
+  int<lower=1,upper=max(year)> which_prior_SAR[N_prior_SAR]; // which years with prior SAR
+  vector[N_prior_SAR] mu_prior_SAR;        // annual prior means of logit SAR
+  vector[N_prior_SAR] sigma_prior_SAR;     // annual prior SDs of logit SAR
   int<lower=0> N_X_U;                  // number of adult upstream survival covariates
   matrix[max(append_array(year,year_fwd)),N_X_U] X_U; // upstream survival covariates (if none, use vector of zeros)
-  ////// priors for survival from CJS go here //////
+  int<lower=1,upper=max(year)> N_prior_U; // number of years with prior upstream survival
+  int<lower=1,upper=max(year)> which_prior_U[N_prior_U]; // which years with prior upstream survival
+  vector[N_prior_U] mu_prior_U;        // annual prior means of logit upstream survival
+  vector[N_prior_U] sigma_prior_U;     // annual prior SDs of logit upstream survival
   // fishery and hatchery removals
   vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -177,19 +188,18 @@ parameters {
   real<lower=0> sigma_M;                 // spawner-smolt process error SD
   vector[N] zeta_M;                      // smolt recruitment process errors (Z-scores)
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
-  real<lower=0> tau_M;                   // smolt abundance observation error SD 
   // downstream, SAR, upstream survival
-  real<lower=0,upper=1> mu_D;            // mean logit downstream juvenile survival 
+  real mu_D;                             // mean logit downstream juvenile survival 
   vector[N_X_D] beta_D;                  // regression coefs for logit downstream juvenile survival
   real<lower=-1,upper=1> rho_D;          // AR(1) coef for logit downstream juvenile survival
   real<lower=0> sigma_D;                 // process error SD of logit downstream juvenile survival
   vector[N_year_all] zeta_D;             // logit downstream juvenile survival process errors (Z-scores)
-  real<lower=0,upper=1> mu_SAR;          // mean logit smolt-to-adult survival 
+  real mu_SAR;                           // mean logit smolt-to-adult survival 
   vector[N_X_SAR] beta_SAR;              // regression coefs for logit smolt-to-adult survival
   real<lower=-1,upper=1> rho_SAR;        // AR(1) coef for logit smolt-to-adult survival
   real<lower=0> sigma_SAR;               // process error SD of logit smolt-to-adult survival
   vector[N_year_all] zeta_SAR;           // logit smolt-to-adult survival process errors (Z-scores)
-  real<lower=0,upper=1> mu_U;            // mean logit upstream adult survival 
+  real mu_U;                             // mean logit upstream adult survival 
   vector[N_X_U] beta_U;                  // regression coefs for logit upstream adult survival
   real<lower=-1,upper=1> rho_U;          // AR(1) coef for logit upstream adult survival
   real<lower=0> sigma_U;                 // process error SD of logit upstream adult survival
@@ -268,10 +278,10 @@ transformed parameters {
     epsilon_U[i] = rho_U*epsilon_U[i-1] + zeta_U[i]*sigma_U;
   }
   // constrain process errors to sum to 0 (columns of X should be centered)
-  s_D = inv_logit(logit(mu_D) + mat_lmult(X_D,beta_D) + epsilon_D - mean(epsilon_D[1:N_year]));
-  SAR = inv_logit(logit(mu_SAR) + mat_lmult(X_SAR,beta_SAR) + epsilon_SAR - mean(epsilon_SAR[1:N_year]));
-  s_U = inv_logit(logit(mu_U) + mat_lmult(X_U,beta_U) + epsilon_U - mean(epsilon_U[1:N_year]));
-  
+  s_D = inv_logit(mu_D + mat_lmult(X_D,beta_D) + epsilon_D - mean(epsilon_D[1:N_year]));
+  SAR = inv_logit(mu_SAR + mat_lmult(X_SAR,beta_SAR) + epsilon_SAR - mean(epsilon_SAR[1:N_year]));
+  s_U = inv_logit(mu_U + mat_lmult(X_U,beta_U) + epsilon_U - mean(epsilon_U[1:N_year]));
+
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
   p_HOS_all[which_H] = p_HOS;
@@ -324,7 +334,8 @@ transformed parameters {
     {
       // Use recruitment process model
       for(a in 1:N_age)
-        S_W_a[a] = M[i-ocean_ages[a]]*s_D[i-ocean_ages[a]]*SAR[i-ocean_ages[a]]*p[i-ocean_ages[a],a]*s_U[i];
+        S_W_a[a] = M[i-ocean_ages[a]] * s_D[year[i]-ocean_ages[a]] * 
+          SAR[year[i]-ocean_ages[a]] * p[i-ocean_ages[a],a] * s_U[year[i]];
       // catch and broodstock removal (assumes no take of age 1)
       S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
       S_W[i] = sum(S_W_a);
@@ -358,24 +369,28 @@ model {
   sigma_M ~ pexp(0,2,10);
   zeta_M ~ normal(0,1);    // epsilon_M ~ AR1(rho_M, sigma_M)
   M_init ~ lognormal(0,5);
-  tau_M ~ pexp(0,1,10);
-  
+
   // downstream, SAR, upstream survival
+  // prior on logit-intercepts implies Unif(0,1) prior on intercept when
+  // all covariates are at their sample means
+  target += log_inv_logit(mu_D) + log1m_inv_logit(mu_D);
   beta_D ~ normal(0,5);
   rho_D ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_D ~ pexp(0,2,10);
   zeta_D ~ normal(0,1);      // epsilon_D ~ AR1(rho_D, sigma_D)
-  ////// informative prior on s_D goes here
+  logit(s_D[which_prior_D]) ~ normal(mu_prior_D, sigma_prior_D); // informative prior on s_D
+  target += log_inv_logit(mu_SAR) + log1m_inv_logit(mu_SAR);
   beta_SAR ~ normal(0,5);
   rho_SAR ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
   sigma_SAR ~ pexp(0,2,10);
   zeta_SAR ~ normal(0,1);    // epsilon_SAR ~ AR1(rho_SAR, sigma_SAR)
-  ////// informative prior on SAR goes here
+  logit(SAR[which_prior_SAR]) ~ normal(mu_prior_SAR, sigma_prior_SAR); // informative prior on SAR
+  target += log_inv_logit(mu_U) + log1m_inv_logit(mu_U);
   beta_U ~ normal(0,5);
   rho_U ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_U ~ pexp(0,2,10);
   zeta_U ~ normal(0,1);      // epsilon_U ~ AR1(rho_U, sigma_U)
-  ////// informative prior on s_U goes here
+  logit(s_U[which_prior_U]) ~ normal(mu_prior_U, sigma_prior_U); // informative prior on s_U
   
   // spawner age structure
   for(i in 1:(N_age-1))
@@ -460,7 +475,7 @@ generated quantities {
   
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
-    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau); 
+    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau_S); 
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)

@@ -63,6 +63,11 @@
 #'   element names correspond to stage- or transition-specific covariate
 #'   matrices defined in the Stan model being used. (This is required if
 #'   \code{life_cycle != "SS"}.)
+#' @param prior_data Only if `stan_model == "IPM_ICchinook_pp"`, named list
+#' with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}
+#' \code{year}, \code{mu_prior_D}, \code{sigma_prior_D}, \code{mu_prior_SAR}, \code{sigma_prior_SAR},
+#'  \code{mu_prior_U}, \code{sigma_prior_U}, giving the prior mean and SD of logit survival
+#'  downstream, at sea, and upstream in each year.}}
 #' @param ages If \code{life_cycle != "SS"}, a named list giving the fixed ages
 #'   in years of all subadult life stages.
 #' @param age_S_obs Only if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, a logical or numeric
@@ -117,7 +122,7 @@
 #'
 #' @export
 
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, 
+salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_data = NULL,
                       ages = NULL, age_S_obs = NULL, age_S_eff = NULL,  
                       model, life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", 
                       init = NULL, pars = NULL, log_lik = FALSE, 
@@ -133,7 +138,7 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
     pool_pops <- mlp[3]
   }
   dat <- stan_data(fish_data = fish_data, fish_data_fwd = fish_data_fwd, env_data = env_data, 
-                   ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   prior_data = prior_data, ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    stan_model = stan_model, SR_fun = SR_fun)
   
   if(is.null(pars)) pars <- stan_pars(stan_model)
