@@ -35,7 +35,7 @@ fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
 # "old priors" version of partial pooling
-fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
+fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
                      age_S_obs = rep(1,3), age_S_eff = rep(1,3),
                      chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                      control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
@@ -44,7 +44,7 @@ print(fit_pp1, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling across populations
-fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
+fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp_alt-prior-initial_states",
                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
