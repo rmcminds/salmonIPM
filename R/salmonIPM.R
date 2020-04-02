@@ -70,10 +70,10 @@
 #'  downstream, at sea, and upstream in each year.}}
 #' @param ages If \code{life_cycle != "SS"}, a named list giving the fixed ages
 #'   in years of all subadult life stages.
-#' @param age_S_obs Only if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, a logical or numeric
+#' @param age_S_obs Only if `stan_model == "IPM_SSpa_pp`, a logical or numeric
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of all ages.
-#' @param age_S_eff Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+#' @param age_S_eff Only if `stan_model == "IPM_SSpa_pp"`, a logical or numeric
 #'   vector indicating, for each adult age, whether spawners of that age
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
