@@ -64,13 +64,18 @@
 #'   element names correspond to stage- or transition-specific covariate
 #'   matrices defined in the Stan model being used. (This is required for
 #'   multi-stage models.)
+#' @param prior_data Only if `stan_model == "IPM_ICchinook_pp"`, named list
+#' with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}
+#' \code{year}, \code{mu_prior_D}, \code{sigma_prior_D}, \code{mu_prior_SAR}, \code{sigma_prior_SAR},
+#'  \code{mu_prior_U}, \code{sigma_prior_U}, giving the prior mean and SD of logit survival
+#'  downstream, at sea, and upstream in each year.}}
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages.
-#' @param age_S_obs Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+#' @param age_S_obs Only if `stan_model == "IPM_SSpa_pp"`, a logical or numeric
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
 #'   all ages.
-#' @param age_S_eff Only if `stan_model == "IPM_SSpa_np"`, a logical or numeric
+#' @param age_S_eff Only if `stan_model == "IPM_SSpa_pp"`, a logical or numeric
 #'   vector indicating, for each adult age, whether spawners of that age
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
@@ -85,7 +90,7 @@
 #'
 #' @export
 
-stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, 
+stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_data = NULL,
                       ages = NULL, age_S_obs = NULL, age_S_eff = NULL, 
                       stan_model, SR_fun = "BH")
 {
@@ -119,13 +124,39 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
     fish_data_fwd <- fish_data_fwd[c(),]
   }
   
+  if(stan_model == "IPM_ICchinook_pp") {
+    if(is.null(prior_data)) {
+      stop(paste("Priors for survival must be specified for model IPM_ICchinook_pp \n"))
+    } else {
+      s <- prior_data$s[prior_data$s$year %in% fish_data$year,]
+      
+      prior_D <- na.omit(s[,c("year","mu_prior_D","sigma_prior_D")])
+      N_prior_D <- nrow(prior_D)
+      which_prior_D <- match(prior_D$year, sort(unique(fish_data$year)))
+      mu_prior_D <- prior_D$mu_prior_D
+      sigma_prior_D <- prior_D$sigma_prior_D
+
+      prior_SAR <- na.omit(s[,c("year","mu_prior_SAR","sigma_prior_SAR")])
+      N_prior_SAR <- nrow(prior_SAR)
+      which_prior_SAR <- match(prior_SAR$year, sort(unique(fish_data$year)))
+      mu_prior_SAR <- prior_SAR$mu_prior_SAR
+      sigma_prior_SAR <- prior_SAR$sigma_prior_SAR
+    
+      prior_U <- na.omit(s[,c("year","mu_prior_U","sigma_prior_U")])
+      N_prior_U <- nrow(prior_U)
+      which_prior_U <- match(prior_U$year, sort(unique(fish_data$year)))
+      mu_prior_U <- prior_U$mu_prior_U
+      sigma_prior_U <- prior_U$sigma_prior_U
+    }
+}
+  
   fish_data$pop <- as.numeric(factor(fish_data$pop))
   fish_data$year <- as.numeric(factor(fish_data$year))
   fish_data$fit_p_HOS <- as.logical(fish_data$fit_p_HOS)
   
   if(any(unlist(tapply(fish_data$year, fish_data$pop, diff)) != 1))
-     stop(paste0("Non-consecutive years not allowed in fish_data \n"))
-  
+    stop(paste0("Non-consecutive years not allowed in fish_data \n"))
+
   for(i in c("pop","year","A","fit_p_HOS","B_take_obs"))
     if(any(is.na(fish_data[,i])))
       stop(paste0("Missing values not allowed in fish_data$", i, "\n"))
@@ -142,7 +173,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
     if(any(unlist(sapply(env_data, is.na))))
       stop("Missing values are not allowed in environmental covariates.\n")
   }
-
+  
   if(is.null(env_data))
     env_data <- switch(life_cycle,
                        SS = list(matrix(0, max(fish_data$year, fish_data_fwd$year), 0)),
@@ -150,7 +181,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
                        SMS = list(M = matrix(0, max(fish_data$year), 0),
                                   MS = matrix(0, max(fish_data$year), 0)),
                        SMaS = list(M = matrix(0, max(fish_data$year), 0),
-                                   MS = matrix(0, max(fish_data$year), 0)))
+                                   MS = matrix(0, max(fish_data$year), 0)),
+                       ICchinook = list(M = matrix(0, max(fish_data$year), 0),
+                                        s_D = matrix(0, max(fish_data$year), 0),
+                                        s_SAR = matrix(0, max(fish_data$year), 0),
+                                        s_U = matrix(0, max(fish_data$year), 0)))
   
   if(stan_model == "IPM_SSpa_pp" & is.null(age_S_obs))
     age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
@@ -159,7 +194,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   if(stan_model == "IPM_SSpa_pp" & is.null(age_S_eff))
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
-
+  
   if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.\n")
   
@@ -185,7 +220,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
                which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))), "\n"))
   
   if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMaS_np",
-                        "RR_SS_np","RR_SS_pp"))
+                        "IPM_ICchinook_pp","RR_SS_np","RR_SS_pp"))
     stop(paste("Stan model", stan_model, "does not exist.\n"))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp"))
@@ -367,6 +402,72 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         max_MSage = max_MSage,
         n_MSage_obs = as.matrix(fish_data[,grep("n_MSage", names(fish_data))]),
         n_GRage_obs = as.matrix(fish_data[,grep("n_GRage", names(fish_data))]),
+        # H/W composition
+        N_H = sum(fit_p_HOS),
+        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
+        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+      )
+      
+      dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
+      dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
+      dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
+      
+      return(dat)
+    })
+  } else if(stan_model == "IPM_ICchinook_pp") {
+    with(fish_data, {  
+      dat <- list(
+        # info for observed data
+        N = nrow(fish_data),
+        pop = pop, 
+        year = year,
+        # info for forward simulations
+        N_fwd = N_fwd,
+        pop_fwd = array(fish_data_fwd$pop, dim = nrow(fish_data_fwd)),
+        year_fwd = array(fish_data_fwd$year, dim = nrow(fish_data_fwd)),
+        A_fwd = array(fish_data_fwd$A, dim = nrow(fish_data_fwd)),
+        B_rate_fwd = array(fish_data_fwd$B_rate, dim = nrow(fish_data_fwd)),
+        F_rate_fwd = array(fish_data_fwd$F_rate, dim = nrow(fish_data_fwd)),
+        p_HOS_fwd = array(fish_data_fwd$p_HOS, dim = nrow(fish_data_fwd)),
+        # recruitment
+        SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+        A = A,
+        smolt_age = ages$M,
+        N_X_M = ncol(env_data$M), 
+        X_M = as.matrix(env_data$M),
+        # downstream, SAR, upstream survival
+        N_X_D = ncol(env_data$s_D),
+        X_D = as.matrix(env_data$s_D),
+        N_prior_D = N_prior_D,
+        which_prior_D = array(which_prior_D, dim = N_prior_D),
+        mu_prior_D = array(mu_prior_D, dim = N_prior_D),
+        sigma_prior_D = array(sigma_prior_D, dim = N_prior_D),
+        N_X_SAR = ncol(env_data$s_SAR),
+        X_SAR = as.matrix(env_data$s_SAR),
+        N_prior_SAR = N_prior_SAR,
+        which_prior_SAR = array(which_prior_SAR, dim = N_prior_SAR),
+        mu_prior_SAR = array(mu_prior_SAR, dim = N_prior_SAR),
+        sigma_prior_SAR = array(sigma_prior_SAR, dim = N_prior_SAR),
+        N_X_U = ncol(env_data$s_U),
+        X_U = as.matrix(env_data$s_U),
+        N_prior_U = N_prior_U,
+        which_prior_U = array(which_prior_U, dim = N_prior_U),
+        mu_prior_U = array(mu_prior_U, dim = N_prior_U),
+        sigma_prior_U = array(sigma_prior_U, dim = N_prior_U),
+        # fishery and hatchery removals
+        F_rate = replace(F_rate, is.na(F_rate), 0),
+        N_B = sum(B_take_obs > 0),
+        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        B_take_obs = B_take_obs[B_take_obs > 0],
+        # spawner abundance
+        N_S_obs = sum(!is.na(S_obs)),
+        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
+        # spawner age structure
+        N_age = sum(grepl("n_age", names(fish_data))), 
+        max_age = max_age,
+        n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
         # H/W composition
         N_H = sum(fit_p_HOS),
         which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),

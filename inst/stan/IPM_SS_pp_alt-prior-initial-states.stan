@@ -4,11 +4,11 @@ functions {
     real R;
     
     if(SR_fun == 1)      // discrete exponential
-    R = alpha*S/A;
+      R = alpha*S/A;
     else if(SR_fun == 2) // Beverton-Holt
-    R = alpha*S/(A + alpha*S/Rmax);
+      R = alpha*S/(A + alpha*S/Rmax);
     else if(SR_fun == 3) // Ricker
-    R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
+      R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
@@ -36,12 +36,12 @@ functions {
   }
   
   // Vectorized logical &&
-    int[] vand(int[] cond1, int[] cond2) {
-      int cond1_and_cond2[size(cond1)];
-      for(i in 1:size(cond1))
-        cond1_and_cond2[i] = cond1[i] && cond2[i];
-      return(cond1_and_cond2);
-    }
+  int[] vand(int[] cond1, int[] cond2) {
+    int cond1_and_cond2[size(cond1)];
+    for(i in 1:size(cond1))
+      cond1_and_cond2[i] = cond1[i] && cond2[i];
+    return(cond1_and_cond2);
+  }
   
   // R-style conditional subsetting
   int[] rsub(int[] x, int[] cond) {
@@ -121,6 +121,8 @@ transformed data {
   int<lower=2> ages[N_age];          // adult ages
   int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
+  int<lower=1> N_R_a_init;           // number of initial "orphan" recruits-at-age states per pop
+  int<lower=0> R_a_init_indx[N,N_age]; // index into R_a_init for each initial year
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   
   N_pop = max(pop);
@@ -137,6 +139,21 @@ transformed data {
       pop_year_indx[i] = 1;
     else
       pop_year_indx[i] = pop_year_indx[i-1] + 1;
+  }
+  
+  N_R_a_init = N_age * (min(ages) + (N_age - 1)/2);
+  for(i in 1:N)
+  {
+    int ii = 1;  // temp: current index position
+    
+    for(a in 1:N_age)
+      if(pop_year_indx[i] - ages[a] < 1)  // if orphan age class
+      {
+        R_a_init_indx[i,a] = ii;
+        ii = ii + 1;
+      }
+      else
+        R_a_init_indx[i,a] = 0;
   }
   
   fwd_init_indx = rep_array(0, N_fwd, N_age);
@@ -165,7 +182,7 @@ parameters {
   vector[N_year_all] zeta_phi;           // log brood year productivity anomalies (Z-scores)
   real<lower=0> sigma;                   // unique process error SD
   vector[N] zeta_R;                      // log true recruit abundance (not density) by brood year (z-scores)
-  // spawner age structure 
+  // spawner age structure
   simplex[N_age] mu_p;                   // among-pop mean of age distributions
   vector<lower=0>[N_age-1] sigma_gamma;  // among-pop SD of mean log-ratio age distributions
   cholesky_factor_corr[N_age-1] L_gamma; // Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
@@ -177,8 +194,7 @@ parameters {
   vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
   // initial spawners, observation error
-  vector<lower=0>[max_age*N_pop] S_init; // true total spawner abundance in years 1-max_age
-  simplex[N_age] q_init[max_age*N_pop];  // true wild spawner age distributions in years 1-max_age
+  vector<lower=0>[N_pop*N_R_a_init] R_a_init; // true "orphan" recuruits-at-age abundance in years 1:max_age
   real<lower=0> tau;                     // observation error SD of total spawners
 }
 
@@ -216,8 +232,8 @@ transformed parameters {
     sigma_alphaRmax[2] = sigma_Rmax;
     zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
     epsilon_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * zeta_alphaRmax')';
-                         alpha = exp(mu_alpha + col(epsilon_alphaRmax,1));
-                         Rmax = exp(mu_Rmax + col(epsilon_alphaRmax,2));
+    alpha = exp(mu_alpha + col(epsilon_alphaRmax,1));
+    Rmax = exp(mu_Rmax + col(epsilon_alphaRmax,2));
   }
   
   // AR(1) model for phi
@@ -237,43 +253,45 @@ transformed parameters {
   mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
   gamma = rep_matrix(mu_gamma,N_pop) + (diag_matrix(sigma_gamma) * L_gamma * zeta_gamma')';
   p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * zeta_p')', rep_vector(0,N));
-  
+    
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
     row_vector[N_age] exp_p; // temp variable: exp(p[i,])
     row_vector[N_age] S_W_a; // temp variable: true wild spawners by age
-    int ii;                  // temp variable: index into S_init and q_init
-    
+
     // Inverse log-ratio transform of cohort age distn
     // (built-in softmax function doesn't accept row vectors)
     exp_p = exp(p[i,]);
     p[i,] = exp_p/sum(exp_p);
+    
     if(pop_year_indx[i] <= max_age)
     {
-      // Use initial values 
-      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
-      S_H[i] = S_init[ii]*p_HOS_all[i];
-      q[i,] = to_row_vector(q_init[ii,]);
-      S_W_a = S_W[i]*q[i,];
+      // Use one or more initial values
+      for(a in 1:N_age)
+      {
+        if(i - ages[a] < 1)  
+          S_W_a[a] = R_a_init[R_a_init_indx[i,a]]*(1 - p_HOS_all[i]); // prior on orphan age classes
+        else  
+          S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a]; // from process model
+      }
     }
     else
     {
       // Use recruitment process model
       for(a in 1:N_age)
         S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a];
-      // catch and broodstock removal (assumes no take of age 1)
-      S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-      S_W[i] = sum(S_W_a);
-      S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
-      q[i,] = S_W_a/S_W[i];
     }
     
+    // catch and broodstock removal (assumes no take of age 1)
+    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_W[i] = sum(S_W_a);
+    S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
+    q[i,] = S_W_a/S_W[i];
     S[i] = S_W[i] + S_H[i];
     R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    R[i] = R_hat[i] * exp(phi[year[i]] + sigma*zeta_R[i]);
+    R[i] = R_hat[i]*exp(phi[year[i]] + sigma*zeta_R[i]);
   }
 }
 
@@ -315,14 +333,13 @@ model {
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
-  // initial spawners, observation error
-  S_init ~ lognormal(0,10);
+  // initial recruits, observation error
+  R_a_init ~ lognormal(0,5);
   tau ~ pexp(0,1,10);
   
   // Observation model
-  // total spawners (of observed ages)
-  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau); 
-  n_H_obs ~ binomial(n_HW_obs, p_HOS); // counts of hatchery vs. wild spawners
+  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau);  // observed total spawners
+  n_H_obs ~ binomial(n_HW_obs, p_HOS); // obs counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
 
@@ -350,43 +367,43 @@ generated quantities {
   for(i in 1:N_fwd)
   {
     vector[N_age-1] alr_p_fwd;   // temp variable: alr(p_fwd[i,])'
-row_vector[N_age] S_W_a_fwd;   // temp variable: true wild spawners by age
-
-// Inverse log-ratio transform of cohort age distn
-alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
-p_fwd[i,] = to_row_vector(softmax(append_row(alr_p_fwd,0)));
-
-for(a in 1:N_age)
-{
-  if(fwd_init_indx[i,a] != 0)
-  {
-    // Use estimated values from previous cohorts
-    S_W_a_fwd[a] = R[fwd_init_indx[i,a]]*p[fwd_init_indx[i,a],a];
+    row_vector[N_age] S_W_a_fwd;   // temp variable: true wild spawners by age
+    
+    // Inverse log-ratio transform of cohort age distn
+    alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
+    p_fwd[i,] = to_row_vector(softmax(append_row(alr_p_fwd,0)));
+    
+    for(a in 1:N_age)
+    {
+      if(fwd_init_indx[i,a] != 0)
+      {
+        // Use estimated values from previous cohorts
+        S_W_a_fwd[a] = R[fwd_init_indx[i,a]]*p[fwd_init_indx[i,a],a];
+      }
+      else
+      {
+        S_W_a_fwd[a] = R_fwd[i-ages[a]]*p_fwd[i-ages[a],a];
+      }
+    }
+    
+    for(a in 2:N_age)  // catch and broodstock removal (assumes no take of age 1)
+      S_W_a_fwd[a] = S_W_a_fwd[a]*(1 - F_rate_fwd[i])*(1 - B_rate_fwd[i]);
+    
+    S_W_fwd[i] = sum(S_W_a_fwd);
+    S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
+    q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
+    S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
+    R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
+    R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
   }
-  else
-  {
-    S_W_a_fwd[a] = R_fwd[i-ages[a]]*p_fwd[i-ages[a],a];
-  }
-}
-
-for(a in 2:N_age)  // catch and broodstock removal (assumes no take of age 1)
-S_W_a_fwd[a] = S_W_a_fwd[a]*(1 - F_rate_fwd[i])*(1 - B_rate_fwd[i]);
-
-S_W_fwd[i] = sum(S_W_a_fwd);
-S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
-q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
-S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
-R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
-                                                       }
-
-LL_S_obs = rep_vector(0,N);
-for(i in 1:N_S_obs)
-  LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau); 
-LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
-LL_n_H_obs = rep_vector(0,N_H);
-for(i in 1:N_H)
-  LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-LL = LL_S_obs + LL_n_age_obs;
-LL[which_H] = LL[which_H] + LL_n_H_obs;
+  
+  LL_S_obs = rep_vector(0,N);
+  for(i in 1:N_S_obs)
+    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau); 
+  LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+  LL_n_H_obs = rep_vector(0,N_H);
+  for(i in 1:N_H)
+    LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
+  LL = LL_S_obs + LL_n_age_obs;
+  LL[which_H] = LL[which_H] + LL_n_H_obs;
 }

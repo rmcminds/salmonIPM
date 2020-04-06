@@ -70,7 +70,24 @@ par_defs <- function(stan_model = NULL) {
     c("S_sim", "N x 1", "Simulated number of spawners"),
     c("R_sim", "N x 1", "Simulated number of recruits"),
     c("gamma", "N_pop x (N_age-1)", "Popn mean log-ratio age distributions"),
-    c("phi", "N_year_all x 1", "log of productivity anomalies by brood year")
+    c("phi", "N_year_all x 1", "log of productivity anomalies by brood year"),
+    c("mu_D", "scalar", "Mean logit downstream juvenile survival"),
+    c("beta_D", "N_X_D x 1", "Regression coefs for logit downstream juvenile survival"),
+    c("rho_D", "scalar", "AR(1) coef for logit downstream juvenile survival"),
+    c("sigma_D", "scalar", "Process error SD of logit downstream juvenile survival"),
+    c("s_D", "N_year_all x 1", "Downstream survival by outmigration year"),
+
+    c("mu_SAR", "scalar", "Mean logit smolt-to-adult survival"),
+    c("beta_SAR", "N_X_SAR x 1", "Regression coefs for logit smolt-to-adult survival"),
+    c("rho_SAR", "scalar", "AR(1) coef for logit smolt-to-adult survival"),
+    c("sigma_SAR", "scalar", "Process error SD of logit smolt-to-adult survival"),
+    c("s_SAR", "N_year_all x 1", "Smolt-to-adult survival by outmigration year"),
+
+    c("mu_U", "scalar", "Mean logit upstream juvenile survival"),
+    c("beta_U", "N_X_U x 1", "Regression coefs for logit upstream juvenile survival"),
+    c("rho_U", "scalar", "AR(1) coef for logit upstream juvenile survival"),
+    c("sigma_U", "scalar", "Process error SD of logit upstream juvenile survival"),
+    c("s_U", "N_year_all x 1", "Upstream survival by outmigration year"),
   )
   full_tbl <- do.call(rbind, par_list)
   colnames(full_tbl) <- c("Parameter/state", "Dimensions", "Definition")

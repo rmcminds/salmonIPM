@@ -10,7 +10,7 @@ options(device=windows)
 
 # Simulate data
 N_pop <- 20
-N_year <- 25
+N_year <- 30
 N <- N_pop * N_year
 
 sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5,
@@ -34,15 +34,101 @@ fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
+# "old priors" version of partial pooling
+fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
+                     age_S_obs = rep(1,3), age_S_eff = rep(1,3),
+                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
+                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+
+print(fit_pp1, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+      include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
 # Partial pooling across populations
-fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
+fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp_alt-prior-initial_states",
                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+
+print(fit_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+      include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 
 #===========================================================================
 # PLOTS
 #===========================================================================
+
+##############################################
+# temp: test new priors on initial states
+##############################################
+library(matrixStats)
+library(yarrr)
+
+S_true <- rowSums(sim_out$pars_out$S_W_a) / (1 - sim_out$pars_out$p_HOS)
+
+graphics.off()
+windows(width = 14, height = 10)
+par(mfrow=c(4,5), mar = c(4,4,2,1))
+
+for(i in 1:20) {
+  plot(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
+       pch = "", xlab = "year", ylab = "S", main = i, 
+       ylim = range(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = c(0.05,0.95))))
+  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], S_true[sim_out$sim_dat$pop==i])
+  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i]),
+        col = "orange", lwd = 2)
+  polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
+          c(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
+            rev(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
+          col = transparent("orange", 0.8), border = NA)
+  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i]),
+        col = "blue", lwd = 2)
+  polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
+          c(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
+            rev(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
+          col = transparent("blue", 0.8), border = NA)
+  points(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
+         pch = 16)
+}
+
+
+dev.new(width = 10, height = 7)
+par(mfrow = c(1,2))
+
+yy <- 5
+for(i in c(16,18)) {
+  hist(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy],
+       prob = TRUE, col = transparent("orange",0.8),
+       xlim = range(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy],
+                    extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy]),
+       xlab = "S", main = i)
+  curve(dlnorm(x,0,10), n = 500, col = "orange", add = TRUE)
+  hist(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy],
+       prob = TRUE, col = transparent("blue",0.8), add = TRUE)
+  curve(dgamma(x, 1/3*3, 0.001), n = 500, col = "blue", add = TRUE)
+  curve(dlnorm(x, log(S_true[sim_out$sim_dat$pop==i & sim_out$sim_dat$year==yy]), 
+               stan_mean(fit_pp1,"tau")), add = TRUE)
+}
+
+
+dev.new(width = 10, height = 5)
+par(mfrow = c(1,3))
+
+pp <- 1
+yy <- 6
+
+for(i in 1:3) {
+  ii <- which(sim_out$sim_dat$pop==pp & sim_out$sim_dat$year==yy)
+  hist(extract1(fit_pp1,paste0("q[",ii,",",i,"]")), 20, prob = TRUE, 
+       col = transparent("orange",0.8), xlim = c(0,1), xlab = paste0("q[",yy,"]"), main = i)
+  curve(dunif(x,0,1), col = "blue", add = TRUE)
+  hist(extract1(fit_pp,paste0("q[",ii,",",i,"]")), 20, prob = TRUE, 
+       col = transparent("blue",0.8), add = TRUE)
+  curve(dbeta(x, 1/3, 1 - 1/3), col = "blue", add = TRUE)
+  abline(v = sim_out$pars_out$S_W_a[ii,i]/sum(sim_out$pars_out$S_W_a[ii,]), col = "red")
+}
+
+
+#####
+#####
 
 # Time series of observed and estimated S_tot under unpooled and partially pooled models, 
 # panel for each pop
