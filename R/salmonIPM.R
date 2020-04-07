@@ -144,7 +144,7 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
   if(is.null(pars)) pars <- stan_pars(stan_model)
   if(log_lik) pars <- c(pars, "LL")
   
-  fit <- stan(file = file.path(path.package("salmonIPM"), "stan", paste0(stan_model, ".stan")),
+  fit <- rstan::sampling(stanmodels[[stan_model]],
               data = dat, 
               init = stan_init(dat, stan_model, chains), 
               pars = pars,

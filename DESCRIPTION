@@ -11,20 +11,31 @@ Description: A hierarchical Bayesian model of salmon population dynamics. It
     future run sizes, by year and age.
 Depends:
     R (>= 3.5),
-    rstan,
     shinystan,
     loo,
     MASS,
+    lattice,
+    parallel,
     stats
 Imports:
-    gtools,
-    lattice,
-    parallel
+    methods,
+    Rcpp (>= 0.12.0),
+    rstan (>= 2.18.1),
+    rstantools (>= 2.0.0.9000)
+LinkingTo: 
+    BH (>= 1.66.0),
+    Rcpp (>= 0.12.0),
+    RcppEigen (>= 0.3.3.3.0),
+    rstan (>= 2.18.1),
+    StanHeaders (>= 2.18.0)
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
+Biarch: true
 Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.1.0
+SystemRequirements: GNU make
+
