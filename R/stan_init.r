@@ -114,7 +114,7 @@ stan_init <- function(data, stan_model, chains)
             sigma = runif(1, 0.5, 1),
             zeta_R = as.vector(scale(log(R)))*0.1,
             # spawner age structure
-            mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
+            mu_p = colMeans(p),
             sigma_gamma = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
             zeta_gamma = zeta_gamma,
             sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
@@ -191,7 +191,7 @@ stan_init <- function(data, stan_model, chains)
             sigma_U = runif(1, 0.05, 2),
             zeta_U = array(rnorm(max(year,year_fwd), 0, 0.1), dim = max(year,year_fwd)),
             # spawner age structure
-            mu_p = colMeans(p), sigma_gamma = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
+            mu_p = colMeans(p),
             sigma_gamma = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
             zeta_gamma = zeta_gamma,
             sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),

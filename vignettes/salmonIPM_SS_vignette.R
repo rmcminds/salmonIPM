@@ -25,6 +25,7 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sig
                                           n_age_obs = 50, n_HW_obs = 0),
                    N_age = 3, max_age = 5)
 
+
 #===========================================================================
 # CALL STAN TO FIT MODELS
 #===========================================================================
@@ -41,14 +42,6 @@ fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
                      control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
 
 print(fit_pp1, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
-      include = FALSE, prob = c(c(0.05,0.5,0.95)))
-
-# Partial pooling across populations
-fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp_alt-prior-initial_states",
-                    chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
-                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
-
-print(fit_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 
@@ -71,7 +64,7 @@ par(mfrow=c(4,5), mar = c(4,4,2,1))
 for(i in 1:20) {
   plot(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
        pch = "", xlab = "year", ylab = "S", main = i, 
-       ylim = range(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = c(0.05,0.95))))
+       ylim = range(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = c(0.05,0.95))))
   lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], S_true[sim_out$sim_dat$pop==i])
   lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i]),
         col = "orange", lwd = 2)
@@ -79,12 +72,12 @@ for(i in 1:20) {
           c(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
             rev(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
           col = transparent("orange", 0.8), border = NA)
-  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i]),
-        col = "blue", lwd = 2)
-  polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
-          c(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
-            rev(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
-          col = transparent("blue", 0.8), border = NA)
+  # lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i]),
+  #       col = "blue", lwd = 2)
+  # polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
+  #         c(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
+  #           rev(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
+  #         col = transparent("blue", 0.8), border = NA)
   points(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
          pch = 16)
 }
