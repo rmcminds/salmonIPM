@@ -334,17 +334,13 @@ model {
   {
     if(pop_year_indx[i] <= max_age)
     {
-      // number of orphan age classes
-      int N_orphan_age = N_age - max(pop_year_indx[i] - min_age, 0); 
-      vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
+      int N_orphan_age = N_age - max(pop_year_indx[i] - min_age, 0); // # orphan age classes
+      int N_amalg_age = N_age - N_orphan_age + 1; // # amalgamated age classes
       int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into S_init and q_init
       
-      q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
-                            tail(q_init[ii], N_orphan_age - 1));
-      
-      // subtract implied prior on the amalgamated simplex q_orphan
-      // implies q_orphan ~ Dir(1)
-      target += -dirichlet_lpdf(q_orphan | append_row(N_age - N_orphan_age + 1, rep_vector(1, N_orphan_age - 1)));
+      // prior on q_init that implies q_orphan ~ Dir(1)
+      q_init[ii] ~ dirichlet(append_row(rep_vector(1.0/N_amalg_age, N_amalg_age),
+                                        rep_vector(1, N_orphan_age - 1)));
     }
   }
 
@@ -382,7 +378,7 @@ generated quantities {
   // (Note that if N_fwd == 0, this block will not execute)
   for(i in 1:N_fwd)
   {
-    vector[N_age-1] alr_p_fwd;   // alr(p_fwd[i,])'
+    vector[N_age-1] alr_p_fwd;     // alr(p_fwd[i,])'
     row_vector[N_age] S_W_a_fwd;   // true wild spawners by age
 
 // Inverse log-ratio transform of cohort age distn

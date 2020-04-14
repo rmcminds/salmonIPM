@@ -8,6 +8,8 @@ options(device=windows)
 # SIMULATE DATA
 #===========================================================================
 
+set.seed(12345)
+
 # Simulate data
 N_pop <- 20
 N_year <- 30
@@ -33,13 +35,15 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sig
 # No pooling across populations
 fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
-                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                    seed = 123)
 
 # "old priors" version of partial pooling
 fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
                      age_S_obs = rep(1,3), age_S_eff = rep(1,3),
                      chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
-                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                     seed = 123)
 
 print(fit_pp1, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
