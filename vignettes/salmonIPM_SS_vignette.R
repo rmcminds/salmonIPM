@@ -27,6 +27,11 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sig
                                           n_age_obs = 50, n_HW_obs = 0),
                    N_age = 3, max_age = 5)
 
+no_age_data <- 1:N_year
+sim_out$sim_dat[no_age_data,c("n_age3_obs","n_age4_obs","n_age5_obs")] <- 0
+which_S_NA <- sample(N, round(N/5))
+sim_out$sim_dat$S_obs[which_S_NA] <- NA
+
 
 #===========================================================================
 # CALL STAN TO FIT MODELS
