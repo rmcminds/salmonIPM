@@ -246,10 +246,10 @@ transformed parameters {
   {
     row_vector[N_age] exp_p; // exp(p[i,])
     row_vector[N_age] S_W_a; // true wild spawners by age
+    int ii; // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = N_age - min(max(pop_year_indx[i] - min_age, 0), N_age); 
+    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
-    real S_orphan; // orphan spawner abundance
     
     // Inverse log-ratio transform of cohort age distn
     // (built-in softmax function doesn't accept row vectors)
@@ -259,11 +259,9 @@ transformed parameters {
     // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)
     {
-      int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into S_init and q_init
-      
+      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
       q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                             tail(q_init[ii], N_orphan_age - 1));
-      S_orphan = S_init[ii]*sum(tail(q_init[ii], N_orphan_age));
     }
     
     for(a in 1:N_age)
@@ -273,7 +271,7 @@ transformed parameters {
         S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a];
       else
         // Use initial values
-        S_W_a[a] = S_orphan*q_orphan[a - (N_age - N_orphan_age)]*(1 - p_HOS_all[i]);
+        S_W_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
     }
     
     // catch and broodstock removal (assumes no take of age 1)
@@ -329,14 +327,15 @@ model {
 
   // initial spawners and wild spawner age distribution
   // (accounting for amalgamation of q_init to q_orphan)
-  S_init ~ lognormal(0,10);
   for(i in 1:N)
   {
     if(pop_year_indx[i] <= max_age)
     {
       int N_orphan_age = N_age - max(pop_year_indx[i] - min_age, 0); // # orphan age classes
       int N_amalg_age = N_age - N_orphan_age + 1; // # amalgamated age classes
-      int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into S_init and q_init
+      int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into q_init
+      
+      S_init[ii] ~ lognormal(log(1.0*N_orphan_age/N_age), 10);
       
       // prior on q_init that implies q_orphan ~ Dir(1)
       q_init[ii] ~ dirichlet(append_row(rep_vector(1.0/N_amalg_age, N_amalg_age),

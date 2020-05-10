@@ -119,7 +119,6 @@ transformed data {
   int<lower=1,upper=N> N_year;       // number of years, not including forward simulations
   int<lower=1,upper=N> N_year_all;   // total number of years, including forward simulations
   int<lower=2> ages[N_age];          // adult ages
-  int<lower=1> min_age;              // minimum adult age
   int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
@@ -129,7 +128,6 @@ transformed data {
   N_year_all = max(append_array(year, year_fwd));
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
-  min_age = min(ages);  
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
   
   pop_year_indx[1] = 1;
@@ -205,10 +203,10 @@ transformed parameters {
   
   // Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
-    matrix[2,2] L_alphaRmax;           // Cholesky factor of corr matrix of log(alpha), log(Rmax)
-    matrix[N_pop,2] zeta_alphaRmax;    // [log(alpha), log(Rmax)] random effects (z-scored)
-    matrix[N_pop,2] epsilon_alphaRmax; // [log(alpha), log(Rmax)] random effects
-    vector[2] sigma_alphaRmax;         // SD vector of [log(alpha), log(Rmax)]
+    matrix[2,2] L_alphaRmax;           // temp variable: Cholesky factor of corr matrix of log(alpha), log(Rmax)
+    matrix[N_pop,2] zeta_alphaRmax;    // temp variable [log(alpha), log(Rmax)] random effects (z-scored)
+    matrix[N_pop,2] epsilon_alphaRmax; // temp variable: [log(alpha), log(Rmax)] random effects
+    vector[2] sigma_alphaRmax;         // temp variable: SD vector of [log(alpha), log(Rmax)]
     
     L_alphaRmax[1,1] = 1;
     L_alphaRmax[2,1] = rho_alphaRmax;
@@ -244,48 +242,38 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] exp_p; // exp(p[i,])
-    row_vector[N_age] S_W_a; // true wild spawners by age
-    // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = N_age - min(max(pop_year_indx[i] - min_age, 0), N_age); 
-    vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
-    real S_W_orphan; // orphan wild spawner abundance
+    row_vector[N_age] exp_p; // temp variable: exp(p[i,])
+    row_vector[N_age] S_W_a; // temp variable: true wild spawners by age
+    int ii;                  // temp variable: index into S_init and q_init
     
     // Inverse log-ratio transform of cohort age distn
     // (built-in softmax function doesn't accept row vectors)
     exp_p = exp(p[i,]);
     p[i,] = exp_p/sum(exp_p);
-    
-    // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)
     {
-      int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into S_init and q_init
-      
-      q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
-                            tail(q_init[ii], N_orphan_age - 1));
-      S_W_orphan = S_init[ii]*(1 - p_HOS_all[i])*sum(tail(q_init[ii], N_orphan_age));
+      // Use initial values 
+      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
+      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
+      S_H[i] = S_init[ii]*p_HOS_all[i];
+      q[i,] = to_row_vector(q_init[ii,]);
+      S_W_a = S_W[i]*q[i,];
     }
-    
-    for(a in 1:N_age)
+    else
     {
-      if(ages[a] < pop_year_indx[i])
-        // Use recruitment process model
+      // Use recruitment process model
+      for(a in 1:N_age)
         S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a];
-      else
-        // Use initial values
-        S_W_a[a] = S_W_orphan*q_orphan[a - (N_age - N_orphan_age)];
+      // catch and broodstock removal (assumes no take of age 1)
+      S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+      S_W[i] = sum(S_W_a);
+      S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
+      q[i,] = S_W_a/S_W[i];
     }
     
-    // catch and broodstock removal (assumes no take of age 1)
-    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-    S_W[i] = sum(S_W_a);
-    S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
-    q[i,] = S_W_a/S_W[i];
-    
-    // Recruitment
-    R_hat[i] = A[i]*SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
-    R[i] = R_hat[i]*exp(phi[year[i]] + sigma*zeta_R[i]);
+    R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    R[i] = R_hat[i] * exp(phi[year[i]] + sigma*zeta_R[i]);
   }
 }
 
@@ -327,28 +315,11 @@ model {
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
-  // initial spawners and wild spawner age distribution
-  // (accounting for amalgamation of q_init to q_orphan)
+  // initial spawners, observation error
   S_init ~ lognormal(0,10);
-  for(i in 1:N)
-  {
-    if(pop_year_indx[i] <= max_age)
-    {
-      int N_orphan_age = N_age - max(pop_year_indx[i] - min_age, 0); // # orphan age classes
-      int N_amalg_age = N_age - N_orphan_age + 1; // # amalgamated age classes
-      int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into q_init
-      
-      // prior on q_init that implies q_orphan ~ Dir(1)
-      q_init[ii] ~ dirichlet(append_row(rep_vector(1.0/N_amalg_age, N_amalg_age),
-                                        rep_vector(1, N_orphan_age - 1)));
-    }
-  }
-
-  // spawner observation error
   tau ~ pexp(0,1,10);
   
   // Observation model
-  
   // total spawners (of observed ages)
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau); 
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // counts of hatchery vs. wild spawners
@@ -378,8 +349,8 @@ generated quantities {
   // (Note that if N_fwd == 0, this block will not execute)
   for(i in 1:N_fwd)
   {
-    vector[N_age-1] alr_p_fwd;     // alr(p_fwd[i,])'
-    row_vector[N_age] S_W_a_fwd;   // true wild spawners by age
+    vector[N_age-1] alr_p_fwd;   // temp variable: alr(p_fwd[i,])'
+row_vector[N_age] S_W_a_fwd;   // temp variable: true wild spawners by age
 
 // Inverse log-ratio transform of cohort age distn
 alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
