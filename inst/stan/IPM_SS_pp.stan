@@ -350,43 +350,43 @@ generated quantities {
   for(i in 1:N_fwd)
   {
     vector[N_age-1] alr_p_fwd;   // temp variable: alr(p_fwd[i,])'
-row_vector[N_age] S_W_a_fwd;   // temp variable: true wild spawners by age
-
-// Inverse log-ratio transform of cohort age distn
-alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
-p_fwd[i,] = to_row_vector(softmax(append_row(alr_p_fwd,0)));
-
-for(a in 1:N_age)
-{
-  if(fwd_init_indx[i,a] != 0)
-  {
-    // Use estimated values from previous cohorts
-    S_W_a_fwd[a] = R[fwd_init_indx[i,a]]*p[fwd_init_indx[i,a],a];
+    row_vector[N_age] S_W_a_fwd;   // temp variable: true wild spawners by age
+    
+    // Inverse log-ratio transform of cohort age distn
+    alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
+    p_fwd[i,] = to_row_vector(softmax(append_row(alr_p_fwd,0)));
+    
+    for(a in 1:N_age)
+    {
+      if(fwd_init_indx[i,a] != 0)
+      {
+        // Use estimated values from previous cohorts
+        S_W_a_fwd[a] = R[fwd_init_indx[i,a]]*p[fwd_init_indx[i,a],a];
+      }
+      else
+      {
+        S_W_a_fwd[a] = R_fwd[i-ages[a]]*p_fwd[i-ages[a],a];
+      }
+    }
+    
+    for(a in 2:N_age)  // catch and broodstock removal (assumes no take of age 1)
+    S_W_a_fwd[a] = S_W_a_fwd[a]*(1 - F_rate_fwd[i])*(1 - B_rate_fwd[i]);
+    
+    S_W_fwd[i] = sum(S_W_a_fwd);
+    S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
+    q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
+    S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
+    R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
+    R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
   }
-  else
-  {
-    S_W_a_fwd[a] = R_fwd[i-ages[a]]*p_fwd[i-ages[a],a];
-  }
-}
-
-for(a in 2:N_age)  // catch and broodstock removal (assumes no take of age 1)
-S_W_a_fwd[a] = S_W_a_fwd[a]*(1 - F_rate_fwd[i])*(1 - B_rate_fwd[i]);
-
-S_W_fwd[i] = sum(S_W_a_fwd);
-S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
-q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
-S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
-R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
-                                                       }
-
-LL_S_obs = rep_vector(0,N);
-for(i in 1:N_S_obs)
+  
+  LL_S_obs = rep_vector(0,N);
+  for(i in 1:N_S_obs)
   LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau); 
-LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
-LL_n_H_obs = rep_vector(0,N_H);
-for(i in 1:N_H)
+  LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
+  LL_n_H_obs = rep_vector(0,N_H);
+  for(i in 1:N_H)
   LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-LL = LL_S_obs + LL_n_age_obs;
-LL[which_H] = LL[which_H] + LL_n_H_obs;
+  LL = LL_S_obs + LL_n_age_obs;
+  LL[which_H] = LL[which_H] + LL_n_H_obs;
 }
