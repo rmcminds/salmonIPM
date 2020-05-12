@@ -12,6 +12,7 @@ RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SMS_np_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SMaS_np_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SS_np_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SS_pp_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SS_pp_amalgamated_q_init_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SSpa_pp_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4RR_SS_np_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4RR_SS_pp_mod();
@@ -22,6 +23,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rcpp_module_boot_stan_fit4IPM_SMaS_np_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SMaS_np_mod, 0},
     {"_rcpp_module_boot_stan_fit4IPM_SS_np_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SS_np_mod, 0},
     {"_rcpp_module_boot_stan_fit4IPM_SS_pp_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SS_pp_mod, 0},
+    {"_rcpp_module_boot_stan_fit4IPM_SS_pp_amalgamated_q_init_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SS_pp_amalgamated_q_init_mod, 0},
     {"_rcpp_module_boot_stan_fit4IPM_SSpa_pp_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SSpa_pp_mod, 0},
     {"_rcpp_module_boot_stan_fit4RR_SS_np_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4RR_SS_np_mod, 0},
     {"_rcpp_module_boot_stan_fit4RR_SS_pp_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4RR_SS_pp_mod, 0},
