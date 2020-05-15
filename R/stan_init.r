@@ -123,7 +123,9 @@ stan_init <- function(data, stan_model, chains)
             p_HOS = p_HOS_obs,
             B_rate = B_rate,
             # initial spawners, observation error
-            R_a_init = rep(median(S_obs_noNA/((1 - B_rate_all)*(1 - F_rate))), N_R_a_init),
+            # R_a_init = rep(median(S_obs_noNA/((1 - B_rate_all)*(1 - F_rate))), N_R_a_init),
+            S_init = rep(median(S_obs_noNA), max_age*N_pop),
+            q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
             tau = runif(1, 0.5, 1)
           )
         ))
