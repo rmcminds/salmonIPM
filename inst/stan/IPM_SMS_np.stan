@@ -214,18 +214,18 @@ model {
   // Priors
   
   // smolt recruitment
-  alpha ~ lognormal(2,2);
-  Rmax ~ lognormal(2,3);
+  alpha ~ lognormal(2.0,2.0);
+  Rmax ~ lognormal(2.0,3.0);
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
   sigma_M ~ pexp(0,1,10);
-  zeta_M ~ normal(0,1);     // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
+  zeta_M ~ std_normal();    // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
   // SAR
   to_vector(beta_MS) ~ normal(0,5);
   rho_MS ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_MS ~ pexp(0,1,10);
-  zeta_MS ~ normal(0,1);    // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
+  zeta_MS ~ std_normal();   // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
 
   // spawner age structure
   to_vector(sigma_p) ~ normal(0,5);
@@ -233,15 +233,15 @@ model {
     L_p[j] ~ lkj_corr_cholesky(3);
   // age probs logistic MVN: 
   // alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
-  to_vector(zeta_p) ~ normal(0,1);
+  to_vector(zeta_p) ~ std_normal();
 
   // removals
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
   // initial states, observation error
-  M_init ~ lognormal(0,5);
-  S_init ~ lognormal(0,5);
+  M_init ~ lognormal(0.0,5.0);
+  S_init ~ lognormal(0.0,5.0);
   tau_M ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
   tau_S ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
 

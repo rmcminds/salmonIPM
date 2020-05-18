@@ -2,24 +2,24 @@ functions {
   // spawner-recruit functions
   real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
     real R;
-    
+
     if(SR_fun == 1)      // discrete exponential
       R = alpha*S/A;
     else if(SR_fun == 2) // Beverton-Holt
       R = alpha*S/(A + alpha*S/Rmax);
     else if(SR_fun == 3) // Ricker
       R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
-    
+
     return(R);
   }
-  
+
   // Generalized normal (aka power-exponential) unnormalized log-probability
   real pexp_lpdf(vector y, real mu, real sigma, real shape) {
     vector[num_elements(y)] LL;
-    
+
     for(i in 1:num_elements(LL))
       LL[i] = -pow(fabs(y[i] - mu)/sigma, shape);
-      
+
     return(sum(LL));
   }
 }
@@ -35,13 +35,13 @@ data {
   int<lower=0> N_X;                    // number of productivity covariates
   matrix[max(year),N_X] X;             // brood-year productivity covariates (if none, use vector of zeros)
   // spawner abundance
-  int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
+  int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
   // spawner age structure
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
-  matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
+  matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -60,7 +60,7 @@ transformed data {
   int<lower=2> ages[N_age];       // adult ages
   int<lower=1> pop_year_indx[N];  // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];     // total sample sizes for H/W frequencies
-  
+
   N_pop = max(pop);
   N_year = max(year);
   for(a in 1:N_age)
@@ -101,7 +101,7 @@ parameters {
 transformed parameters {
   // recruitment
   vector<lower=0>[N] R_hat;           // expected recruit abundance (not density) by brood year
-  vector[N] epsilon_R;                // process error in recruit abundance by brood year 
+  vector[N] epsilon_R;                // process error in recruit abundance by brood year
   vector<lower=0>[N] R;               // true recruit abundance (not density) by brood year
   // H/W spawner abundance, removals
   vector[N] p_HOS_all;                // true p_HOS in all years (can == 0)
@@ -113,17 +113,17 @@ transformed parameters {
   matrix[N_pop,N_age-1] gamma;        // population mean log ratio age distributions
   matrix<lower=0,upper=1>[N,N_age] p; // cohort age distributions
   matrix<lower=0,upper=1>[N,N_age] q; // true spawner age distributions
-  
+
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
   p_HOS_all[which_H] = p_HOS;
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
-  
+
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
     gamma[j,] = to_row_vector(log(mu_p[j,1:(N_age-1)]) - log(mu_p[j,N_age]));
-  
+
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
   for(i in 1:N)
@@ -131,18 +131,18 @@ transformed parameters {
     row_vector[N_age] alr_p; // temp variable: alr(p[i,])
     row_vector[N_age] S_W_a; // temp variable: true wild spawners by age
     int ii;                  // temp variable: index into S_init and q_init
-    
+
     // Multivariate Matt trick for within-pop, time-varying age vectors
     alr_p = rep_row_vector(0,N_age);
     alr_p[1:(N_age-1)] = gamma[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
-    
+
     if(pop_year_indx[i] <= max_age)
     {
       // use initial values
       ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
+      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);
       S_H[i] = S_init[ii]*p_HOS_all[i];
       q[i,] = to_row_vector(q_init[ii,]);
       S_W_a = S_W[i]*q[i,];
@@ -157,7 +157,7 @@ transformed parameters {
       S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
       q[i,] = S_W_a/S_W[i];
     }
-    
+
     S[i] = S_W[i] + S_H[i];
     R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     if(pop_year_indx[i] == 1) // initial process error
@@ -174,28 +174,28 @@ model {
   // Priors
   
   // recruitment
-  alpha ~ lognormal(2,2);
-  Rmax ~ lognormal(2,3);
+  alpha ~ lognormal(2.0,2.0);
+  Rmax ~ lognormal(2.0,3.0);
   to_vector(beta) ~ normal(0,5);
-  rho ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
+  rho ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
   sigma ~ pexp(0,1,10);
-  zeta_R ~ normal(0,1);  // total recruits: R ~ lognormal(log(R_hat), sigma)
+  zeta_R ~ std_normal();  // total recruits: R ~ lognormal(log(R_hat), sigma)
 
   // spawner age structure
   to_vector(sigma_p) ~ normal(0,5);
   for(j in 1:N_pop)
     L_p[j] ~ lkj_corr_cholesky(3);
   // age probs logistic MVN: alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
-  to_vector(zeta_p) ~ normal(0,1);
+  to_vector(zeta_p) ~ std_normal();
 
   // removals
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
-  B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
+  B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match
 
-  // initial spawners, observation error
-  S_init ~ lognormal(0,5);
-  tau ~ pexp(1,0.85,30);  // rule out tau < 0.1 to avoid divergences 
-  
+  // // initial spawners, observation error
+  S_init ~ lognormal(0.0,5.0);
+  tau ~ pexp(1,0.85,30);  // rule out tau < 0.1 to avoid divergences
+
   // Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau[pop[which_S_obs]]);  // observed total spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // obs counts of hatchery vs. wild spawners
@@ -207,14 +207,14 @@ generated quantities {
   vector[N] LL_S_obs;              // pointwise log-likelihood of total spawners
   vector[N_H] LL_n_H_obs;          // pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL_n_age_obs;          // pointwise log-likelihood of wild age frequencies
-  vector[N] LL;                    // total pointwise log-likelihood                              
-  
+  vector[N] LL;                    // total pointwise log-likelihood
+
   for(j in 1:N_pop)
     R_p[j] = multiply_lower_tri_self_transpose(L_p[j]);
-    
+
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
-    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau[pop[which_S_obs]]); 
+    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau[pop[which_S_obs]]);
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)

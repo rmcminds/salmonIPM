@@ -111,9 +111,9 @@ model {
   
   // Hierarchical priors
   // [log(alpha), log(Rmax)] ~ MVN(0, D*R_log_aRmax*D), where D = diag_matrix(sigma_alpha, sigma_Rmax)
-  zeta_alpha ~ normal(0,1);
-  zeta_Rmax ~ normal(0,1);
-  zeta_phi ~ normal(0,1);    // phi ~ N(0, sigma_phi)
+  zeta_alpha ~ std_normal();
+  zeta_Rmax ~ std_normal();
+  zeta_phi ~ std_normal();    // phi ~ N(0, sigma_phi)
   
   // Likelihood
   R[which_fit] ~ lognormal(log(R_hat[which_fit]) + phi[year[which_fit]], sigma);

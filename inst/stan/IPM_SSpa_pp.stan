@@ -291,14 +291,14 @@ model {
   sigma_alpha ~ pexp(0,3,10);
   mu_Rmax ~ normal(0,10);
   sigma_Rmax ~ pexp(0,3,10);
-  zeta_alpha ~ normal(0,1);  // [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D),
-  zeta_Rmax ~ normal(0,1);   // where D = diag_matrix(sigma_alpha, sigma_Rmax)
+  zeta_alpha ~ std_normal(); // [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D),
+  zeta_Rmax ~ std_normal();  // where D = diag_matrix(sigma_alpha, sigma_Rmax)
   beta_phi ~ normal(0,5);
   rho_phi ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
-  zeta_phi ~ normal(0,1);    // phi[i] ~ N(rho_phi*phi[i-1], sigma_phi)
+  zeta_phi ~ std_normal();   // phi[i] ~ N(rho_phi*phi[i-1], sigma_phi)
   sigma_phi ~ pexp(0,2,10);
   sigma ~ pexp(0,1,10);
-  zeta_R ~ normal(0,1);      // total recruits: R ~ lognormal(log(R_hat), sigma)
+  zeta_R ~ std_normal();     // total recruits: R ~ lognormal(log(R_hat), sigma)
 
   // spawner age structure
   for(i in 1:(N_age-1))
@@ -310,17 +310,17 @@ model {
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 
   // gamma[i,] ~ MVN(mu_gamma,D*R_gamma*D), where D = diag_matrix(sigma_gamma)
-  to_vector(zeta_gamma) ~ normal(0,1);
+  to_vector(zeta_gamma) ~ std_normal();
   // age probs logistic MVN: 
   // alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
-  to_vector(zeta_p) ~ normal(0,1);
+  to_vector(zeta_p) ~ std_normal();
 
   // removals
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
   // initial spawners, observation error
-  S_init ~ lognormal(0,10);
+  S_init ~ lognormal(0.0,10.0);
   tau ~ pexp(0,1,10);
   
   // Observation model

@@ -362,13 +362,13 @@ model {
   mu_Rmax ~ normal(0,10);
   sigma_Rmax ~ pexp(0,3,10);
   // log([alpha,Rmax]) ~ MVN([mu_alpha,mu_Rmax], D*R_aRmax*D), where D = diag_matrix(sigma_alpha,sigma_Rmax)
-  zeta_alpha ~ normal(0,1);
-  zeta_Rmax ~ normal(0,1);
+  zeta_alpha ~ std_normal();
+  zeta_Rmax ~ std_normal();
   beta_M ~ normal(0,5);
   rho_M ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
   sigma_M ~ pexp(0,2,10);
-  zeta_M ~ normal(0,1);    // epsilon_M ~ AR1(rho_M, sigma_M)
-  M_init ~ lognormal(0,5);
+  zeta_M ~ std_normal();   // epsilon_M ~ AR1(rho_M, sigma_M)
+  M_init ~ lognormal(0.0,5.0);
 
   // downstream, SAR, upstream survival
   // prior on logit-intercepts implies Unif(0,1) prior on intercept when
@@ -377,19 +377,19 @@ model {
   beta_D ~ normal(0,5);
   rho_D ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_D ~ pexp(0,2,10);
-  zeta_D ~ normal(0,1);      // epsilon_D ~ AR1(rho_D, sigma_D)
+  zeta_D ~ std_normal();      // epsilon_D ~ AR1(rho_D, sigma_D)
   logit(s_D[which_prior_D]) ~ normal(mu_prior_D, sigma_prior_D); // informative prior on s_D
   target += log_inv_logit(mu_SAR) + log1m_inv_logit(mu_SAR);
   beta_SAR ~ normal(0,5);
   rho_SAR ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
   sigma_SAR ~ pexp(0,2,10);
-  zeta_SAR ~ normal(0,1);    // epsilon_SAR ~ AR1(rho_SAR, sigma_SAR)
+  zeta_SAR ~ std_normal();   // epsilon_SAR ~ AR1(rho_SAR, sigma_SAR)
   logit(SAR[which_prior_SAR]) ~ normal(mu_prior_SAR, sigma_prior_SAR); // informative prior on SAR
   target += log_inv_logit(mu_U) + log1m_inv_logit(mu_U);
   beta_U ~ normal(0,5);
   rho_U ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_U ~ pexp(0,2,10);
-  zeta_U ~ normal(0,1);      // epsilon_U ~ AR1(rho_U, sigma_U)
+  zeta_U ~ std_normal();     // epsilon_U ~ AR1(rho_U, sigma_U)
   logit(s_U[which_prior_U]) ~ normal(mu_prior_U, sigma_prior_U); // informative prior on s_U
   
   // spawner age structure
@@ -401,14 +401,14 @@ model {
   L_gamma ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // gamma[i,] ~ MVN(mu_gamma,D*R_gamma*D), where D = diag_matrix(sigma_gamma)
-  to_vector(zeta_gamma) ~ normal(0,1);
+  to_vector(zeta_gamma) ~ std_normal();
   // age probs logistic MVN: 
   // alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), 
   // where D = diag_matrix(sigma_p)
-  to_vector(zeta_p) ~ normal(0,1);
+  to_vector(zeta_p) ~ std_normal();
   
   // initial spawners, observation error, removals
-  S_init ~ lognormal(0,10);
+  S_init ~ lognormal(0.0,10.0);
   tau_S ~ pexp(0,1,10);
   B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
