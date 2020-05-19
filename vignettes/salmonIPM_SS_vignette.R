@@ -39,19 +39,32 @@ sim_out$sim_dat$S_obs[which_S_NA] <- NA
 
 # No pooling across populations
 fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
-                    chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
+                    chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
                     seed = 123)
 
-# "old priors" version of partial pooling
-fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
-                     age_S_obs = rep(1,3), age_S_eff = rep(1,3),
-                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
+print(fit_np, pars = c("gamma","p","B_rate_all","S","R","q"), 
+      include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
+# Partial pooling
+fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
+                     chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
                      control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
                      seed = 123)
 
-print(fit_pp1, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
+# Partial pooling with partially observed and partially effective spawner ages
+fit_pa <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
+                    age_S_obs = rep(1,3), age_S_eff = rep(1,3),
+                    chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                    seed = 123)
+
+print(fit_pa, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+      include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
 
 
 #===========================================================================
@@ -172,7 +185,7 @@ rm(list=c("S_tot","S_tot_fixedpop","c1","c1t"))
 # png(filename="posterior_densities_simdata.png", width=16*0.6, height=10*0.6, units="in", res=200, type="cairo-png")
 dev.new(width=16, height=10)
 par(mfrow=c(3,4), mar=c(4.1,2,2,1), oma=c(0,4.1,0,0))
-mod <- fit_pp1
+mod <- fit_pp
 plot(density(extract1(mod,"mu_alpha")), xlab = bquote(mu[a]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
 abline(v = sim_out$sim_dat$pars_out$mu_alpha, lwd = 3)
 plot(density(extract1(mod,"sigma_alpha")), xlab = bquote(sigma[a]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
