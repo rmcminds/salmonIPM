@@ -115,17 +115,17 @@ data {
 }
 
 transformed data {
-  int<lower=1,upper=N> N_pop;        // number of populations
-  int<lower=1,upper=N> N_year;       // number of years, not including forward simulations
-  int<lower=1,upper=N> N_year_all;   // total number of years, including forward simulations
+  int<lower=1,upper=N> N_pop = max(pop);   // number of populations
+  int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
+  int<lower=1,upper=N> N_year_all;   // total number of years, including fwd simulations
   int<lower=2> ages[N_age];          // adult ages
   int<lower=1> min_age;              // minimum adult age
   int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
+  vector[max_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_age
+  matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age
   
-  N_pop = max(pop);
-  N_year = max(year);
   N_year_all = max(append_array(year, year_fwd));
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
@@ -148,6 +148,24 @@ transformed data {
     {
       if(year_fwd[i] - ages[a] < min(rsub(year_fwd, veq(pop_fwd, pop_fwd[i]))))
         fwd_init_indx[i,a] = which(vand(veq(pop, pop_fwd[i]), veq(year, year_fwd[i] - ages[a])));
+    }
+  }
+  
+  for(i in 1:max_age)
+  {
+    int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan age classes
+    int N_amalg_age = N_age - N_orphan_age + 1; // number of amalgamated age classes
+    
+    for(j in 1:N_pop)
+    {
+      int ii = (j - 1)*max_age + i; // index into S_init, q_init
+
+      // prior mean that scales S_init by number of orphan age classes
+      mu_S_init[ii] = log(1.0*N_orphan_age/N_age);
+      
+      // prior on q_init that implies q_orphan ~ Dir(1)
+      mu_q_init[,ii] = append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), 
+                                  rep_vector(1, N_orphan_age - 1));
     }
   }
 }
@@ -327,20 +345,12 @@ model {
 
   // initial spawners and wild spawner age distribution
   // (accounting for amalgamation of q_init to q_orphan)
-  for(i in 1:N)
+  S_init ~ lognormal(mu_S_init, 10.0);
   {
-    if(pop_year_indx[i] <= max_age)
-    {
-      int N_orphan_age = N_age - max(pop_year_indx[i] - min_age, 0); // # orphan age classes
-      int N_amalg_age = N_age - N_orphan_age + 1; // # amalgamated age classes
-      int ii = (pop[i] - 1)*max_age + pop_year_indx[i]; // index into q_init
-      
-      S_init[ii] ~ lognormal(log(1.0*N_orphan_age/N_age), 10.0);
-      
-      // prior on q_init that implies q_orphan ~ Dir(1)
-      q_init[ii] ~ dirichlet(append_row(rep_vector(1.0/N_amalg_age, N_amalg_age),
-                                        rep_vector(1, N_orphan_age - 1)));
-    }
+    matrix[N_age,max_age*N_pop] q_init_mat;
+    
+    for(j in 1:size(q_init)) q_init_mat[,j] = q_init[j];
+    target += sum((mu_q_init - 1) .* log(q_init_mat)); // q_init[i] ~ Dir(mu_q_init[,i])
   }
 
   // spawner observation error
