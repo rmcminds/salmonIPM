@@ -838,11 +838,11 @@ public:
             current_statement_begin__ = 110;
             lp_accum__.add(pexp_lpdf<propto__>(sigma, 0, 2, 10, pstream__));
             current_statement_begin__ = 114;
-            lp_accum__.add(normal_log<propto__>(zeta_alpha, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_alpha));
             current_statement_begin__ = 115;
-            lp_accum__.add(normal_log<propto__>(zeta_Rmax, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_Rmax));
             current_statement_begin__ = 116;
-            lp_accum__.add(normal_log<propto__>(zeta_phi, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_phi));
             current_statement_begin__ = 119;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(R, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R"), add(stan::math::log(stan::model::rvalue(R_hat, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R_hat")), stan::model::rvalue(phi, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(year, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "year")), stan::model::nil_index_list()), "phi")), sigma));
         } catch (const std::exception& e) {

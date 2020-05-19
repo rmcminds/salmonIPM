@@ -1345,9 +1345,9 @@ public:
             stan::math::initialize(B_take, DUMMY_VAR__);
             stan::math::fill(B_take, DUMMY_VAR__);
             current_statement_begin__ = 177;
-            lp_accum__.add(lognormal_log<propto__>(alpha, 2, 2));
+            lp_accum__.add(lognormal_log<propto__>(alpha, 2.0, 2.0));
             current_statement_begin__ = 178;
-            lp_accum__.add(lognormal_log<propto__>(Rmax, 2, 3));
+            lp_accum__.add(lognormal_log<propto__>(Rmax, 2.0, 3.0));
             current_statement_begin__ = 179;
             lp_accum__.add(normal_log<propto__>(to_vector(beta), 0, 5));
             current_statement_begin__ = 180;
@@ -1355,7 +1355,7 @@ public:
             current_statement_begin__ = 181;
             lp_accum__.add(pexp_lpdf<propto__>(sigma, 0, 1, 10, pstream__));
             current_statement_begin__ = 182;
-            lp_accum__.add(normal_log<propto__>(zeta_R, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_R));
             current_statement_begin__ = 185;
             lp_accum__.add(normal_log<propto__>(to_vector(sigma_p), 0, 5));
             current_statement_begin__ = 186;
@@ -1364,17 +1364,17 @@ public:
                 lp_accum__.add(lkj_corr_cholesky_log<propto__>(get_base1(L_p, j, "L_p", 1), 3));
             }
             current_statement_begin__ = 189;
-            lp_accum__.add(normal_log<propto__>(to_vector(zeta_p), 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_p)));
             current_statement_begin__ = 192;
             stan::math::assign(B_take, elt_divide(elt_multiply(elt_multiply(B_rate, stan::model::rvalue(S_W, stan::model::cons_list(stan::model::index_multi(which_B), stan::model::nil_index_list()), "S_W")), subtract(1, stan::model::rvalue(q, stan::model::cons_list(stan::model::index_multi(which_B), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "q"))), subtract(1, B_rate)));
             current_statement_begin__ = 193;
             lp_accum__.add(lognormal_log<propto__>(B_take_obs, stan::math::log(B_take), 0.1));
             current_statement_begin__ = 196;
-            lp_accum__.add(lognormal_log<propto__>(S_init, 0, 5));
+            lp_accum__.add(lognormal_log<propto__>(S_init, 0.0, 5.0));
             current_statement_begin__ = 197;
             lp_accum__.add(pexp_lpdf<propto__>(tau, 1, 0.85, 30, pstream__));
             current_statement_begin__ = 200;
-            lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(S_obs, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S_obs"), stan::math::log(stan::model::rvalue(S, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S")), tau));
+            lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(S_obs, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S_obs"), stan::math::log(stan::model::rvalue(S, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S")), stan::model::rvalue(tau, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(pop, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "pop")), stan::model::nil_index_list()), "tau")));
             current_statement_begin__ = 201;
             lp_accum__.add(binomial_log<propto__>(n_H_obs, n_HW_obs, p_HOS));
             current_statement_begin__ = 202;
@@ -1990,7 +1990,7 @@ public:
                 current_statement_begin__ = 217;
                 stan::model::assign(LL_S_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_S_obs, i, "which_S_obs", 1)), stan::model::nil_index_list()), 
-                            lognormal_log(get_base1(S_obs, get_base1(which_S_obs, i, "which_S_obs", 1), "S_obs", 1), stan::math::log(get_base1(S, get_base1(which_S_obs, i, "which_S_obs", 1), "S", 1)), tau), 
+                            lognormal_log(get_base1(S_obs, get_base1(which_S_obs, i, "which_S_obs", 1), "S_obs", 1), stan::math::log(get_base1(S, get_base1(which_S_obs, i, "which_S_obs", 1), "S", 1)), stan::model::rvalue(tau, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(pop, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "pop")), stan::model::nil_index_list()), "tau")), 
                             "assigning variable LL_S_obs");
             }
             current_statement_begin__ = 218;

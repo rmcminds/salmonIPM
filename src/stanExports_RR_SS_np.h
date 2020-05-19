@@ -643,9 +643,9 @@ public:
             check_greater_or_equal(function__, "sigma_ar1", sigma_ar1, 0);
             // model body
             current_statement_begin__ = 96;
-            lp_accum__.add(lognormal_log<propto__>(alpha, 2, 2));
+            lp_accum__.add(lognormal_log<propto__>(alpha, 2.0, 2.0));
             current_statement_begin__ = 97;
-            lp_accum__.add(lognormal_log<propto__>(Rmax, 2, 3));
+            lp_accum__.add(lognormal_log<propto__>(Rmax, 2.0, 3.0));
             current_statement_begin__ = 98;
             for (int i = 1; i <= N_pop; ++i) {
                 current_statement_begin__ = 100;

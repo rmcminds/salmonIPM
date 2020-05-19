@@ -1680,9 +1680,9 @@ public:
             stan::math::initialize(B_take, DUMMY_VAR__);
             stan::math::fill(B_take, DUMMY_VAR__);
             current_statement_begin__ = 217;
-            lp_accum__.add(lognormal_log<propto__>(alpha, 2, 2));
+            lp_accum__.add(lognormal_log<propto__>(alpha, 2.0, 2.0));
             current_statement_begin__ = 218;
-            lp_accum__.add(lognormal_log<propto__>(Rmax, 2, 3));
+            lp_accum__.add(lognormal_log<propto__>(Rmax, 2.0, 3.0));
             current_statement_begin__ = 219;
             lp_accum__.add(normal_log<propto__>(to_vector(beta_M), 0, 5));
             current_statement_begin__ = 220;
@@ -1690,7 +1690,7 @@ public:
             current_statement_begin__ = 221;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_M, 0, 1, 10, pstream__));
             current_statement_begin__ = 222;
-            lp_accum__.add(normal_log<propto__>(zeta_M, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_M));
             current_statement_begin__ = 225;
             lp_accum__.add(normal_log<propto__>(to_vector(beta_MS), 0, 5));
             current_statement_begin__ = 226;
@@ -1698,7 +1698,7 @@ public:
             current_statement_begin__ = 227;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_MS, 0, 1, 10, pstream__));
             current_statement_begin__ = 228;
-            lp_accum__.add(normal_log<propto__>(zeta_MS, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_MS));
             current_statement_begin__ = 231;
             lp_accum__.add(normal_log<propto__>(to_vector(sigma_p), 0, 5));
             current_statement_begin__ = 232;
@@ -1707,15 +1707,15 @@ public:
                 lp_accum__.add(lkj_corr_cholesky_log<propto__>(get_base1(L_p, j, "L_p", 1), 3));
             }
             current_statement_begin__ = 236;
-            lp_accum__.add(normal_log<propto__>(to_vector(zeta_p), 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_p)));
             current_statement_begin__ = 239;
             stan::math::assign(B_take, elt_divide(elt_multiply(elt_multiply(B_rate, stan::model::rvalue(S_W, stan::model::cons_list(stan::model::index_multi(which_B), stan::model::nil_index_list()), "S_W")), subtract(1, stan::model::rvalue(q, stan::model::cons_list(stan::model::index_multi(which_B), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "q"))), subtract(1, B_rate)));
             current_statement_begin__ = 240;
             lp_accum__.add(lognormal_log<propto__>(B_take_obs, stan::math::log(B_take), 0.1));
             current_statement_begin__ = 243;
-            lp_accum__.add(lognormal_log<propto__>(M_init, 0, 5));
+            lp_accum__.add(lognormal_log<propto__>(M_init, 0.0, 5.0));
             current_statement_begin__ = 244;
-            lp_accum__.add(lognormal_log<propto__>(S_init, 0, 5));
+            lp_accum__.add(lognormal_log<propto__>(S_init, 0.0, 5.0));
             current_statement_begin__ = 245;
             lp_accum__.add(pexp_lpdf<propto__>(tau_M, 1, 0.85, 30, pstream__));
             current_statement_begin__ = 246;

@@ -2744,9 +2744,9 @@ public:
             current_statement_begin__ = 363;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_Rmax, 0, 3, 10, pstream__));
             current_statement_begin__ = 365;
-            lp_accum__.add(normal_log<propto__>(zeta_alpha, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_alpha));
             current_statement_begin__ = 366;
-            lp_accum__.add(normal_log<propto__>(zeta_Rmax, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_Rmax));
             current_statement_begin__ = 367;
             lp_accum__.add(normal_log<propto__>(beta_M, 0, 5));
             current_statement_begin__ = 368;
@@ -2754,9 +2754,9 @@ public:
             current_statement_begin__ = 369;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_M, 0, 2, 10, pstream__));
             current_statement_begin__ = 370;
-            lp_accum__.add(normal_log<propto__>(zeta_M, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_M));
             current_statement_begin__ = 371;
-            lp_accum__.add(lognormal_log<propto__>(M_init, 0, 5));
+            lp_accum__.add(lognormal_log<propto__>(M_init, 0.0, 5.0));
             current_statement_begin__ = 376;
             lp_accum__.add((log_inv_logit(mu_D) + log1m_inv_logit(mu_D)));
             current_statement_begin__ = 377;
@@ -2766,7 +2766,7 @@ public:
             current_statement_begin__ = 379;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_D, 0, 2, 10, pstream__));
             current_statement_begin__ = 380;
-            lp_accum__.add(normal_log<propto__>(zeta_D, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_D));
             current_statement_begin__ = 381;
             lp_accum__.add(normal_log<propto__>(logit(stan::model::rvalue(s_D, stan::model::cons_list(stan::model::index_multi(which_prior_D), stan::model::nil_index_list()), "s_D")), mu_prior_D, sigma_prior_D));
             current_statement_begin__ = 382;
@@ -2778,7 +2778,7 @@ public:
             current_statement_begin__ = 385;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_SAR, 0, 2, 10, pstream__));
             current_statement_begin__ = 386;
-            lp_accum__.add(normal_log<propto__>(zeta_SAR, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_SAR));
             current_statement_begin__ = 387;
             lp_accum__.add(normal_log<propto__>(logit(stan::model::rvalue(SAR, stan::model::cons_list(stan::model::index_multi(which_prior_SAR), stan::model::nil_index_list()), "SAR")), mu_prior_SAR, sigma_prior_SAR));
             current_statement_begin__ = 388;
@@ -2790,7 +2790,7 @@ public:
             current_statement_begin__ = 391;
             lp_accum__.add(pexp_lpdf<propto__>(sigma_U, 0, 2, 10, pstream__));
             current_statement_begin__ = 392;
-            lp_accum__.add(normal_log<propto__>(zeta_U, 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_U));
             current_statement_begin__ = 393;
             lp_accum__.add(normal_log<propto__>(logit(stan::model::rvalue(s_U, stan::model::cons_list(stan::model::index_multi(which_prior_U), stan::model::nil_index_list()), "s_U")), mu_prior_U, sigma_prior_U));
             current_statement_begin__ = 396;
@@ -2805,11 +2805,11 @@ public:
             current_statement_begin__ = 402;
             lp_accum__.add(lkj_corr_cholesky_log<propto__>(L_p, 1));
             current_statement_begin__ = 404;
-            lp_accum__.add(normal_log<propto__>(to_vector(zeta_gamma), 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_gamma)));
             current_statement_begin__ = 408;
-            lp_accum__.add(normal_log<propto__>(to_vector(zeta_p), 0, 1));
+            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_p)));
             current_statement_begin__ = 411;
-            lp_accum__.add(lognormal_log<propto__>(S_init, 0, 10));
+            lp_accum__.add(lognormal_log<propto__>(S_init, 0.0, 10.0));
             current_statement_begin__ = 412;
             lp_accum__.add(pexp_lpdf<propto__>(tau_S, 0, 1, 10, pstream__));
             current_statement_begin__ = 413;
