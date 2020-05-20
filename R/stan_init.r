@@ -39,8 +39,7 @@ stan_init <- function(data, stan_model, chains)
       B_rate[is.na(B_rate)] <- 0.1
       B_rate_all[which_B] <- B_rate
       year <- as.numeric(factor(year))
-      N_R_a_init <- N_pop*N_age*(min_age + (N_age - 1)/2) # total no. initial orphan recruit age classes
-      
+
       # Maybe figure out a way to do this with a call to run_recon?
       for(i in 1:N)
         for(j in 1:N_age)
@@ -123,7 +122,6 @@ stan_init <- function(data, stan_model, chains)
             p_HOS = p_HOS_obs,
             B_rate = B_rate,
             # initial spawners, observation error
-            # R_a_init = rep(median(S_obs_noNA/((1 - B_rate_all)*(1 - F_rate))), N_R_a_init),
             S_init = rep(median(S_obs_noNA), max_age*N_pop),
             q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
             tau = runif(1, 0.5, 1)
@@ -156,8 +154,8 @@ stan_init <- function(data, stan_model, chains)
             B_rate = B_rate,
             # initial states, observation error
             M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
-            S_init = rep(median(S_obs_noNA), max_age*N_pop),
-            q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T)
+            S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
+            q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T)
           )
         ))
       } else if(stan_model == "IPM_ICchinook_pp") {
@@ -202,8 +200,8 @@ stan_init <- function(data, stan_model, chains)
             p_HOS = p_HOS_obs,
             B_rate = B_rate,
             # initial spawners, observation error
-            S_init = rep(median(S_obs_noNA), max_age*N_pop),
-            q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
+            S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
+            q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = TRUE),
             tau_S = runif(1, 0.5, 1)
           )
         ))

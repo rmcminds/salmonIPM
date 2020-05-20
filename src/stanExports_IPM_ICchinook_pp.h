@@ -430,8 +430,9 @@ private:
         int N_year;
         int N_year_all;
         std::vector<int> ocean_ages;
+        int max_ocean_age;
+        int min_ocean_age;
         std::vector<int> ages;
-        int min_age;
         std::vector<int> n_HW_obs;
         std::vector<int> pop_year_indx;
         std::vector<std::vector<int> > fwd_init_indx;
@@ -1002,52 +1003,55 @@ public:
             ocean_ages = std::vector<int>(N_age, int(0));
             stan::math::fill(ocean_ages, std::numeric_limits<int>::min());
             current_statement_begin__ = 142;
+            max_ocean_age = int(0);
+            stan::math::fill(max_ocean_age, std::numeric_limits<int>::min());
+            stan::math::assign(max_ocean_age,(max_age - smolt_age));
+            current_statement_begin__ = 143;
+            min_ocean_age = int(0);
+            stan::math::fill(min_ocean_age, std::numeric_limits<int>::min());
+            stan::math::assign(min_ocean_age,((max_ocean_age - N_age) + 1));
+            current_statement_begin__ = 144;
             validate_non_negative_index("ages", "N_age", N_age);
             ages = std::vector<int>(N_age, int(0));
             stan::math::fill(ages, std::numeric_limits<int>::min());
-            current_statement_begin__ = 143;
-            min_age = int(0);
-            stan::math::fill(min_age, std::numeric_limits<int>::min());
-            current_statement_begin__ = 144;
+            current_statement_begin__ = 145;
             validate_non_negative_index("n_HW_obs", "N_H", N_H);
             n_HW_obs = std::vector<int>(N_H, int(0));
             stan::math::fill(n_HW_obs, std::numeric_limits<int>::min());
-            current_statement_begin__ = 145;
+            current_statement_begin__ = 146;
             validate_non_negative_index("pop_year_indx", "N", N);
             pop_year_indx = std::vector<int>(N, int(0));
             stan::math::fill(pop_year_indx, std::numeric_limits<int>::min());
-            current_statement_begin__ = 146;
+            current_statement_begin__ = 147;
             validate_non_negative_index("fwd_init_indx", "N_fwd", N_fwd);
             validate_non_negative_index("fwd_init_indx", "N_age", N_age);
             fwd_init_indx = std::vector<std::vector<int> >(N_fwd, std::vector<int>(N_age, int(0)));
             stan::math::fill(fwd_init_indx, std::numeric_limits<int>::min());
-            current_statement_begin__ = 147;
+            current_statement_begin__ = 148;
             validate_non_negative_index("mu_S_init", "(max_age * N_pop)", (max_age * N_pop));
             mu_S_init = Eigen::Matrix<double, Eigen::Dynamic, 1>((max_age * N_pop));
             stan::math::fill(mu_S_init, DUMMY_VAR__);
-            current_statement_begin__ = 148;
+            current_statement_begin__ = 149;
             validate_non_negative_index("mu_q_init", "N_age", N_age);
             validate_non_negative_index("mu_q_init", "(max_age * N_pop)", (max_age * N_pop));
             mu_q_init = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(N_age, (max_age * N_pop));
             stan::math::fill(mu_q_init, DUMMY_VAR__);
             // execute transformed data statements
-            current_statement_begin__ = 150;
-            stan::math::assign(N_year_all, max(append_array(year, year_fwd)));
             current_statement_begin__ = 151;
-            for (int a = 1; a <= N_age; ++a) {
-                current_statement_begin__ = 153;
-                stan::model::assign(ages, 
-                            stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
-                            ((max_age - N_age) + a), 
-                            "assigning variable ages");
+            stan::math::assign(N_year_all, max(append_array(year, year_fwd)));
+            current_statement_begin__ = 152;
+            for (int a = min_ocean_age; a <= max_ocean_age; ++a) {
                 current_statement_begin__ = 154;
                 stan::model::assign(ocean_ages, 
                             stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
-                            (((max_age - smolt_age) - N_age) + a), 
+                            a, 
                             "assigning variable ocean_ages");
+                current_statement_begin__ = 155;
+                stan::model::assign(ages, 
+                            stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
+                            (smolt_age + a), 
+                            "assigning variable ages");
             }
-            current_statement_begin__ = 156;
-            stan::math::assign(min_age, min(ages));
             current_statement_begin__ = 157;
             for (int i = 1; i <= N_H; ++i) {
                 current_statement_begin__ = 157;
@@ -1095,13 +1099,13 @@ public:
                 }
             }
             current_statement_begin__ = 178;
-            for (int i = 1; i <= max_age; ++i) {
+            for (int i = 1; i <= max_ocean_age; ++i) {
                 {
                 current_statement_begin__ = 180;
                 int N_orphan_age(0);
                 (void) N_orphan_age;  // dummy to suppress unused var warning
                 stan::math::fill(N_orphan_age, std::numeric_limits<int>::min());
-                stan::math::assign(N_orphan_age,(N_age - std::max((i - min_age), 0)));
+                stan::math::assign(N_orphan_age,(N_age - std::max((i - min_ocean_age), 0)));
                 current_statement_begin__ = 181;
                 int N_amalg_age(0);
                 (void) N_amalg_age;  // dummy to suppress unused var warning
@@ -1114,7 +1118,7 @@ public:
                     int ii(0);
                     (void) ii;  // dummy to suppress unused var warning
                     stan::math::fill(ii, std::numeric_limits<int>::min());
-                    stan::math::assign(ii,(((j - 1) * max_age) + i));
+                    stan::math::assign(ii,(((j - 1) * max_ocean_age) + i));
                     current_statement_begin__ = 188;
                     stan::model::assign(mu_S_init, 
                                 stan::model::cons_list(stan::model::index_uni(ii), stan::model::nil_index_list()), 
@@ -1145,23 +1149,25 @@ public:
                 check_greater_or_equal(function__, "ocean_ages[i_0__]", ocean_ages[i_0__], 1);
             }
             current_statement_begin__ = 142;
+            check_greater_or_equal(function__, "max_ocean_age", max_ocean_age, 1);
+            current_statement_begin__ = 143;
+            check_greater_or_equal(function__, "min_ocean_age", min_ocean_age, 1);
+            current_statement_begin__ = 144;
             size_t ages_i_0_max__ = N_age;
             for (size_t i_0__ = 0; i_0__ < ages_i_0_max__; ++i_0__) {
                 check_greater_or_equal(function__, "ages[i_0__]", ages[i_0__], 2);
             }
-            current_statement_begin__ = 143;
-            check_greater_or_equal(function__, "min_age", min_age, 1);
-            current_statement_begin__ = 144;
+            current_statement_begin__ = 145;
             size_t n_HW_obs_i_0_max__ = N_H;
             for (size_t i_0__ = 0; i_0__ < n_HW_obs_i_0_max__; ++i_0__) {
                 check_greater_or_equal(function__, "n_HW_obs[i_0__]", n_HW_obs[i_0__], 0);
             }
-            current_statement_begin__ = 145;
+            current_statement_begin__ = 146;
             size_t pop_year_indx_i_0_max__ = N;
             for (size_t i_0__ = 0; i_0__ < pop_year_indx_i_0_max__; ++i_0__) {
                 check_greater_or_equal(function__, "pop_year_indx[i_0__]", pop_year_indx[i_0__], 1);
             }
-            current_statement_begin__ = 146;
+            current_statement_begin__ = 147;
             size_t fwd_init_indx_i_0_max__ = N_fwd;
             size_t fwd_init_indx_i_1_max__ = N_age;
             for (size_t i_0__ = 0; i_0__ < fwd_init_indx_i_0_max__; ++i_0__) {
@@ -1270,12 +1276,12 @@ public:
             validate_non_negative_index("B_rate", "N_B", N_B);
             num_params_r__ += N_B;
             current_statement_begin__ = 239;
-            validate_non_negative_index("S_init", "(max_age * N_pop)", (max_age * N_pop));
-            num_params_r__ += (max_age * N_pop);
+            validate_non_negative_index("S_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+            num_params_r__ += (max_ocean_age * N_pop);
             current_statement_begin__ = 240;
             validate_non_negative_index("q_init", "N_age", N_age);
-            validate_non_negative_index("q_init", "(max_age * N_pop)", (max_age * N_pop));
-            num_params_r__ += ((N_age - 1) * (max_age * N_pop));
+            validate_non_negative_index("q_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+            num_params_r__ += ((N_age - 1) * (max_ocean_age * N_pop));
             current_statement_begin__ = 241;
             num_params_r__ += 1;
         } catch (const std::exception& e) {
@@ -1864,10 +1870,10 @@ public:
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable S_init missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("S_init");
         pos__ = 0U;
-        validate_non_negative_index("S_init", "(max_age * N_pop)", (max_age * N_pop));
-        context__.validate_dims("parameter initialization", "S_init", "vector_d", context__.to_vec((max_age * N_pop)));
-        Eigen::Matrix<double, Eigen::Dynamic, 1> S_init((max_age * N_pop));
-        size_t S_init_j_1_max__ = (max_age * N_pop);
+        validate_non_negative_index("S_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+        context__.validate_dims("parameter initialization", "S_init", "vector_d", context__.to_vec((max_ocean_age * N_pop)));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> S_init((max_ocean_age * N_pop));
+        size_t S_init_j_1_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < S_init_j_1_max__; ++j_1__) {
             S_init(j_1__) = vals_r__[pos__++];
         }
@@ -1882,17 +1888,17 @@ public:
         vals_r__ = context__.vals_r("q_init");
         pos__ = 0U;
         validate_non_negative_index("q_init", "N_age", N_age);
-        validate_non_negative_index("q_init", "(max_age * N_pop)", (max_age * N_pop));
-        context__.validate_dims("parameter initialization", "q_init", "vector_d", context__.to_vec((max_age * N_pop),N_age));
-        std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > q_init((max_age * N_pop), Eigen::Matrix<double, Eigen::Dynamic, 1>(N_age));
+        validate_non_negative_index("q_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+        context__.validate_dims("parameter initialization", "q_init", "vector_d", context__.to_vec((max_ocean_age * N_pop),N_age));
+        std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > q_init((max_ocean_age * N_pop), Eigen::Matrix<double, Eigen::Dynamic, 1>(N_age));
         size_t q_init_j_1_max__ = N_age;
-        size_t q_init_k_0_max__ = (max_age * N_pop);
+        size_t q_init_k_0_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < q_init_j_1_max__; ++j_1__) {
             for (size_t k_0__ = 0; k_0__ < q_init_k_0_max__; ++k_0__) {
                 q_init[k_0__](j_1__) = vals_r__[pos__++];
             }
         }
-        size_t q_init_i_0_max__ = (max_age * N_pop);
+        size_t q_init_i_0_max__ = (max_ocean_age * N_pop);
         for (size_t i_0__ = 0; i_0__ < q_init_i_0_max__; ++i_0__) {
             try {
                 writer__.simplex_unconstrain(q_init[i_0__]);
@@ -2194,12 +2200,12 @@ public:
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> S_init;
             (void) S_init;  // dummy to suppress unused var warning
             if (jacobian__)
-                S_init = in__.vector_lb_constrain(0, (max_age * N_pop), lp__);
+                S_init = in__.vector_lb_constrain(0, (max_ocean_age * N_pop), lp__);
             else
-                S_init = in__.vector_lb_constrain(0, (max_age * N_pop));
+                S_init = in__.vector_lb_constrain(0, (max_ocean_age * N_pop));
             current_statement_begin__ = 240;
             std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> > q_init;
-            size_t q_init_d_0_max__ = (max_age * N_pop);
+            size_t q_init_d_0_max__ = (max_ocean_age * N_pop);
             q_init.reserve(q_init_d_0_max__);
             for (size_t d_0__ = 0; d_0__ < q_init_d_0_max__; ++d_0__) {
                 if (jacobian__)
@@ -2467,7 +2473,7 @@ public:
                 int N_orphan_age(0);
                 (void) N_orphan_age;  // dummy to suppress unused var warning
                 stan::math::fill(N_orphan_age, std::numeric_limits<int>::min());
-                stan::math::assign(N_orphan_age,std::max((N_age - std::max((get_base1(pop_year_indx, i, "pop_year_indx", 1) - min_age), 0)), N_age));
+                stan::math::assign(N_orphan_age,std::max((N_age - std::max((get_base1(pop_year_indx, i, "pop_year_indx", 1) - min_ocean_age), 0)), N_age));
                 current_statement_begin__ = 327;
                 validate_non_negative_index("q_orphan", "N_orphan_age", N_orphan_age);
                 Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_orphan(N_orphan_age);
@@ -2509,16 +2515,16 @@ public:
                                 "assigning variable M");
                 }
                 current_statement_begin__ = 348;
-                if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_age))) {
+                if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_ocean_age))) {
                     current_statement_begin__ = 350;
-                    stan::math::assign(ii, (((get_base1(pop, i, "pop", 1) - 1) * max_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)));
+                    stan::math::assign(ii, (((get_base1(pop, i, "pop", 1) - 1) * max_ocean_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)));
                     current_statement_begin__ = 351;
                     stan::math::assign(q_orphan, append_row(sum(head(get_base1(q_init, ii, "q_init", 1), ((N_age - N_orphan_age) + 1))), tail(get_base1(q_init, ii, "q_init", 1), (N_orphan_age - 1))));
                 }
                 current_statement_begin__ = 355;
                 for (int a = 1; a <= N_age; ++a) {
                     current_statement_begin__ = 357;
-                    if (as_bool(logical_lt(get_base1(ages, a, "ages", 1), get_base1(pop_year_indx, i, "pop_year_indx", 1)))) {
+                    if (as_bool(logical_lt(get_base1(ocean_ages, a, "ocean_ages", 1), get_base1(pop_year_indx, i, "pop_year_indx", 1)))) {
                         current_statement_begin__ = 359;
                         stan::model::assign(S_W_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
@@ -2872,8 +2878,8 @@ public:
             {
             current_statement_begin__ = 443;
             validate_non_negative_index("q_init_mat", "N_age", N_age);
-            validate_non_negative_index("q_init_mat", "(max_age * N_pop)", (max_age * N_pop));
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> q_init_mat(N_age, (max_age * N_pop));
+            validate_non_negative_index("q_init_mat", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> q_init_mat(N_age, (max_ocean_age * N_pop));
             stan::math::initialize(q_init_mat, DUMMY_VAR__);
             stan::math::fill(q_init_mat, DUMMY_VAR__);
             current_statement_begin__ = 445;
@@ -3083,10 +3089,10 @@ public:
         dims__.push_back(N_B);
         dimss__.push_back(dims__);
         dims__.resize(0);
-        dims__.push_back((max_age * N_pop));
+        dims__.push_back((max_ocean_age * N_pop));
         dimss__.push_back(dims__);
         dims__.resize(0);
-        dims__.push_back((max_age * N_pop));
+        dims__.push_back((max_ocean_age * N_pop));
         dims__.push_back(N_age);
         dimss__.push_back(dims__);
         dims__.resize(0);
@@ -3336,19 +3342,19 @@ public:
         for (size_t j_1__ = 0; j_1__ < B_rate_j_1_max__; ++j_1__) {
             vars__.push_back(B_rate(j_1__));
         }
-        Eigen::Matrix<double, Eigen::Dynamic, 1> S_init = in__.vector_lb_constrain(0, (max_age * N_pop));
-        size_t S_init_j_1_max__ = (max_age * N_pop);
+        Eigen::Matrix<double, Eigen::Dynamic, 1> S_init = in__.vector_lb_constrain(0, (max_ocean_age * N_pop));
+        size_t S_init_j_1_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < S_init_j_1_max__; ++j_1__) {
             vars__.push_back(S_init(j_1__));
         }
         std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > q_init;
-        size_t q_init_d_0_max__ = (max_age * N_pop);
+        size_t q_init_d_0_max__ = (max_ocean_age * N_pop);
         q_init.reserve(q_init_d_0_max__);
         for (size_t d_0__ = 0; d_0__ < q_init_d_0_max__; ++d_0__) {
             q_init.push_back(in__.simplex_constrain(N_age));
         }
         size_t q_init_j_1_max__ = N_age;
-        size_t q_init_k_0_max__ = (max_age * N_pop);
+        size_t q_init_k_0_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < q_init_j_1_max__; ++j_1__) {
             for (size_t k_0__ = 0; k_0__ < q_init_k_0_max__; ++k_0__) {
                 vars__.push_back(q_init[k_0__](j_1__));
@@ -3616,7 +3622,7 @@ public:
                 int N_orphan_age(0);
                 (void) N_orphan_age;  // dummy to suppress unused var warning
                 stan::math::fill(N_orphan_age, std::numeric_limits<int>::min());
-                stan::math::assign(N_orphan_age,std::max((N_age - std::max((get_base1(pop_year_indx, i, "pop_year_indx", 1) - min_age), 0)), N_age));
+                stan::math::assign(N_orphan_age,std::max((N_age - std::max((get_base1(pop_year_indx, i, "pop_year_indx", 1) - min_ocean_age), 0)), N_age));
                 current_statement_begin__ = 327;
                 validate_non_negative_index("q_orphan", "N_orphan_age", N_orphan_age);
                 Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_orphan(N_orphan_age);
@@ -3658,16 +3664,16 @@ public:
                                 "assigning variable M");
                 }
                 current_statement_begin__ = 348;
-                if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_age))) {
+                if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_ocean_age))) {
                     current_statement_begin__ = 350;
-                    stan::math::assign(ii, (((get_base1(pop, i, "pop", 1) - 1) * max_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)));
+                    stan::math::assign(ii, (((get_base1(pop, i, "pop", 1) - 1) * max_ocean_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)));
                     current_statement_begin__ = 351;
                     stan::math::assign(q_orphan, append_row(sum(head(get_base1(q_init, ii, "q_init", 1), ((N_age - N_orphan_age) + 1))), tail(get_base1(q_init, ii, "q_init", 1), (N_orphan_age - 1))));
                 }
                 current_statement_begin__ = 355;
                 for (int a = 1; a <= N_age; ++a) {
                     current_statement_begin__ = 357;
-                    if (as_bool(logical_lt(get_base1(ages, a, "ages", 1), get_base1(pop_year_indx, i, "pop_year_indx", 1)))) {
+                    if (as_bool(logical_lt(get_base1(ocean_ages, a, "ocean_ages", 1), get_base1(pop_year_indx, i, "pop_year_indx", 1)))) {
                         current_statement_begin__ = 359;
                         stan::model::assign(S_W_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
@@ -4158,14 +4164,14 @@ public:
             param_name_stream__ << "B_rate" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
-        size_t S_init_j_1_max__ = (max_age * N_pop);
+        size_t S_init_j_1_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < S_init_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "S_init" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         size_t q_init_j_1_max__ = N_age;
-        size_t q_init_k_0_max__ = (max_age * N_pop);
+        size_t q_init_k_0_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < q_init_j_1_max__; ++j_1__) {
             for (size_t k_0__ = 0; k_0__ < q_init_k_0_max__; ++k_0__) {
                 param_name_stream__.str(std::string());
@@ -4536,14 +4542,14 @@ public:
             param_name_stream__ << "B_rate" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
-        size_t S_init_j_1_max__ = (max_age * N_pop);
+        size_t S_init_j_1_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < S_init_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "S_init" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         size_t q_init_j_1_max__ = (N_age - 1);
-        size_t q_init_k_0_max__ = (max_age * N_pop);
+        size_t q_init_k_0_max__ = (max_ocean_age * N_pop);
         for (size_t j_1__ = 0; j_1__ < q_init_j_1_max__; ++j_1__) {
             for (size_t k_0__ = 0; k_0__ < q_init_k_0_max__; ++k_0__) {
                 param_name_stream__.str(std::string());

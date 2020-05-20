@@ -139,8 +139,9 @@ transformed data {
   int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
   int<lower=1,upper=N> N_year_all;   // total number of years, including forward simulations
   int<lower=1> ocean_ages[N_age];    // ocean ages
+  int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
+  int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   int<lower=2> ages[N_age];          // adult ages
-  int<lower=1> min_age;              // minimum adult age
   int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
@@ -148,12 +149,11 @@ transformed data {
   matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age
   
   N_year_all = max(append_array(year, year_fwd));
-  for(a in 1:N_age)
+  for(a in min_ocean_age:max_ocean_age)
   {
-    ages[a] = max_age - N_age + a;
-    ocean_ages[a] = max_age - smolt_age - N_age + a;
+    ocean_ages[a] = a;
+    ages[a] = smolt_age + a;
   }
-  min_age = min(ages);  
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
   
   pop_year_indx[1] = 1;
@@ -175,14 +175,14 @@ transformed data {
     }
   }
   
-  for(i in 1:max_age)
+  for(i in 1:max_ocean_age)
   {
-    int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan age classes
+    int N_orphan_age = N_age - max(i - min_ocean_age, 0); // number of orphan age classes
     int N_amalg_age = N_age - N_orphan_age + 1; // number of amalgamated age classes
     
     for(j in 1:N_pop)
     {
-      int ii = (j - 1)*max_age + i; // index into S_init, q_init
+      int ii = (j - 1)*max_ocean_age + i; // index into S_init, q_init
 
       // prior mean that scales S_init by number of orphan age classes
       mu_S_init[ii] = log(1.0*N_orphan_age/N_age);
@@ -236,8 +236,8 @@ parameters {
   vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
   // initial spawners, observation error
-  vector<lower=0>[max_age*N_pop] S_init; // true total spawner abundance in years 1-max_age
-  simplex[N_age] q_init[max_age*N_pop];  // true wild spawner age distributions in years 1-max_age
+  vector<lower=0>[max_ocean_age*N_pop] S_init; // true total spawner abundance in years 1:max_ocean_age
+  simplex[N_age] q_init[max_ocean_age*N_pop];  // true wild spawner age distributions in years 1:max_ocean_age
   real<lower=0> tau_S;                   // observation error SD of total spawners
 }
 
@@ -323,7 +323,7 @@ transformed parameters {
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age); 
+    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
     
     // Inverse log-ratio transform of cohort age distn
@@ -345,16 +345,16 @@ transformed parameters {
     
     // Spawner recruitment and age structure
     // Use initial values for orphan age classes, otherwise use process model
-    if(pop_year_indx[i] <= max_age)
+    if(pop_year_indx[i] <= max_ocean_age)
     {
-      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
+      ii = (pop[i] - 1)*max_ocean_age + pop_year_indx[i];
       q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                             tail(q_init[ii], N_orphan_age - 1));
     }
     
     for(a in 1:N_age)
     {
-      if(ages[a] < pop_year_indx[i])
+      if(ocean_ages[a] < pop_year_indx[i])
         // Use recruitment process model
         S_W_a[a] = M[i-ocean_ages[a]] * s_D[year[i]-ocean_ages[a]] * 
                    SAR[year[i]-ocean_ages[a]] * p[i-ocean_ages[a],a] * s_U[year[i]];
@@ -440,7 +440,7 @@ model {
   // (accounting for amalgamation of q_init to q_orphan)
   S_init ~ lognormal(mu_S_init, 10.0);
   {
-    matrix[N_age,max_age*N_pop] q_init_mat;
+    matrix[N_age,max_ocean_age*N_pop] q_init_mat;
     
     for(j in 1:size(q_init)) q_init_mat[,j] = q_init[j];
     target += sum((mu_q_init - 1) .* log(q_init_mat)); // q_init[i] ~ Dir(mu_q_init[,i])
