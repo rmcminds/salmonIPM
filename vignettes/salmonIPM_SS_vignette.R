@@ -38,31 +38,31 @@ sim_out$sim_dat$S_obs[which_S_NA] <- NA
 #===========================================================================
 
 # No pooling across populations
-fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
-                    chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
-                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
-                    seed = 123)
+fit_SS_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
+                       chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                       control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                       seed = 123)
 
-print(fit_np, pars = c("gamma","p","B_rate_all","S","R","q"), 
+print(fit_SS_np, pars = c("gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling
-fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
-                     chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
-                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
-                     seed = 123)
+fit_SS_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
+                       chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                       control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                       seed = 123)
 
-print(fit_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_SS_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling with partially observed and partially effective spawner ages
-fit_pa <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
-                    age_S_obs = rep(1,3), age_S_eff = rep(1,3),
-                    chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
-                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
-                    seed = 123)
+fit_SSpa_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
+                         age_S_obs = rep(1,3), age_S_eff = rep(1,3),
+                         chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                         control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                         seed = 123)
 
-print(fit_pa, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_SSpa_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 

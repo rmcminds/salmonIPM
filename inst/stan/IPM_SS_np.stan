@@ -33,7 +33,7 @@ data {
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=0> N_X;                    // number of productivity covariates
-  matrix[max(year),N_X] X;             // brood-year productivity covariates (if none, use vector of zeros)
+  matrix[max(year),N_X] X;             // brood-year productivity covariates
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs

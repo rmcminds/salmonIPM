@@ -33,7 +33,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_RR_SS_pp");
-    reader.add_event(146, 144, "end", "model_RR_SS_pp");
+    reader.add_event(147, 145, "end", "model_RR_SS_pp");
     return reader;
 }
 template <typename T1__, typename T2__, typename T3__, typename T4__>
@@ -705,38 +705,42 @@ public:
             stan::math::initialize(L_alphaRmax, DUMMY_VAR__);
             stan::math::fill(L_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 73;
-            validate_non_negative_index("log_alphaRmax", "N_pop", N_pop);
-            validate_non_negative_index("log_alphaRmax", "2", 2);
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> log_alphaRmax(N_pop, 2);
-            stan::math::initialize(log_alphaRmax, DUMMY_VAR__);
-            stan::math::fill(log_alphaRmax, DUMMY_VAR__);
+            validate_non_negative_index("zeta_alphaRmax", "N_pop", N_pop);
+            validate_non_negative_index("zeta_alphaRmax", "2", 2);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> zeta_alphaRmax(N_pop, 2);
+            stan::math::initialize(zeta_alphaRmax, DUMMY_VAR__);
+            stan::math::fill(zeta_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 74;
+            validate_non_negative_index("epsilon_alphaRmax", "N_pop", N_pop);
+            validate_non_negative_index("epsilon_alphaRmax", "2", 2);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> epsilon_alphaRmax(N_pop, 2);
+            stan::math::initialize(epsilon_alphaRmax, DUMMY_VAR__);
+            stan::math::fill(epsilon_alphaRmax, DUMMY_VAR__);
+            current_statement_begin__ = 75;
             validate_non_negative_index("sigma_alphaRmax", "2", 2);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_alphaRmax(2);
             stan::math::initialize(sigma_alphaRmax, DUMMY_VAR__);
             stan::math::fill(sigma_alphaRmax, DUMMY_VAR__);
-            current_statement_begin__ = 76;
+            current_statement_begin__ = 77;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), 
                         1, 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 77;
+            current_statement_begin__ = 78;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(2), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), 
                         rho_alphaRmax, 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 78;
+            current_statement_begin__ = 79;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), 
                         0, 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 79;
+            current_statement_begin__ = 80;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(2), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), 
                         stan::math::sqrt((1 - pow(rho_alphaRmax, 2))), 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 80;
-            stan::math::assign(log_alphaRmax, append_col(zeta_alpha, zeta_Rmax));
             current_statement_begin__ = 81;
             stan::model::assign(sigma_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
@@ -748,32 +752,34 @@ public:
                         sigma_Rmax, 
                         "assigning variable sigma_alphaRmax");
             current_statement_begin__ = 83;
-            stan::math::assign(log_alphaRmax, transpose(multiply(multiply(diag_matrix(sigma_alphaRmax), L_alphaRmax), transpose(log_alphaRmax))));
+            stan::math::assign(zeta_alphaRmax, append_col(zeta_alpha, zeta_Rmax));
             current_statement_begin__ = 84;
-            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, col(log_alphaRmax, 1))));
+            stan::math::assign(epsilon_alphaRmax, transpose(diag_pre_multiply(sigma_alphaRmax, multiply(L_alphaRmax, transpose(zeta_alphaRmax)))));
             current_statement_begin__ = 85;
-            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, col(log_alphaRmax, 2))));
+            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
+            current_statement_begin__ = 86;
+            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
             }
-            current_statement_begin__ = 89;
+            current_statement_begin__ = 90;
             stan::model::assign(phi, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
                         ((get_base1(zeta_phi, 1, "zeta_phi", 1) * sigma_phi) / stan::math::sqrt((1 - pow(rho_phi, 2)))), 
                         "assigning variable phi");
-            current_statement_begin__ = 90;
+            current_statement_begin__ = 91;
             for (int i = 2; i <= N_year; ++i) {
-                current_statement_begin__ = 91;
+                current_statement_begin__ = 92;
                 stan::model::assign(phi, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((rho_phi * get_base1(phi, (i - 1), "phi", 1)) + (get_base1(zeta_phi, i, "zeta_phi", 1) * sigma_phi)), 
                             "assigning variable phi");
             }
-            current_statement_begin__ = 92;
+            current_statement_begin__ = 93;
             stan::math::assign(phi, subtract(phi, mean(phi)));
-            current_statement_begin__ = 95;
-            stan::math::assign(R_hat, rep_vector(0, N));
             current_statement_begin__ = 96;
+            stan::math::assign(R_hat, rep_vector(0, N));
+            current_statement_begin__ = 97;
             for (int i = 1; i <= N_fit; ++i) {
-                current_statement_begin__ = 97;
+                current_statement_begin__ = 98;
                 stan::model::assign(R_hat, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
                             (get_base1(A, get_base1(which_fit, i, "which_fit", 1), "A", 1) * SR(SR_fun, get_base1(alpha, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "alpha", 1), get_base1(Rmax, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "Rmax", 1), get_base1(S, get_base1(which_fit, i, "which_fit", 1), "S", 1), get_base1(A, get_base1(which_fit, i, "which_fit", 1), "A", 1), pstream__)), 
@@ -823,27 +829,27 @@ public:
             }
             check_greater_or_equal(function__, "R_hat", R_hat, 0);
             // model body
-            current_statement_begin__ = 104;
-            lp_accum__.add(normal_log<propto__>(mu_alpha, 0, 5));
             current_statement_begin__ = 105;
-            lp_accum__.add(pexp_lpdf<propto__>(sigma_alpha, 0, 3, 10, pstream__));
+            lp_accum__.add(normal_log<propto__>(mu_alpha, 0, 5));
             current_statement_begin__ = 106;
-            lp_accum__.add(normal_log<propto__>(mu_Rmax, 0, 10));
+            lp_accum__.add(pexp_lpdf<propto__>(sigma_alpha, 0, 3, 10, pstream__));
             current_statement_begin__ = 107;
-            lp_accum__.add(pexp_lpdf<propto__>(sigma_Rmax, 0, 3, 10, pstream__));
+            lp_accum__.add(normal_log<propto__>(mu_Rmax, 0, 10));
             current_statement_begin__ = 108;
-            lp_accum__.add(pexp_lpdf<propto__>(rho_phi, 0, 0.85, 50, pstream__));
+            lp_accum__.add(pexp_lpdf<propto__>(sigma_Rmax, 0, 3, 10, pstream__));
             current_statement_begin__ = 109;
-            lp_accum__.add(pexp_lpdf<propto__>(sigma_phi, 0, 3, 10, pstream__));
+            lp_accum__.add(pexp_lpdf<propto__>(rho_phi, 0, 0.85, 50, pstream__));
             current_statement_begin__ = 110;
+            lp_accum__.add(pexp_lpdf<propto__>(sigma_phi, 0, 3, 10, pstream__));
+            current_statement_begin__ = 111;
             lp_accum__.add(pexp_lpdf<propto__>(sigma, 0, 2, 10, pstream__));
-            current_statement_begin__ = 114;
-            lp_accum__.add(std_normal_log<propto__>(zeta_alpha));
             current_statement_begin__ = 115;
-            lp_accum__.add(std_normal_log<propto__>(zeta_Rmax));
+            lp_accum__.add(std_normal_log<propto__>(zeta_alpha));
             current_statement_begin__ = 116;
+            lp_accum__.add(std_normal_log<propto__>(zeta_Rmax));
+            current_statement_begin__ = 117;
             lp_accum__.add(std_normal_log<propto__>(zeta_phi));
-            current_statement_begin__ = 119;
+            current_statement_begin__ = 120;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(R, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R"), add(stan::math::log(stan::model::rvalue(R_hat, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R_hat")), stan::model::rvalue(phi, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(year, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "year")), stan::model::nil_index_list()), "phi")), sigma));
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -1012,38 +1018,42 @@ public:
             stan::math::initialize(L_alphaRmax, DUMMY_VAR__);
             stan::math::fill(L_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 73;
-            validate_non_negative_index("log_alphaRmax", "N_pop", N_pop);
-            validate_non_negative_index("log_alphaRmax", "2", 2);
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> log_alphaRmax(N_pop, 2);
-            stan::math::initialize(log_alphaRmax, DUMMY_VAR__);
-            stan::math::fill(log_alphaRmax, DUMMY_VAR__);
+            validate_non_negative_index("zeta_alphaRmax", "N_pop", N_pop);
+            validate_non_negative_index("zeta_alphaRmax", "2", 2);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> zeta_alphaRmax(N_pop, 2);
+            stan::math::initialize(zeta_alphaRmax, DUMMY_VAR__);
+            stan::math::fill(zeta_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 74;
+            validate_non_negative_index("epsilon_alphaRmax", "N_pop", N_pop);
+            validate_non_negative_index("epsilon_alphaRmax", "2", 2);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> epsilon_alphaRmax(N_pop, 2);
+            stan::math::initialize(epsilon_alphaRmax, DUMMY_VAR__);
+            stan::math::fill(epsilon_alphaRmax, DUMMY_VAR__);
+            current_statement_begin__ = 75;
             validate_non_negative_index("sigma_alphaRmax", "2", 2);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_alphaRmax(2);
             stan::math::initialize(sigma_alphaRmax, DUMMY_VAR__);
             stan::math::fill(sigma_alphaRmax, DUMMY_VAR__);
-            current_statement_begin__ = 76;
+            current_statement_begin__ = 77;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), 
                         1, 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 77;
+            current_statement_begin__ = 78;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(2), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), 
                         rho_alphaRmax, 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 78;
+            current_statement_begin__ = 79;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), 
                         0, 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 79;
+            current_statement_begin__ = 80;
             stan::model::assign(L_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(2), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), 
                         stan::math::sqrt((1 - pow(rho_alphaRmax, 2))), 
                         "assigning variable L_alphaRmax");
-            current_statement_begin__ = 80;
-            stan::math::assign(log_alphaRmax, append_col(zeta_alpha, zeta_Rmax));
             current_statement_begin__ = 81;
             stan::model::assign(sigma_alphaRmax, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
@@ -1055,32 +1065,34 @@ public:
                         sigma_Rmax, 
                         "assigning variable sigma_alphaRmax");
             current_statement_begin__ = 83;
-            stan::math::assign(log_alphaRmax, transpose(multiply(multiply(diag_matrix(sigma_alphaRmax), L_alphaRmax), transpose(log_alphaRmax))));
+            stan::math::assign(zeta_alphaRmax, append_col(zeta_alpha, zeta_Rmax));
             current_statement_begin__ = 84;
-            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, col(log_alphaRmax, 1))));
+            stan::math::assign(epsilon_alphaRmax, transpose(diag_pre_multiply(sigma_alphaRmax, multiply(L_alphaRmax, transpose(zeta_alphaRmax)))));
             current_statement_begin__ = 85;
-            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, col(log_alphaRmax, 2))));
+            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
+            current_statement_begin__ = 86;
+            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
             }
-            current_statement_begin__ = 89;
+            current_statement_begin__ = 90;
             stan::model::assign(phi, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
                         ((get_base1(zeta_phi, 1, "zeta_phi", 1) * sigma_phi) / stan::math::sqrt((1 - pow(rho_phi, 2)))), 
                         "assigning variable phi");
-            current_statement_begin__ = 90;
+            current_statement_begin__ = 91;
             for (int i = 2; i <= N_year; ++i) {
-                current_statement_begin__ = 91;
+                current_statement_begin__ = 92;
                 stan::model::assign(phi, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((rho_phi * get_base1(phi, (i - 1), "phi", 1)) + (get_base1(zeta_phi, i, "zeta_phi", 1) * sigma_phi)), 
                             "assigning variable phi");
             }
-            current_statement_begin__ = 92;
+            current_statement_begin__ = 93;
             stan::math::assign(phi, subtract(phi, mean(phi)));
-            current_statement_begin__ = 95;
-            stan::math::assign(R_hat, rep_vector(0, N));
             current_statement_begin__ = 96;
+            stan::math::assign(R_hat, rep_vector(0, N));
+            current_statement_begin__ = 97;
             for (int i = 1; i <= N_fit; ++i) {
-                current_statement_begin__ = 97;
+                current_statement_begin__ = 98;
                 stan::model::assign(R_hat, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
                             (get_base1(A, get_base1(which_fit, i, "which_fit", 1), "A", 1) * SR(SR_fun, get_base1(alpha, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "alpha", 1), get_base1(Rmax, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "Rmax", 1), get_base1(S, get_base1(which_fit, i, "which_fit", 1), "S", 1), get_base1(A, get_base1(which_fit, i, "which_fit", 1), "A", 1), pstream__)), 
@@ -1119,35 +1131,35 @@ public:
             }
             if (!include_gqs__) return;
             // declare and define generated quantities
-            current_statement_begin__ = 123;
+            current_statement_begin__ = 124;
             validate_non_negative_index("S_sim", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> S_sim(N);
             stan::math::initialize(S_sim, DUMMY_VAR__);
             stan::math::fill(S_sim, DUMMY_VAR__);
-            current_statement_begin__ = 124;
+            current_statement_begin__ = 125;
             validate_non_negative_index("R_sim", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> R_sim(N);
             stan::math::initialize(R_sim, DUMMY_VAR__);
             stan::math::fill(R_sim, DUMMY_VAR__);
             // generated quantities statements
-            current_statement_begin__ = 126;
-            stan::math::assign(S_sim, S);
             current_statement_begin__ = 127;
+            stan::math::assign(S_sim, S);
+            current_statement_begin__ = 128;
             stan::math::assign(R_sim, R);
-            current_statement_begin__ = 129;
+            current_statement_begin__ = 130;
             for (int i = 1; i <= N; ++i) {
-                current_statement_begin__ = 131;
+                current_statement_begin__ = 132;
                 if (as_bool(logical_eq(get_base1(S_NA, i, "S_NA", 1), 1))) {
-                    current_statement_begin__ = 133;
+                    current_statement_begin__ = 134;
                     if (as_bool((primitive_value(logical_gte(i, max_age)) && primitive_value(logical_eq(get_base1(pop, (i - max_age), "pop", 1), get_base1(pop, i, "pop", 1)))))) {
-                        current_statement_begin__ = 135;
+                        current_statement_begin__ = 136;
                         stan::model::assign(S_sim, 
                                     stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                     0, 
                                     "assigning variable S_sim");
-                        current_statement_begin__ = 136;
+                        current_statement_begin__ = 137;
                         for (int a = 1; a <= N_age; ++a) {
-                            current_statement_begin__ = 137;
+                            current_statement_begin__ = 138;
                             stan::model::assign(S_sim, 
                                         stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                         (get_base1(S_sim, i, "S_sim", 1) + (get_base1(R_sim, (i - get_base1(ages, a, "ages", 1)), "R_sim", 1) * get_base1(p, get_base1(pop, i, "pop", 1), a, "p", 1))), 
@@ -1155,9 +1167,9 @@ public:
                         }
                     }
                 }
-                current_statement_begin__ = 141;
+                current_statement_begin__ = 142;
                 if (as_bool(logical_eq(get_base1(R_NA, i, "R_NA", 1), 1))) {
-                    current_statement_begin__ = 142;
+                    current_statement_begin__ = 143;
                     stan::model::assign(R_sim, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 ((get_base1(A, i, "A", 1) * SR(SR_fun, get_base1(alpha, get_base1(pop, i, "pop", 1), "alpha", 1), get_base1(Rmax, get_base1(pop, i, "pop", 1), "Rmax", 1), get_base1(S_sim, i, "S_sim", 1), get_base1(A, i, "A", 1), pstream__)) * lognormal_rng(get_base1(phi, get_base1(year, i, "year", 1), "phi", 1), sigma, base_rng__)), 
@@ -1165,12 +1177,12 @@ public:
                 }
             }
             // validate, write generated quantities
-            current_statement_begin__ = 123;
+            current_statement_begin__ = 124;
             size_t S_sim_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < S_sim_j_1_max__; ++j_1__) {
                 vars__.push_back(S_sim(j_1__));
             }
-            current_statement_begin__ = 124;
+            current_statement_begin__ = 125;
             size_t R_sim_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < R_sim_j_1_max__; ++j_1__) {
                 vars__.push_back(R_sim(j_1__));

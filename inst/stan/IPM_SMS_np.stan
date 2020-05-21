@@ -34,14 +34,14 @@ data {
   vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
   int<lower=1> smolt_age;              // smolt age
-  matrix[max(year),N_X_M] X_M;         // spawner-smolt covariates (if none, use vector of zeros)
+  matrix[max(year),N_X_M] X_M;         // spawner-smolt covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;            // observed annual smolt abundance (not density)
   // SAR (sMolt-Spawner survival)
   int<lower=0> N_X_MS;                 // number of SAR productivity covariates
-  matrix[max(year),N_X_MS] X_MS;       // SAR covariates (if none, use vector of zeros)
+  matrix[max(year),N_X_MS] X_MS;       // SAR covariates
   // fishery and hatchery removals
   vector[N] F_rate;                    // fishing mortality rate of wild adults (no fishing on jacks)
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -300,10 +300,10 @@ generated quantities {
   
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
-    LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M_obs[which_M_obs[i]] | log(M[which_M_obs[i]]), tau_M); 
+    LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M_obs[which_M_obs[i]] | log(M[which_M_obs[i]]), tau_M[pop[which_M_obs[i]]]); 
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
-    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau_S); 
+    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau_S[pop[which_M_obs[i]]]); 
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)

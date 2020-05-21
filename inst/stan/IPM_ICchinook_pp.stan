@@ -18,15 +18,6 @@ functions {
     return(-(fabs(y - mu)/sigma)^shape);
   }
   
-  // convert matrix to array of column vectors
-  vector[] matrix_to_array(matrix m) {
-    vector[2] arr[cols(m)];
-    
-    for(i in 1:cols(m))
-      arr[i] = col(m,i);
-    return(arr);
-  }
-
   // Vectorized logical equality
   int[] veq(int[] x, int y) {
     int xeqy[size(x)];
@@ -282,9 +273,9 @@ transformed parameters {
     sigma_alphaRmax[1] = sigma_alpha;
     sigma_alphaRmax[2] = sigma_Rmax;
     zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
-    epsilon_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * zeta_alphaRmax')';
-    alpha = exp(mu_alpha + col(epsilon_alphaRmax,1));
-    Rmax = exp(mu_Rmax + col(epsilon_alphaRmax,2));
+    epsilon_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
+    alpha = exp(mu_alpha + epsilon_alphaRmax[,1]);
+    Rmax = exp(mu_Rmax + epsilon_alphaRmax[,2]);
   }
 
   // AR(1) models for downstream, SAR, upstream survival
@@ -311,15 +302,15 @@ transformed parameters {
   // Multivariate Matt trick for age vectors
   mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
   // pop-specific mean
-  gamma = rep_matrix(mu_gamma,N_pop) + (diag_matrix(sigma_gamma) * L_gamma * zeta_gamma')';
+  gamma = rep_matrix(mu_gamma,N_pop) + diag_pre_multiply(sigma_gamma, L_gamma * zeta_gamma')';
   // within-pop, time-varying IID
-  p = append_col(gamma[pop,] + (diag_matrix(sigma_p) * L_p * zeta_p')', rep_vector(0,N));
+  p = append_col(gamma[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
   
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] exp_p; // exp(p[i,])
+    row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>

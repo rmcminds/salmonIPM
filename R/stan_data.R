@@ -219,8 +219,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
     stop(paste("Conflicting NAs in age frequency data in rows", 
                which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))), "\n"))
   
-  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMaS_np",
-                        "IPM_ICchinook_pp","RR_SS_np","RR_SS_pp"))
+  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp",
+                        "IPM_SMaS_np", "IPM_ICchinook_pp","RR_SS_np","RR_SS_pp"))
     stop(paste("Stan model", stan_model, "does not exist.\n"))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp"))
@@ -319,7 +319,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
       
       return(dat)
     })
-  } else if(stan_model %in% c("IPM_SMS_np")) {
+  } else if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp")) {
     with(fish_data, {  
       dat <- list(
         # info for observed data

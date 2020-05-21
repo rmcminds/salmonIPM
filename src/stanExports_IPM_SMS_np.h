@@ -2569,7 +2569,7 @@ public:
                 current_statement_begin__ = 303;
                 stan::model::assign(LL_M_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_M_obs, i, "which_M_obs", 1)), stan::model::nil_index_list()), 
-                            lognormal_log(get_base1(M_obs, get_base1(which_M_obs, i, "which_M_obs", 1), "M_obs", 1), stan::math::log(get_base1(M, get_base1(which_M_obs, i, "which_M_obs", 1), "M", 1)), tau_M), 
+                            lognormal_log(get_base1(M_obs, get_base1(which_M_obs, i, "which_M_obs", 1), "M_obs", 1), stan::math::log(get_base1(M, get_base1(which_M_obs, i, "which_M_obs", 1), "M", 1)), get_base1(tau_M, get_base1(pop, get_base1(which_M_obs, i, "which_M_obs", 1), "pop", 1), "tau_M", 1)), 
                             "assigning variable LL_M_obs");
             }
             current_statement_begin__ = 304;
@@ -2579,7 +2579,7 @@ public:
                 current_statement_begin__ = 306;
                 stan::model::assign(LL_S_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_S_obs, i, "which_S_obs", 1)), stan::model::nil_index_list()), 
-                            lognormal_log(get_base1(S_obs, get_base1(which_S_obs, i, "which_S_obs", 1), "S_obs", 1), stan::math::log(get_base1(S, get_base1(which_S_obs, i, "which_S_obs", 1), "S", 1)), tau_S), 
+                            lognormal_log(get_base1(S_obs, get_base1(which_S_obs, i, "which_S_obs", 1), "S_obs", 1), stan::math::log(get_base1(S, get_base1(which_S_obs, i, "which_S_obs", 1), "S", 1)), get_base1(tau_S, get_base1(pop, get_base1(which_M_obs, i, "which_M_obs", 1), "pop", 1), "tau_S", 1)), 
                             "assigning variable LL_S_obs");
             }
             current_statement_begin__ = 307;

@@ -86,7 +86,7 @@
 #'   spawner-smolt-spawner (\code{"SMS"}).
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
-#'   fixed/independent. Must be TRUE if model == "IPM_F".
+#'   fixed/independent.
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included). If provided,
 #'   \code{"stan_model"} overrides \code{"model"}, \code{"life_cycle"}, and
