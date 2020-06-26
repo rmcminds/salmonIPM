@@ -73,7 +73,7 @@ transformed data {
   vector[max_ocean_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_ocean_age
   matrix[N_age,max_ocean_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_ocean_age
   
-  for(a in min_ocean_age:max_ocean_age) ocean_ages[a] = a;
+  for(a in 1:N_age) ocean_ages[a] = min_ocean_age - 1 + a;
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
 
   pop_year_indx[1] = 1;

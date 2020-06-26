@@ -22,30 +22,36 @@ IPM_sim(
 \item{\code{mu_Rmax}}{Hyper-mean of log asymptotic recruitment}
 \item{\code{sigma_Rmax}}{Hyper-SD of log asymptotic recruitment}
 \item{\code{rho_alphaRmax}}{Correlation between log(alpha) and log(Rmax)}
-\item{\code{beta_phi}}{Vector of regression coefficients for log
-productivity anomalies} \item{\code{rho_phi}}{AR(1) coefficient for log
-productivity anomalies} \item{\code{sigma_phi}}{Hyper-SD of brood year log
-productivity anomalies} \item{\code{sigma}}{Unique recruitment process
-error SD}  \item{\code{beta_M}}{If \code{life_cycle=="SMS"}, vector of
-regression coefficients for spawner-smolt productivity}
-\item{\code{rho_M}}{If \code{life_cycle=="SMS"}, AR(1) coefficient of
-spawner-smolt productivity} \item{\code{sigma_M}}{If
-\code{life_cycle=="SMS"}, spawner-smolt process error SD}
+\item{\code{beta_phi}}{If \code{life_cycle=="SS"}, vector of regression
+coefficients for log productivity anomalies} \item{\code{rho_phi}}{If
+\code{life_cycle=="SS"}, AR(1) coefficient for log productivity anomalies}
+\item{\code{sigma_phi}}{If \code{life_cycle=="SS"}, hyper-SD of brood year
+log productivity anomalies} \item{\code{sigma}}{If \code{life_cycle=="SS"},
+unique recruitment process error SD} \item{\code{beta_phi_M}}{If
+\code{life_cycle=="SMS"}, vector of regression coefficients for
+spawner-smolt log productivity anomalies} \item{\code{rho_phi_M}}{If
+\code{life_cycle=="SMS"}, AR(1) coefficient of spawner-smolt log
+productivity anomalies} \item{\code{sigma_phi_M}}{If
+\code{life_cycle=="SMS"}, process error SD of spawner-smolt log
+productivity anomalies} \item{\code{sigma_M}}{If \code{life_cycle=="SMS"},
+SD of unique spawner-smolt productivity process errors}
 \item{\code{mu_MS}}{If \code{life_cycle=="SMS"}, mean SAR}
-\item{\code{beta_MS}}{If \code{life_cycle=="SMS"}, vector of regression
-coefficients for SAR} \item{\code{rho_MS}}{If \code{life_cycle=="SMS"},
-AR(1) coefficient for logit SAR} \item{\code{sigma_MS}}{If
-\code{life_cycle=="SMS"}, process error SD of SAR}
-\item{\code{mu_p}}{Among-population mean simplex of age distributions}
-\item{\code{sigma_gamma}}{Vector of among-population SDs of mean log-ratio
-age distributions} \item{\code{R_gamma}}{Among-population correlation
-matrix of mean log-ratio age distributions}
-\item{\code{sigma_gamma}}{Vector of SDs of log-ratio cohort age
-distributions} \item{\code{R_gamma}}{Correlation matrix of cohort log-ratio
-age distributions} \item{\code{sigma_p}}{Vector of SDs of log-ratio cohort age
-distributions} \item{\code{R_p}}{Correlation matrix of cohort log-ratio age
-distributions} \item{\code{tau_M}}{If \code{life_cycle=="SMS"}, smolt
-observation error SD} \item{\code{tau_S}}{Spawner observation error SD}
+\item{\code{beta_phi_MS}}{If \code{life_cycle=="SMS"}, vector of regression
+coefficients for logit SAR anomalies} \item{\code{rho_phi_MS}}{If
+\code{life_cycle=="SMS"}, AR(1) coefficient for logit SAR anomalies}
+\item{\code{sigma_phi_MS}}{If \code{life_cycle=="SMS"}, process error SD of
+logit SAR anomalies} \item{\code{sigma_MS}}{If \code{life_cycle=="SMS"}, SD
+of unique SAR process errors} \item{\code{mu_p}}{Among-population mean
+simplex of age distributions} \item{\code{sigma_gamma}}{Vector of
+among-population SDs of mean log-ratio age distributions}
+\item{\code{R_gamma}}{Among-population correlation matrix of mean log-ratio
+age distributions} \item{\code{sigma_gamma}}{Vector of SDs of log-ratio
+cohort age distributions} \item{\code{R_gamma}}{Correlation matrix of
+cohort log-ratio age distributions} \item{\code{sigma_p}}{Vector of SDs of
+log-ratio cohort age distributions} \item{\code{R_p}}{Correlation matrix of
+cohort log-ratio age distributions} \item{\code{tau_M}}{If
+\code{life_cycle=="SMS"}, smolt observation error SD}
+\item{\code{tau_S}}{Spawner observation error SD}
 \item{\code{S_init_K}}{Mean of initial spawning population size as a
 fraction of carrying capacity} }}
 

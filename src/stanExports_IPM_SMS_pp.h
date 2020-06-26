@@ -568,11 +568,11 @@ public:
             stan::math::fill(mu_q_init, DUMMY_VAR__);
             // execute transformed data statements
             current_statement_begin__ = 80;
-            for (int a = min_ocean_age; a <= max_ocean_age; ++a) {
+            for (int a = 1; a <= N_age; ++a) {
                 current_statement_begin__ = 80;
                 stan::model::assign(ocean_ages, 
                             stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
-                            a, 
+                            ((min_ocean_age - 1) + a), 
                             "assigning variable ocean_ages");
             }
             current_statement_begin__ = 81;
