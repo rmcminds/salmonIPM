@@ -332,8 +332,8 @@ model {
   // tau_S ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
 
   // Observation model
-  M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M_obs);  // observed smolts
-  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S_obs);  // observed spawners
+  M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M_obs[which_M_obs]);  // observed smolts
+  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S_obs[which_S_obs]);  // observed spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // observed counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
