@@ -8,6 +8,8 @@ options(device=windows)
 # SIMULATE DATA
 #===========================================================================
 
+set.seed(12345)
+
 # Simulate data
 N_pop <- 20
 N_year <- 30
@@ -25,31 +27,44 @@ sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sig
                                           n_age_obs = 50, n_HW_obs = 0),
                    N_age = 3, max_age = 5)
 
+no_age_data <- 1:N_year
+sim_out$sim_dat[no_age_data,c("n_age3_obs","n_age4_obs","n_age5_obs")] <- 0
+which_S_NA <- sample(N, round(N/5))
+sim_out$sim_dat$S_obs[which_S_NA] <- NA
+
+
 #===========================================================================
 # CALL STAN TO FIT MODELS
 #===========================================================================
 
 # No pooling across populations
-fit_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
-                    chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
-                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+fit_SS_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
+                       chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                       control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                       seed = 123)
 
-# "old priors" version of partial pooling
-fit_pp1 <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
-                     age_S_obs = rep(1,3), age_S_eff = rep(1,3),
-                     chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
-                     control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
-
-print(fit_pp1, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_SS_np, pars = c("gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
-# Partial pooling across populations
-fit_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp_alt-prior-initial_states",
-                    chains = 3, iter = 200, warmup = 100, thin = 1, cores = 3,
-                    control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13))
+# Partial pooling
+fit_SS_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
+                       chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                       control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                       seed = 123)
 
-print(fit_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_SS_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
+# Partial pooling with partially observed and partially effective spawner ages
+fit_SSpa_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
+                         age_S_obs = rep(1,3), age_S_eff = rep(1,3),
+                         chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                         control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
+                         seed = 123)
+
+print(fit_SSpa_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+      include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
 
 
 #===========================================================================
@@ -71,7 +86,7 @@ par(mfrow=c(4,5), mar = c(4,4,2,1))
 for(i in 1:20) {
   plot(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
        pch = "", xlab = "year", ylab = "S", main = i, 
-       ylim = range(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = c(0.05,0.95))))
+       ylim = range(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = c(0.05,0.95))))
   lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], S_true[sim_out$sim_dat$pop==i])
   lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i]),
         col = "orange", lwd = 2)
@@ -79,12 +94,12 @@ for(i in 1:20) {
           c(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
             rev(colQuantiles(extract1(fit_pp1,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
           col = transparent("orange", 0.8), border = NA)
-  lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i]),
-        col = "blue", lwd = 2)
-  polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
-          c(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
-            rev(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
-          col = transparent("blue", 0.8), border = NA)
+  # lines(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], colMedians(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i]),
+  #       col = "blue", lwd = 2)
+  # polygon(c(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], rev(sim_out$sim_dat$year[sim_out$sim_dat$pop==i])),
+  #         c(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.05),
+  #           rev(colQuantiles(extract1(fit_pp,"S")[,sim_out$sim_dat$pop==i], probs = 0.95))), 
+  #         col = transparent("blue", 0.8), border = NA)
   points(sim_out$sim_dat$year[sim_out$sim_dat$pop==i], sim_out$sim_dat$S_obs[sim_out$sim_dat$pop==i],
          pch = 16)
 }
@@ -170,7 +185,7 @@ rm(list=c("S_tot","S_tot_fixedpop","c1","c1t"))
 # png(filename="posterior_densities_simdata.png", width=16*0.6, height=10*0.6, units="in", res=200, type="cairo-png")
 dev.new(width=16, height=10)
 par(mfrow=c(3,4), mar=c(4.1,2,2,1), oma=c(0,4.1,0,0))
-mod <- fit_pp1
+mod <- fit_pp
 plot(density(extract1(mod,"mu_alpha")), xlab = bquote(mu[a]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
 abline(v = sim_out$sim_dat$pars_out$mu_alpha, lwd = 3)
 plot(density(extract1(mod,"sigma_alpha")), xlab = bquote(sigma[a]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)

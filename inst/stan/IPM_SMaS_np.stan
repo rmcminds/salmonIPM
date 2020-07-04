@@ -294,12 +294,12 @@ model {
   // Priors
   
   // smolt recruitment
-  alpha ~ lognormal(2,2);
-  Rmax ~ lognormal(8,1);
+  alpha ~ lognormal(2.0,2.0);
+  Rmax ~ lognormal(8.0,1.0);
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,5);
-  zeta_M ~ normal(0,1);    // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
+  zeta_M ~ std_normal();   // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
   // smolt age structure
   to_vector(sigma_p_M) ~ normal(0,5);
@@ -307,7 +307,7 @@ model {
     L_p_M[j] ~ lkj_corr_cholesky(1);
   // smolt age probs logistic MVN: 
   // alr(p_M[i,]) ~ MVN(gamma_M[pop[i],], D*R_p_M*D), where D = diag_matrix(sigma_p_M[pop[i],])
-  to_vector(zeta_p_M) ~ normal(0,1);
+  to_vector(zeta_p_M) ~ std_normal();
 
   // SAR
   to_vector(beta_MS) ~ normal(0,5);
@@ -315,7 +315,7 @@ model {
   to_vector(rho_MS) ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
   for(j in 1:N_pop)
     L_MS[j] ~ lkj_corr_cholesky(1);
-  to_vector(zeta_MS) ~ normal(0,1); // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
+  to_vector(zeta_MS) ~ std_normal(); // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
 
   // ocean age structure
   for(j in 1:N_pop)
@@ -326,18 +326,18 @@ model {
   }
   // ocean age probs logistic MVN: 
   // alr(p_MS[i,]) ~ MVN(gamma_MS[pop[i],,], D*R_p_MS*D), where D = diag_matrix(sigma_p_MS[pop[i],,])
-  to_vector(zeta_p_MS) ~ normal(0,1);
+  to_vector(zeta_p_MS) ~ std_normal();
 
   // removals
   B_take = B_rate .* S_W[which_B] .* (1 - q_MS[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
   // initial states, observation error
-  M_init ~ lognormal(0,5);
-  S_init ~ lognormal(0,5);
-  tau_M ~ lognormal(-3,0.2);
+  M_init ~ lognormal(0.0,5.0);
+  S_init ~ lognormal(0.0,5.0);
+  tau_M ~ lognormal(-3.0,0.2);
   // tau_S ~ pexp(1,0.85,30); // rule out tau < 0.1 to avoid divergences 
-  tau_S ~ lognormal(-3,0.2);
+  tau_S ~ lognormal(-3.0,0.2);
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts

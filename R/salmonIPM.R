@@ -86,7 +86,7 @@
 #'   spawner-smolt-spawner (\code{"SMS"}).
 #' @param pool_pops Logical, with default \code{TRUE}, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
-#'   fixed/independent. Must be TRUE if model == "IPM_F".
+#'   fixed/independent.
 #' @param stan_model Character string giving the name of the Stan model being
 #'   fit (".stan" filetype extension is not included). If provided,
 #'   \code{"stan_model"} overrides \code{"model"}, \code{"life_cycle"}, and
@@ -114,7 +114,7 @@
 #'   default is 1, which is usually the recommended value.
 #' @param cores Number of cores to use when executing the chains in parallel.
 #'   Defaults to one less than the number of cores available.
-#' @param ... Additional arguments to pass to \code{stan}.
+#' @param ... Additional arguments to pass to \code{rstan::sampling}.
 #' @return An object of class \code{stanfit} representing the fitted model. See
 #'   \code{rstan::stan} for details.
 #'
@@ -144,7 +144,7 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
   if(is.null(pars)) pars <- stan_pars(stan_model)
   if(log_lik) pars <- c(pars, "LL")
   
-  fit <- stan(file = file.path(path.package("salmonIPM"), "stan", paste0(stan_model, ".stan")),
+  fit <- rstan::sampling(stanmodels[[stan_model]],
               data = dat, 
               init = stan_init(dat, stan_model, chains), 
               pars = pars,

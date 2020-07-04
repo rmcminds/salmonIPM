@@ -1,5 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^.*script.R$
-^IPM_PVA.*$
 ^docs.*$
+^Read-and-delete-me

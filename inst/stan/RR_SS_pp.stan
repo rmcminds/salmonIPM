@@ -67,22 +67,23 @@ transformed parameters {
   vector<lower=0>[N_year] phi;  // log brood year productivity anomalies
   vector<lower=0>[N] R_hat;     // expected recruit abundance (not density) by brood year
   
-  // Multivariate Matt trick for [log(alpha), log(b)]
+  // Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
-    matrix[2,2] L_alphaRmax;       // Cholesky factor of corr matrix of log(alpha) and log(Rmax)
-    matrix[N_pop,2] log_alphaRmax; // temp variable: matrix of [log(alpha), log(Rmax)]
-    vector[2] sigma_alphaRmax;     // temp variable: SD vector of [log(alpha), log(Rmax)]
+    matrix[2,2] L_alphaRmax;           // Cholesky factor of corr matrix of log(alpha), log(Rmax)
+    matrix[N_pop,2] zeta_alphaRmax;    // [log(alpha), log(Rmax)] random effects (z-scored)
+    matrix[N_pop,2] epsilon_alphaRmax; // [log(alpha), log(Rmax)] random effects
+    vector[2] sigma_alphaRmax;         // SD vector of [log(alpha), log(Rmax)]
     
     L_alphaRmax[1,1] = 1;
     L_alphaRmax[2,1] = rho_alphaRmax;
     L_alphaRmax[1,2] = 0;
     L_alphaRmax[2,2] = sqrt(1 - rho_alphaRmax^2);
-    log_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
     sigma_alphaRmax[1] = sigma_alpha;
     sigma_alphaRmax[2] = sigma_Rmax;
-    log_alphaRmax = (diag_matrix(sigma_alphaRmax) * L_alphaRmax * log_alphaRmax')';
-    alpha = exp(mu_alpha + col(log_alphaRmax,1));
-    Rmax = exp(mu_Rmax + col(log_alphaRmax,2));
+    zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
+    epsilon_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
+    alpha = exp(mu_alpha + epsilon_alphaRmax[,1]);
+    Rmax = exp(mu_Rmax + epsilon_alphaRmax[,2]);
   }
   
   // AR(1) model for phi
@@ -111,9 +112,9 @@ model {
   
   // Hierarchical priors
   // [log(alpha), log(Rmax)] ~ MVN(0, D*R_log_aRmax*D), where D = diag_matrix(sigma_alpha, sigma_Rmax)
-  zeta_alpha ~ normal(0,1);
-  zeta_Rmax ~ normal(0,1);
-  zeta_phi ~ normal(0,1);    // phi ~ N(0, sigma_phi)
+  zeta_alpha ~ std_normal();
+  zeta_Rmax ~ std_normal();
+  zeta_phi ~ std_normal();    // phi ~ N(0, sigma_phi)
   
   // Likelihood
   R[which_fit] ~ lognormal(log(R_hat[which_fit]) + phi[year[which_fit]], sigma);

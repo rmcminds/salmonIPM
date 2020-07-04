@@ -8,30 +8,36 @@
 #'   \item{\code{mu_Rmax}}{Hyper-mean of log asymptotic recruitment}
 #'   \item{\code{sigma_Rmax}}{Hyper-SD of log asymptotic recruitment}
 #'   \item{\code{rho_alphaRmax}}{Correlation between log(alpha) and log(Rmax)}
-#'   \item{\code{beta_phi}}{Vector of regression coefficients for log
-#'   productivity anomalies} \item{\code{rho_phi}}{AR(1) coefficient for log
-#'   productivity anomalies} \item{\code{sigma_phi}}{Hyper-SD of brood year log
-#'   productivity anomalies} \item{\code{sigma}}{Unique recruitment process
-#'   error SD}  \item{\code{beta_M}}{If \code{life_cycle=="SMS"}, vector of
-#'   regression coefficients for spawner-smolt productivity}
-#'   \item{\code{rho_M}}{If \code{life_cycle=="SMS"}, AR(1) coefficient of
-#'   spawner-smolt productivity} \item{\code{sigma_M}}{If
-#'   \code{life_cycle=="SMS"}, spawner-smolt process error SD}
+#'   \item{\code{beta_phi}}{If \code{life_cycle=="SS"}, vector of regression
+#'   coefficients for log productivity anomalies} \item{\code{rho_phi}}{If
+#'   \code{life_cycle=="SS"}, AR(1) coefficient for log productivity anomalies}
+#'   \item{\code{sigma_phi}}{If \code{life_cycle=="SS"}, hyper-SD of brood year
+#'   log productivity anomalies} \item{\code{sigma}}{If \code{life_cycle=="SS"},
+#'   unique recruitment process error SD} \item{\code{beta_phi_M}}{If
+#'   \code{life_cycle=="SMS"}, vector of regression coefficients for
+#'   spawner-smolt log productivity anomalies} \item{\code{rho_phi_M}}{If
+#'   \code{life_cycle=="SMS"}, AR(1) coefficient of spawner-smolt log
+#'   productivity anomalies} \item{\code{sigma_phi_M}}{If
+#'   \code{life_cycle=="SMS"}, process error SD of spawner-smolt log
+#'   productivity anomalies} \item{\code{sigma_M}}{If \code{life_cycle=="SMS"},
+#'   SD of unique spawner-smolt productivity process errors}
 #'   \item{\code{mu_MS}}{If \code{life_cycle=="SMS"}, mean SAR}
-#'   \item{\code{beta_MS}}{If \code{life_cycle=="SMS"}, vector of regression
-#'   coefficients for SAR} \item{\code{rho_MS}}{If \code{life_cycle=="SMS"},
-#'   AR(1) coefficient for logit SAR} \item{\code{sigma_MS}}{If
-#'   \code{life_cycle=="SMS"}, process error SD of SAR}
-#'   \item{\code{mu_p}}{Among-population mean simplex of age distributions}
-#'   \item{\code{sigma_gamma}}{Vector of among-population SDs of mean log-ratio
-#'   age distributions} \item{\code{R_gamma}}{Among-population correlation
-#'   matrix of mean log-ratio age distributions}
-#'   \item{\code{sigma_gamma}}{Vector of SDs of log-ratio cohort age
-#'   distributions} \item{\code{R_gamma}}{Correlation matrix of cohort log-ratio
-#'   age distributions} \item{\code{sigma_p}}{Vector of SDs of log-ratio cohort age
-#'   distributions} \item{\code{R_p}}{Correlation matrix of cohort log-ratio age
-#'   distributions} \item{\code{tau_M}}{If \code{life_cycle=="SMS"}, smolt
-#'   observation error SD} \item{\code{tau_S}}{Spawner observation error SD}
+#'   \item{\code{beta_phi_MS}}{If \code{life_cycle=="SMS"}, vector of regression
+#'   coefficients for logit SAR anomalies} \item{\code{rho_phi_MS}}{If
+#'   \code{life_cycle=="SMS"}, AR(1) coefficient for logit SAR anomalies}
+#'   \item{\code{sigma_phi_MS}}{If \code{life_cycle=="SMS"}, process error SD of
+#'   logit SAR anomalies} \item{\code{sigma_MS}}{If \code{life_cycle=="SMS"}, SD
+#'   of unique SAR process errors} \item{\code{mu_p}}{Among-population mean
+#'   simplex of age distributions} \item{\code{sigma_gamma}}{Vector of
+#'   among-population SDs of mean log-ratio age distributions}
+#'   \item{\code{R_gamma}}{Among-population correlation matrix of mean log-ratio
+#'   age distributions} \item{\code{sigma_gamma}}{Vector of SDs of log-ratio
+#'   cohort age distributions} \item{\code{R_gamma}}{Correlation matrix of
+#'   cohort log-ratio age distributions} \item{\code{sigma_p}}{Vector of SDs of
+#'   log-ratio cohort age distributions} \item{\code{R_p}}{Correlation matrix of
+#'   cohort log-ratio age distributions} \item{\code{tau_M}}{If
+#'   \code{life_cycle=="SMS"}, smolt observation error SD}
+#'   \item{\code{tau_S}}{Spawner observation error SD}
 #'   \item{\code{S_init_K}}{Mean of initial spawning population size as a
 #'   fraction of carrying capacity} }
 #' @param fish_data Data frame with columns
@@ -104,7 +110,7 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
   Rmax <- alphaRmax[,2]
   K <- A_pop*switch(life_cycle, 
                     SS = (alpha - 1)*Rmax/alpha,
-                    SMS = exp(mu_MS)*(alpha - 1)*Rmax/alpha) # assumes BH
+                    SMS = mu_MS*(alpha - 1)*Rmax/alpha) # assumes BH
   if(life_cycle == "SS")
   {
     phi <- rep(NA, max(year))
@@ -113,18 +119,20 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
       phi[i] <- rnorm(1, rho_phi*phi[i-1], sigma_phi)
     phi <- phi + env_data %*% beta_phi
   }
-  if(life_cycle == "SMS")  # currently only works if N_pop == 1
+  if(life_cycle == "SMS")
   {
-    epsilon_M <- rep(NA, max(year))
-    epsilon_MS <- rep(NA, max(year))
-    epsilon_M[1] <- rnorm(1, 0, sigma_M/sqrt(1 - rho_M^2))
-    epsilon_MS[1] <- rnorm(1, 0, sigma_MS/sqrt(1 - rho_MS^2))
+    phi_M <- rep(NA, max(year))
+    phi_MS <- rep(NA, max(year))
+    phi_M[1] <- rnorm(1, 0, sigma_phi_M/sqrt(1 - rho_phi_M^2))
+    phi_MS[1] <- rnorm(1, 0, sigma_phi_MS/sqrt(1 - rho_phi_MS^2))
     for(i in 2:max(year))
     {
-      epsilon_M[i] <- rnorm(1, rho_M*epsilon_M[i-1], sigma_M)
-      epsilon_MS[i] <- rnorm(1, rho_MS*epsilon_MS[i-1], sigma_MS) 
+      phi_M[i] <- rnorm(1, rho_phi_M*phi_M[i-1], sigma_phi_M)
+      phi_MS[i] <- rnorm(1, rho_phi_MS*phi_MS[i-1], sigma_phi_MS) 
     }
-    s_MS <- plogis(qlogis(mu_MS) + env_data$MS %*% beta_MS + epsilon_MS)
+    phi_M <- phi_M + env_data$M %*% beta_phi_M
+    phi_MS <- phi_MS + env_data$MS %*% beta_phi_MS
+    s_MS <- plogis(rnorm(N, qlogis(mu_MS) + phi_MS[year], sigma_MS))
   }
   mu_alr_p <- log(mu_p[1:(N_age-1)]) - log(mu_p[N_age])
   Sigma_gamma <-  (sigma_gamma %*% t(sigma_gamma)) * R_gamma
@@ -152,11 +160,7 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
                                                dat_init$S, A[dat_init$pop])*rlnorm(N_init, 0, sigma),
                        SMS = dat_init$M0*plogis(qlogis(mu_MS) + rnorm(N_init, 0, sigma_MS)))
   
-  
-  
-  
-  # Simulate recruits and calculate total spawners
-  # and spawner age distributions
+  # Simulate recruits and calculate total spawners and spawner age distributions
   S_W_a <- matrix(NA, N, N_age)  # true wild spawners by age  
   S_W <- vector("numeric",N)     # true total wild spawners
   S_H <- vector("numeric",N)     # true total hatchery spawners
@@ -179,8 +183,8 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
       {
         if(year[i] - adult_ages[a] < min(year[pop==pop[i]])) # initialize spawners in yrs 1:max_age
         {
-          indx <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
-          S_W_a[i,a] <- dat_init$R[indx]*p_init[indx,a]
+          ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
+          S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
         } else {
           S_W_a[i,a] <- R[i - adult_ages[a]]*p[i - adult_ages[a],a]
         }
@@ -198,10 +202,10 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
       
       for(a in 1:N_age)
       {
-        if(year[i] - adult_ages[a] < min(year[pop==pop[i]])) # initialize spawners in yrs 1:max_age
+        if(year[i] - ocean_ages[a] < min(year[pop==pop[i]])) # initialize spawners in yrs 1:max_ocean_age
         {
-          indx <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
-          S_W_a[i,a] <- dat_init$R[indx]*p_init[indx,a]
+          ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - ocean_ages[a]
+          S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
         } else {
           S_W_a[i,a] <- M[i - ocean_ages[a]]*s_MS[i - ocean_ages[a]]*p[i - ocean_ages[a],a]
         }
@@ -223,7 +227,7 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
     if(life_cycle=="SMS")
     {
       M_hat[i] <- A[i]*SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i])
-      M0[i] <- M_hat[i]*exp(env_data$M[i,] %*% beta_M  + epsilon_M[i])
+      M0[i] <- M_hat[i]*rlnorm(1, phi_M[year[i]], sigma_M)
     }
   }
   
@@ -247,6 +251,8 @@ IPM_sim <- function(pars, fish_data, env_data = NULL, life_cycle = "SS",
                                    B_take_obs = B_take, F_rate = F_rate),
               pars_out = c(pars, list(S_W_a = S_W_a, alpha = alpha, Rmax = Rmax, 
                                       phi = switch(life_cycle, SS = phi, SMS = NULL),
+                                      phi_M = switch(life_cycle, SS = NULL, SMS = phi_M),
+                                      phi_MS = switch(life_cycle, SS = NULL, SMS = phi_MS),
                                       s_MS = switch(life_cycle, SS = NULL, SMS = s_MS),
                                       gamma = gamma, alr_p = alr_p, p = p, p_HOS = p_HOS, 
                                       R_hat = switch(life_cycle, SS = R_hat, SMS = NULL), 
