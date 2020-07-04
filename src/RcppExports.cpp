@@ -8,6 +8,7 @@ using namespace Rcpp;
 
 
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_ICchinook_pp_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_LCRchum_pp_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SMS_np_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SMS_pp_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4IPM_SMaS_np_mod();
@@ -19,6 +20,7 @@ RcppExport SEXP _rcpp_module_boot_stan_fit4RR_SS_pp_mod();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rcpp_module_boot_stan_fit4IPM_ICchinook_pp_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_ICchinook_pp_mod, 0},
+    {"_rcpp_module_boot_stan_fit4IPM_LCRchum_pp_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_LCRchum_pp_mod, 0},
     {"_rcpp_module_boot_stan_fit4IPM_SMS_np_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SMS_np_mod, 0},
     {"_rcpp_module_boot_stan_fit4IPM_SMS_pp_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SMS_pp_mod, 0},
     {"_rcpp_module_boot_stan_fit4IPM_SMaS_np_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4IPM_SMaS_np_mod, 0},
