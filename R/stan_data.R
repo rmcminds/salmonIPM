@@ -9,6 +9,8 @@
 #'   length or area). Will usually be time-invariant within a population, but
 #'   need not be.} \item{\code{M_obs}}{Total number of wild-origin smolts (only
 #'   needed for models including smolt stage).}
+#'   \item{\code{tau_M_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
+#'   known observation error SDs for smolt abundance.}
 #'   \item{\code{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}}{If
 #'   \code{life_cycle=="SMaS"}, multiple columns of observed smolt age
 #'   frequencies (i.e., counts), where \code{[min_Mage]} and \code{[max_Mage]}
@@ -16,6 +18,8 @@
 #'   respectively. Note that age is measured in calendar years from the brood
 #'   year (i.e., the Gilbert-Rich system).} \item{\code{S_obs}}{Total number
 #'   (not density) of wild and hatchery-origin spawners.}
+#'   \item{\code{tau_S_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
+#'   known observation error SDs for spawner abundance.}
 #'   \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
 #'   observed spawner age frequencies (i.e., counts), where \code{[min_age]} and
 #'   \code{[max_age]} are the numeral age in years (total, not ocean age) of the
@@ -182,6 +186,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
                                   MS = matrix(0, max(fish_data$year), 0)),
                        SMaS = list(M = matrix(0, max(fish_data$year), 0),
                                    MS = matrix(0, max(fish_data$year), 0)),
+                       LCRchum = list(M = matrix(0, max(fish_data$year), 0),
+                                      MS = matrix(0, max(fish_data$year), 0)),
                        ICchinook = list(M = matrix(0, max(fish_data$year), 0),
                                         s_D = matrix(0, max(fish_data$year), 0),
                                         s_SAR = matrix(0, max(fish_data$year), 0),
@@ -206,6 +212,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
   } else {
     max_age <- max(as.numeric(substring(names(fish_data)[grep("n_age", names(fish_data))], 6, 6)))
   }
+  
   F_rate_check <- tapply(fish_data$F_rate, fish_data$pop, function(x) any(is.na(x[-c(1:max_age)])))
   if(any(F_rate_check))
     stop(paste0("Missing values not allowed in fish_data$F_rate except in years 1:max_age", i, "\n"))
@@ -220,7 +227,8 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
                which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))), "\n"))
   
   if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp",
-                        "IPM_SMaS_np", "IPM_ICchinook_pp","RR_SS_np","RR_SS_pp"))
+                        "IPM_SMaS_np","IPM_LCRchum_pp","IPM_ICchinook_pp",
+                        "RR_SS_np","RR_SS_pp"))
     stop(paste("Stan model", stan_model, "does not exist.\n"))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp"))
@@ -402,6 +410,54 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
         max_MSage = max_MSage,
         n_MSage_obs = as.matrix(fish_data[,grep("n_MSage", names(fish_data))]),
         n_GRage_obs = as.matrix(fish_data[,grep("n_GRage", names(fish_data))]),
+        # H/W composition
+        N_H = sum(fit_p_HOS),
+        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
+        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
+        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+      )
+      
+      dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
+      dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
+      dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
+      
+      return(dat)
+    })
+  } else if(stan_model == "IPM_LCRchum_pp") {
+    with(fish_data, {  
+      dat <- list(
+        # info for observed data
+        N = nrow(fish_data),
+        pop = pop, 
+        year = year,
+        # smolt production
+        SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+        A = A,
+        N_X_M = ncol(env_data$M), 
+        X_M = as.matrix(env_data$M),
+        # smolt abundance and observation error
+        N_M_obs = sum(!is.na(M_obs)),
+        which_M_obs = array(which(!is.na(M_obs)), dim = sum(!is.na(M_obs))),
+        M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
+        N_age = sum(grepl("n_age", names(fish_data))), 
+        smolt_age = ages$M,
+        tau_M_obs = replace(tau_M_obs, is.na(tau_M_obs), mean(na.omit(tau_M_obs))),
+        # SAR
+        N_X_MS = ncol(env_data$MS), 
+        X_MS = as.matrix(env_data$MS),
+        # fishery and hatchery removals
+        F_rate = replace(F_rate, is.na(F_rate), 0),
+        N_B = sum(B_take_obs > 0),
+        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        B_take_obs = B_take_obs[B_take_obs > 0],
+        # spawner abundance and observation error
+        N_S_obs = sum(!is.na(S_obs)),
+        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
+        tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), mean(na.omit(tau_S_obs))),
+        # spawner age structure
+        max_age = max_age,
+        n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
         # H/W composition
         N_H = sum(fit_p_HOS),
         which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
