@@ -387,6 +387,6 @@ generated quantities {
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)
     LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-  LL = LL_M_obs + LL_S_obs + LL_n_age_obs;
+  LL = LL_tau_M_obs + LL_tau_S_obs + LL_M_obs + LL_S_obs + LL_n_age_obs;
   LL[which_H] = LL[which_H] + LL_n_H_obs;
 }
