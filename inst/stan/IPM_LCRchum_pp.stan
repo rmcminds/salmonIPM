@@ -283,9 +283,9 @@ transformed parameters {
   
   // Impute missing observation error SDs
   tau_M = rep_vector(mu_tau_M,N);
-  tau_M[which_tau_M_obs] = tau_M_obs;
+  tau_M[which_tau_M_obs] = tau_M_obs[which_tau_M_obs];
   tau_S = rep_vector(mu_tau_S,N);
-  tau_S[which_tau_S_obs] = tau_S_obs;
+  tau_S[which_tau_S_obs] = tau_S_obs[which_tau_S_obs];
 }
 
 model {
