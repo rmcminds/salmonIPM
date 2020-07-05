@@ -342,15 +342,17 @@ model {
     target += sum((mu_q_init - 1) .* log(q_init_mat)); // q_init[i] ~ Dir(mu_q_init[,i])
   }
 
-  // observation error
+  // observation error SDs
   mu_tau_M ~ normal(0,1);    // half-normal
   sigma_tau_M ~ normal(0,5);
   mu_tau_S ~ normal(0,1);    // half-normal
   sigma_tau_S ~ normal(0,5);
 
   // Observation model
-  M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[which_M_obs]);  // observed smolts
-  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[which_S_obs]);  // observed spawners
+  tau_M_obs[which_tau_M_obs] ~ lognormal(log(mu_tau_M), sigma_tau_M); // known smolt obs error SDs
+  tau_S_obs[which_tau_S_obs] ~ lognormal(log(mu_tau_S), sigma_tau_S); // known spawner obs error SDs
+  M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[which_M_obs]); // observed smolts
+  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[which_S_obs]); // observed spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // observed counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
@@ -358,6 +360,8 @@ model {
 generated quantities {
   corr_matrix[N_age-1] R_gamma; // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;     // correlation matrix of within-pop cohort log-ratio age distns 
+  vector[N] LL_tau_M_obs;       // pointwise log-likelihood of smolt observation error SDs
+  vector[N] LL_tau_S_obs;       // pointwise log-likelihood of spawner observation error SDs
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
   vector[N_H] LL_n_H_obs;       // pointwise log-likelihood of hatchery vs. wild frequencies
@@ -367,6 +371,12 @@ generated quantities {
   R_gamma = multiply_lower_tri_self_transpose(L_gamma);
   R_p = multiply_lower_tri_self_transpose(L_p);
   
+  LL_tau_M_obs = rep_vector(0,N);
+  for(i in 1:N_tau_M_obs)
+    LL_tau_M_obs[i] = lognormal_lpdf(tau_M_obs[which_tau_M_obs[i]] | log(mu_tau_M), sigma_tau_M);
+  LL_tau_S_obs = rep_vector(0,N);
+  for(i in 1:N_tau_S_obs)
+    LL_tau_S_obs[i] = lognormal_lpdf(tau_S_obs[which_tau_S_obs[i]] | log(mu_tau_S), sigma_tau_S);
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
     LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M_obs[which_M_obs[i]] | log(M[which_M_obs[i]]), tau_M[which_M_obs[i]]); 
