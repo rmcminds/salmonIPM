@@ -19,6 +19,7 @@ salmonIPM(
   SR_fun = "BH",
   init = NULL,
   pars = NULL,
+  include = TRUE,
   log_lik = FALSE,
   chains,
   iter,
@@ -126,7 +127,7 @@ Currently available options are spawner-to-spawner (\code{"SS"}, the
 default), spawner-to-spawner "harvest model" (\code{"SS_F"}), or
 spawner-smolt-spawner (\code{"SMS"}).}
 
-\item{pool_pops}{Logical, with default \code{TRUE}, indicating whether or not
+\item{pool_pops}{Logical scalar defaulting to \code{TRUE}, indicating whether or not
 to treat the different populations as hierarchical rather than
 fixed/independent.}
 
@@ -142,26 +143,30 @@ fit (".stan" filetype extension is not included). If provided,
 \code{rstan::stan}. If \code{NULL}, initial values will be automatically
 generated from the supplied data using \code{salmonIPM::stan_init}.}
 
-\item{pars}{A vector of character strings specifying parameters to monitor.
-If NULL, default values are used. If a non-default value is supplied, it is
-the user's responsibility to make sure the parameters requested appear in
-the model configuration specified.}
+\item{pars}{Vector of character strings specifying parameters to monitor.
+If NULL, default values are used. If a non-default value is supplied, the
+user should make sure the parameters requested appear in the model configuration 
+specified.}
 
-\item{log_lik}{A logical indicator as to whether the pointwise log-likelihood
+\item{include}{Logical scalar defaulting to \code{TRUE} indicating whether to include
+or exclude the parameters given by \code{pars}. If \code{FALSE}, only entire 
+multidimensional parameters can be excluded, rather than particular elements of them.}
+
+\item{log_lik}{Logical scalar indicating whether the pointwise log-likelihood
 should be returned for later analysis with \code{loo:loo}.}
 
-\item{chains}{A positive integer specifying the number of Markov chains.}
+\item{chains}{Positive integer specifying the number of Markov chains.}
 
-\item{iter}{A positive integer specifying the number of iterations for each
+\item{iter}{Positive integer specifying the number of iterations for each
 chain (including warmup).}
 
-\item{warmup}{A positive integer specifying the number of warmup (aka burnin)
+\item{warmup}{Positive integer specifying the number of warmup (aka burnin)
 iterations per chain. If step-size adaptation is on (which it is by
 default), this also controls the number of iterations for which adaptation
 is run (and hence these warmup samples should not be used for inference).
 The number of warmup iterations should not be larger than \code{iter}}
 
-\item{thin}{A positive integer specifying the period for saving samples. The
+\item{thin}{Positive integer specifying the period for saving samples. The
 default is 1, which is usually the recommended value.}
 
 \item{cores}{Number of cores to use when executing the chains in parallel.
