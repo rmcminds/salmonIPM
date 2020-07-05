@@ -441,7 +441,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
         M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
         N_age = sum(grepl("n_age", names(fish_data))), 
         smolt_age = ages$M,
-        tau_M_obs = replace(tau_M_obs, is.na(tau_M_obs), mean(na.omit(tau_M_obs))),
+        N_tau_M_obs = sum(!is.na(tau_M_obs)),
+        which_tau_M_obs = array(which(!is.na(tau_M_obs)), dim = sum(!is.na(tau_M_obs))),
+        tau_M_obs = replace(tau_M_obs, is.na(tau_M_obs), 0),
         # SAR
         N_X_MS = ncol(env_data$MS), 
         X_MS = as.matrix(env_data$MS),
@@ -454,7 +456,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
         N_S_obs = sum(!is.na(S_obs)),
         which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
-        tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), mean(na.omit(tau_S_obs))),
+        N_tau_S_obs = sum(!is.na(tau_S_obs)),
+        which_tau_S_obs = array(which(!is.na(tau_S_obs)), dim = sum(!is.na(tau_S_obs))),
+        tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), 0),
         # spawner age structure
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),

@@ -235,7 +235,11 @@ stan_init <- function(data, stan_model, chains)
             # initial states, observation error
             M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
             S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
-            q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T)
+            q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
+            mu_tau_M = runif(1, 0, 1),
+            sigma_tau_M = runif(1, 0, 1),
+            mu_tau_S = runif(1, 0, 1),
+            sigma_tau_S = runif(1, 0, 1)
           )
         ))
       } else if(stan_model == "IPM_ICchinook_pp") {
