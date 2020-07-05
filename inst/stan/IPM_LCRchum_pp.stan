@@ -43,6 +43,8 @@ data {
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;            // observed annual smolt abundance (not density)
+  int<lower=1,upper=N> N_tau_M_obs;    // number of cases with known smolt observation error SD
+  int<lower=1,upper=N> which_tau_M_obs[N_tau_M_obs]; // cases with known smolt observation error SD
   vector<lower=0>[N] tau_M_obs;        // known smolt observation error SDs
   // SAR (sMolt-Spawner survival)
   int<lower=0> N_X_MS;                 // number of SAR productivity covariates
@@ -56,6 +58,8 @@ data {
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
+  int<lower=1,upper=N> N_tau_S_obs;    // number of cases with known spawner observation error SD
+  int<lower=1,upper=N> which_tau_S_obs[N_tau_S_obs]; // cases with known spawner observation error SD
   vector<lower=0>[N] tau_S_obs;        // known spawner observation error SDs
   // spawner age structure
   int<lower=2> N_age;                  // number of adult age classes
@@ -148,8 +152,10 @@ parameters {
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
   vector<lower=0>[max_ocean_age*N_pop] S_init; // true total spawner abundance in years 1:max_ocean_age
   simplex[N_age] q_init[max_ocean_age*N_pop];  // true wild spawner age distributions in years 1:max_ocean_age
-  // real<lower=0> tau_M;                   // smolt observation error SD
-  // real<lower=0> tau_S;                   // spawner observation error SD
+  real<lower=0> mu_tau_M;                // median smolt observation error SD
+  real<lower=0> sigma_tau_M;             // log-SD of smolt observation error SDs
+  real<lower=0> mu_tau_S;                // median spawner observation error SD
+  real<lower=0> sigma_tau_S;             // log-SD of spawner observation error SDs
 }
 
 transformed parameters {
@@ -174,6 +180,9 @@ transformed parameters {
   matrix[N_pop,N_age-1] gamma;           // population mean log-ratio age distributions
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
+  // observation error SDs
+  vector<lower=0>[N] tau_M;              // smolt observation error SDs
+  vector<lower=0>[N] tau_S;              // spawner observation error SDs
   
   // Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
@@ -271,6 +280,12 @@ transformed parameters {
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     M0[i] = M_hat[i] * exp(phi_M[year[i]] + sigma_M*zeta_M[i]);
   }
+  
+  // Impute missing observation error SDs
+  tau_M = rep_vector(mu_tau_M,N);
+  tau_M[which_tau_M_obs] = tau_M_obs;
+  tau_S = rep_vector(mu_tau_S,N);
+  tau_S[which_tau_S_obs] = tau_S_obs;
 }
 
 model {
@@ -328,12 +343,14 @@ model {
   }
 
   // observation error
-  // tau_M ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
-  // tau_S ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
+  mu_tau_M ~ normal(0,1);    // half-normal
+  sigma_tau_M ~ normal(0,5);
+  mu_tau_S ~ normal(0,1);    // half-normal
+  sigma_tau_S ~ normal(0,5);
 
   // Observation model
-  M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M_obs[which_M_obs]);  // observed smolts
-  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S_obs[which_S_obs]);  // observed spawners
+  M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[which_M_obs]);  // observed smolts
+  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[which_S_obs]);  // observed spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // observed counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
