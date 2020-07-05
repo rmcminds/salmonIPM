@@ -373,10 +373,10 @@ generated quantities {
   
   LL_tau_M_obs = rep_vector(0,N);
   for(i in 1:N_tau_M_obs)
-    LL_tau_M_obs[i] = lognormal_lpdf(tau_M_obs[which_tau_M_obs[i]] | log(mu_tau_M), sigma_tau_M);
+    LL_tau_M_obs[which_tau_M_obs[i]] = lognormal_lpdf(tau_M_obs[which_tau_M_obs[i]] | log(mu_tau_M), sigma_tau_M);
   LL_tau_S_obs = rep_vector(0,N);
   for(i in 1:N_tau_S_obs)
-    LL_tau_S_obs[i] = lognormal_lpdf(tau_S_obs[which_tau_S_obs[i]] | log(mu_tau_S), sigma_tau_S);
+    LL_tau_S_obs[which_tau_S_obs[i]] = lognormal_lpdf(tau_S_obs[which_tau_S_obs[i]] | log(mu_tau_S), sigma_tau_S);
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
     LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M_obs[which_M_obs[i]] | log(M[which_M_obs[i]]), tau_M[which_M_obs[i]]); 
