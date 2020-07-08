@@ -154,8 +154,10 @@ parameters {
   simplex[N_age] q_init[max_ocean_age*N_pop];  // true wild spawner age distributions in years 1:max_ocean_age
   real<lower=0> mu_tau_M;                // median smolt observation error SD
   real<lower=0> sigma_tau_M;             // log-SD of smolt observation error SDs
+  vector[N] tau_M_z;                     // log of smolt observation error SDs (Z-scores)
   real<lower=0> mu_tau_S;                // median spawner observation error SD
   real<lower=0> sigma_tau_S;             // log-SD of spawner observation error SDs
+  vector[N] tau_S_z;                     // log of spawner observation error SDs (Z-scores)
 }
 
 transformed parameters {
@@ -281,10 +283,11 @@ transformed parameters {
     M0[i] = M_hat[i] * exp(phi_M[year[i]] + sigma_M*zeta_M[i]);
   }
   
-  // Impute missing observation error SDs
-  tau_M = rep_vector(mu_tau_M,N);
+  // Impute missing observation error SDs from lognormal hyperdistribution
+  // (use Matt trick)
+  tau_M = exp(log(mu_tau_M) + sigma_tau_M*tau_M_z);
   tau_M[which_tau_M_obs] = tau_M_obs[which_tau_M_obs];
-  tau_S = rep_vector(mu_tau_S,N);
+  tau_S = exp(log(mu_tau_S) + sigma_tau_S*tau_S_z);
   tau_S[which_tau_S_obs] = tau_S_obs[which_tau_S_obs];
 }
 
@@ -343,14 +346,19 @@ model {
   }
 
   // observation error SDs
-  mu_tau_M ~ normal(0,1);    // half-normal
+  // hyperparameters
+  mu_tau_M ~ normal(0,1); // half-normal
   sigma_tau_M ~ normal(0,5);
-  mu_tau_S ~ normal(0,1);    // half-normal
+  mu_tau_S ~ normal(0,1); // half-normal
   sigma_tau_S ~ normal(0,5);
+  // unknown SDs
+  tau_M_z ~ std_normal(); // tau_M[-which_tau_M_obs] ~ lognormal(log(mu_tau_M), sigma_tau_M);
+  tau_S_z ~ std_normal(); // tau_S[-which_tau_S_obs] ~ lognormal(log(mu_tau_S), sigma_tau_S);
+  // known SDs
+  tau_M_obs[which_tau_M_obs] ~ lognormal(log(mu_tau_M), sigma_tau_M);
+  tau_S_obs[which_tau_S_obs] ~ lognormal(log(mu_tau_S), sigma_tau_S);
 
   // Observation model
-  tau_M_obs[which_tau_M_obs] ~ lognormal(log(mu_tau_M), sigma_tau_M); // known smolt obs error SDs
-  tau_S_obs[which_tau_S_obs] ~ lognormal(log(mu_tau_S), sigma_tau_S); // known spawner obs error SDs
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[which_M_obs]); // observed smolts
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[which_S_obs]); // observed spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // observed counts of hatchery vs. wild spawners
@@ -360,8 +368,6 @@ model {
 generated quantities {
   corr_matrix[N_age-1] R_gamma; // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;     // correlation matrix of within-pop cohort log-ratio age distns 
-  vector[N] LL_tau_M_obs;       // pointwise log-likelihood of smolt observation error SDs
-  vector[N] LL_tau_S_obs;       // pointwise log-likelihood of spawner observation error SDs
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
   vector[N_H] LL_n_H_obs;       // pointwise log-likelihood of hatchery vs. wild frequencies
@@ -371,12 +377,6 @@ generated quantities {
   R_gamma = multiply_lower_tri_self_transpose(L_gamma);
   R_p = multiply_lower_tri_self_transpose(L_p);
   
-  LL_tau_M_obs = rep_vector(0,N);
-  for(i in 1:N_tau_M_obs)
-    LL_tau_M_obs[which_tau_M_obs[i]] = lognormal_lpdf(tau_M_obs[which_tau_M_obs[i]] | log(mu_tau_M), sigma_tau_M);
-  LL_tau_S_obs = rep_vector(0,N);
-  for(i in 1:N_tau_S_obs)
-    LL_tau_S_obs[which_tau_S_obs[i]] = lognormal_lpdf(tau_S_obs[which_tau_S_obs[i]] | log(mu_tau_S), sigma_tau_S);
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
     LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M_obs[which_M_obs[i]] | log(M[which_M_obs[i]]), tau_M[which_M_obs[i]]); 
@@ -387,6 +387,6 @@ generated quantities {
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)
     LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-  LL = LL_tau_M_obs + LL_tau_S_obs + LL_M_obs + LL_S_obs + LL_n_age_obs;
+  LL = LL_M_obs + LL_S_obs + LL_n_age_obs;
   LL[which_H] = LL[which_H] + LL_n_H_obs;
 }
