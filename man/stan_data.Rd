@@ -9,6 +9,7 @@ stan_data(
   fish_data,
   fish_data_fwd = NULL,
   env_data = NULL,
+  fecundity_data = NULL,
   prior_data = NULL,
   ages = NULL,
   age_S_obs = NULL,
@@ -83,10 +84,15 @@ broodstock removal rate (proportion) of natural-origin fish.}
 
 \item{env_data}{Optional data frame or named list of data frames whose
 variables are time-varying environmental covariates, sequentially ordered
-with each row corresponding to a unique year in fish_data. If a named list,
+with each row corresponding to a unique year in \code{fish_data}. If a named list,
 element names correspond to stage- or transition-specific covariate
 matrices defined in the Stan model being used. (This is required for
 multi-stage models.)}
+
+\item{fecundity_data}{Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
+the following \code{colnames}, representing observations of fecundity with each
+row corresponding to a female. \describe{\item{\code{age_E}}{Female age in years.} 
+\item{\code{E_obs}}{Observed fecundity.}}}
 
 \item{prior_data}{Only if `stan_model == "IPM_ICchinook_pp"`, named list
 with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}

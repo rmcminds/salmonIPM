@@ -64,10 +64,14 @@
 #'   \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.} }
 #' @param env_data Optional data frame or named list of data frames whose
 #'   variables are time-varying environmental covariates, sequentially ordered
-#'   with each row corresponding to a unique year in fish_data. If a named list,
+#'   with each row corresponding to a unique year in \code{fish_data}. If a named list,
 #'   element names correspond to stage- or transition-specific covariate
 #'   matrices defined in the Stan model being used. (This is required for
 #'   multi-stage models.)
+#' @param fecundity_data Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
+#' the following \code{colnames}, representing observations of fecundity with each
+#' row corresponding to a female. \describe{\item{\code{age_E}}{Female age in years.} 
+#' \item{\code{E_obs}}{Observed fecundity.}}
 #' @param prior_data Only if `stan_model == "IPM_ICchinook_pp"`, named list
 #' with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}
 #' \code{year}, \code{mu_prior_D}, \code{sigma_prior_D}, \code{mu_prior_SAR}, \code{sigma_prior_SAR},
@@ -94,7 +98,8 @@
 #'
 #' @export
 
-stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_data = NULL,
+stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, 
+                      fecundity_data = NULL, prior_data = NULL,
                       ages = NULL, age_S_obs = NULL, age_S_eff = NULL, 
                       stan_model, SR_fun = "BH")
 {
@@ -186,12 +191,20 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
                                   MS = matrix(0, max(fish_data$year), 0)),
                        SMaS = list(M = matrix(0, max(fish_data$year), 0),
                                    MS = matrix(0, max(fish_data$year), 0)),
-                       LCRchum = list(M = matrix(0, max(fish_data$year), 0),
+                       LCRchum = list(EM = matrix(0, max(fish_data$year), 0),
                                       MS = matrix(0, max(fish_data$year), 0)),
                        ICchinook = list(M = matrix(0, max(fish_data$year), 0),
                                         s_D = matrix(0, max(fish_data$year), 0),
                                         s_SAR = matrix(0, max(fish_data$year), 0),
                                         s_U = matrix(0, max(fish_data$year), 0)))
+  
+  if(stan_model == "IPM_LCRchum_pp") {
+    if(is.null(fecundity_data)) {
+      stop("Fecundity data must be provided for Lower Columbia chum IPM. \n") 
+    } else if(any(is.na(fecundity_data))) {
+      stop("Missing values are not allowed in fecundity data. \n")
+    }
+  }
   
   if(stan_model == "IPM_SSpa_pp" & is.null(age_S_obs))
     age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
@@ -430,17 +443,21 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, prior_da
         N = nrow(fish_data),
         pop = pop, 
         year = year,
-        # smolt production
+        # egg deposition
         SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
         A = A,
-        N_X_M = ncol(env_data$M), 
-        X_M = as.matrix(env_data$M),
+        N_E = nrow(fecundity_data),
+        age_E = fecundity_data$age_E,
+        E_obs = fecundity_data$E_obs,
+        # egg-smolt survival
+        N_X_EM = ncol(env_data$EM), 
+        X_EM = as.matrix(env_data$EM),
+        smolt_age = ages$M,
         # smolt abundance and observation error
         N_M_obs = sum(!is.na(M_obs)),
         which_M_obs = array(which(!is.na(M_obs)), dim = sum(!is.na(M_obs))),
         M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
         N_age = sum(grepl("n_age", names(fish_data))), 
-        smolt_age = ages$M,
         N_tau_M_obs = sum(!is.na(tau_M_obs)),
         which_tau_M_obs = array(which(!is.na(tau_M_obs)), dim = sum(!is.na(tau_M_obs))),
         tau_M_obs = replace(tau_M_obs, is.na(tau_M_obs), 0),
