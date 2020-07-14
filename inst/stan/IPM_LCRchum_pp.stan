@@ -242,7 +242,7 @@ transformed parameters {
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
   eta_pop_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  p = append_col(eta_pop_p[pop,] + diag_pre_multiply(sigma_pop_p, L_p * zeta_p')', rep_vector(0,N));
+  p = append_col(eta_pop_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
   
   // Calculate true total wild and hatchery spawners, spawner age distribution, and smolts,
   // and predict smolt recruitment from brood year i
