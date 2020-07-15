@@ -132,7 +132,6 @@ parameters {
   real<lower=0,upper=1> mu_EM;           // hyper-mean egg-smolt survival
   real<lower=0> sigma_pop_EM;            // among-pop hyper-SD of logit egg-smolt survival
   vector[N_pop] zeta_pop_EM;             // pop-specific logit egg-smolt survival (Z-scores)
-  real<lower=-1,upper=1> rho_Emax_EM;    // among-pop correlation between log(Emax) and logit(s_EM)
   vector[N_X_EM] beta_EM;                // regression coefs for annual egg-smolt survial anomalies
   real<lower=-1,upper=1> rho_EM;         // AR(1) coef for logit egg-smolt survival anomalies
   real<lower=0> sigma_year_EM;           // process error SD of logit egg-smolt survival anomalies
@@ -172,7 +171,7 @@ parameters {
 
 transformed parameters {
   // egg deposition
-  vector<lower=0>[N_pop] Emax;           // pop-specific asymptotic egg deposition (millions)
+  vector<lower=0>[N_pop] Emax;           // pop-specific maximum egg deposition (millions)
   vector<lower=0>[N] E;                  // true egg deposition
   // egg-smolt survival
   vector[N_pop] eta_pop_EM;              // pop-specific avg logit egg-smolt survival
@@ -197,25 +196,10 @@ transformed parameters {
   // observation error SDs
   vector<lower=0>[N] tau_M;              // smolt observation error SDs
   vector<lower=0>[N] tau_S;              // spawner observation error SDs
-  
-  // Multivariate Matt trick for [log(Emax), logit(s_EM)]
-  {
-    matrix[2,2] L_Emax_EM;        // Cholesky factor of corr matrix of log(Emax), logit(s_EM)
-    matrix[N_pop,2] zeta_Emax_EM; // [log(Emax), logit(s_EM)] random effects (z-scored)
-    matrix[N_pop,2] eta_Emax_EM;  // [log(Emax), logit(s_EM)] random effects
-    vector[2] sigma_Emax_EM;      // SD vector of [log(Emax), logit(s_EM)]
-    
-    L_Emax_EM[1,1] = 1;
-    L_Emax_EM[2,1] = rho_Emax_EM;
-    L_Emax_EM[1,2] = 0;
-    L_Emax_EM[2,2] = sqrt(1 - rho_Emax_EM^2);
-    sigma_Emax_EM[1] = sigma_Emax;
-    sigma_Emax_EM[2] = sigma_pop_EM;
-    zeta_Emax_EM = append_col(zeta_Emax, zeta_pop_EM);
-    eta_Emax_EM = diag_pre_multiply(sigma_Emax_EM, L_Emax_EM * zeta_Emax_EM')';
-    Emax = exp(mu_Emax + eta_Emax_EM[,1]);
-    eta_pop_EM = eta_Emax_EM[,2];
-  }
+
+  // Population-specific egg deposition and egg-smolt survival terms
+  Emax = exp(mu_Emax + sigma_Emax*zeta_Emax);
+  eta_pop_EM = sigma_pop_EM*zeta_pop_EM;
   
   // AR(1) model for spawner-smolt productivity and SAR anomalies
   eta_year_EM[1] = zeta_year_EM[1]*sigma_year_EM/sqrt(1 - rho_EM^2); // initial anomaly
@@ -320,13 +304,11 @@ model {
   sigma_E ~ normal(500,1000);
   mu_Emax ~ normal(2,5);       // units of Emax are millions of eggs 
   sigma_Emax ~ normal(0,5);
-  zeta_Emax ~ std_normal();  
-  // [log(Emax), eta_pop_EM] ~ MVN([mu_Emax, logit(mu_EM)], D*R_Emax_EM*D)
-  // where D = diag_matrix(sigma_Emax, sigma_pop_EM)
+  zeta_Emax ~ std_normal();    // log(Emax) ~ N(mu_Emax, sigma_Emax)
 
   // egg-smolt survival
   sigma_pop_EM ~ normal(0,5);
-  zeta_pop_EM ~ std_normal();
+  zeta_pop_EM ~ std_normal();  // logit(eta_pop_EM) ~ N(0, sigma_pop_EM)
   beta_EM ~ normal(0,5);
   rho_EM ~ pexp(0,0.85,20);    // mildly regularize to ensure stationarity
   sigma_year_EM ~ normal(0,5);

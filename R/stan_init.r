@@ -218,7 +218,6 @@ stan_init <- function(data, stan_model, chains)
             mu_EM = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
             sigma_pop_EM = runif(1, 0.1, 0.5),
             zeta_pop_EM = array(rnorm(max(pop), 0, 0.1), dim = max(pop)),
-            rho_Emax_EM = runif(1, -0.5, 0.5),
             beta_EM = array(rnorm(N_X_EM, 0, 1), dim = N_X_EM),
             rho_EM = runif(1, 0.1, 0.7),
             sigma_year_EM = runif(1, 0.1, 0.5),
