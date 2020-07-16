@@ -16,7 +16,8 @@
 #' @export
 stan_init <- function(data, stan_model, chains) 
 {
-  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp","IPM_ICchinook_pp"))
+  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp",
+                       "IPM_LCRchum_pp","IPM_ICchinook_pp"))
   {
     with(data, {
       N_pop <- max(pop)
@@ -64,11 +65,17 @@ stan_init <- function(data, stan_model, chains)
       zeta_gamma <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
       zeta_gamma <- apply(zeta_gamma, 2, scale)
       
-      if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp")) 
+      if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp","IPM_LCRchum_pp")) 
       {
         if(N_M_obs < N)
           M_obs[-which_M_obs] <- median(M_obs[which_M_obs])
         s_MS <- pmin(S_obs_noNA/M_obs, 0.99)
+      }
+      
+      if(stan_model == "IPM_LCRchum_pp")
+      {
+        E <- S_obs_noNA * mean(fecundity_data$E_obs)
+        s_EM <- pmin(M_obs/E, 0.99)
       }
       
       if(stan_model == "IPM_SS_np") {
@@ -196,6 +203,51 @@ stan_init <- function(data, stan_model, chains)
             q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
             tau_M = runif(1, 0.5, 1),
             tau_S = runif(1, 0.5, 1)
+          )
+        ))
+      } else if(stan_model == "IPM_LCRchum_pp") {
+        return(lapply(1:chains, function(i)
+          list(
+            # egg deposition
+            mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 1),
+            sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 1), 
+            mu_Emax = rnorm(1, 2, 2),
+            sigma_Emax = runif(1, 0.1, 0.5),
+            zeta_Emax = array(rnorm(N_pop, 0, 1), dim = N_pop),
+            # egg-smolt survival
+            mu_EM = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
+            sigma_pop_EM = runif(1, 0.1, 0.5),
+            zeta_pop_EM = array(rnorm(max(pop), 0, 0.1), dim = max(pop)),
+            beta_EM = array(rnorm(N_X_EM, 0, 1), dim = N_X_EM),
+            rho_EM = runif(1, 0.1, 0.7),
+            sigma_year_EM = runif(1, 0.1, 0.5),
+            zeta_year_EM = array(rnorm(max(year), 0, 0.1), dim = max(year)),
+            sigma_EM = runif(1, 0.5, 1),
+            zeta_EM = as.vector(scale(qlogis(s_EM))),
+            # SAR
+            mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
+            beta_MS = array(rnorm(N_X_MS,0,1), dim = N_X_MS),
+            rho_MS = runif(1, 0.1, 0.7),
+            sigma_year_MS = runif(1, 0.05, 2), 
+            sigma_MS = runif(1, 0.5, 1),
+            zeta_MS = as.vector(scale(qlogis(s_MS))),
+            # spawner age structure
+            mu_p = colMeans(p),
+            sigma_pop_p = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
+            zeta_pop_p = zeta_gamma,
+            sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
+            zeta_p = zeta_p,
+            # H/W composition, removals
+            p_HOS = p_HOS_obs,
+            B_rate = B_rate,
+            # initial states, observation error
+            M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
+            S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
+            q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
+            mu_tau_M = runif(1, 0, 1),
+            sigma_tau_M = runif(1, 0, 1),
+            mu_tau_S = runif(1, 0, 1),
+            sigma_tau_S = runif(1, 0, 1)
           )
         ))
       } else if(stan_model == "IPM_ICchinook_pp") {

@@ -9,6 +9,7 @@ stan_data(
   fish_data,
   fish_data_fwd = NULL,
   env_data = NULL,
+  fecundity_data = NULL,
   prior_data = NULL,
   ages = NULL,
   age_S_obs = NULL,
@@ -26,6 +27,8 @@ the brood year).} \item{\code{A}}{Spawning habitat size (either stream
 length or area). Will usually be time-invariant within a population, but
 need not be.} \item{\code{M_obs}}{Total number of wild-origin smolts (only
 needed for models including smolt stage).}
+\item{\code{tau_M_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
+known observation error SDs for smolt abundance.}
 \item{\code{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}}{If
 \code{life_cycle=="SMaS"}, multiple columns of observed smolt age
 frequencies (i.e., counts), where \code{[min_Mage]} and \code{[max_Mage]}
@@ -33,6 +36,8 @@ are the numeral age in years of the youngest and oldest smolts,
 respectively. Note that age is measured in calendar years from the brood
 year (i.e., the Gilbert-Rich system).} \item{\code{S_obs}}{Total number
 (not density) of wild and hatchery-origin spawners.}
+\item{\code{tau_S_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
+known observation error SDs for spawner abundance.}
 \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
 observed spawner age frequencies (i.e., counts), where \code{[min_age]} and
 \code{[max_age]} are the numeral age in years (total, not ocean age) of the
@@ -79,10 +84,15 @@ broodstock removal rate (proportion) of natural-origin fish.}
 
 \item{env_data}{Optional data frame or named list of data frames whose
 variables are time-varying environmental covariates, sequentially ordered
-with each row corresponding to a unique year in fish_data. If a named list,
+with each row corresponding to a unique year in \code{fish_data}. If a named list,
 element names correspond to stage- or transition-specific covariate
 matrices defined in the Stan model being used. (This is required for
 multi-stage models.)}
+
+\item{fecundity_data}{Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
+the following \code{colnames}, representing observations of fecundity with each
+row corresponding to a female. \describe{\item{\code{age_E}}{Female age in years.} 
+\item{\code{E_obs}}{Observed fecundity.}}}
 
 \item{prior_data}{Only if `stan_model == "IPM_ICchinook_pp"`, named list
 with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}

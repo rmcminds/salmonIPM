@@ -8,6 +8,7 @@ salmonIPM(
   fish_data,
   fish_data_fwd = NULL,
   env_data = NULL,
+  fecundity_data = NULL,
   prior_data = NULL,
   ages = NULL,
   age_S_obs = NULL,
@@ -19,6 +20,7 @@ salmonIPM(
   SR_fun = "BH",
   init = NULL,
   pars = NULL,
+  include = TRUE,
   log_lik = FALSE,
   chains,
   iter,
@@ -37,6 +39,8 @@ the brood year).} \item{\code{A}}{Spawning habitat size (either stream
 length or area). Will usually be time-invariant within a population, but
 need not be.} \item{\code{M_obs}}{Total number of wild-origin smolts (only
 needed for models including smolt stage).}
+\item{\code{tau_M_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
+known observation error SDs for smolt abundance.}
 \item{\code{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}}{If
 \code{life_cycle=="SMaS"}, multiple columns of observed smolt age
 frequencies (i.e., counts), where \code{[min_Mage]} and \code{[max_Mage]}
@@ -44,6 +48,8 @@ are the numeral age in years of the youngest and oldest smolts,
 respectively. Note that age is measured in calendar years from the brood
 year (i.e., the Gilbert-Rich system).} \item{\code{S_obs}}{Total number
 (not density) of wild and hatchery-origin spawners.}
+\item{\code{tau_S_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
+known observation error SDs for spawner abundance.}
 \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
 observed spawner age frequencies (i.e., counts), where \code{[min_age]} and
 \code{[max_age]} are the numeral age in years (total, not ocean age) of the
@@ -95,6 +101,11 @@ element names correspond to stage- or transition-specific covariate
 matrices defined in the Stan model being used. (This is required if
 \code{life_cycle != "SS"}.)}
 
+\item{fecundity_data}{Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
+the following \code{colnames}, representing observations of fecundity with each
+row corresponding to a female. \describe{\item{\code{age_E}}{Female age in years.} 
+\item{\code{E_obs}}{Observed fecundity.}}}
+
 \item{prior_data}{Only if `stan_model == "IPM_ICchinook_pp"`, named list
 with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}
 \code{year}, \code{mu_prior_D}, \code{sigma_prior_D}, \code{mu_prior_SAR}, \code{sigma_prior_SAR},
@@ -122,7 +133,7 @@ Currently available options are spawner-to-spawner (\code{"SS"}, the
 default), spawner-to-spawner "harvest model" (\code{"SS_F"}), or
 spawner-smolt-spawner (\code{"SMS"}).}
 
-\item{pool_pops}{Logical, with default \code{TRUE}, indicating whether or not
+\item{pool_pops}{Logical scalar defaulting to \code{TRUE}, indicating whether or not
 to treat the different populations as hierarchical rather than
 fixed/independent.}
 
@@ -138,26 +149,30 @@ fit (".stan" filetype extension is not included). If provided,
 \code{rstan::stan}. If \code{NULL}, initial values will be automatically
 generated from the supplied data using \code{salmonIPM::stan_init}.}
 
-\item{pars}{A vector of character strings specifying parameters to monitor.
-If NULL, default values are used. If a non-default value is supplied, it is
-the user's responsibility to make sure the parameters requested appear in
-the model configuration specified.}
+\item{pars}{Vector of character strings specifying parameters to monitor.
+If NULL, default values are used. If a non-default value is supplied, the
+user should make sure the parameters requested appear in the model configuration 
+specified.}
 
-\item{log_lik}{A logical indicator as to whether the pointwise log-likelihood
+\item{include}{Logical scalar defaulting to \code{TRUE} indicating whether to include
+or exclude the parameters given by \code{pars}. If \code{FALSE}, only entire 
+multidimensional parameters can be excluded, rather than particular elements of them.}
+
+\item{log_lik}{Logical scalar indicating whether the pointwise log-likelihood
 should be returned for later analysis with \code{loo:loo}.}
 
-\item{chains}{A positive integer specifying the number of Markov chains.}
+\item{chains}{Positive integer specifying the number of Markov chains.}
 
-\item{iter}{A positive integer specifying the number of iterations for each
+\item{iter}{Positive integer specifying the number of iterations for each
 chain (including warmup).}
 
-\item{warmup}{A positive integer specifying the number of warmup (aka burnin)
+\item{warmup}{Positive integer specifying the number of warmup (aka burnin)
 iterations per chain. If step-size adaptation is on (which it is by
 default), this also controls the number of iterations for which adaptation
 is run (and hence these warmup samples should not be used for inference).
 The number of warmup iterations should not be larger than \code{iter}}
 
-\item{thin}{A positive integer specifying the period for saving samples. The
+\item{thin}{Positive integer specifying the period for saving samples. The
 default is 1, which is usually the recommended value.}
 
 \item{cores}{Number of cores to use when executing the chains in parallel.

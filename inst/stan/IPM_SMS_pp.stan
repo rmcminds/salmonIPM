@@ -124,7 +124,7 @@ parameters {
   real<lower=0> sigma_M;                 // unique smolt recruitment process error SD
   vector[N] zeta_M;                      // unique smolt recruitment process errors (Z-scores)
   // SAR
-  real<lower=0,upper=1> mu_MS;           // mean SAR (common to all populations)
+  real<lower=0,upper=1> mu_MS;           // mean SAR
   vector[N_X_MS] beta_phi_MS;            // regression coefs for logit SAR anomalies
   real<lower=-1,upper=1> rho_phi_MS;     // AR(1) coef for logit SAR anomalies
   real<lower=0> sigma_phi_MS;            // process error SD of logit SAR anomalies
