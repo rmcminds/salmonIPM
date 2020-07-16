@@ -335,9 +335,8 @@ model {
   // initial states, observation error
   M_init ~ lognormal(0.0,5.0);
   S_init ~ lognormal(0.0,5.0);
-  tau_M ~ lognormal(-3.0,0.2);
-  // tau_S ~ pexp(1,0.85,30); // rule out tau < 0.1 to avoid divergences 
-  tau_S ~ lognormal(-3.0,0.2);
+  tau_M ~ normal(0,1);  // tuned for Auke Creek coho
+  tau_S ~ normal(0,1);  // tuned for Auke Creek coho
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts
