@@ -200,6 +200,12 @@ transformed parameters {
   vector<lower=0>[N] tau_M;              // smolt observation error SDs
   vector<lower=0>[N] tau_S;              // spawner observation error SDs
 
+  // Pad p_HOS and B_rate
+  p_HOS_all = rep_vector(0,N);
+  p_HOS_all[which_H] = p_HOS;
+  B_rate_all = rep_vector(0,N);
+  B_rate_all[which_B] = B_rate;
+  
   // Population-specific egg deposition and egg-smolt survival terms
   Emax = exp(mu_Emax + sigma_Emax*zeta_Emax);
   eta_pop_EM = sigma_pop_EM*zeta_pop_EM;
@@ -219,12 +225,6 @@ transformed parameters {
   s_EM = inv_logit(logit(mu_EM) + eta_pop_EM[pop] + eta_year_EM[year] + zeta_EM*sigma_EM);
   // annual population-specific SAR
   s_MS = inv_logit(logit(mu_MS) + eta_year_MS[year] + zeta_MS*sigma_MS);
-  
-  // Pad p_HOS and B_rate
-  p_HOS_all = rep_vector(0,N);
-  p_HOS_all[which_H] = p_HOS;
-  B_rate_all = rep_vector(0,N);
-  B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
@@ -275,8 +275,8 @@ transformed parameters {
         S_W_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
     }
     
-    // catch and broodstock removal (assumes no take of age 1)
-    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    // catch and broodstock removal
+    S_W_a = S_W_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
@@ -343,7 +343,7 @@ model {
   to_vector(zeta_p) ~ std_normal();
 
   // removals
-  B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
+  B_take = B_rate .* S_W[which_B] ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
   // initial states
