@@ -309,30 +309,30 @@ model {
   mu_E ~ normal(2500,500);
   sigma_E ~ normal(500,1000);
   mu_Emax ~ normal(2,5);       // units of Emax are millions of eggs 
-  sigma_Emax ~ normal(0,5);
+  sigma_Emax ~ normal(0,3);
   zeta_Emax ~ std_normal();    // log(Emax) ~ N(mu_Emax, sigma_Emax)
 
   // egg-smolt survival
-  sigma_pop_EM ~ normal(0,5);
+  sigma_pop_EM ~ normal(0,2);
   zeta_pop_EM ~ std_normal();  // logit(eta_pop_EM) ~ N(0, sigma_pop_EM)
-  beta_EM ~ normal(0,5);
+  beta_EM ~ normal(0,2);
   rho_EM ~ pexp(0,0.85,20);    // mildly regularize to ensure stationarity
-  sigma_year_EM ~ normal(0,5);
+  sigma_year_EM ~ normal(0,2);
   zeta_year_EM ~ std_normal(); // eta_year_EM[i] ~ N(rho_EM*phi_EM[i-1], sigma_year_EM)
-  sigma_EM ~ normal(0,5);
+  sigma_EM ~ normal(0,2);
   zeta_EM ~ std_normal();      // egg-smolt survival: logit(s_EM) ~ N(logit(mu_EM_hat), sigma_EM)
   
   // SAR
-  beta_MS ~ normal(0,5);
+  beta_MS ~ normal(0,2);
   rho_MS ~ pexp(0,0.85,20);    // mildly regularize to ensure stationarity
-  sigma_year_MS ~ normal(0,5);
+  sigma_year_MS ~ normal(0,2);
   zeta_year_MS ~ std_normal(); // phi_MS[i] ~ N(rho_MS*phi_MS[i-1], sigma_year_MS)
-  sigma_MS ~ normal(0,5);
+  sigma_MS ~ normal(0,2);
   zeta_MS ~ std_normal();      // SAR: logit(s_MS) ~ N(logit(s_MS_hat), sigma_MS)
 
   // spawner age structure
-  to_vector(sigma_pop_p) ~ normal(0,5);
-  to_vector(sigma_p) ~ normal(0,5);
+  to_vector(sigma_pop_p) ~ normal(0,2);
+  to_vector(sigma_p) ~ normal(0,2);
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 
