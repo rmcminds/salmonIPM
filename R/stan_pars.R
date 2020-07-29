@@ -44,7 +44,7 @@ stan_pars <- function(stan_model) {
                     "mu_p_M","sigma_p_M","R_p_M","p_M","q_M",
                     "mu_MS","beta_MS","rho_MS","sigma_MS","R_MS","s_MS",
                     "mu_p_MS","sigma_p_MS","R_p_MS","p_MS","q_MS",
-                    "q_GR","tau_S","S"),
+                    "q_GR","p_HOS","B_rate_all","tau_S","S"),
     IPM_LCRchum_pp = c("mu_E","sigma_E","mu_Emax","sigma_Emax","Emax",
                        "mu_EM","sigma_pop_EM","eta_pop_EM", "beta_EM","rho_EM",
                        "sigma_year_EM","eta_year_EM","sigma_EM","s_EM",
