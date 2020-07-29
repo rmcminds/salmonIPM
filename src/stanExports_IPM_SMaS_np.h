@@ -33,7 +33,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_IPM_SMaS_np");
-    reader.add_event(386, 384, "end", "model_IPM_SMaS_np");
+    reader.add_event(385, 383, "end", "model_IPM_SMaS_np");
     return reader;
 }
 template <typename T1__, typename T2__, typename T3__, typename T4__>
@@ -2309,20 +2309,20 @@ public:
             current_statement_begin__ = 337;
             lp_accum__.add(lognormal_log<propto__>(S_init, 0.0, 5.0));
             current_statement_begin__ = 338;
-            lp_accum__.add(lognormal_log<propto__>(tau_M, -(3.0), 0.2));
-            current_statement_begin__ = 340;
-            lp_accum__.add(lognormal_log<propto__>(tau_S, -(3.0), 0.2));
-            current_statement_begin__ = 343;
+            lp_accum__.add(normal_log<propto__>(tau_M, 0, 1));
+            current_statement_begin__ = 339;
+            lp_accum__.add(normal_log<propto__>(tau_S, 0, 1));
+            current_statement_begin__ = 342;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(M_obs, stan::model::cons_list(stan::model::index_multi(which_M_obs), stan::model::nil_index_list()), "M_obs"), stan::math::log(stan::model::rvalue(M, stan::model::cons_list(stan::model::index_multi(which_M_obs), stan::model::nil_index_list()), "M")), stan::model::rvalue(tau_M, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(pop, stan::model::cons_list(stan::model::index_multi(which_M_obs), stan::model::nil_index_list()), "pop")), stan::model::nil_index_list()), "tau_M")));
-            current_statement_begin__ = 344;
+            current_statement_begin__ = 343;
             lp_accum__.add(sum(elt_multiply(n_Mage_obs, stan::math::log(q_M))));
-            current_statement_begin__ = 345;
+            current_statement_begin__ = 344;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(S_obs, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S_obs"), stan::math::log(stan::model::rvalue(S, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S")), stan::model::rvalue(tau_S, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(pop, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "pop")), stan::model::nil_index_list()), "tau_S")));
-            current_statement_begin__ = 346;
+            current_statement_begin__ = 345;
             lp_accum__.add(sum(elt_multiply(n_MSage_obs, stan::math::log(q_MS))));
-            current_statement_begin__ = 347;
+            current_statement_begin__ = 346;
             lp_accum__.add(sum(elt_multiply(n_GRage_obs, stan::math::log(q_GR))));
-            current_statement_begin__ = 348;
+            current_statement_begin__ = 347;
             lp_accum__.add(binomial_log<propto__>(n_H_obs, n_HW_obs, p_HOS));
             }
         } catch (const std::exception& e) {
@@ -3395,126 +3395,126 @@ public:
             }
             if (!include_gqs__) return;
             // declare and define generated quantities
-            current_statement_begin__ = 352;
+            current_statement_begin__ = 351;
             validate_non_negative_index("R_p_M", "(N_Mage - 1)", (N_Mage - 1));
             validate_non_negative_index("R_p_M", "(N_Mage - 1)", (N_Mage - 1));
             validate_non_negative_index("R_p_M", "N_pop", N_pop);
             std::vector<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> > R_p_M(N_pop, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>((N_Mage - 1), (N_Mage - 1)));
             stan::math::initialize(R_p_M, DUMMY_VAR__);
             stan::math::fill(R_p_M, DUMMY_VAR__);
-            current_statement_begin__ = 353;
+            current_statement_begin__ = 352;
             validate_non_negative_index("R_MS", "N_Mage", N_Mage);
             validate_non_negative_index("R_MS", "N_Mage", N_Mage);
             validate_non_negative_index("R_MS", "N_pop", N_pop);
             std::vector<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> > R_MS(N_pop, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(N_Mage, N_Mage));
             stan::math::initialize(R_MS, DUMMY_VAR__);
             stan::math::fill(R_MS, DUMMY_VAR__);
-            current_statement_begin__ = 354;
+            current_statement_begin__ = 353;
             validate_non_negative_index("R_p_MS", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
             validate_non_negative_index("R_p_MS", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
             validate_non_negative_index("R_p_MS", "N_pop", N_pop);
             std::vector<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> > R_p_MS(N_pop, Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>((N_Mage * (N_MSage - 1)), (N_Mage * (N_MSage - 1))));
             stan::math::initialize(R_p_MS, DUMMY_VAR__);
             stan::math::fill(R_p_MS, DUMMY_VAR__);
-            current_statement_begin__ = 355;
+            current_statement_begin__ = 354;
             validate_non_negative_index("LL_M_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_M_obs(N);
             stan::math::initialize(LL_M_obs, DUMMY_VAR__);
             stan::math::fill(LL_M_obs, DUMMY_VAR__);
-            current_statement_begin__ = 356;
+            current_statement_begin__ = 355;
             validate_non_negative_index("LL_n_smolt_age_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_smolt_age_obs(N);
             stan::math::initialize(LL_n_smolt_age_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_smolt_age_obs, DUMMY_VAR__);
-            current_statement_begin__ = 357;
+            current_statement_begin__ = 356;
             validate_non_negative_index("LL_S_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_S_obs(N);
             stan::math::initialize(LL_S_obs, DUMMY_VAR__);
             stan::math::fill(LL_S_obs, DUMMY_VAR__);
-            current_statement_begin__ = 358;
+            current_statement_begin__ = 357;
             validate_non_negative_index("LL_n_ocean_age_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_ocean_age_obs(N);
             stan::math::initialize(LL_n_ocean_age_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_ocean_age_obs, DUMMY_VAR__);
-            current_statement_begin__ = 359;
+            current_statement_begin__ = 358;
             validate_non_negative_index("LL_n_GR_age_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_GR_age_obs(N);
             stan::math::initialize(LL_n_GR_age_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_GR_age_obs, DUMMY_VAR__);
-            current_statement_begin__ = 360;
+            current_statement_begin__ = 359;
             validate_non_negative_index("LL_n_H_obs", "N_H", N_H);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_H_obs(N_H);
             stan::math::initialize(LL_n_H_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_H_obs, DUMMY_VAR__);
-            current_statement_begin__ = 361;
+            current_statement_begin__ = 360;
             validate_non_negative_index("LL", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL(N);
             stan::math::initialize(LL, DUMMY_VAR__);
             stan::math::fill(LL, DUMMY_VAR__);
             // generated quantities statements
-            current_statement_begin__ = 363;
+            current_statement_begin__ = 362;
             for (int j = 1; j <= N_pop; ++j) {
-                current_statement_begin__ = 365;
+                current_statement_begin__ = 364;
                 stan::model::assign(R_p_M, 
                             stan::model::cons_list(stan::model::index_uni(j), stan::model::nil_index_list()), 
                             multiply_lower_tri_self_transpose(get_base1(L_p_M, j, "L_p_M", 1)), 
                             "assigning variable R_p_M");
-                current_statement_begin__ = 366;
+                current_statement_begin__ = 365;
                 stan::model::assign(R_MS, 
                             stan::model::cons_list(stan::model::index_uni(j), stan::model::nil_index_list()), 
                             multiply_lower_tri_self_transpose(get_base1(L_MS, j, "L_MS", 1)), 
                             "assigning variable R_MS");
-                current_statement_begin__ = 367;
+                current_statement_begin__ = 366;
                 stan::model::assign(R_p_MS, 
                             stan::model::cons_list(stan::model::index_uni(j), stan::model::nil_index_list()), 
                             multiply_lower_tri_self_transpose(get_base1(L_p_MS, j, "L_p_MS", 1)), 
                             "assigning variable R_p_MS");
             }
-            current_statement_begin__ = 370;
+            current_statement_begin__ = 369;
             stan::math::assign(LL_M_obs, rep_vector(0, N));
-            current_statement_begin__ = 371;
+            current_statement_begin__ = 370;
             for (int i = 1; i <= N_M_obs; ++i) {
-                current_statement_begin__ = 372;
+                current_statement_begin__ = 371;
                 stan::model::assign(LL_M_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_M_obs, i, "which_M_obs", 1)), stan::model::nil_index_list()), 
                             lognormal_log(get_base1(M_obs, get_base1(which_M_obs, i, "which_M_obs", 1), "M_obs", 1), stan::math::log(get_base1(M, get_base1(which_M_obs, i, "which_M_obs", 1), "M", 1)), tau_M), 
                             "assigning variable LL_M_obs");
             }
-            current_statement_begin__ = 373;
+            current_statement_begin__ = 372;
             stan::math::assign(LL_n_smolt_age_obs, multiply(elt_multiply(n_Mage_obs, stan::math::log(q_M)), rep_vector(1, N_Mage)));
-            current_statement_begin__ = 374;
+            current_statement_begin__ = 373;
             stan::math::assign(LL_S_obs, rep_vector(0, N));
-            current_statement_begin__ = 375;
+            current_statement_begin__ = 374;
             for (int i = 1; i <= N_S_obs; ++i) {
-                current_statement_begin__ = 376;
+                current_statement_begin__ = 375;
                 stan::model::assign(LL_S_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_S_obs, i, "which_S_obs", 1)), stan::model::nil_index_list()), 
                             lognormal_log(get_base1(S_obs, get_base1(which_S_obs, i, "which_S_obs", 1), "S_obs", 1), stan::math::log(get_base1(S, get_base1(which_S_obs, i, "which_S_obs", 1), "S", 1)), tau_S), 
                             "assigning variable LL_S_obs");
             }
-            current_statement_begin__ = 377;
+            current_statement_begin__ = 376;
             stan::math::assign(LL_n_ocean_age_obs, multiply(elt_multiply(n_MSage_obs, stan::math::log(q_MS)), rep_vector(1, N_MSage)));
-            current_statement_begin__ = 378;
+            current_statement_begin__ = 377;
             stan::math::assign(LL_n_GR_age_obs, multiply(elt_multiply(n_GRage_obs, stan::math::log(q_GR)), rep_vector(1, N_GRage)));
-            current_statement_begin__ = 379;
+            current_statement_begin__ = 378;
             stan::math::assign(LL_n_H_obs, rep_vector(0, N_H));
-            current_statement_begin__ = 380;
+            current_statement_begin__ = 379;
             for (int i = 1; i <= N_H; ++i) {
-                current_statement_begin__ = 381;
+                current_statement_begin__ = 380;
                 stan::model::assign(LL_n_H_obs, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             binomial_log(get_base1(n_H_obs, i, "n_H_obs", 1), get_base1(n_HW_obs, i, "n_HW_obs", 1), get_base1(p_HOS, i, "p_HOS", 1)), 
                             "assigning variable LL_n_H_obs");
             }
-            current_statement_begin__ = 382;
+            current_statement_begin__ = 381;
             stan::math::assign(LL, add(add(add(add(LL_M_obs, LL_n_smolt_age_obs), LL_S_obs), LL_n_ocean_age_obs), LL_n_GR_age_obs));
-            current_statement_begin__ = 383;
+            current_statement_begin__ = 382;
             stan::model::assign(LL, 
                         stan::model::cons_list(stan::model::index_multi(which_H), stan::model::nil_index_list()), 
                         stan::model::deep_copy(add(stan::model::rvalue(LL, stan::model::cons_list(stan::model::index_multi(which_H), stan::model::nil_index_list()), "LL"), LL_n_H_obs)), 
                         "assigning variable LL");
             // validate, write generated quantities
-            current_statement_begin__ = 352;
+            current_statement_begin__ = 351;
             size_t R_p_M_i_0_max__ = N_pop;
             for (size_t i_0__ = 0; i_0__ < R_p_M_i_0_max__; ++i_0__) {
                 stan::math::check_corr_matrix(function__, "R_p_M[i_0__]", R_p_M[i_0__]);
@@ -3529,7 +3529,7 @@ public:
                     }
                 }
             }
-            current_statement_begin__ = 353;
+            current_statement_begin__ = 352;
             size_t R_MS_i_0_max__ = N_pop;
             for (size_t i_0__ = 0; i_0__ < R_MS_i_0_max__; ++i_0__) {
                 stan::math::check_corr_matrix(function__, "R_MS[i_0__]", R_MS[i_0__]);
@@ -3544,7 +3544,7 @@ public:
                     }
                 }
             }
-            current_statement_begin__ = 354;
+            current_statement_begin__ = 353;
             size_t R_p_MS_i_0_max__ = N_pop;
             for (size_t i_0__ = 0; i_0__ < R_p_MS_i_0_max__; ++i_0__) {
                 stan::math::check_corr_matrix(function__, "R_p_MS[i_0__]", R_p_MS[i_0__]);
@@ -3559,37 +3559,37 @@ public:
                     }
                 }
             }
-            current_statement_begin__ = 355;
+            current_statement_begin__ = 354;
             size_t LL_M_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_M_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_M_obs(j_1__));
             }
-            current_statement_begin__ = 356;
+            current_statement_begin__ = 355;
             size_t LL_n_smolt_age_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_n_smolt_age_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_smolt_age_obs(j_1__));
             }
-            current_statement_begin__ = 357;
+            current_statement_begin__ = 356;
             size_t LL_S_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_S_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_S_obs(j_1__));
             }
-            current_statement_begin__ = 358;
+            current_statement_begin__ = 357;
             size_t LL_n_ocean_age_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_n_ocean_age_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_ocean_age_obs(j_1__));
             }
-            current_statement_begin__ = 359;
+            current_statement_begin__ = 358;
             size_t LL_n_GR_age_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_n_GR_age_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_GR_age_obs(j_1__));
             }
-            current_statement_begin__ = 360;
+            current_statement_begin__ = 359;
             size_t LL_n_H_obs_j_1_max__ = N_H;
             for (size_t j_1__ = 0; j_1__ < LL_n_H_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_H_obs(j_1__));
             }
-            current_statement_begin__ = 361;
+            current_statement_begin__ = 360;
             size_t LL_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_j_1_max__; ++j_1__) {
                 vars__.push_back(LL(j_1__));
