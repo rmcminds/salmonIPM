@@ -29,6 +29,21 @@ functions {
     s = rep_row_vector(1, rows(X)) * X;
     return s;
   }
+  
+  // Return the size m*n column vector consisting of m copies of x,
+  // where x is a column vector of size n
+  vector rep_vec(vector x, int m) {
+    vector[num_elements(x)*m] y;
+    y = to_vector(rep_matrix(x,m));
+    return(y);
+  }
+  
+  // Equivalent of R operator ":"
+  int[] seq(int from, int to) {
+    int x[to-from+1];
+    for(i in from:to) x[i-from+1] = i;
+    return(x);
+  }
 }
 
 data {
@@ -74,23 +89,21 @@ data {
 }
 
 transformed data {
-  int<lower=1,upper=N> N_pop;        // number of populations
-  int<lower=1,upper=N> N_year;       // number of years
-  int<lower=0> smolt_ages[N_Mage];   // smolt ages
-  int<lower=0> ocean_ages[N_MSage];  // ocean ages
-  int<lower=2> max_age;              // maximum adult age
-  int<lower=2> N_GRage;              // number of Gilbert-Rich age classes
-  int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
-  int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
+  int<lower=1,upper=N> N_pop = max(pop);   // number of populations
+  int<lower=1,upper=N> N_year = max(year); // number of years
+  int<lower=1> min_Mage = max_Mage - N_Mage + 1; // minimum smolt age
+  int<lower=0> Mages[N_Mage] = seq(min_Mage, max_Mage); // smolt ages
+  int<lower=0> min_MSage = max_MSage - N_MSage + 1; // minimum ocean age
+  int<lower=0> MSages[N_MSage] = seq(min_MSage, max_MSage); // ocean ages
+  int<lower=2> max_age = max_Mage + max_MSage; // maximum adult age
+  int<lower=2> N_GRage = N_Mage*N_MSage;   // number of Gilbert-Rich age classes
+  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
+  int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
+  vector[max_Mage*N_pop] mu_M_init;        // prior mean of total smolt abundance in years 1:max_Mage
+  matrix[N_Mage,max_Mage*N_pop] mu_q_M_init; // prior counts of smolt age distns in years 1:max_Mage
+  vector[max_MSage*N_pop] mu_S_init;       // prior mean of total spawner abundance in years 1:max_MSage
+  matrix[N_GRage,max_MSage*N_pop] mu_q_GR_init; // prior counts of wild spawner age distns in years 1:max_MSage
   
-  N_pop = max(pop);
-  N_year = max(year);
-  for(a in 1:N_Mage)
-    smolt_ages[a] = max_Mage - N_Mage + a;
-  for(a in 1:N_MSage)
-    ocean_ages[a] = max_MSage - N_MSage + a;
-  max_age = max_Mage + max_MSage;
-  N_GRage = N_Mage*N_MSage;
   pop_year_indx[1] = 1;
   for(i in 1:N)
   {
@@ -99,7 +112,44 @@ transformed data {
     else
       pop_year_indx[i] = pop_year_indx[i-1] + 1;
   }
+  
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
+  
+  for(i in 1:max_Mage)
+  {
+    int N_orphan_Mage = N_Mage - max(i - min_Mage, 0); // number of orphan smolt age classes
+    int N_amalg_Mage = N_Mage - N_orphan_Mage + 1; // number of amalgamated smolt age classes
+    
+    for(j in 1:N_pop)
+    {
+      int ii = (j - 1)*max_Mage + i; // index into M_init, q_M_init
+
+      // prior mean that scales M_init by number of orphan smolt age classes
+      mu_M_init[ii] = log(1.0*N_orphan_Mage/N_Mage);
+      
+      // prior on q_M_init that implies q_M_orphan ~ Dir(1)
+      mu_q_M_init[,ii] = append_row(rep_vector(1.0/N_amalg_Mage, N_amalg_Mage), 
+                                    rep_vector(1, N_orphan_Mage - 1));
+    }
+  }
+  
+  for(i in 1:max_MSage)
+  {
+    int N_orphan_MSage = N_MSage - max(i - min_MSage, 0); // number of orphan ocean-age classes
+    int N_amalg_MSage = N_MSage - N_orphan_MSage + 1; // number of amalgamated ocean-age classes
+    
+    for(j in 1:N_pop)
+    {
+      int ii = (j - 1)*max_MSage + i; // index into S_init, q_GR_init
+      
+      // prior mean that scales S_init by number of orphan ocean-age classes
+      mu_S_init[ii] = log(1.0*N_orphan_MSage/N_MSage);
+      
+      // prior on q_GR_init that implies q_GR_orphan ~ Dir(1)
+      mu_q_GR_init[,ii] = rep_vec(append_row(rep_vector(1.0/N_amalg_MSage, N_amalg_MSage), 
+                                                        rep_vector(1, N_orphan_MSage - 1)), N_Mage);
+    }
+  }
 }
 
 parameters {
@@ -134,8 +184,8 @@ parameters {
   // initial states, observation error
   vector<lower=0>[max_Mage*N_pop] M_init;     // true smolt abundance in years 1:max_Mage
   simplex[N_Mage] q_M_init[max_Mage*N_pop];   // true smolt age distns in years 1:max_Mage
-  vector<lower=0>[max_age*N_pop] S_init;      // true total spawner abundance in years 1:max_age
-  simplex[N_GRage] q_GR_init[max_age*N_pop];  // true wild spawner age distns in years 1:max_age
+  vector<lower=0>[max_MSage*N_pop] S_init;    // true total spawner abundance in years 1:max_MSage
+  simplex[N_GRage] q_GR_init[max_MSage*N_pop]; // true wild spawner age distns in years 1:max_MSage
   vector<lower=0>[N_pop] tau_M;               // smolt observation error SDs
   vector<lower=0>[N_pop] tau_S;               // spawner observation error SDs
 }
@@ -180,22 +230,29 @@ transformed parameters {
     
     // Ocean age
     for(a in 1:N_Mage)
-    {
       gamma_MS[j,a] = log(mu_p_MS[j,a,1:(N_MSage-1)]) - log(mu_p_MS[j,a,N_MSage]);
-    }
   }
   
   // Calculate true smolts and total wild and hatchery spawners by age,
   // and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_Mage] alr_p_M;              // temp: alr(p_M[i,])
-    row_vector[N_Mage] M_a;                  // temp: true smolts by age
-    vector[N_Mage*(N_MSage-1)] gamma_MS_i;   // temp: gamma_MS[i,,] 
-    vector[N_Mage*(N_MSage-1)] sigma_p_MS_i; // temp: sigma_p_MS[i,,]
-    vector[N_Mage*(N_MSage-1)] alr_p_MS;     // temp: alr(p_MS[i,])    
-    matrix[N_Mage,N_MSage] S_W_a;            // temp: true W spawners by smolt and ocean age
-    int ii;                                  // temp variable: index into M_init, S_init and q_init
+    row_vector[N_Mage] alr_p_M;              // alr(p_M[i,])
+    row_vector[N_Mage] M_a;                  // true smolts by age
+    int mm;                                  // index into M_init, q_M_init
+    // number of orphan smolt age classes <lower=0,upper=N_Mage>
+    int N_orphan_Mage = max(N_Mage - max(pop_year_indx[i] - min_Mage, 0), N_Mage); 
+    // orphan smolt age distn (amalgamated simplex)
+    vector[N_orphan_Mage] q_M_orphan;
+    vector[N_Mage*(N_MSage-1)] gamma_MS_i;   // gamma_MS[i,,] 
+    vector[N_Mage*(N_MSage-1)] sigma_p_MS_i; // sigma_p_MS[i,,]
+    vector[N_Mage*(N_MSage-1)] alr_p_MS;     // alr(p_MS[i,]) 
+    int ss;                                  // index into S_init, q_GR_init
+    // number of orphan ocean-age classes <lower=0,upper=N_MSage>
+    int N_orphan_MSage = max(N_MSage - max(pop_year_indx[i] - min_MSage, 0), N_MSage); 
+    // slice of orphan G-R age distn for a given smolt age (amalgamated simplex)
+    vector[N_orphan_MSage] q_GR_orphan;
+    matrix[N_Mage,N_MSage] S_W_a;            // true W spawners by smolt and ocean age
     
     // Time-varying IID age vectors (multivariate Matt trick)
     // Smolt age
@@ -211,7 +268,7 @@ transformed parameters {
       gamma_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = gamma_MS[pop[i],a];
       sigma_p_MS_i[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))] = sigma_p_MS[pop[i],a];
     }
-    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * zeta_p_MS[i,]'); //'
+    alr_p_MS = gamma_MS_i + sigma_p_MS_i .* (L_p_MS[pop[i]] * zeta_p_MS[i,]');
     // inverse log-ratio transform and assign back to array
     for(a in 1:N_Mage)
     {
@@ -236,51 +293,57 @@ transformed parameters {
     s_MS[i,] = inv_logit(logit(mu_MS[pop[i],]) + dot_product(X_MS[year[i],], beta_MS[pop[i],]) + epsilon_MS[i,]);
     
     // Smolt recruitment
+    // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_Mage)
     {
-      // use initial values
-      ii = (pop[i] - 1)*max_Mage + pop_year_indx[i];
-      M[i] = M_init[ii];  
-      q_M[i,] = to_row_vector(q_M_init[ii,]);
+      mm = (pop[i] - 1)*max_Mage + pop_year_indx[i];
+      q_M_orphan = append_row(sum(head(q_M_init[mm], N_Mage - N_orphan_Mage + 1)), 
+                              tail(q_M_init[mm], N_orphan_Mage - 1));
     }
-    else
+    
+    for(a in 1:N_Mage)
     {
-      for(a in 1:N_Mage)
-      {
-        // age-a smolts from appropriate brood year
-        M_a[a] = M0[i-smolt_ages[a]]*p_M[i-smolt_ages[a],a]; 
-      }
-      M[i] = sum(M_a);
-      q_M[i,] = M_a/M[i];
+      if(Mages[a] < pop_year_indx[i])
+        // Age-a smolts from appropriate brood year
+        M_a[a] = M0[i-Mages[a]]*p_M[i-Mages[a],a]; 
+      else
+        // Use initial values
+        M_a[a] = M_init[mm]*q_M_orphan[a - (N_Mage - N_orphan_Mage)];
     }
+    
+    M[i] = sum(M_a);
+    q_M[i,] = M_a/M[i];
     
     // Spawners and age structure
-    if(pop_year_indx[i] <= max_age)
+    // Use initial values for orphan age classes, otherwise use process model
+    for(sa in 1:N_Mage)
     {
-      // use initial values
-      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      S_W[i] = S_init[ii]*(1 - p_HOS_all[i]);        
-      S_H[i] = S_init[ii]*p_HOS_all[i];
-      q_GR[i,] = to_row_vector(q_GR_init[ii,]);
-      S_W_a = to_matrix(S_W[i]*q_GR[i,], N_Mage, N_MSage, 0);
-      q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));
-    }
-    else
-    {
-      for(sa in 1:N_Mage)
+      if(pop_year_indx[i] <= max_MSage)
       {
-        for(oa in 1:N_MSage)
-          S_W_a[sa,oa] = M[i-ocean_ages[oa]]*q_M[i-ocean_ages[oa],sa]*s_MS[i-ocean_ages[oa],sa]*p_MS[i-ocean_ages[oa],sa][oa];
+        int aa[N_MSage] = seq((sa - 1)*N_MSage + 1, sa*N_MSage); // slice of q_GR_init for smolt age sa
+        ss = (pop[i] - 1)*max_MSage + pop_year_indx[i];
+        q_GR_orphan = append_row(sum(head(q_GR_init[ss][aa], N_MSage - N_orphan_MSage + 1)), 
+                                 tail(q_GR_init[ss][aa], N_orphan_MSage - 1));
       }
-      // catch and broodstock removal (assumes no take of ocean age 1)
-      S_W_a[,2:N_MSage] = S_W_a[,2:N_MSage]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-      S_W[i] = sum(S_W_a);
-      S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
-      q_GR[i,] = to_row_vector(S_W_a')/S_W[i]; //'
-      q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));                                
+      
+      for(oa in 1:N_MSage)
+      {
+        if(MSages[oa] < pop_year_indx[i])
+          // Use recruitment process model
+          S_W_a[sa,oa] = M[i-MSages[oa]]*q_M[i-MSages[oa],sa]*s_MS[i-MSages[oa],sa]*p_MS[i-MSages[oa],sa][oa];
+        else
+          // Use initial values
+          S_W_a[sa,oa] = S_init[ss]*(1 - p_HOS_all[i])*q_GR_orphan[oa - (N_MSage - N_orphan_MSage)];
+      }
     }
     
+    // Catch and broodstock removal (assumes no take of ocean age 1)
+    S_W_a[,2:N_MSage] = S_W_a[,2:N_MSage]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_W[i] = sum(S_W_a);
+    S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
+    q_GR[i,] = to_row_vector(S_W_a')/S_W[i];
+    q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));                                
     
     // Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
@@ -332,9 +395,27 @@ model {
   B_take = B_rate .* S_W[which_B] .* (1 - q_MS[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
-  // initial states, observation error
+  // initial states
   M_init ~ lognormal(0.0,5.0);
-  S_init ~ lognormal(0.0,5.0);
+  
+  // initial states
+  // (accounting for amalgamation of q_init to q_orphan)
+  M_init ~ lognormal(mu_M_init,5.0);
+  {
+    matrix[N_Mage,max_Mage*N_pop] q_M_init_mat;
+    
+    for(j in 1:size(q_M_init)) q_M_init_mat[,j] = q_M_init[j];
+    target += sum((mu_q_M_init - 1) .* log(q_M_init_mat)); // q_M_init[i] ~ Dir(mu_q_M_init[,i])
+  }
+  S_init ~ lognormal(mu_S_init, 5.0);
+  {
+    matrix[N_GRage,max_MSage*N_pop] q_GR_init_mat;
+    
+    for(j in 1:size(q_GR_init)) q_GR_init_mat[,j] = q_GR_init[j];
+    target += sum((mu_q_GR_init - 1) .* log(q_GR_init_mat)); // q_GR_init[i] ~ Dir(mu_q_GR_init[,i])
+  }
+
+  // observation error
   tau_M ~ pexp(0.2, 0.16, 30);  // tuned for Auke Creek coho
   tau_S ~ pexp(0.3, 0.26, 30);  // tuned for Auke Creek coho
 
@@ -343,7 +424,7 @@ model {
   target += sum(n_Mage_obs .* log(q_M));  // obs wild age freq: n_Mage_obs[i] ~ multinomial(q_M[i])
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[pop[which_S_obs]]);  // observed spawners
   target += sum(n_MSage_obs .* log(q_MS));  // obs wild age freq: n_MSage_obs[i] ~ multinomial(q_MS[i])
-  target += sum(n_GRage_obs .* log(q_GR));  // obs wild age freq: n_age_obs[i] ~ multinomial(q_GR[i])
+  target += sum(n_GRage_obs .* log(q_GR));  // obs wild age freq: n_GRage_obs[i] ~ multinomial(q_GR[i])
   n_H_obs ~ binomial(n_HW_obs, p_HOS);  // observed counts of hatchery vs. wild spawners
 }
 
@@ -352,9 +433,9 @@ generated quantities {
   corr_matrix[N_Mage] R_MS[N_pop]; // correlation matrices of logit SAR by smolt age
   corr_matrix[N_Mage*(N_MSage-1)] R_p_MS[N_pop]; // correlation matrices of log-ratio ocean age distns
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
-  vector[N] LL_n_smolt_age_obs; // pointwise log-likelihood of smolt age frequencies
+  vector[N] LL_n_Mage_obs; // pointwise log-likelihood of smolt age frequencies
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
-  vector[N] LL_n_ocean_age_obs; // pointwise log-likelihood of ocean age frequencies
+  vector[N] LL_n_MSage_obs; // pointwise log-likelihood of ocean age frequencies
   vector[N] LL_n_GR_age_obs;    // pointwise log-likelihood of Gilbert-Rich age frequencies
   vector[N_H] LL_n_H_obs;       // pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL;                 // total pointwise log-likelihood                              
@@ -369,15 +450,15 @@ generated quantities {
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
     LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M_obs[which_M_obs[i]] | log(M[which_M_obs[i]]), tau_M); 
-  LL_n_smolt_age_obs = (n_Mage_obs .* log(q_M)) * rep_vector(1,N_Mage);
+  LL_n_Mage_obs = (n_Mage_obs .* log(q_M)) * rep_vector(1,N_Mage);
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
     LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau_S); 
-  LL_n_ocean_age_obs = (n_MSage_obs .* log(q_MS)) * rep_vector(1,N_MSage);
+  LL_n_MSage_obs = (n_MSage_obs .* log(q_MS)) * rep_vector(1,N_MSage);
   LL_n_GR_age_obs = (n_GRage_obs .* log(q_GR)) * rep_vector(1,N_GRage);
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)
     LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-  LL = LL_M_obs + LL_n_smolt_age_obs + LL_S_obs + LL_n_ocean_age_obs + LL_n_GR_age_obs;
+  LL = LL_M_obs + LL_n_Mage_obs + LL_S_obs + LL_n_MSage_obs + LL_n_GR_age_obs;
   LL[which_H] = LL[which_H] + LL_n_H_obs;
 }
