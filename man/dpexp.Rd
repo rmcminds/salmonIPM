@@ -16,6 +16,6 @@ dpexp(x, mu = 0, sigma = 1, shape = 2)
 \item{shape}{shape of the distribution}
 }
 \description{
-Density function for a power-exponential (also known as generalized normal 
+Density function for a power-exponential (also known as generalized normal
 or Subbotin) distribution.
 }

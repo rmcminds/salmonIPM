@@ -87,7 +87,7 @@ in years of all subadult life stages.}
 }
 \value{
 A list with initial starting values for all of the parameters and
-  states in the Stan model.
+states in the Stan model.
 }
 \description{
 \code{IPM_sim} simulates initial values for parameters and states in Stan.

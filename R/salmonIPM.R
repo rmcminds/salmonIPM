@@ -86,6 +86,13 @@
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
 #'   of all ages.
+#' @param conditionGRonMS Only if `stan_model == "IPM_SMaS_np`, logical indicating
+#' whether the Gilbert-Rich age frequencies `n_GRage_obs` in `fish_data` are conditioned
+#' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
+#' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
+#' age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
+#' in a `smolt age x ocean age` contingency table, the cell frequencies are conditioned
+#' on the column totals. 
 #' @param model Either \code{"IPM"} or \code{"RR"}, indicating whether the data
 #'   are intended for an integrated or run-reconstruction model.
 #' @param life_cycle Character string indicating which life-cycle model to fit.
@@ -135,7 +142,7 @@
 
 salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, 
                       fecundity_data = NULL, prior_data = NULL,
-                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL,  
+                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       model, life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", 
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
                       chains, iter, warmup, thin = 1, cores = parallel::detectCores() - 1, ...)
@@ -152,7 +159,7 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   dat <- stan_data(fish_data = fish_data, fish_data_fwd = fish_data_fwd, env_data = env_data, 
                    fecundity_data = fecundity_data, prior_data = prior_data, 
                    ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                   stan_model = stan_model, SR_fun = SR_fun)
+                   conditionGRonMS = conditionGRonMS, stan_model = stan_model, SR_fun = SR_fun)
   
   if(is.null(pars)) 
   {

@@ -38,6 +38,11 @@ functions {
     return(y);
   }
   
+  // Convert the matrix m to a row vector in row-major order
+  row_vector to_row_vector_row_major(matrix m) {
+    return(to_row_vector(m'));
+  }
+  
   // Equivalent of R operator ":"
   int[] seq(int from, int to) {
     int x[to-from+1];
@@ -48,44 +53,45 @@ functions {
 
 data {
   // info for observed data
-  int<lower=1> N;                      // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];         // population identifier
-  int<lower=1,upper=N> year[N];        // calendar year identifier
+  int<lower=1> N;                       // total number of cases in all pops and years
+  int<lower=1,upper=N> pop[N];          // population identifier
+  int<lower=1,upper=N> year[N];         // calendar year identifier
   // smolt production
-  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  vector[N] A;                         // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
-  matrix[max(year),N_X_M] X_M;         // spawner-smolt covariates (if none, use vector of zeros)
+  int<lower=1> SR_fun;                  // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  vector[N] A;                          // habitat area associated with each spawner abundance obs
+  int<lower=0> N_X_M;                   // number of spawner-smolt productivity covariates
+  matrix[max(year),N_X_M] X_M;          // spawner-smolt covariates (if none, use vector of zeros)
   // smolt abundance
-  int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
+  int<lower=1,upper=N> N_M_obs;         // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
-  vector<lower=0>[N] M_obs;            // observed annual smolt abundance (not density)
+  vector<lower=0>[N] M_obs;             // observed annual smolt abundance (not density)
   // smolt age structure
-  int<lower=2> N_Mage;                 // number of smolt age classes
-  int<lower=2> max_Mage;               // maximum smolt age
+  int<lower=2> N_Mage;                  // number of smolt age classes
+  int<lower=2> max_Mage;                // maximum smolt age
   matrix<lower=0>[N,N_Mage] n_Mage_obs; // observed smolt age frequencies (all zero row = NA)  
   // SAR (sMolt-Spawner survival)
-  int<lower=0> N_X_MS;                 // number of SAR productivity covariates
-  matrix[max(year),N_X_MS] X_MS;       // SAR covariates (if none, use vector of zeros)
+  int<lower=0> N_X_MS;                  // number of SAR productivity covariates
+  matrix[max(year),N_X_MS] X_MS;        // SAR covariates (if none, use vector of zeros)
   // fishery and hatchery removals
-  vector[N] F_rate;                    // fishing mortality rate of wild adults (no fishing on jacks)
-  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
-  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
+  vector[N] F_rate;                     // fishing mortality rate of wild adults (no fishing on jacks)
+  int<lower=0,upper=N> N_B;             // number of years with B_take > 0
+  int<lower=1,upper=N> which_B[N_B];    // years with B_take > 0
+  vector[N_B] B_take_obs;               // observed broodstock take of wild adults
   // spawner abundance
-  int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
+  int<lower=1,upper=N> N_S_obs;         // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
-  vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
+  vector<lower=0>[N] S_obs;             // observed annual total spawner abundance (not density)
   // spawner ocean age and Gilbert-Rich age structure
-  int<lower=2> N_MSage;                // number of ocean age classes
-  int<lower=1> max_MSage;              // maximum ocean age
+  int<lower=2> N_MSage;                 // number of ocean age classes
+  int<lower=1> max_MSage;               // maximum ocean age
   matrix<lower=0>[N,N_MSage] n_MSage_obs; // observed ocean age frequencies (all zero row = NA)  
-  matrix<lower=0>[N,N_Mage*N_MSage] n_GRage_obs;  // obs W spawner Gilbert-Rich age freqs (all zero row = NA)  
+  matrix<lower=0>[N,N_Mage*N_MSage] n_GRage_obs; // obs W spawner Gilbert-Rich age freqs (all zero row = NA)  
+  int<lower=0,upper=1> conditionGRonMS; // is n_GRage_obs unconditional (0) or conditioned on ocean age totals (1)?
   // H/W composition
-  int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
-  int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
-  int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples (assumes no NAs)
-  int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples (assumes no NAs)
+  int<lower=0,upper=N> N_H;             // number of years with p_HOS > 0
+  int<lower=1,upper=N> which_H[N_H];    // years with p_HOS > 0
+  int<lower=0> n_W_obs[N_H];            // count of wild spawners in samples (assumes no NAs)
+  int<lower=0> n_H_obs[N_H];            // count of hatchery spawners in samples (assumes no NAs)
 }
 
 transformed data {
@@ -276,8 +282,7 @@ transformed parameters {
       p_MS[i,a] = p_MS[i,a]/sum(p_MS[i,a]);
     }
     
-    // AR(1) smolt recruitment process errors 
-    // MAR(1) SAR process errors  
+    // AR(1) smolt recruitment process errors and MAR(1) SAR process errors  
     if(pop_year_indx[i] == 1) // initial process error
     {
       epsilon_M[i] = zeta_M[i]*sigma_M[pop[i]]/sqrt(1 - rho_M[pop[i]]^2);
@@ -342,11 +347,16 @@ transformed parameters {
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
-    q_GR[i,] = to_row_vector(S_W_a')/S_W[i];
-    q_MS[i,] = col_sums(to_matrix(q_GR[i,], N_Mage, N_MSage, 0));                                
-    
+    q_MS[i,] = col_sums(S_W_a/S_W[i]);
+    if(conditionGRonMS)
+      // q_GR := probabilities of smolt age conditioned on ocean age
+      q_GR[i,] = to_row_vector_row_major(diag_post_multiply(S_W_a/S_W[i], 1 ./ q_MS[i,]));
+    else 
+      // q_GR := unconditional probabilities of Gilbert-Rich age
+      q_GR[i,] = to_row_vector_row_major(S_W_a/S_W[i]);
+
     // Smolt production from brood year i
-    M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    M_hat[i] = A[i]*SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]);
   }
 }
@@ -395,18 +405,16 @@ model {
   B_take = B_rate .* S_W[which_B] .* (1 - q_MS[which_B,1]) ./ (1 - B_rate);
   B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
 
-  // initial states
-  M_init ~ lognormal(0.0,5.0);
-  
-  // initial states
-  // (accounting for amalgamation of q_init to q_orphan)
-  M_init ~ lognormal(mu_M_init,5.0);
+  // initial states (accounting for amalgamation of q_init to q_orphan)
+  // smolt abundance and age structure
+  M_init ~ lognormal(mu_M_init, 5.0);
   {
     matrix[N_Mage,max_Mage*N_pop] q_M_init_mat;
     
     for(j in 1:size(q_M_init)) q_M_init_mat[,j] = q_M_init[j];
     target += sum((mu_q_M_init - 1) .* log(q_M_init_mat)); // q_M_init[i] ~ Dir(mu_q_M_init[,i])
   }
+  // spawner abundance and age structure
   S_init ~ lognormal(mu_S_init, 5.0);
   {
     matrix[N_GRage,max_MSage*N_pop] q_GR_init_mat;
@@ -421,10 +429,16 @@ model {
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts
-  target += sum(n_Mage_obs .* log(q_M));  // obs wild age freq: n_Mage_obs[i] ~ multinomial(q_M[i])
+  target += sum(n_Mage_obs .* log(q_M));   // obs smolt age freq: n_Mage_obs[i] ~ multinomial(q_M[i,])
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[pop[which_S_obs]]);  // observed spawners
-  target += sum(n_MSage_obs .* log(q_MS));  // obs wild age freq: n_MSage_obs[i] ~ multinomial(q_MS[i])
-  target += sum(n_GRage_obs .* log(q_GR));  // obs wild age freq: n_GRage_obs[i] ~ multinomial(q_GR[i])
+  // obs wild ocean age freq: n_MSage_obs[i,] ~ multinomial(q_MS[i,])
+  target += sum(n_MSage_obs .* log(q_MS));
+  // obs wild Gilbert-Rich age freq
+  // if conditionGRonMS == 0: n_GRage_obs[i,] ~ multinomial(q_GR[i,])
+  //                          P(freshwater age & ocean age)
+  // if conditionGRonMS == 1: n_GRage_obs[i,oa] ~ multinomial(q_GR[i,oa]) where oa indexes ocean age
+  //                          P(freshwater age | ocean age)
+  target += sum(n_GRage_obs .* log(q_GR));
   n_H_obs ~ binomial(n_HW_obs, p_HOS);  // observed counts of hatchery vs. wild spawners
 }
 
