@@ -11,6 +11,13 @@
 #'   needed for models including smolt stage).}
 #'   \item{`tau_M_obs`}{If `stan_model=="IPM_LCRchum_pp"`, 
 #'   known observation error SDs for smolt abundance.}
+#'   \item{`downstream_trap`}{If `stan_model="IPM_LCRchum_pp"`, row indices
+#'   corresponding to a downstream smolt trap in a different population whose
+#'   catch additionally includes the smolts produced in one or more upstream populations,
+#'   assuming zero mortality. Each upstream population can have at most one 
+#'   downstream trap (in addition to its own, if any) but a trap can have multiple 
+#'   upstream populations. If `downstream_trap[i]==j`, `M_downstream[j] <- M[j] + M[i]`; 
+#'   if `is.na(downstream_trap[i])` then `M[i]` is not double-counted.}
 #'   \item{`n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs`}{If
 #'   `life_cycle=="SMaS"`, multiple columns of observed smolt age
 #'   frequencies (i.e., counts), where `[min_Mage]` and `[max_Mage]`
@@ -471,6 +478,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N_tau_M_obs = sum(!is.na(tau_M_obs)),
         which_tau_M_obs = array(which(!is.na(tau_M_obs)), dim = sum(!is.na(tau_M_obs))),
         tau_M_obs = replace(tau_M_obs, is.na(tau_M_obs), 0),
+        N_upstream = sum(!is.na(downstream_trap)),
+        which_upstream = array(which(!is.na(downstream_trap)), dim = sum(!is.na(downstream_trap))),
+        downstream_trap = na.omit(downstream_trap),
         # SAR
         N_X_MS = ncol(env_data$MS), 
         X_MS = as.matrix(env_data$MS),
