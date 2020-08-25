@@ -1,132 +1,39 @@
 #' Fits an integrated or run-reconstruction spawner-recruit model.
 #'
-#' @param fish_data Data frame that includes the following \code{colnames}, in
-#'   no particular order except where noted: \describe{
-#'   \item{\code{pop}}{Numeric or character population ID.}
-#'   \item{\code{year}}{Numeric variable giving the year the fish spawned (i.e.,
-#'   the brood year).} \item{\code{A}}{Spawning habitat size (either stream
-#'   length or area). Will usually be time-invariant within a population, but
-#'   need not be.} \item{\code{M_obs}}{Total number of wild-origin smolts (only
-#'   needed for models including smolt stage).}
-#'   \item{\code{tau_M_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
-#'   known observation error SDs for smolt abundance.}
-#'   \item{`downstream_trap`}{If `stan_model="IPM_LCRchum_pp"`, row indices
-#'   corresponding to a downstream smolt trap in a different population whose
-#'   catch additionally includes the smolts produced in one or more upstream populations,
-#'   assuming zero mortality. Each upstream population can have at most one 
-#'   downstream trap (in addition to its own, if any) but a trap can have multiple 
-#'   upstream populations. If `downstream_trap[i]==j`, `M_downstream[j] <- M[j] + M[i]`; 
-#'   if `is.na(downstream_trap[i])` then `M[i]` is not double-counted.}
-#'   \item{\code{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}}{If
-#'   \code{life_cycle=="SMaS"}, multiple columns of observed smolt age
-#'   frequencies (i.e., counts), where \code{[min_Mage]} and \code{[max_Mage]}
-#'   are the numeral age in years of the youngest and oldest smolts,
-#'   respectively. Note that age is measured in calendar years from the brood
-#'   year (i.e., the Gilbert-Rich system).} \item{\code{S_obs}}{Total number
-#'   (not density) of wild and hatchery-origin spawners.}
-#'   \item{\code{tau_S_obs}}{If \code{stan_model=="IPM_LCRchum_pp"}, 
-#'   known observation error SDs for spawner abundance.}
-#'   \item{\code{n_age[min_age]_obs...n_age[max_age]_obs}}{Multiple columns of
-#'   observed spawner age frequencies (i.e., counts), where \code{[min_age]} and
-#'   \code{[max_age]} are the numeral age in years (total, not ocean age) of the
-#'   youngest and oldest spawners, respectively.}
-#'   \item{\code{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}}{If
-#'   \code{life_cycle=="SMaS"}, multiple columns of observed ocean age
-#'   frequencies (i.e., counts), where \code{[min_MSage]} and \code{[max_MSage]}
-#'   are the youngest and oldest ocean age in years, respectively.}
-#'   \item{\code{n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs}}{If
-#'    \code{life_cycle=="SMaS"}, multiple columns of observed Gilbert-Rich age
-#'   frequencies, sorted first by smolt age (\code{min_Mage:max_Mage}) and then
-#'   by total age \code{min_age:max_age}. For example, a life history with
-#'   subyearling or yearling smolts and ocean ages 2:3 would have column names
-#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs",
-#'   "n_GRage_5_2_obs")} \item{\code{n_W_obs}}{Observed frequency of
-#'   natural-origin spawners.} \item{\code{n_H_obs}}{Observed frequency of
-#'   hatchery-origin spawners.} \item{\code{fit_p_HOS}}{Logical or 0/1
-#'   indicating for each row in fish_data whether the model should estimate
-#'   \code{p_HOS > 0}. This is only required if \code{model == "IPM"}.}
-#'   \item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin
-#'   fish.} \item{\code{B_take_obs}}{Number of adults taken for hatchery
-#'   broodstock.} }
-#' @param fish_data_fwd Only if model == "IPM", life_cycle == "SS", and
-#'   pool_pops == TRUE, optional data frame with the following \code{colnames},
-#'   representing "forward" or "future" simulations. Unlike \code{fish_data}, a
-#'   given combination of population and year may occur multiple times, perhaps
-#'   to facilitate comparisons across scenarios or "branches" with different
-#'   inputs (e.g., harvest rate). In this case, all branches are subjected to
-#'   the same sequence of process errors in recruitment and age structure.
-#'   \describe{ \item{\code{pop}}{Numeric or character population ID. All values
-#'   must also appear in \code{fish_data$pop}.} \item{\code{year}}{Integer
-#'   variable giving the year the fish spawned (i.e., the brood year). For each
-#'   population in \code{fish_data_fwd$pop}, the first year appearing in
-#'   \code{fish_data_fwd$year} must be one greater than the last year appearing
-#'   in \code{fish_data$year}, i.e.,
-#'   \code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) ==
-#'   max(fish_data$year[fish_data$pop==j]) + 1}.} \item{\code{A}}{Spawning
-#'   habitat size (either stream length or area). Will usually be time-invariant
-#'   within a population, but need not be.} \item{\code{F_rate}}{Total harvest
-#'   rate (proportion) of natural-origin fish.} \item{\code{B_rate}}{Total
-#'   broodstock removal rate (proportion) of natural-origin fish.}
-#'   \item{\code{p_HOS}}{Proportion of hatchery-origin spawners.} }
-#' @param env_data Optional data frame or named list of data frames whose
-#'   variables are time-varying environmental covariates, sequentially ordered
-#'   with each row corresponding to a unique year in fish_data. If a named list,
-#'   element names correspond to stage- or transition-specific covariate
-#'   matrices defined in the Stan model being used. (This is required if
-#'   \code{life_cycle != "SS"}.)
-#' @param fecundity_data Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
-#' the following \code{colnames}, representing observations of fecundity with each
-#' row corresponding to a female. \describe{\item{\code{age_E}}{Female age in years.} 
-#' \item{\code{E_obs}}{Observed fecundity.}}
-#' @param prior_data Only if `stan_model == "IPM_ICchinook_pp"`, named list
-#' with the following elements: \describe{\item{\code{s}}{Data frame with \code{colnames}
-#' \code{year}, \code{mu_prior_D}, \code{sigma_prior_D}, \code{mu_prior_SAR}, \code{sigma_prior_SAR},
-#'  \code{mu_prior_U}, \code{sigma_prior_U}, giving the prior mean and SD of logit survival
-#'  downstream, at sea, and upstream in each year.}}
-#' @param ages If \code{life_cycle != "SS"}, a named list giving the fixed ages
-#'   in years of all subadult life stages.
-#' @param age_S_obs Only if `stan_model == "IPM_SSpa_pp`, a logical or numeric
-#'   vector indicating, for each adult age, whether observed total spawner data
-#'   includes that age. The default is to treat `S_obs` as including spawners of all ages.
-#' @param age_S_eff Only if `stan_model == "IPM_SSpa_pp"`, a logical or numeric
-#'   vector indicating, for each adult age, whether spawners of that age
-#'   contribute toward reproduction. This could be used, e.g., to exclude jacks
-#'   from the effective breeding population. The default is to include spawners
-#'   of all ages.
-#' @param conditionGRonMS Only if `stan_model == "IPM_SMaS_np`, logical indicating
-#' whether the Gilbert-Rich age frequencies `n_GRage_obs` in `fish_data` are conditioned
-#' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
-#' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
-#' age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
-#' in a `smolt age x ocean age` contingency table, the cell frequencies are conditioned
-#' on the column totals. 
-#' @param model Either \code{"IPM"} or \code{"RR"}, indicating whether the data
+#' @param fish_data See [stan_data()].
+#' @param fish_data_fwd See [stan_data()].
+#' @param env_data See [stan_data()].
+#' @param fecundity_data See [stan_data()].
+#' @param prior_data See [stan_data()].
+#' @param ages See [stan_data()].
+#' @param age_S_obs See [stan_data()].
+#' @param age_S_eff See [stan_data()].
+#' @param conditionGRonMS See [stan_data()].
+#' @param model Either `"IPM"` or `"RR"`, indicating whether the data
 #'   are intended for an integrated or run-reconstruction model.
 #' @param life_cycle Character string indicating which life-cycle model to fit.
-#'   Currently available options are spawner-to-spawner (\code{"SS"}, the
-#'   default), spawner-to-spawner "harvest model" (\code{"SS_F"}), or
-#'   spawner-smolt-spawner (\code{"SMS"}).
-#' @param pool_pops Logical scalar defaulting to \code{TRUE}, indicating whether or not
+#'   Currently available options are spawner-to-spawner (`"SS"`, the
+#'   default), spawner-to-spawner "harvest model" (`"SS_F"`), or
+#'   spawner-smolt-spawner (`"SMS"`).
+#' @param pool_pops Logical scalar defaulting to `TRUE`, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent.
-#' @param stan_model Character string giving the name of the Stan model being
-#'   fit (".stan" filetype extension is not included). If provided,
-#'   \code{"stan_model"} overrides \code{"model"}, \code{"life_cycle"}, and
-#'   \code{"pool_pops"}.
-#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
-#'   \code{"Ricker"}, indicating which spawner-recruit function to fit.
+#' @param stan_model Character string giving the name of the **salmonIPM** model being
+#'   fit (".stan" filetype extension is not included).
+#' @param SR_fun One of `"exp"`, `"BH"` (the default), or
+#'   `"Ricker"`, indicating which spawner-recruit function to fit.
 #' @param init A list of named lists of initial values to be passed to
-#'   \code{rstan::stan}. If \code{NULL}, initial values will be automatically
-#'   generated from the supplied data using \code{salmonIPM::stan_init}.
+#'   [rstan::stan()]. If `NULL`, initial values will be automatically
+#'   generated from the supplied data using [stan_init()].
 #' @param pars Vector of character strings specifying parameters to monitor.
 #'   If NULL, default values are used. If a non-default value is supplied, the
 #'   user should make sure the parameters requested appear in the model configuration 
 #'   specified.
-#' @param include Logical scalar defaulting to \code{TRUE} indicating whether to include
-#'  or exclude the parameters given by \code{pars}. If \code{FALSE}, only entire 
+#' @param include Logical scalar defaulting to `TRUE` indicating whether to include
+#'  or exclude the parameters given by `pars`. If `FALSE`, only entire 
 #'  multidimensional parameters can be excluded, rather than particular elements of them. 
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
-#'   should be returned for later analysis with \code{loo:loo}.
+#'   should be returned for later analysis with [loo::loo()].
 #' @param chains Positive integer specifying the number of Markov chains.
 #' @param iter Positive integer specifying the number of iterations for each
 #'   chain (including warmup).
@@ -134,14 +41,14 @@
 #'   iterations per chain. If step-size adaptation is on (which it is by
 #'   default), this also controls the number of iterations for which adaptation
 #'   is run (and hence these warmup samples should not be used for inference).
-#'   The number of warmup iterations should not be larger than \code{iter}
+#'   The number of warmup iterations should not be larger than `iter`
 #' @param thin Positive integer specifying the period for saving samples. The
 #'   default is 1, which is usually the recommended value.
 #' @param cores Number of cores to use when executing the chains in parallel.
 #'   Defaults to one less than the number of cores available.
-#' @param ... Additional arguments to pass to \code{rstan::sampling}.
-#' @return An object of class \code{stanfit} representing the fitted model. See
-#'   \code{rstan::stan} for details.
+#' @param ... Additional arguments to pass to [rstan::sampling()].
+#' @return An object of class `stanfit` representing the fitted model. See
+#'   [rstan::stan()] for details.
 #'
 #' @importFrom rstan stan
 #'

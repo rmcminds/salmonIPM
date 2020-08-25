@@ -3,19 +3,19 @@
 \name{stan_pars}
 \alias{stan_pars}
 \title{Helper function that returns the parameters and states that a given
-model should return.}
+model should save.}
 \usage{
 stan_pars(stan_model)
 }
 \arguments{
 \item{stan_model}{Character string giving the name of the Stan model being
-fit (".stan" filetype extension is not included).}
+fit (\code{".stan"} filetype extension is not included).}
 }
 \value{
 Character vector with names of parameters and states that Stan will
-return.
+save.
 }
 \description{
 Helper function that returns the parameters and states that a given
-model should return.
+model should save.
 }

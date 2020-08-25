@@ -2,38 +2,44 @@
 % Please edit documentation in R/run_recon.r
 \name{run_recon}
 \alias{run_recon}
-\title{Perform run reconstruction on brood table data.}
+\title{Perform run reconstruction on brood table data}
 \usage{
 run_recon(fish_data)
 }
 \arguments{
-\item{fish_data}{Data frame that includes the following \code{colnames}, in no particular order except where noted:
-\describe{
-\item{\code{pop}}{Numeric or character population ID.}
-\item{\code{year}}{Numeric variable giving the year the fish spawned (i.e., the brood year).}
-\item{\code{A}}{Spawning habitat size (either stream length or area). Will usually be time-invariant within a population, but need not be.}
-\item{\code{S_obs}}{Total number (not density) of wild and hatchery-origin spawners.}
-\item{\code{n_age_minAge...n_age_maxAge}}{Multiple columns of observed spawner age frequencies (i.e., counts), where minAge (maxAge) is the numeral age in years (total, not ocean age) of the youngest (oldest) spawners.}
-\item{\code{n_W_obs}}{Observed frequency of natural-origin spawners.}
-\item{\code{n_H_obs}}{Observed frequency of hatchery-origin spawners.}
-\item{\code{F_rate}}{Total harvest rate (proportion) of natural-origin fish.}
-\item{\code{B_take_obs}}{Number of adults taken for hatchery broodstock.}
+\item{fish_data}{Data frame that includes the following columns,
+in no particular order except where noted:
+\itemize{
+\item \code{pop}  Numeric, factor or character population ID.
+\item \code{year}  Numeric variable giving the year the fish spawned (i.e., the brood year).
+\item \code{A} Spawning habitat size (either stream length or area).
+Will usually be time-invariant within a population, but need not be.
+\item \code{S_obs}  Total number (not density) of wild and hatchery-origin spawners.
+\item \code{n_age_minAge...n_age_maxAge}  Multiple columns of observed spawner age frequencies
+(i.e., counts), where \code{minAge} (\code{maxAge}) is the numeral age in years
+(total, not ocean age) of the youngest (oldest) spawners.
+\item \code{n_W_obs}  Observed frequency of natural-origin spawners.
+\item \code{n_H_obs}  Observed frequency of hatchery-origin spawners.
+\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
+\item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
 }}
 }
 \value{
-A data frame with the following \code{colnames}, some of which are simply replicated from fish_data:
-\describe{
-\item{\code{pop}}{See above.}
-\item{\code{year}}{See above.}
-\item{\code{A}}{See above.}
-\item{\code{S}}{Same as S_obs above.}
-\item{\code{p_age_minAge...p_age_maxAge}}{Multiple columns of spawner age \emph{relative} frequencies corresponding to the frequencies in fish_data.}
-\item{\code{p_HOS}}{Proportion of hatchery-origin spawners.}
-\item{\code{F_rate}}{See above.}
-\item{\code{B_take_obs}}{See above.}
-#' \item{\code{R}}{Total natural-origin recruits from the brood year in each row.}
+A data frame with the following columns, some of which are simply
+replicated from \code{fish_data}:
+\itemize{
+\item \code{pop}  See above.
+\item \code{year}  See above.
+\item \code{A}  See above.
+\item \code{S}  Same as \code{S_obs} above.
+\item \code{p_age_minAge...p_age_maxAge}  Multiple columns of spawner age
+\emph{relative} frequencies corresponding to the frequencies in \code{fish_data}.
+\item \code{p_HOS}  Proportion of hatchery-origin spawners.
+\item \code{F_rate}  See above.
+\item \code{B_take_obs}  See above.
+\item \code{R}  Total natural-origin recruits from the brood year in each row.
 }
 }
 \description{
-Perform run reconstruction on brood table data.
+Perform run reconstruction on brood table data
 }

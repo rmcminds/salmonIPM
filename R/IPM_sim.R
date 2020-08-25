@@ -1,71 +1,80 @@
 #' Simulate data under an integrated population model
 #'
-#' \code{IPM_sim} simulates initial values for parameters and states in Stan.
+#' Generate pseudo-data, group-level parameters, and states from a specified
+#' **salmonIPM** integrated population model given values for the hyperparameters.
+#' This may be useful, e.g., in simulation-based calibration and model sensitivity
+#' checking.
 #'
-#' @param pars Named list of (hyper-) parameters to be used for simulations:
-#'   \describe{\item{\code{mu_alpha}}{Hyper-mean of log intrinsic productivity}
-#'   \item{\code{sigma_alpha}}{Hyper-SD of log intrinsic productivity}
-#'   \item{\code{mu_Rmax}}{Hyper-mean of log asymptotic recruitment}
-#'   \item{\code{sigma_Rmax}}{Hyper-SD of log asymptotic recruitment}
-#'   \item{\code{rho_alphaRmax}}{Correlation between log(alpha) and log(Rmax)}
-#'   \item{\code{beta_phi}}{If \code{life_cycle=="SS"}, vector of regression
-#'   coefficients for log productivity anomalies} \item{\code{rho_phi}}{If
-#'   \code{life_cycle=="SS"}, AR(1) coefficient for log productivity anomalies}
-#'   \item{\code{sigma_phi}}{If \code{life_cycle=="SS"}, hyper-SD of brood year
-#'   log productivity anomalies} \item{\code{sigma}}{If \code{life_cycle=="SS"},
-#'   unique recruitment process error SD} \item{\code{beta_phi_M}}{If
-#'   \code{life_cycle=="SMS"}, vector of regression coefficients for
-#'   spawner-smolt log productivity anomalies} \item{\code{rho_phi_M}}{If
-#'   \code{life_cycle=="SMS"}, AR(1) coefficient of spawner-smolt log
-#'   productivity anomalies} \item{\code{sigma_phi_M}}{If
-#'   \code{life_cycle=="SMS"}, process error SD of spawner-smolt log
-#'   productivity anomalies} \item{\code{sigma_M}}{If \code{life_cycle=="SMS"},
-#'   SD of unique spawner-smolt productivity process errors}
-#'   \item{\code{mu_MS}}{If \code{life_cycle=="SMS"}, mean SAR}
-#'   \item{\code{beta_phi_MS}}{If \code{life_cycle=="SMS"}, vector of regression
-#'   coefficients for logit SAR anomalies} \item{\code{rho_phi_MS}}{If
-#'   \code{life_cycle=="SMS"}, AR(1) coefficient for logit SAR anomalies}
-#'   \item{\code{sigma_phi_MS}}{If \code{life_cycle=="SMS"}, process error SD of
-#'   logit SAR anomalies} \item{\code{sigma_MS}}{If \code{life_cycle=="SMS"}, SD
-#'   of unique SAR process errors} \item{\code{mu_p}}{Among-population mean
-#'   simplex of age distributions} \item{\code{sigma_gamma}}{Vector of
-#'   among-population SDs of mean log-ratio age distributions}
-#'   \item{\code{R_gamma}}{Among-population correlation matrix of mean log-ratio
-#'   age distributions} \item{\code{sigma_gamma}}{Vector of SDs of log-ratio
-#'   cohort age distributions} \item{\code{R_gamma}}{Correlation matrix of
-#'   cohort log-ratio age distributions} \item{\code{sigma_p}}{Vector of SDs of
-#'   log-ratio cohort age distributions} \item{\code{R_p}}{Correlation matrix of
-#'   cohort log-ratio age distributions} \item{\code{tau_M}}{If
-#'   \code{life_cycle=="SMS"}, smolt observation error SD}
-#'   \item{\code{tau_S}}{Spawner observation error SD}
-#'   \item{\code{S_init_K}}{Mean of initial spawning population size as a
-#'   fraction of carrying capacity} }
-#' @param fish_data Data frame with columns
-#'   \describe{\item{\code{pop}}{Population ID} \item{\code{year}}{Calendar
-#'   year} \item{\code{A}}{Spawning habitat area} \item{\code{p_HOS}}{True
-#'   fraction of hatchery-origin spawners}  \item{\code{F_rate}}{Fishing
-#'   mortality rate} \item{\code{B_rate}}{Hatchery broodstock removal rate}
-#'   \item{\code{n_age_obs}}{Number of spawners sampled for age composition}
-#'   \item{\code{n_HW_obs}}{Number of spawners sampled for hatchery/wild
-#'   origin}}
+#' @param pars Named list of (hyper)parameters to be used for simulations:
+#'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
+#'   * `sigma_alpha`  Hyper-SD of log intrinsic productivity.
+#'   * `mu_Rmax`  Hyper-mean of log asymptotic recruitment.
+#'   * `sigma_Rmax`  Hyper-SD of log asymptotic recruitment.
+#'   * `rho_alphaRmax`  Correlation between log(alpha) and log(Rmax).
+#'   * `beta_phi`  If `life_cycle=="SS"`, vector of regression
+#'   coefficients for log productivity anomalies.
+#'   * `rho_phi`  If `life_cycle=="SS"`, AR(1) coefficient for 
+#'   log productivity anomalies.
+#'   * `sigma_phi`  If `life_cycle=="SS"`, hyper-SD of brood year 
+#'   log productivity anomalies.
+#'   * `sigma`  If `life_cycle=="SS"`, unique recruitment process error SD.
+#'   * `beta_phi_M`  If `life_cycle=="SMS"`, vector of regression coefficients for
+#'   spawner-smolt log productivity anomalies.
+#'   * `rho_phi_M`  If `life_cycle=="SMS"`, AR(1) coefficient of spawner-smolt log
+#'   productivity anomalies.
+#'   * `sigma_phi_M`  If `life_cycle=="SMS"`, process error SD 
+#'   of spawner-smolt log productivity anomalies.
+#'   * `sigma_M`  If `life_cycle=="SMS"`,
+#'   SD of unique spawner-smolt productivity process errors.
+#'   * `mu_MS`  If `life_cycle=="SMS"`, mean SAR.
+#'   * `beta_phi_MS`  If `life_cycle=="SMS"`, vector of regression
+#'   coefficients for logit SAR anomalies.
+#'   * `rho_phi_MS`  If `life_cycle=="SMS"`, AR(1) coefficient for  logit SAR anomalies.
+#'   * `sigma_phi_MS`  If `life_cycle=="SMS"`, process error SD of logit SAR anomalies.
+#'   * `sigma_MS`  If `life_cycle=="SMS"`, SD of unique SAR process errors.
+#'   * `mu_p`  Among-population mean simplex of age distributions.
+#'   * `sigma_gamma`  Vector of among-population SDs of mean log-ratio age distributions.
+#'   * `R_gamma`  Among-population correlation matrix of mean log-ratio age distributions. 
+#'   * `sigma_gamma`  Vector of SDs of log-ratio cohort age distributions.
+#'   * `R_gamma`  Correlation matrix of cohort log-ratio age distributions. 
+#'   * `sigma_p`  Vector of SDs of log-ratio cohort age distributions.
+#'   * `R_p`  Correlation matrix of cohort log-ratio age distributions. 
+#'   * `tau_M`  If `life_cycle=="SMS"`, smolt observation error SD.
+#'   * `tau_S`  Spawner observation error SD.
+#'   * `S_init_K`  Mean of initial spawning population size as a fraction of carrying capacity. 
+#' @param fish_data Data frame with columns:
+#'   * `pop`  Population ID.
+#'   * `year`  Calendar year.
+#'   * `A`  Spawning habitat area.
+#'   * `p_HOS`  True fraction of hatchery-origin spawners.
+#'   * `F_rate`  Fishing mortality rate.
+#'   * `B_rate`  Hatchery broodstock removal rate.
+#'   * `n_age_obs`  Number of spawners sampled for age composition.
+#'   * `n_HW_obs`  Number of spawners sampled for hatchery/wild origin.
 #' @param env_data Optional data frame or named list of data frames whose
 #'   variables are time-varying environmental covariates, sequentially ordered
 #'   with each row corresponding to a unique year in fish_data. If a named list,
 #'   element names correspond to stage- or transition-specific covariate
 #'   matrices defined in the simulation model being used. (This is required if
-#'   \code{life_cycle != "SS"}.)
+#'   `life_cycle != "SS"`.)
 #' @param life_cycle Character string indicating which life-cycle model to
-#'   simulate Currently available options are spawner-to-spawner (\code{"SS"},
-#'   the default) or spawner-smolt-spawner (\code{"SMS"}).
+#'   simulate Currently available options are spawner-to-spawner (`"SS"`,
+#'   the default) or spawner-smolt-spawner (`"SMS"`).
 #' @param N_age The number of adult age classes.
 #' @param max_age Oldest adult age class.
-#' @param ages If \code{life_cycle != "SS"}, a named list giving the fixed ages
+#' @param ages If `life_cycle != "SS"`, a named list giving the fixed ages
 #'   in years of all subadult life stages.
-#' @param SR_fun One of \code{"exp"}, \code{"BH"} (the default), or
-#'   \code{"Ricker"}, indicating which spawner-recruit function to simulate.
+#' @param SR_fun One of `"exp"`, `"BH"` (the default), or
+#'   `"Ricker"`, indicating which spawner-recruit function to simulate.
 #'
-#' @return A list with initial starting values for all of the parameters and
-#'   states in the Stan model.
+#' @return A named list with elements
+#' 
+#' * `sim_dat`  A data frame containing simulated data in the structure of `fish_data` 
+#' (see [stan_data()]) appropriate for the specified `life_cycle`, ready to be passed 
+#' to [salmonIPM()].
+#' * `pars_out`  A named list of hyperparameters, group-level parameters, and states
+#' used in generating the pseudo-data.
+#' 
 #'
 #' @importFrom stats rbinom rlnorm rmultinom rnorm runif
 #'
