@@ -10,13 +10,13 @@ par_defs(stan_model = NULL)
 \arguments{
 \item{stan_model}{One of two options:
 \enumerate{
-  \item A \code{character} string giving the name of the Stan model being fit
-  (without the ".stan" filetype extension)
-  \item An object of class \code{stanfit} as returned by a call to
-  \code{\link{salmonIPM}}
+\item A \code{character} string giving the name of the Stan model being fit
+(without the ".stan" filetype extension)
+\item An object of class \code{stanfit} as returned by a call to
+\code{\link{salmonIPM}}
 }
 
-The default argument \code{stan_model = NULL} returns a list of all of the 
+The default argument \code{stan_model = NULL} returns a list of all of the
 parameters returned by default, across all model forms.}
 }
 \value{

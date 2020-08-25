@@ -19,7 +19,7 @@ fit (".stan" filetype extension is not included).}
 }
 \value{
 A list with initial starting values for the parameters and states in
-  the Stan model.
+the Stan model.
 }
 \description{
 Generate initial values for fitting either integrated or run-reconstruction
