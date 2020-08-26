@@ -2232,7 +2232,7 @@ public:
                     current_statement_begin__ = 353;
                     stan::model::assign(q_GR, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
-                                to_row_vector_row_major(diag_post_multiply(divide(S_W_a, get_base1(S_W, i, "S_W", 1)), stan::model::rvalue(q_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q_MS")), pstream__), 
+                                to_row_vector_row_major(diag_post_multiply(divide(S_W_a, get_base1(S_W, i, "S_W", 1)), elt_divide(1.0, stan::model::rvalue(q_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q_MS"))), pstream__), 
                                 "assigning variable q_GR");
                 } else {
                     current_statement_begin__ = 356;
@@ -3516,7 +3516,7 @@ public:
                     current_statement_begin__ = 353;
                     stan::model::assign(q_GR, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
-                                to_row_vector_row_major(diag_post_multiply(divide(S_W_a, get_base1(S_W, i, "S_W", 1)), stan::model::rvalue(q_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q_MS")), pstream__), 
+                                to_row_vector_row_major(diag_post_multiply(divide(S_W_a, get_base1(S_W, i, "S_W", 1)), elt_divide(1.0, stan::model::rvalue(q_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q_MS"))), pstream__), 
                                 "assigning variable q_GR");
                 } else {
                     current_statement_begin__ = 356;

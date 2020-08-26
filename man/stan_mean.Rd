@@ -7,7 +7,7 @@
 stan_mean(object, pars)
 }
 \arguments{
-\item{object}{A fitted Stan object.}
+\item{object}{A fitted \code{stanfit} object.}
 
 \item{pars}{Character vector with the names of parameters to summarize.}
 }
@@ -16,5 +16,5 @@ A scalar or vector of means of the posterior distribution of \code{pars}.
 }
 \description{
 Convenience function to simplify extracting posterior means or single
-parameters from stanfit objects.
+parameters from \code{stanfit} objects.
 }

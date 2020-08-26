@@ -1,17 +1,16 @@
-#' Generate initial values for fitting either integrated or run-reconstruction
-#' spawner-recruit models in Stan.
+#' Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.
 #'
-#' @param data Named list of input data for fitting either an integrated or
-#'   run-reconstruction spawner-recruit model in Stan, as returned by
-#'   \code{stan_data}.
+#' @param data Named list of input data for fitting either an IPM or
+#'   run-reconstruction spawner-recruit model in [Stan](http://mc-stan.org), 
+#'   as returned by [stan_data()].
 #' @param chains A positive integer specifying the number of Markov chains.
 #' @param stan_model Character string giving the name of the Stan model being
-#'   fit (".stan" filetype extension is not included).
+#'   fit (`".stan"` filetype extension is not included).
 #'
 #' @importFrom stats aggregate na.omit
 #'
 #' @return A list with initial starting values for the parameters and states in
-#'   the Stan model.
+#'   the model.
 #'
 #' @export
 stan_init <- function(data, stan_model, chains) 

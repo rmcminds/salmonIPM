@@ -2,26 +2,24 @@
 % Please edit documentation in R/stan_init.r
 \name{stan_init}
 \alias{stan_init}
-\title{Generate initial values for fitting either integrated or run-reconstruction
-spawner-recruit models in Stan.}
+\title{Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.}
 \usage{
 stan_init(data, stan_model, chains)
 }
 \arguments{
-\item{data}{Named list of input data for fitting either an integrated or
-run-reconstruction spawner-recruit model in Stan, as returned by
-\code{stan_data}.}
+\item{data}{Named list of input data for fitting either an IPM or
+run-reconstruction spawner-recruit model in \href{http://mc-stan.org}{Stan},
+as returned by \code{\link[=stan_data]{stan_data()}}.}
 
 \item{stan_model}{Character string giving the name of the Stan model being
-fit (".stan" filetype extension is not included).}
+fit (\code{".stan"} filetype extension is not included).}
 
 \item{chains}{A positive integer specifying the number of Markov chains.}
 }
 \value{
 A list with initial starting values for the parameters and states in
-the Stan model.
+the model.
 }
 \description{
-Generate initial values for fitting either integrated or run-reconstruction
-spawner-recruit models in Stan.
+Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.
 }

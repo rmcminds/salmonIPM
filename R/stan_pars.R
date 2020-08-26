@@ -1,11 +1,11 @@
 #' Helper function that returns the parameters and states that a given
-#' model should return.
+#' model should save.
 #'
 #' @param stan_model Character string giving the name of the Stan model being
-#'   fit (".stan" filetype extension is not included).   
+#'   fit (`".stan"` filetype extension is not included).   
 #'
 #' @return Character vector with names of parameters and states that Stan will
-#' return.
+#' save.
 #' 
 #' @export
 stan_pars <- function(stan_model) {

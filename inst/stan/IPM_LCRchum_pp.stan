@@ -50,6 +50,9 @@ data {
   int<lower=1,upper=N> N_tau_M_obs;    // number of cases with known smolt observation error SD
   int<lower=1,upper=N> which_tau_M_obs[N_tau_M_obs]; // cases with known smolt observation error SD
   vector<lower=0>[N] tau_M_obs;        // known smolt observation error SDs
+  int<lower=0,upper=N> N_upstream;     // number of smolt obs upstream of a trap in another pop
+  int<lower=1,upper=N> which_upstream[N_upstream]; // smolt obs upstream of a trap in another pop
+  int<lower=1,upper=N> downstream_trap[N_upstream]; // row index for the downstream trap
   // SAR (smolt-spawner survival)
   int<lower=0> N_X_MS;                 // number of SAR productivity covariates
   matrix[max(year),N_X_MS] X_MS;       // SAR covariates
@@ -301,7 +304,8 @@ transformed parameters {
 }
 
 model {
-  vector[N_B] B_take; // true broodstock take when B_take_obs > 0
+  vector[N_B] B_take;     // true broodstock take when B_take_obs > 0
+  vector[N] M_downstream; // total smolts including upstream populations 
   
   // Priors
   
@@ -373,7 +377,9 @@ model {
   // Observation model
   E_obs ~ normal(mu_E[a_E], sigma_E[a_E]);
   target += -normal_lccdf(0 | mu_E[a_E], sigma_E[a_E]); // zero-truncated normal (T[0, ] not vectorized)
-  M[which_M_obs] ~ lognormal(log(M_obs[which_M_obs]), tau_M[which_M_obs]); // observed smolts
+  M_downstream = M;
+  M_downstream[downstream_trap] += M[which_upstream];
+  M_downstream[which_M_obs] ~ lognormal(log(M_obs[which_M_obs]), tau_M[which_M_obs]); // observed smolts
   S[which_S_obs] ~ lognormal(log(S_obs[which_S_obs]), tau_S[which_S_obs]); // observed spawners
   // M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[which_M_obs]); // observed smolts
   // S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[which_S_obs]); // observed spawners
@@ -385,6 +391,7 @@ generated quantities {
   corr_matrix[N_age-1] R_pop_p; // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;     // correlation matrix of within-pop cohort log-ratio age distns 
   // ?? vector[N_E] LL_E_obs; ??
+  vector[N] M_downstream; // total smolts including upstream populations 
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
   vector[N_H] LL_n_H_obs;       // pointwise log-likelihood of hatchery vs. wild frequencies
@@ -394,6 +401,8 @@ generated quantities {
   R_pop_p = multiply_lower_tri_self_transpose(L_pop_p);
   R_p = multiply_lower_tri_self_transpose(L_p);
   
+  M_downstream = M;
+  M_downstream[downstream_trap] += M[which_upstream];
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
     LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M[which_M_obs[i]] | log(M_obs[which_M_obs[i]]), tau_M[which_M_obs[i]]); 
