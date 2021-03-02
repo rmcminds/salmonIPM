@@ -1,16 +1,29 @@
 functions {
-  // spawner-recruit functions
-  real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
-    real R;
+  // logit egg-to-smolt survival functions
+  real logit_s_EM(int SR_fun, real psi, real Mmax, real E, real A) {
+    real ls;
+
+    if(SR_fun == 1) 
+    {
+      // discrete exponential
+      // s_EM = psi
+      ls = logit(psi);
+    }
+    else if(SR_fun == 2) 
+    {
+      // Beverton-Holt
+      // s_EM = psi/(1 + psi*E/(A*Mmax))
+      ls = log(psi) - log1p(psi*(E/(A*Mmax) - 1));
+    }
+    else if(SR_fun == 3) 
+    {
+      // Ricker
+      // s_EM = psi*exp(-psi*E/(A*e()*Mmax))
+      real Q = psi*E/(A*e()*Mmax);
+      ls = log(psi) - Q - log1m(psi*exp(-Q));
+    }
     
-    if(SR_fun == 1)      // discrete exponential
-    R = alpha*S/A;
-    else if(SR_fun == 2) // Beverton-Holt
-    R = alpha*S/(A + alpha*S/Rmax);
-    else if(SR_fun == 3) // Ricker
-    R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
-    
-    return(R);
+    return(ls);
   }
   
   // Generalized normal (aka power-exponential) unnormalized log-probability
@@ -34,12 +47,12 @@ data {
   int<lower=1,upper=N> pop[N];         // population identifier
   int<lower=1,upper=N> year[N];        // calendar year identifier
   // egg deposition
-  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=0> N_E;                    // number of fecundity observations
   int<lower=1> age_E[N_E];             // female age (years) for fecundity observations
   vector<lower=0>[N_E] E_obs;          // observed fecundity
   // egg-smolt survival
+  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=0> N_X_EM;                 // number of egg-smolt survival covariates
   matrix[max(year),N_X_EM] X_EM;       // egg-smolt survival covariates
   int<lower=1> smolt_age;              // smolt age
@@ -130,26 +143,27 @@ parameters {
   // egg deposition 
   vector<lower=0>[N_age] mu_E;           // mean fecundity at each female age
   vector<lower=0>[N_age] sigma_E;        // among-female SD of fecundity at each age
-  real mu_Emax;                          // hyper-mean log maximum egg deposition (millions)
-  real<lower=0> sigma_Emax;              // among-pop hyper-SD of log maximum egg deposition
-  vector[N_pop] zeta_Emax;               // pop-specific log maximum egg deposition (Z-scores)
   // egg-smolt survival
-  real<lower=0,upper=1> mu_EM;           // hyper-mean egg-smolt survival
-  real<lower=0> sigma_pop_EM;            // among-pop hyper-SD of logit egg-smolt survival
-  vector[N_pop] zeta_pop_EM;             // pop-specific logit egg-smolt survival (Z-scores)
-  vector[N_X_EM] beta_EM;                // regression coefs for annual egg-smolt survial anomalies
-  real<lower=-1,upper=1> rho_EM;         // AR(1) coef for logit egg-smolt survival anomalies
-  real<lower=0> sigma_year_EM;           // process error SD of logit egg-smolt survival anomalies
-  vector[N_year] zeta_year_EM;           // logit egg-smolt survival anomalies (Z-scores)
-  real<lower=0> sigma_EM;                // unique logit egg-smolt survival process error SD
+  real<lower=0,upper=1> mu_psi;          // hyper-mean density-independent egg-smolt survival
+  real<lower=0> sigma_psi;               // hyper-SD logit density-independent egg-smolt survival
+  vector[N_pop] zeta_psi;                // logit density-independent egg-smolt survival (Z-scores)
+  real mu_Mmax;                          // hyper-mean log maximum smolt recruitment (thousands)
+  real<lower=0> sigma_Mmax;              // among-pop hyper-SD of log maximum smolt recruitment
+  vector[N_pop] zeta_Mmax;               // log maximum smolt recruitment (Z-scores)
+  real<lower=-1,upper=1> rho_psiMmax;    // correlation between logit(psi) and log(Mmax)
+  vector[N_X_EM] beta_EM;                // regression coefs for annual logit egg-smolt survival anomalies
+  real<lower=-1,upper=1> rho_EM;         // AR(1) coef of annual logit egg-smolt survival anomalies
+  real<lower=0> sigma_year_EM;           // innovation SD of annual logit egg-smolt survival anomalies
+  vector[N_year] zeta_year_EM;           // annual logit egg-smolt survival anomalies (Z-scores)
+  real<lower=0> sigma_EM;                // SD of unique logit egg-smolt survival process errors
   vector[N] zeta_EM;                     // unique logit egg-smolt survival process errors (Z-scores)
   // SAR
   real<lower=0,upper=1> mu_MS;           // hyper-mean SAR
-  vector[N_X_MS] beta_MS;                // regression coefs for logit SAR anomalies
-  real<lower=-1,upper=1> rho_MS;         // AR(1) coef for logit SAR anomalies
-  real<lower=0> sigma_year_MS;           // process error SD of logit SAR anomalies
-  vector[N_year] zeta_year_MS;           // logit SAR anomalies (Z-scores)
-  real<lower=0> sigma_MS;                // unique logit SAR process error SD
+  vector[N_X_MS] beta_MS;                // regression coefs for annual logit SAR anomalies
+  real<lower=-1,upper=1> rho_MS;         // AR(1) coef of annual logit SAR anomalies
+  real<lower=0> sigma_year_MS;           // innovation SD of annual logit SAR anomalies
+  vector[N_year] zeta_year_MS;           // annual logit SAR anomalies (Z-scores)
+  real<lower=0> sigma_MS;                // SD of unique logit SAR process errors
   vector[N] zeta_MS;                     // unique logit SAR process errors (Z-scores)
   // spawner age structure
   simplex[N_age] mu_p;                   // among-pop mean of age distributions
@@ -176,14 +190,14 @@ parameters {
 
 transformed parameters {
   // egg deposition
-  vector<lower=0>[N_pop] Emax;           // pop-specific maximum egg deposition (millions)
   vector<lower=0>[N] E;                  // true egg deposition
   // egg-smolt survival
-  vector[N_pop] eta_pop_EM;              // pop-specific avg logit egg-smolt survival
+  vector<lower=0,upper=1>[N_pop] psi;    // pop-specific density-independent egg-smolt survival 
+  vector<lower=0>[N_pop] Mmax;           // pop-specific maximum smolt recruitment (thousands)
   vector[N_year] eta_year_EM;            // annual logit egg-smolt survival anomalies
   vector<lower=0,upper=1>[N] s_EM;       // true egg-smolt survival
-  vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
-  vector<lower=0>[N] M;                  // true smolt abundance (not density) by outmigration year
+  vector<lower=0>[N] M0;                 // true smolt abundance by brood year
+  vector<lower=0>[N] M;                  // true smolt abundance by outmigration year
   // SAR
   vector[N_year] eta_year_MS;            // annual logit SAR anomalies
   vector<lower=0,upper=1>[N] s_MS;       // true SAR
@@ -209,11 +223,27 @@ transformed parameters {
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
   
-  // Population-specific egg deposition and egg-smolt survival terms
-  Emax = exp(mu_Emax + sigma_Emax*zeta_Emax);
-  eta_pop_EM = sigma_pop_EM*zeta_pop_EM;
+  // Population-specific egg-smolt survival and capacity terms
+  // Multivariate Matt trick for [logit(psi), log(Mmax)]
+  {
+    matrix[2,2] L_psiMmax;           // Cholesky factor of corr matrix of logit(psi), log(Mmax)
+    matrix[N_pop,2] zeta_psiMmax;    // [logit(psi), log(Mmax)] random effects (z-scored)
+    matrix[N_pop,2] epsilon_psiMmax; // [logit(psi), log(Mmax)] random effects
+    vector[2] sigma_psiMmax;         // SD vector of [logit(psi), log(Mmax)]
+    
+    L_psiMmax[1,1] = 1;
+    L_psiMmax[2,1] = rho_psiMmax;
+    L_psiMmax[1,2] = 0;
+    L_psiMmax[2,2] = sqrt(1 - rho_psiMmax^2);
+    sigma_psiMmax[1] = sigma_psi;
+    sigma_psiMmax[2] = sigma_Mmax;
+    zeta_psiMmax = append_col(zeta_psi, zeta_Mmax);
+    epsilon_psiMmax = diag_pre_multiply(sigma_psiMmax, L_psiMmax * zeta_psiMmax')';
+    psi = inv_logit(logit(mu_psi) + epsilon_psiMmax[,1]);
+    Mmax = exp(mu_Mmax + epsilon_psiMmax[,2]);
+  }
   
-  // AR(1) model for spawner-smolt productivity and SAR anomalies
+  // AR(1) model for egg-smolt survival and SAR anomalies
   eta_year_EM[1] = zeta_year_EM[1]*sigma_year_EM/sqrt(1 - rho_EM^2); // initial anomaly
   eta_year_MS[1] = zeta_year_MS[1]*sigma_year_MS/sqrt(1 - rho_MS^2); // initial anomaly
   for(i in 2:N_year)
@@ -224,10 +254,8 @@ transformed parameters {
   // constrain "fitted" anomalies to sum to 0 (columns of X should be centered)
   eta_year_EM = eta_year_EM - mean(eta_year_EM[1:N_year]) + mat_lmult(X_EM, beta_EM);
   eta_year_MS = eta_year_MS - mean(eta_year_MS[1:N_year]) + mat_lmult(X_MS, beta_MS);
-  // annual population-specific egg-smolt survival
-  s_EM = inv_logit(logit(mu_EM) + eta_pop_EM[pop] + eta_year_EM[year] + zeta_EM*sigma_EM);
   // annual population-specific SAR
-  s_MS = inv_logit(logit(mu_MS) + eta_year_MS[year] + zeta_MS*sigma_MS);
+  s_MS = inv_logit(logit(mu_MS) + eta_year_MS[year] + sigma_MS*zeta_MS);
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
@@ -237,8 +265,8 @@ transformed parameters {
   exp_p = exp(p);
   p = diag_pre_multiply(ones_N ./ (exp_p * ones_N_age), exp_p);
   
-  // Calculate true total wild and hatchery spawners, spawner age distribution, and smolts,
-  // and predict smolt recruitment from brood year i
+  // Calculate true total wild and hatchery spawners, spawner age distribution, 
+  // eggs and smolts, and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
     // row_vector[N_age] exp_p; // exp(alr(p[i,]))
@@ -247,11 +275,6 @@ transformed parameters {
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
-    
-    // // Inverse log-ratio transform of cohort age distn
-    // // (built-in softmax function doesn't accept row vectors)
-    // exp_p = exp(p[i,]);
-    // p[i,] = exp_p/sum(exp_p);
     
     // Smolt recruitment
     if(pop_year_indx[i] <= smolt_age)
@@ -286,12 +309,13 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Egg production from brood year i
-    // Intrinsic productivity is age-weighted average fecundity / 2
-    // Units of Emax are millions of eggs
+    // Per capita age-weighted average fecundity / 2
     // assume 50:50 sex ratio for now
-    E[i] = A[i]*SR(SR_fun, 0.5*q[i,]*mu_E, 1e6*Emax[pop[i]], S[i], A[i]);
+    E[i] = 0.5*q[i,]*mu_E*S[i];
     
-    // Survival of eggs to smolts from brood year i
+    // Egg-to-smolt survival for brood year i
+    s_EM[i] = inv_logit(logit_s_EM(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E[i], A[i]) + 
+                        eta_year_EM[year[i]] + sigma_EM*zeta_EM[i]);
     M0[i] = E[i]*s_EM[i];
   }
   
@@ -312,13 +336,13 @@ model {
   // egg deposition
   mu_E ~ normal(2500,500);
   sigma_E ~ normal(500,1000);
-  mu_Emax ~ normal(2,5);       // units of Emax are millions of eggs 
-  sigma_Emax ~ normal(0,3);
-  zeta_Emax ~ std_normal();    // log(Emax) ~ N(mu_Emax, sigma_Emax)
 
   // egg-smolt survival
-  sigma_pop_EM ~ normal(0,2);
-  zeta_pop_EM ~ std_normal();  // logit(eta_pop_EM) ~ N(0, sigma_pop_EM)
+  sigma_psi ~ normal(0,2);
+  mu_Mmax ~ normal(5,5);    // units of Mmax: thousands of smolts
+  sigma_Mmax ~ normal(0,3);
+  zeta_psi ~ std_normal();  // [logit(psi), log(Mmax)] ~ MVN([logit(mu_psi), mu_Mmax], D*R_psiMmax*D),
+  zeta_Mmax ~ std_normal(); // where D = diag_matrix(sigma_psi, sigma_Mmax)
   beta_EM ~ normal(0,2);
   rho_EM ~ pexp(0,0.85,20);    // mildly regularize to ensure stationarity
   sigma_year_EM ~ normal(0,2);
@@ -379,10 +403,8 @@ model {
   target += -normal_lccdf(0 | mu_E[a_E], sigma_E[a_E]); // zero-truncated normal (T[0, ] not vectorized)
   M_downstream = M;
   M_downstream[downstream_trap] += M[which_upstream];
-  M_downstream[which_M_obs] ~ lognormal(log(M_obs[which_M_obs]), tau_M[which_M_obs]); // observed smolts
-  S[which_S_obs] ~ lognormal(log(S_obs[which_S_obs]), tau_S[which_S_obs]); // observed spawners
-  // M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[which_M_obs]); // observed smolts
-  // S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S[which_S_obs]); // observed spawners
+  M_downstream[which_M_obs] ~ lognormal(log(M_obs[which_M_obs]), tau_M[which_M_obs]); // prior on smolts
+  S[which_S_obs] ~ lognormal(log(S_obs[which_S_obs]), tau_S[which_S_obs]); // prior on spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // observed counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
