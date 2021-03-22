@@ -101,7 +101,7 @@ default is 1, which is usually the recommended value.}
 \item{cores}{Number of cores to use when executing the chains in parallel.
 Defaults to one less than the number of cores available.}
 
-\item{...}{Additional arguments to pass to \code{\link[rstan:sampling]{rstan::sampling()}}.}
+\item{...}{Additional arguments to pass to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 }
 \value{
 An object of class \code{stanfit} representing the fitted model. See

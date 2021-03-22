@@ -464,9 +464,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N_E = nrow(fecundity_data),
         age_E = fecundity_data$age_E,
         E_obs = fecundity_data$E_obs,
-        # egg-smolt survival
-        N_X_EM = ncol(env_data$EM), 
-        X_EM = as.matrix(env_data$EM),
+        # spawner-smolt productivity
+        N_X_M = ncol(env_data$M), 
+        X_M = as.matrix(env_data$M),
         smolt_age = ages$M,
         # smolt abundance and observation error
         N_M_obs = sum(!is.na(M_obs)),
