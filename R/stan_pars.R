@@ -53,7 +53,7 @@ stan_pars <- function(stan_model) {
                        "mu_p","sigma_pop_p","R_pop_p","eta_pop_p","sigma_p","R_p","p",
                        "p_HOS","B_rate_all",
                        "mu_tau_M","sigma_tau_M","tau_M","mu_tau_S","sigma_tau_S","tau_S",
-                       "M","S","q"),
+                       "E_hat","M","S","q"),
     IPM_ICchinook_pp =  c("mu_alpha","sigma_alpha","alpha",
                           "mu_Rmax","sigma_Rmax","Rmax","rho_alphaRmax",
                           "beta_M","rho_M","sigma_M","M",

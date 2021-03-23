@@ -177,7 +177,7 @@ parameters {
 
 transformed parameters {
   // fecundity
-  vector<lower=0>[N] E;                  // true egg deposition
+  vector<lower=0>[N] E_hat;              // expected egg deposition
   // spawner-smolt productivity
   vector<lower=0,upper=1>[N_pop] psi;    // pop-specific density-independent egg-smolt survival 
   vector<lower=0>[N_pop] Mmax;           // pop-specific maximum smolt recruitment (thousands)
@@ -210,25 +210,29 @@ transformed parameters {
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
   
-  // Population-specific egg-smolt survival and capacity terms
-  // Multivariate Matt trick for [logit(psi), log(Mmax)]
-  {
-    matrix[2,2] L_psiMmax;           // Cholesky factor of corr matrix of logit(psi), log(Mmax)
-    matrix[N_pop,2] zeta_psiMmax;    // [logit(psi), log(Mmax)] random effects (z-scored)
-    matrix[N_pop,2] epsilon_psiMmax; // [logit(psi), log(Mmax)] random effects
-    vector[2] sigma_psiMmax;         // SD vector of [logit(psi), log(Mmax)]
-    
-    L_psiMmax[1,1] = 1;
-    L_psiMmax[2,1] = rho_psiMmax;
-    L_psiMmax[1,2] = 0;
-    L_psiMmax[2,2] = sqrt(1 - rho_psiMmax^2);
-    sigma_psiMmax[1] = sigma_psi;
-    sigma_psiMmax[2] = sigma_Mmax;
-    zeta_psiMmax = append_col(zeta_psi, zeta_Mmax);
-    epsilon_psiMmax = diag_pre_multiply(sigma_psiMmax, L_psiMmax * zeta_psiMmax')';
-    psi = inv_logit(logit(mu_psi) + epsilon_psiMmax[,1]);
-    Mmax = exp(mu_Mmax + epsilon_psiMmax[,2]);
-  }
+  // // Population-specific egg-smolt survival and capacity terms
+  // // Multivariate Matt trick for [logit(psi), log(Mmax)]
+  // {
+  //   matrix[2,2] L_psiMmax;           // Cholesky factor of corr matrix of logit(psi), log(Mmax)
+  //   matrix[N_pop,2] zeta_psiMmax;    // [logit(psi), log(Mmax)] random effects (z-scored)
+  //   matrix[N_pop,2] epsilon_psiMmax; // [logit(psi), log(Mmax)] random effects
+  //   vector[2] sigma_psiMmax;         // SD vector of [logit(psi), log(Mmax)]
+  //   
+  //   L_psiMmax[1,1] = 1;
+  //   L_psiMmax[2,1] = rho_psiMmax;
+  //   L_psiMmax[1,2] = 0;
+  //   L_psiMmax[2,2] = sqrt(1 - rho_psiMmax^2);
+  //   sigma_psiMmax[1] = sigma_psi;
+  //   sigma_psiMmax[2] = sigma_Mmax;
+  //   zeta_psiMmax = append_col(zeta_psi, zeta_Mmax);
+  //   epsilon_psiMmax = diag_pre_multiply(sigma_psiMmax, L_psiMmax * zeta_psiMmax')';
+  //   psi = inv_logit(logit(mu_psi) + epsilon_psiMmax[,1]);
+  //   Mmax = exp(mu_Mmax + epsilon_psiMmax[,2]);
+  // }
+  
+  // Population-specific egg-smolt survival and capacity terms (independent)
+  psi = inv_logit(logit(mu_psi) + sigma_psi*zeta_psi);
+  Mmax = exp(mu_Mmax + sigma_Mmax*zeta_Mmax);
   
   // AR(1) model for spawner-smolt productivity and SAR anomalies
   eta_year_M[1] = zeta_year_M[1]*sigma_year_M/sqrt(1 - rho_M^2); // initial anomaly
@@ -297,11 +301,11 @@ transformed parameters {
     
     // Density-independent egg production from brood year i
     // assume 50:50 sex ratio for now
-    E[i] = 0.5*q[i,]*mu_E*S[i];
+    E_hat[i] = q[i,]*mu_E*0.5*S[i];
 
     // Smolt production from brood year i
     // Density-dependent egg-to-smolt survival
-    M_hat[i] = A[i] * SR(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E[i], A[i]);
+    M_hat[i] = A[i] * SR(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E_hat[i], A[i]);
     M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + sigma_M*zeta_M[i]);
   }
   
@@ -385,7 +389,7 @@ model {
   tau_S_obs[which_tau_S_obs] ~ lognormal(log(mu_tau_S), sigma_tau_S);
 
   // Observation model
-  E_obs ~ normal(mu_E[a_E], sigma_E[a_E]);
+  E_obs ~ normal(mu_E[a_E], sigma_E[a_E]); // observed fecundity
   target += -normal_lccdf(0 | mu_E[a_E], sigma_E[a_E]); // zero-truncated normal (T[0, ] not vectorized)
   M_downstream = M;
   M_downstream[downstream_trap] += M[which_upstream];
