@@ -176,6 +176,8 @@ parameters {
 }
 
 transformed parameters {
+  // fecundity
+  vector<lower=0>[N] E;                  // true egg deposition
   // spawner-smolt productivity
   vector<lower=0,upper=1>[N_pop] psi;    // pop-specific density-independent egg-smolt survival 
   vector<lower=0>[N_pop] Mmax;           // pop-specific maximum smolt recruitment (thousands)
@@ -293,10 +295,13 @@ transformed parameters {
     S[i] = S_W[i] + S_H[i];
     q[i,] = S_W_a/S_W[i];
     
+    // Density-independent egg production from brood year i
+    // assume 50:50 sex ratio for now
+    E[i] = 0.5*q[i,]*mu_E*S[i];
+
     // Smolt production from brood year i
-    // Intrinsic productivity is the product of per capita age-weighted average fecundity / 2
-    // (assume 50:50 sex ratio for now) and density-independent egg-to-smolt survival
-    M_hat[i] = A[i] * SR(SR_fun, 0.5*q[i,]*mu_E*psi[pop[i]], Mmax[pop[i]]*1e3, S[i], A[i]);
+    // Density-dependent egg-to-smolt survival
+    M_hat[i] = A[i] * SR(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E[i], A[i]);
     M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + sigma_M*zeta_M[i]);
   }
   
@@ -319,7 +324,7 @@ model {
   sigma_E ~ normal(500,1000);
 
   // spawner-smolt productivity
-  sigma_psi ~ normal(0,2);
+  sigma_psi ~ normal(0,5);
   mu_Mmax ~ normal(5,5);       // units of Mmax: thousands of smolts
   sigma_Mmax ~ normal(0,3);
   zeta_psi ~ std_normal();     // [logit(psi), log(Mmax)] ~ MVN([logit(mu_psi), mu_Mmax], D*R_psiMmax*D),
