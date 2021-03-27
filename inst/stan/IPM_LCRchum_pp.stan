@@ -195,7 +195,7 @@ transformed parameters {
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   // spawner age structure
   row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
-  matrix[N_pop,N_age-1] mu_alr_pop_p;    // population mean log-ratio age distributions
+  matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio age distributions
   matrix<lower=0>[N,N_age] alr_p;        // alr(p[i,])
   matrix<lower=0>[N,N_age] exp_alr_p;    // exp(alr(p[i,]))
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
@@ -230,8 +230,8 @@ transformed parameters {
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
-  mu_alr_pop_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  alr_p = append_col(mu_alr_pop_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
+  alr_p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
   // Inverse log-ratio (softmax) transform of cohort age distn
   exp_alr_p = exp(alr_p);
   p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
@@ -244,7 +244,7 @@ transformed parameters {
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
-    vector[N_orphan_age] q_orphan; 
+    vector[N_orphan_age] q_orphan; // orphan age distribution
     
     // Smolt recruitment
     if(pop_year_indx[i] <= smolt_age)
@@ -310,8 +310,8 @@ model {
   sigma_psi ~ normal(0,5);
   mu_Mmax ~ normal(5,5);       // units of Mmax: thousands of smolts
   sigma_Mmax ~ normal(0,3);
-  zeta_psi ~ std_normal();     // [logit(psi), log(Mmax)] ~ MVN([logit(mu_psi), mu_Mmax], D*R_psiMmax*D),
-  zeta_Mmax ~ std_normal();    // where D = diag_matrix(sigma_psi, sigma_Mmax)
+  zeta_psi ~ std_normal();     // logit(psi) ~ N(logit(mu_psi), sigma_psi)
+  zeta_Mmax ~ std_normal();    // log(Mmax) ~ N(mu_Mmax, sigma_Mmax)
   beta_M ~ normal(0,2);
   rho_M ~ pexp(0,0.85,20);     // mildly regularize to ensure stationarity
   sigma_year_M ~ normal(0,2);
@@ -333,10 +333,10 @@ model {
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 
-  // mu_alr_pop_p[i,] ~ MVN(mu_alr_p, D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
+  // mu_pop_alr_p[i,] ~ MVN(mu_alr_p, D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
   to_vector(zeta_pop_p) ~ std_normal();
   // age probs logistic MVN: 
-  // alr_p[i,] ~ MVN(mu_alr_pop_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
+  // alr_p[i,] ~ MVN(mu_pop_alr_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
 
   // removals

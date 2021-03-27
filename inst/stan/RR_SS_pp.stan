@@ -1,3 +1,4 @@
+functions {
   // spawner-recruit functions
   real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
     real R;
