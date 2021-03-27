@@ -217,7 +217,6 @@ stan_init <- function(data, stan_model, chains)
             mu_Mmax = rnorm(1, 10, 5),
             sigma_Mmax = runif(1, 0.5, 2),
             zeta_Mmax = array(rnorm(N_pop, 0, 1), dim = N_pop),
-            rho_psiMmax = runif(1, -0.5, 0.5),
             beta_M = array(rnorm(N_X_M, 0, 1), dim = N_X_M),
             rho_M = runif(1, 0.1, 0.7),
             sigma_year_M = runif(1, 0.1, 0.5),

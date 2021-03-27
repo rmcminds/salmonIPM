@@ -137,7 +137,6 @@ parameters {
   real mu_Mmax;                          // hyper-mean log maximum smolt recruitment (thousands)
   real<lower=0> sigma_Mmax;              // among-pop hyper-SD of log maximum smolt recruitment
   vector[N_pop] zeta_Mmax;               // log maximum smolt recruitment (Z-scores)
-  real<lower=-1,upper=1> rho_psiMmax;    // correlation between logit(psi) and log(Mmax)
   vector[N_X_M] beta_M;                  // regression coefs for annual spawner-smolt productivity anomalies
   real<lower=-1,upper=1> rho_M;          // AR(1) coef of annual spawner-smolt productivity anomalies
   real<lower=0> sigma_year_M;            // innovation SD of annual spawner-smolt productivity anomalies
@@ -196,8 +195,9 @@ transformed parameters {
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   // spawner age structure
   row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
-  matrix[N_pop,N_age-1] eta_pop_p;       // population mean log-ratio age distributions
-  matrix<lower=0>[N,N_age] exp_p;        // exp(alr(p[i,]))
+  matrix[N_pop,N_age-1] mu_alr_pop_p;    // population mean log-ratio age distributions
+  matrix<lower=0>[N,N_age] alr_p;        // alr(p[i,])
+  matrix<lower=0>[N,N_age] exp_alr_p;    // exp(alr(p[i,]))
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
   // observation error SDs
@@ -209,33 +209,13 @@ transformed parameters {
   p_HOS_all[which_H] = p_HOS;
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
-  
-  // // Population-specific egg-smolt survival and capacity terms
-  // // Multivariate Matt trick for [logit(psi), log(Mmax)]
-  // {
-  //   matrix[2,2] L_psiMmax;           // Cholesky factor of corr matrix of logit(psi), log(Mmax)
-  //   matrix[N_pop,2] zeta_psiMmax;    // [logit(psi), log(Mmax)] random effects (z-scored)
-  //   matrix[N_pop,2] epsilon_psiMmax; // [logit(psi), log(Mmax)] random effects
-  //   vector[2] sigma_psiMmax;         // SD vector of [logit(psi), log(Mmax)]
-  //   
-  //   L_psiMmax[1,1] = 1;
-  //   L_psiMmax[2,1] = rho_psiMmax;
-  //   L_psiMmax[1,2] = 0;
-  //   L_psiMmax[2,2] = sqrt(1 - rho_psiMmax^2);
-  //   sigma_psiMmax[1] = sigma_psi;
-  //   sigma_psiMmax[2] = sigma_Mmax;
-  //   zeta_psiMmax = append_col(zeta_psi, zeta_Mmax);
-  //   epsilon_psiMmax = diag_pre_multiply(sigma_psiMmax, L_psiMmax * zeta_psiMmax')';
-  //   psi = inv_logit(logit(mu_psi) + epsilon_psiMmax[,1]);
-  //   Mmax = exp(mu_Mmax + epsilon_psiMmax[,2]);
-  // }
-  
+
   // Population-specific egg-smolt survival and capacity terms (independent)
   psi = inv_logit(logit(mu_psi) + sigma_psi*zeta_psi);
   Mmax = exp(mu_Mmax + sigma_Mmax*zeta_Mmax);
   
   // AR(1) model for spawner-smolt productivity and SAR anomalies
-  eta_year_M[1] = zeta_year_M[1]*sigma_year_M/sqrt(1 - rho_M^2); // initial anomaly
+  eta_year_M[1] = zeta_year_M[1]*sigma_year_M/sqrt(1 - rho_M^2);     // initial anomaly
   eta_year_MS[1] = zeta_year_MS[1]*sigma_year_MS/sqrt(1 - rho_MS^2); // initial anomaly
   for(i in 2:N_year)
   {
@@ -250,22 +230,21 @@ transformed parameters {
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
   mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
-  eta_pop_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  p = append_col(eta_pop_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  mu_alr_pop_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
+  alr_p = append_col(mu_alr_pop_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
   // Inverse log-ratio (softmax) transform of cohort age distn
-  exp_p = exp(p);
-  p = diag_pre_multiply(ones_N ./ (exp_p * ones_N_age), exp_p);
+  exp_alr_p = exp(alr_p);
+  p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
   
   // Calculate true total wild and hatchery spawners, spawner age distribution, 
   // eggs and smolts, and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
-    // row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
-    vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
+    vector[N_orphan_age] q_orphan; 
     
     // Smolt recruitment
     if(pop_year_indx[i] <= smolt_age)
@@ -354,10 +333,10 @@ model {
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 
-  // eta_pop_p[i,] ~ MVN(mu_alr_p, D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
+  // mu_alr_pop_p[i,] ~ MVN(mu_alr_p, D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
   to_vector(zeta_pop_p) ~ std_normal();
   // age probs logistic MVN: 
-  // alr_p[i,] ~ MVN(eta_pop_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
+  // alr_p[i,] ~ MVN(mu_alr_pop_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
 
   // removals
