@@ -2,14 +2,14 @@ functions {
   // spawner-recruit functions
   real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
     real R;
-
+    
     if(SR_fun == 1)      // discrete exponential
-      R = alpha*S/A;
+      R = alpha*S;
     else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(A + alpha*S/Rmax);
+      R = alpha*S/(1 + alpha*S/(A*Rmax));
     else if(SR_fun == 3) // Ricker
-      R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
-
+      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
+    
     return(R);
   }
 
@@ -188,7 +188,7 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
     
     // Recruitment
-    R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    R_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     if(pop_year_indx[i] == 1) // initial process error
       epsilon_R[i] = zeta_R[i]*sigma[pop[i]]/sqrt(1 - rho[pop[i]]^2);
     else

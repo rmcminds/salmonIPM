@@ -4,11 +4,11 @@ functions {
     real R;
     
     if(SR_fun == 1)      // discrete exponential
-      R = alpha*S/A;
+      R = alpha*S;
     else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(A + alpha*S/Rmax);
+      R = alpha*S/(1 + alpha*S/(A*Rmax));
     else if(SR_fun == 3) // Ricker
-      R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
+      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
@@ -284,7 +284,7 @@ transformed parameters {
 
     // Smolt production from brood year i
     // Density-dependent egg-to-smolt survival
-    M_hat[i] = A[i] * SR(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E_hat[i], A[i]);
+    M_hat[i] = SR(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E_hat[i], A[i]);
     M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + sigma_M*zeta_M[i]);
   }
   
