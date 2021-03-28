@@ -110,7 +110,7 @@ transformed data {
   for(i in 1:max_ocean_age)
   {
     int N_orphan_age = N_age - max(i - min_ocean_age, 0); // number of orphan age classes
-    int N_amalg_age = N_age - N_orphan_age + 1; // number of amalgamated age classes
+    int N_amalg_age = N_age - N_orphan_age + 1;           // number of amalgamated age classes
     
     for(j in 1:N_pop)
     {
@@ -196,7 +196,7 @@ transformed parameters {
   // spawner age structure
   row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
   matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio age distributions
-  matrix<lower=0>[N,N_age] alr_p;        // alr(p[i,])
+  matrix[N,N_age] alr_p;                 // alr(p[i,])
   matrix<lower=0>[N,N_age] exp_alr_p;    // exp(alr(p[i,]))
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
@@ -240,8 +240,8 @@ transformed parameters {
   // eggs and smolts, and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] S_W_a; // true wild spawners by age
-    int ii;                  // index into S_init and q_init
+    row_vector[N_age] S_W_a;       // true wild spawners by age
+    int ii;                        // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution
@@ -258,7 +258,7 @@ transformed parameters {
     {
       ii = (pop[i] - 1)*max_ocean_age + pop_year_indx[i];
       q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
-                            tail(q_init[ii], N_orphan_age - 1));
+                                tail(q_init[ii], N_orphan_age - 1));
     }
     
     for(a in 1:N_age)
@@ -307,7 +307,8 @@ model {
   sigma_E ~ normal(500,1000);
 
   // spawner-smolt productivity
-  sigma_psi ~ normal(0,5);
+  mu_psi ~ pexp(0,0.85,20);    // regularize away from 1
+  sigma_psi ~ normal(0,2);
   mu_Mmax ~ normal(5,5);       // units of Mmax: thousands of smolts
   sigma_Mmax ~ normal(0,3);
   zeta_psi ~ std_normal();     // logit(psi) ~ N(logit(mu_psi), sigma_psi)
@@ -382,7 +383,7 @@ generated quantities {
   corr_matrix[N_age-1] R_pop_p; // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;     // correlation matrix of within-pop cohort log-ratio age distns 
   // ?? vector[N_E] LL_E_obs; ??
-  vector[N] M_downstream; // total smolts including upstream populations 
+  vector[N] M_downstream;       // total smolts including upstream populations 
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
   vector[N_H] LL_n_H_obs;       // pointwise log-likelihood of hatchery vs. wild frequencies

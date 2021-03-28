@@ -50,7 +50,7 @@ stan_pars <- function(stan_model) {
                        "beta_M","rho_M","sigma_year_M","eta_year_M","sigma_M",
                        "mu_MS","beta_MS","rho_MS","sigma_year_MS","eta_year_MS",
                        "sigma_MS","s_MS",
-                       "mu_p","sigma_pop_p","R_pop_p","eta_pop_p","sigma_p","R_p","p",
+                       "mu_p","sigma_pop_p","R_pop_p","mu_pop_alr_p","sigma_p","R_p","p",
                        "p_HOS","B_rate_all",
                        "mu_tau_M","sigma_tau_M","tau_M","mu_tau_S","sigma_tau_S","tau_S",
                        "E_hat","M","S","q"),
