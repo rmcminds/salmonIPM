@@ -4,11 +4,11 @@ functions {
     real R;
     
     if(SR_fun == 1)      // discrete exponential
-      R = alpha*S/A;
+      R = alpha*S;
     else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(A + alpha*S/Rmax);
+      R = alpha*S/(1 + alpha*S/(A*Rmax));
     else if(SR_fun == 3) // Ricker
-      R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
+      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
@@ -362,7 +362,7 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Smolt production from brood year i
-    M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    M_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M) + epsilon_M[i]); 
   }
 }
@@ -496,7 +496,7 @@ generated quantities {
   //   S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
   //   q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
   //   S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-  //   R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
+  //   R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
   //   R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
   // }
   

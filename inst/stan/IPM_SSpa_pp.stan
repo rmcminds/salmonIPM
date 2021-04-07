@@ -4,11 +4,11 @@ functions {
     real R;
     
     if(SR_fun == 1)      // discrete exponential
-    R = alpha*S/A;
+      R = alpha*S;
     else if(SR_fun == 2) // Beverton-Holt
-    R = alpha*S/(A + alpha*S/Rmax);
+      R = alpha*S/(1 + alpha*S/(A*Rmax));
     else if(SR_fun == 3) // Ricker
-    R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
+      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
@@ -295,7 +295,7 @@ transformed parameters {
     // Recruitment
     // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
     // (assumes age structure is the same for W and H spawners)
-    R_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i]*q[i,]*age_S_eff, A[i]);
+    R_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i]*q[i,]*age_S_eff, A[i]);
     R[i] = R_hat[i] * exp(phi[year[i]] + sigma*zeta_R[i]);
   }
 }

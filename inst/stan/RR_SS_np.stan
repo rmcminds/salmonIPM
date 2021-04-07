@@ -4,11 +4,11 @@ functions {
     real R;
     
     if(SR_fun == 1)      // discrete exponential
-      R = alpha*S/A;
+      R = alpha*S;
     else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(A + alpha*S/Rmax);
+      R = alpha*S/(1 + alpha*S/(A*Rmax));
     else if(SR_fun == 3) // Ricker
-      R = alpha*(S/A)*exp(-alpha*S/(A*e()*Rmax));
+      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
     
     return(R);
   }
@@ -66,8 +66,8 @@ transformed parameters {
     
   for(i in 1:N_fit)
   {
-    R_hat[which_fit[i]] = A[which_fit[i]] * SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
-                                               S[which_fit[i]], A[which_fit[i]]);
+    R_hat[which_fit[i]] = SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
+                             S[which_fit[i]], A[which_fit[i]]);
     if(i==1 || pop[which_fit[i-1]] != pop[which_fit[i]])
     {
       R_ar1[which_fit[i]] = R_hat[which_fit[i]];
@@ -132,6 +132,6 @@ generated quantities {
       err_sim[i] = normal_rng(rho[pop[i]]*err_sim[i-1], sigma[pop[i]]);
     
     if(R_NA[i] == 1)
-      R_sim[i] = A[i] * SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
+      R_sim[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
   }
 }
