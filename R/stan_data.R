@@ -38,7 +38,9 @@
 #'   frequencies, sorted first by smolt age (`min_Mage:max_Mage`) and then
 #'   by total age `min_age:max_age`. For example, a life history with
 #'   subyearling or yearling smolts and ocean ages 2:3 would have column names
-#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")   
+#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs") 
+#'   * `n_M_obs`  If `stan_model=="IPM_LCRchum_pp`, observed frequency of male spawners.
+#'   * `n_F_obs`  If `stan_model=="IPM_LCRchum_pp`, observed frequency of female spawners.
 #'   * `n_W_obs`  Observed frequency of natural-origin spawners.   
 #'   * `n_H_obs`  Observed frequency of hatchery-origin spawners.   
 #'   * `fit_p_HOS`  Logical or 0/1 indicating for each row in fish_data whether the 
@@ -247,6 +249,10 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   if(any(is.na(fish_data$n_W_obs) != is.na(fish_data$n_H_obs)))
     stop(paste("Conflicting NAs in n_W_obs and n_H_obs in rows", 
                which(is.na(fish_data$n_W_obs) != is.na(fish_data$n_H_obs))), "\n")
+  
+  if(stan_model == "IPM_LCRchum_pp" & any(is.na(fish_data$n_M_obs) != is.na(fish_data$n_F_obs)))
+    stop(paste("Conflicting NAs in n_M_obs and n_F_obs in rows", 
+               which(is.na(fish_data$n_M_obs) != is.na(fish_data$n_F_obs))), "\n")
   
   age_NA_check <- is.na(fish_data[,grep("n_age", names(fish_data))])
   if(any(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))))
@@ -458,12 +464,14 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N = nrow(fish_data),
         pop = pop, 
         year = year,
-        # egg deposition
+        # egg deposition and sex ratio
         SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
         A = A,
         N_E = nrow(fecundity_data),
         age_E = fecundity_data$age_E,
         E_obs = fecundity_data$E_obs,
+        n_M_obs = array(n_M_obs, dim = nrow(fish_data)),
+        n_F_obs = array(n_F_obs, dim = nrow(fish_data)),
         # spawner-smolt productivity
         N_X_M = ncol(env_data$M), 
         X_M = as.matrix(env_data$M),

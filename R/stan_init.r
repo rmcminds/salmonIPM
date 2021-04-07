@@ -23,7 +23,7 @@ stan_init <- function(data, stan_model, chains)
       N_year <- max(year)
       S_obs_noNA <- S_obs
       S_obs[-which_S_obs] <- NA
-      p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.01), 0.99)
+      p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.1), 0.9)
       p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
       p_HOS_all <- rep(0,N)
       p_HOS_all[which_H] <- p_HOS_obs
@@ -68,13 +68,15 @@ stan_init <- function(data, stan_model, chains)
       {
         if(N_M_obs < N)
           M_obs[-which_M_obs] <- median(M_obs[which_M_obs])
-        s_MS <- pmin(S_obs_noNA/M_obs, 0.99)
+        s_MS <- pmin(S_obs_noNA/M_obs, 0.9)
       }
       
       if(stan_model == "IPM_LCRchum_pp")
       {
-        E <- S_obs_noNA * mean(fecundity_data$E_obs)
-        s_EM <- pmin(M_obs/E, 0.99)
+        p_F_obs <- pmin(pmax(n_M_obs/(n_M_obs + n_F_obs), 0.1), 0.9)
+        p_F_obs[n_M_obs + n_F_obs == 0] <- 0.5
+        E <- S_obs_noNA*p_F_obs*mean(fecundity_data$E_obs)
+        s_EM <- pmin(M_obs/E, 0.9)
       }
       
       if(stan_model == "IPM_SS_np") {
@@ -210,6 +212,7 @@ stan_init <- function(data, stan_model, chains)
             # egg deposition
             mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 1),
             sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 1), 
+            p_F = p_F_obs,
             # egg-smolt survival
             mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
             sigma_psi = runif(1, 0.1, 1),

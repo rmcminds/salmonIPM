@@ -103,8 +103,8 @@ data {
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
-  int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples (assumes no NAs)
-  int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples (assumes no NAs)
+  int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples
+  int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples
 }
 
 transformed data {
