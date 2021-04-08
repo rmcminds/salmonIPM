@@ -285,6 +285,8 @@ transformed parameters {
     
     // Density-independent egg production from brood year i
     // weighted by age structure and sex ratio 
+    if(is_nan(q[i,]*mu_E*p_F[i]*S[i]))
+      print("q[i,] = ", q[i,], "  p_F[i] = ", p_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
     E_hat[i] = q[i,]*mu_E*p_F[i]*S[i];
 
     // Smolt production from brood year i
@@ -310,7 +312,7 @@ model {
   // fecundity and sex ratio
   mu_E ~ normal(2500,500);
   sigma_E ~ normal(500,1000);
-  p_F ~ uniform(0,1);          // placeholder for possible prior concentrated near 0.5
+  p_F ~ beta(3,3);             // mildly regularize toward 0.5
 
   // spawner-smolt productivity
   mu_psi ~ pexp(0,0.85,20);    // regularize away from 1

@@ -4,7 +4,7 @@
 \alias{stan_init}
 \title{Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.}
 \usage{
-stan_init(data, stan_model, chains)
+stan_init(data, stan_model, chains = 1)
 }
 \arguments{
 \item{data}{Named list of input data for fitting either an IPM or

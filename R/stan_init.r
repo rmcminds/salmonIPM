@@ -13,7 +13,7 @@
 #'   the model.
 #'
 #' @export
-stan_init <- function(data, stan_model, chains) 
+stan_init <- function(data, stan_model, chains = 1) 
 {
   if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp",
                        "IPM_LCRchum_pp","IPM_ICchinook_pp"))
@@ -73,9 +73,9 @@ stan_init <- function(data, stan_model, chains)
       
       if(stan_model == "IPM_LCRchum_pp")
       {
-        p_F_obs <- pmin(pmax(n_M_obs/(n_M_obs + n_F_obs), 0.1), 0.9)
-        p_F_obs[n_M_obs + n_F_obs == 0] <- 0.5
-        E <- S_obs_noNA*p_F_obs*mean(fecundity_data$E_obs)
+        # p_F_obs <- pmin(pmax(n_M_obs/(n_M_obs + n_F_obs), 0.1), 0.9)
+        # p_F_obs[n_M_obs + n_F_obs == 0] <- 0.5
+        E <- S_obs_noNA*0.5*mean(fecundity_data$E_obs)
         s_EM <- pmin(M_obs/E, 0.9)
       }
       
@@ -212,11 +212,11 @@ stan_init <- function(data, stan_model, chains)
             # egg deposition
             mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 1),
             sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 1), 
-            p_F = p_F_obs,
+            p_F = as.vector(rep(0.5, N)),
             # egg-smolt survival
             mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
             sigma_psi = runif(1, 0.1, 1),
-            zeta_psi = array(rnorm(N_pop, 0, 1), dim = N_pop),
+            zeta_psi = as.vector(rnorm(N_pop, 0, 1)),
             mu_Mmax = rnorm(1, 10, 5),
             sigma_Mmax = runif(1, 0.5, 2),
             zeta_Mmax = array(rnorm(N_pop, 0, 1), dim = N_pop),
