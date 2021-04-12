@@ -464,14 +464,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N = nrow(fish_data),
         pop = pop, 
         year = year,
-        # egg deposition and sex ratio
+        # egg deposition
         SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
         A = A,
         N_E = nrow(fecundity_data),
         age_E = fecundity_data$age_E,
         E_obs = fecundity_data$E_obs,
-        n_M_obs = array(n_M_obs, dim = nrow(fish_data)),
-        n_F_obs = array(n_F_obs, dim = nrow(fish_data)),
         # spawner-smolt productivity
         N_X_M = ncol(env_data$M), 
         X_M = as.matrix(env_data$M),
@@ -502,9 +500,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N_tau_S_obs = sum(!is.na(tau_S_obs)),
         which_tau_S_obs = array(which(!is.na(tau_S_obs)), dim = sum(!is.na(tau_S_obs))),
         tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), 0),
-        # spawner age structure
+        # spawner age structure and sex ratio
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+        n_M_obs = array(n_M_obs, dim = nrow(fish_data)),
+        n_F_obs = array(n_F_obs, dim = nrow(fish_data)),
         # H/W composition
         N_H = sum(fit_p_HOS),
         which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
