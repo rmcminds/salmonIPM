@@ -38,7 +38,9 @@
 #'   frequencies, sorted first by smolt age (`min_Mage:max_Mage`) and then
 #'   by total age `min_age:max_age`. For example, a life history with
 #'   subyearling or yearling smolts and ocean ages 2:3 would have column names
-#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")   
+#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs") 
+#'   * `n_M_obs`  If `stan_model=="IPM_LCRchum_pp`, observed frequency of male spawners.
+#'   * `n_F_obs`  If `stan_model=="IPM_LCRchum_pp`, observed frequency of female spawners.
 #'   * `n_W_obs`  Observed frequency of natural-origin spawners.   
 #'   * `n_H_obs`  Observed frequency of hatchery-origin spawners.   
 #'   * `fit_p_HOS`  Logical or 0/1 indicating for each row in fish_data whether the 
@@ -247,6 +249,10 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   if(any(is.na(fish_data$n_W_obs) != is.na(fish_data$n_H_obs)))
     stop(paste("Conflicting NAs in n_W_obs and n_H_obs in rows", 
                which(is.na(fish_data$n_W_obs) != is.na(fish_data$n_H_obs))), "\n")
+  
+  if(stan_model == "IPM_LCRchum_pp" & any(is.na(fish_data$n_M_obs) != is.na(fish_data$n_F_obs)))
+    stop(paste("Conflicting NAs in n_M_obs and n_F_obs in rows", 
+               which(is.na(fish_data$n_M_obs) != is.na(fish_data$n_F_obs))), "\n")
   
   age_NA_check <- is.na(fish_data[,grep("n_age", names(fish_data))])
   if(any(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))))
@@ -494,9 +500,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N_tau_S_obs = sum(!is.na(tau_S_obs)),
         which_tau_S_obs = array(which(!is.na(tau_S_obs)), dim = sum(!is.na(tau_S_obs))),
         tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), 0),
-        # spawner age structure
+        # spawner age structure and sex ratio
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+        n_M_obs = array(n_M_obs, dim = nrow(fish_data)),
+        n_F_obs = array(n_F_obs, dim = nrow(fish_data)),
         # H/W composition
         N_H = sum(fit_p_HOS),
         which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
