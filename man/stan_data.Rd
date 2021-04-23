@@ -61,6 +61,8 @@ subyearling or yearling smolts and ocean ages 2:3 would have column names
 c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")
 \item \code{n_M_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, observed frequency of male spawners.
 \item \code{n_F_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, observed frequency of female spawners.
+\item \code{p_G_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, observed proportion (assumed known
+without error) of female spawners that are "green", i.e. fully fecund.
 \item \code{n_W_obs}  Observed frequency of natural-origin spawners.
 \item \code{n_H_obs}  Observed frequency of hatchery-origin spawners.
 \item \code{fit_p_HOS}  Logical or 0/1 indicating for each row in fish_data whether the

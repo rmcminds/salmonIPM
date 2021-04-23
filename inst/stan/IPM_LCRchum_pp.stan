@@ -74,6 +74,7 @@ data {
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
   int<lower=0> n_M_obs[N];             // observed count of male spawners
   int<lower=0> n_F_obs[N];             // observed count of female spawners
+  vector<lower=0,upper=1>[N] p_G_obs;  // proportion green (fully fecund) females
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -93,6 +94,7 @@ transformed data {
   int<lower=1> a_E[N_E];                   // female age index for fecundity observations
   int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> n_MF_obs[N];                // total sample sizes for sex frequencies
+  vector<lower=0,upper=1>[N] p_NG_obs = 1 - p_G_obs; // proportion non-green females
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   vector[max_ocean_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_ocean_age
   matrix[N_age,max_ocean_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_ocean_age
@@ -131,9 +133,10 @@ transformed data {
 }
 
 parameters {
-  // fecundity and sex ratio
+  // fecundity
   vector<lower=0>[N_age] mu_E;           // mean fecundity at each female age
   vector<lower=0>[N_age] sigma_E;        // among-female SD of fecundity at each age
+  real<lower=0,upper=1> delta_NG;        // fecundity of non-green females as proportion of green
   // spawner-smolt productivity
   real<lower=0,upper=1> mu_psi;          // hyper-mean density-independent egg-smolt survival
   real<lower=0> sigma_psi;               // hyper-SD logit density-independent egg-smolt survival
@@ -305,9 +308,10 @@ transformed parameters {
     
     // Density-independent egg production from brood year i
     // weighted by age structure and sex ratio 
+    // discounted for proportion of non-green (not fully fecund) females
     if(is_nan(q[i,]*mu_E*q_F[i]*S[i]))
       print("q[i,] = ", q[i,], "  q_F[i] = ", q_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
-    E_hat[i] = q[i,]*mu_E*q_F[i]*S[i];
+    E_hat[i] = q[i,] * mu_E * q_F[i] * (p_G_obs[i] + delta_NG * p_NG_obs[i]) * S[i];
     
     // Smolt production from brood year i
     // Density-dependent egg-to-smolt survival
@@ -334,7 +338,7 @@ model {
   sigma_E ~ normal(500,1000);
 
   // spawner-smolt productivity
-  // mu_psi ~ pexp(0,0.85,20);    // regularize away from 1
+  mu_psi ~ pexp(0,0.85,20);    // regularize away from 1
   sigma_psi ~ normal(0,2);
   mu_Mmax ~ normal(5,5);       // units of Mmax: thousands of smolts
   sigma_Mmax ~ normal(0,3);

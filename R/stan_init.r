@@ -210,6 +210,7 @@ stan_init <- function(data, stan_model, chains = 1)
             # egg deposition
             mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 1),
             sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 1), 
+            delta_NG = runif(1, 0.7, 1),
             # egg-smolt survival
             mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
             sigma_psi = runif(1, 0.1, 1),
