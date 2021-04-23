@@ -334,7 +334,7 @@ model {
   sigma_E ~ normal(500,1000);
 
   // spawner-smolt productivity
-  mu_psi ~ pexp(0,0.85,20);    // regularize away from 1
+  // mu_psi ~ pexp(0,0.85,20);    // regularize away from 1
   sigma_psi ~ normal(0,2);
   mu_Mmax ~ normal(5,5);       // units of Mmax: thousands of smolts
   sigma_Mmax ~ normal(0,3);
