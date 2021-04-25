@@ -49,6 +49,8 @@
 #'   model should estimate `p_HOS > 0`. This is only required if `model == "IPM"`.  
 #'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
 #'   * `B_take_obs`  Number of adults taken for hatchery broodstock.   
+#'   * `S_add_obs`  If `stan_model=="IPM_LCRchum_pp`, number of adults translocated into 
+#'   population.   
 #' @param fish_data_fwd Only if `stan_model == "IPM_SS_pp"`, optional data frame
 #'   with the following columns, representing "forward" or "future"
 #'   simulations: 
@@ -490,11 +492,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         # SAR
         N_X_MS = ncol(env_data$MS), 
         X_MS = as.matrix(env_data$MS),
-        # fishery and hatchery removals
+        # fishery and hatchery removals and translocations
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
         which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
+        S_add_obs = replace(S_add_obs, is.na(S_add_obs), 0),
         # spawner abundance and observation error
         N_S_obs = sum(!is.na(S_obs)),
         which_S_obs = as.vector(which(!is.na(S_obs))),

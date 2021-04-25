@@ -69,6 +69,8 @@ without error) of female spawners that are "green", i.e. fully fecund.
 model should estimate \code{p_HOS > 0}. This is only required if \code{model == "IPM"}.
 \item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
 \item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
+\item \code{S_add_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, number of adults translocated into
+population.
 }}
 
 \item{fish_data_fwd}{Only if \code{stan_model == "IPM_SS_pp"}, optional data frame

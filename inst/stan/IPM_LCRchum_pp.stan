@@ -56,11 +56,12 @@ data {
   // SAR (smolt-spawner survival)
   int<lower=0> N_X_MS;                 // number of SAR productivity covariates
   matrix[max(year),N_X_MS] X_MS;       // SAR covariates
-  // fishery and hatchery removals
+  // fishery and hatchery removals and translocations
   vector[N] F_rate;                    // fishing mortality rate of wild adults (no fishing on jacks)
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
   int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
   vector[N_B] B_take_obs;              // observed broodstock take of wild adults
+  vector<lower=0>[N] S_add_obs;        // number of translocated spawners added to population
   // spawner abundance and observation error
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -298,11 +299,11 @@ transformed parameters {
       }
     }
     
-    // catch and broodstock removal
+    // catch and broodstock removal and translocations
     S_W_a = S_W_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
-    S[i] = S_W[i] + S_H[i];
+    S[i] = S_W[i] + S_H[i] + S_add_obs[i];
     q[i,] = S_W_a/S_W[i];
     q_F[i] = q[i,]*q_F_a;
     
@@ -310,7 +311,7 @@ transformed parameters {
     // weighted by age structure and sex ratio 
     // discounted for proportion of non-green (not fully fecund) females
     if(is_nan(q[i,]*mu_E*q_F[i]*S[i]))
-      print("q[i,] = ", q[i,], "  q_F[i] = ", q_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
+      print("i = ", i, "  q[i,] = ", q[i,], "  q_F[i] = ", q_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
     E_hat[i] = q[i,] * mu_E * q_F[i] * (p_G_obs[i] + delta_NG * p_NG_obs[i]) * S[i];
     
     // Smolt production from brood year i
