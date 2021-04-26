@@ -208,27 +208,28 @@ stan_init <- function(data, stan_model, chains = 1)
         return(lapply(1:chains, function(i)
           list(
             # egg deposition
-            mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 1),
-            sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 1), 
+            mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 0.5),
+            sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 0.5), 
             delta_NG = runif(1, 0.7, 1),
             # egg-smolt survival
             mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
             sigma_psi = runif(1, 0.1, 1),
             zeta_psi = as.vector(rnorm(N_pop, 0, 1)),
-            mu_Mmax = rnorm(1, 10, 5),
+            mu_Mmax = rnorm(1, mean(log(S_obs[which_S_obs])), 3),
             sigma_Mmax = runif(1, 0.5, 2),
             zeta_Mmax = as.vector(rnorm(N_pop, 0, 1)),
             beta_M = as.vector(rnorm(N_X_M, 0, 1)),
             rho_M = runif(1, 0.1, 0.7),
             sigma_year_M = runif(1, 0.1, 0.5),
             zeta_year_M = as.vector(rnorm(max(year), 0, 0.1)),
-            sigma_M = runif(1, 0.5, 1),
+            sigma_M = runif(1, 0.1, 0.5),
             zeta_M = as.vector(scale(log(M_obs)))*0.1,
             # SAR
             mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
             beta_MS = as.vector(rnorm(N_X_MS,0,1)),
             rho_MS = runif(1, 0.1, 0.7),
             sigma_year_MS = runif(1, 0.05, 2), 
+            zeta_year_MS = as.vector(tapply(scale(qlogis(s_MS)), year, mean)),
             sigma_MS = runif(1, 0.5, 1),
             zeta_MS = as.vector(scale(qlogis(s_MS))),
             # spawner age structure and sex ratio
@@ -249,10 +250,10 @@ stan_init <- function(data, stan_model, chains = 1)
             M_init = as.vector(rep(median(M_obs), smolt_age*N_pop)),
             S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
             q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
-            mu_tau_M = runif(1, 0, 1),
-            sigma_tau_M = runif(1, 0, 1),
-            mu_tau_S = runif(1, 0, 1),
-            sigma_tau_S = runif(1, 0, 1)
+            mu_tau_M = runif(1, 0, 0.5),
+            sigma_tau_M = runif(1, 0, 0.5),
+            mu_tau_S = runif(1, 0, 0.5),
+            sigma_tau_S = runif(1, 0, 0.5)
           )
         ))
       } else if(stan_model == "IPM_ICchinook_pp") {
