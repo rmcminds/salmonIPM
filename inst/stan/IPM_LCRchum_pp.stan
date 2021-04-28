@@ -395,7 +395,7 @@ model {
 
   // removals
   log_B_take = log(S_W[which_B]) + logit(B_rate); // B_take = S_W*B_rate/(1 - B_rate)
-  B_take_obs ~ lognormal(log_B_take, 0.1); // penalty to force pred and obs broodstock take to match 
+  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
 
   // initial states
   // (accounting for amalgamation of q_init to q_orphan)
