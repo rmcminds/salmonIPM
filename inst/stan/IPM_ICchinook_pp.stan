@@ -217,9 +217,9 @@ parameters {
   vector[N_year_all] zeta_U;             // logit upstream adult survival process errors (Z-scores)
   // spawner age structure
   simplex[N_age] mu_p;                   // among-pop mean of age distributions
-  vector<lower=0>[N_age-1] sigma_gamma;  // among-pop SD of mean log-ratio age distributions
-  cholesky_factor_corr[N_age-1] L_gamma; // Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
-  matrix[N_pop,N_age-1] zeta_gamma;      // population mean log-ratio age distributions (Z-scores)
+  vector<lower=0>[N_age-1] sigma_pop_p;  // among-pop SD of mean log-ratio age distributions
+  cholesky_factor_corr[N_age-1] L_pop_p; // Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
+  matrix[N_pop,N_age-1] zeta_pop_p;      // population mean log-ratio age distributions (Z-scores)
   vector<lower=0>[N_age-1] sigma_p;      // SD of log-ratio cohort age distributions
   cholesky_factor_corr[N_age-1] L_p;     // Cholesky factor of correlation matrix of cohort log-ratio age distributions
   matrix[N,N_age-1] zeta_p;              // log-ratio cohort age distributions (Z-scores)
@@ -249,8 +249,8 @@ transformed parameters {
   vector[N_year_all] s_U;                // true upstream survival by return year
   // spawner age structure
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
-  row_vector[N_age-1] mu_gamma;          // mean of log-ratio cohort age distributions
-  matrix[N_pop,N_age-1] gamma;           // population mean log-ratio age distributions
+  row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
+  matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio age distributions
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
   // H/W spawner abundance, removals
   vector<lower=0>[N] S_W;                // true total wild spawner abundance
@@ -261,10 +261,10 @@ transformed parameters {
   
   // Multivariate Matt trick for [log(alpha), log(Mmax)]
   {
-    matrix[2,2] L_alphaMmax;           // temp variable: Cholesky factor of corr matrix of log(alpha), log(Mmax)
-    matrix[N_pop,2] zeta_alphaMmax;    // temp variable [log(alpha), log(Mmax)] random effects (z-scored)
-    matrix[N_pop,2] epsilon_alphaMmax; // temp variable: [log(alpha), log(Mmax)] random effects
-    vector[2] sigma_alphaMmax;         // temp variable: SD vector of [log(alpha), log(Mmax)]
+    matrix[2,2] L_alphaMmax;        // Cholesky factor of corr matrix of log(alpha), log(Mmax)
+    matrix[N_pop,2] zeta_alphaMmax; // [log(alpha), log(Mmax)] random effects (z-scored)
+    matrix[N_pop,2] eta_alphaMmax;  // log(alpha), log(Mmax)] random effects
+    vector[2] sigma_alphaMmax;      // SD vector of [log(alpha), log(Mmax)]
     
     L_alphaMmax[1,1] = 1;
     L_alphaMmax[2,1] = rho_alphaMmax;
@@ -273,9 +273,9 @@ transformed parameters {
     sigma_alphaMmax[1] = sigma_alpha;
     sigma_alphaMmax[2] = sigma_Mmax;
     zeta_alphaMmax = append_col(zeta_alpha, zeta_Mmax);
-    epsilon_alphaMmax = diag_pre_multiply(sigma_alphaMmax, L_alphaMmax * zeta_alphaMmax')';
-    alpha = exp(mu_alpha + epsilon_alphaMmax[,1]);
-    Mmax = exp(mu_Mmax + epsilon_alphaMmax[,2]);
+    eta_alphaMmax = diag_pre_multiply(sigma_alphaMmax, L_alphaMmax * zeta_alphaMmax')';
+    alpha = exp(mu_alpha + eta_alphaMmax[,1]);
+    Mmax = exp(mu_Mmax + eta_alphaMmax[,2]);
   }
 
   // AR(1) models for downstream, SAR, upstream survival
@@ -300,11 +300,11 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors
-  mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
+  mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
   // pop-specific mean
-  gamma = rep_matrix(mu_gamma,N_pop) + diag_pre_multiply(sigma_gamma, L_gamma * zeta_gamma')';
+  mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
   // within-pop, time-varying IID
-  p = append_col(gamma[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
   
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
@@ -381,9 +381,9 @@ model {
   zeta_alpha ~ std_normal();
   zeta_Mmax ~ std_normal();
   beta_M ~ normal(0,3);
-  rho_M ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
+  rho_M ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_M ~ normal(0,3);
-  zeta_M ~ std_normal();   // epsilon_M ~ AR1(rho_M, sigma_M)
+  zeta_M ~ std_normal();     // epsilon_M ~ AR1(rho_M, sigma_M)
   M_init ~ lognormal(0.0,5.0);
 
   // downstream, SAR, upstream survival
@@ -411,15 +411,15 @@ model {
   // spawner age structure
   for(i in 1:(N_age-1))
   {
-    sigma_gamma[i] ~ normal(0,3);
+    sigma_pop_p[i] ~ normal(0,3);
     sigma_p[i] ~ normal(0,3); 
   }
-  L_gamma ~ lkj_corr_cholesky(1);
+  L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
-  // gamma[i,] ~ MVN(mu_gamma,D*R_gamma*D), where D = diag_matrix(sigma_gamma)
-  to_vector(zeta_gamma) ~ std_normal();
+  // mu_pop_alr_p[i,] ~ MVN(mu_alr_p,D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
+  to_vector(zeta_pop_p) ~ std_normal();
   // age probs logistic MVN: 
-  // alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), 
+  // alr_p[i,] ~ MVN(mu_pop_alr_p[pop[i],], D*R_p*D), 
   // where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
   
@@ -447,7 +447,7 @@ model {
 }
 
 generated quantities {
-  corr_matrix[N_age-1] R_gamma;     // among-pop correlation matrix of mean log-ratio age distns 
+  corr_matrix[N_age-1] R_pop_p;     // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;         // correlation matrix of within-pop cohort log-ratio age distns 
   // vector<lower=0>[N_fwd] S_W_fwd;   // true total wild spawner abundance in forward simulations
   // vector[N_fwd] S_H_fwd;            // true total hatchery spawner abundance in forward simulations
@@ -461,7 +461,7 @@ generated quantities {
   vector[N] LL_n_age_obs;           // pointwise log-likelihood of wild age frequencies
   vector[N] LL;                     // total pointwise log-likelihood                              
   
-  R_gamma = multiply_lower_tri_self_transpose(L_gamma);
+  R_pop_p = multiply_lower_tri_self_transpose(L_pop_p);
   R_p = multiply_lower_tri_self_transpose(L_p);
   
   // // Calculate true total wild and hatchery spawners and spawner age distribution
@@ -473,7 +473,7 @@ generated quantities {
   //   row_vector[N_age] S_W_a_fwd; // temp variable: true wild spawners by age
   // 
   //   // Inverse log-ratio transform of cohort age distn
-  //   alr_p_fwd = multi_normal_cholesky_rng(to_vector(gamma[pop_fwd[i],]), L_p);
+  //   alr_p_fwd = multi_normal_cholesky_rng(to_vector(mu_pop_alr_p[pop_fwd[i],]), L_p);
   //   p_fwd[i,] = to_row_vector(softmax(append_row(alr_p_fwd,0)));
   // 
   //   for(a in 1:N_age)

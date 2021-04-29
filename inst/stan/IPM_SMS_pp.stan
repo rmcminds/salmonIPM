@@ -48,8 +48,8 @@ data {
   // smolt production
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector[N] A;                         // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
   int<lower=1> smolt_age;              // smolt age
+  int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
   matrix[max(year),N_X_M] X_M;         // spawner-smolt covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
@@ -109,7 +109,7 @@ transformed data {
   for(i in 1:max_ocean_age)
   {
     int N_orphan_age = N_age - max(i - min_ocean_age, 0); // number of orphan age classes
-    int N_amalg_age = N_age - N_orphan_age + 1; // number of amalgamated age classes
+    int N_amalg_age = N_age - N_orphan_age + 1;           // number of amalgamated age classes
     
     for(j in 1:N_pop)
     {
@@ -134,25 +134,25 @@ parameters {
   real<lower=0> sigma_Mmax;              // hyper-SD log asymptotic smolt recruitment
   vector[N_pop] zeta_Mmax;               // log asymptotic smolt recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaMmax;  // correlation between log(alpha) and log(Mmax)
-  vector[N_X_M] beta_phi_M;              // regression coefs for log smolt productivity anomalies
-  real<lower=-1,upper=1> rho_phi_M;      // AR(1) coef for log smolt productivity anomalies
-  real<lower=0> sigma_phi_M;             // process error SD of log smolt productivity anomalies
-  vector[N_year] zeta_phi_M;             // log smolt productivity anomalies (Z-scores)
+  vector[N_X_M] beta_M;                  // regression coefs for log smolt productivity anomalies
+  real<lower=-1,upper=1> rho_M;          // AR(1) coef for log smolt productivity anomalies
+  real<lower=0> sigma_year_M;            // process error SD of log smolt productivity anomalies
+  vector[N_year] zeta_year_M;            // log smolt productivity anomalies (Z-scores)
   real<lower=0> sigma_M;                 // unique smolt recruitment process error SD
   vector[N] zeta_M;                      // unique smolt recruitment process errors (Z-scores)
   // SAR
   real<lower=0,upper=1> mu_MS;           // mean SAR
-  vector[N_X_MS] beta_phi_MS;            // regression coefs for logit SAR anomalies
-  real<lower=-1,upper=1> rho_phi_MS;     // AR(1) coef for logit SAR anomalies
-  real<lower=0> sigma_phi_MS;            // process error SD of logit SAR anomalies
-  vector[N_year] zeta_phi_MS;            // logit SAR anomalies (Z-scores)
+  vector[N_X_MS] beta_MS;                // regression coefs for logit SAR anomalies
+  real<lower=-1,upper=1> rho_MS;         // AR(1) coef for logit SAR anomalies
+  real<lower=0> sigma_year_MS;           // process error SD of logit SAR anomalies
+  vector[N_year] zeta_year_MS;           // logit SAR anomalies (Z-scores)
   real<lower=0> sigma_MS;                // unique logit SAR process error SD
   vector[N] zeta_MS;                     // unique logit SAR process errors (Z-scores)
   // spawner age structure
   simplex[N_age] mu_p;                   // among-pop mean of age distributions
-  vector<lower=0>[N_age-1] sigma_gamma;  // among-pop SD of mean log-ratio age distributions
-  cholesky_factor_corr[N_age-1] L_gamma; // Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
-  matrix[N_pop,N_age-1] zeta_gamma;      // population mean log-ratio age distributions (Z-scores)
+  vector<lower=0>[N_age-1] sigma_pop_p;  // among-pop SD of mean log-ratio age distributions
+  cholesky_factor_corr[N_age-1] L_pop_p; // Cholesky factor of among-pop correlation matrix of mean log-ratio age distns
+  matrix[N_pop,N_age-1] zeta_pop_p;      // population mean log-ratio age distributions (Z-scores)
   vector<lower=0>[N_age-1] sigma_p;      // SD of log-ratio cohort age distributions
   cholesky_factor_corr[N_age-1] L_p;     // Cholesky factor of correlation matrix of cohort log-ratio age distributions
   matrix[N,N_age-1] zeta_p;              // log-ratio cohort age distributions (Z-scores)
@@ -171,12 +171,12 @@ transformed parameters {
   // smolt recruitment
   vector<lower=0>[N_pop] alpha;          // intrinsic spawner-smolt productivity 
   vector<lower=0>[N_pop] Mmax;           // asymptotic smolt recruitment 
-  vector[N_year] phi_M;                  // log brood year spawner-smolt productivity anomalies
+  vector[N_year] eta_year_M;             // log brood year spawner-smolt productivity anomalies
   vector<lower=0>[N] M_hat;              // expected smolt abundance (not density) by brood year
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
   vector<lower=0>[N] M;                  // true smolt abundance (not density) by outmigration year
   // SAR
-  vector[N_year] phi_MS;                 // logit SAR anomalies by outmigration year
+  vector[N_year] eta_year_MS;            // logit SAR anomalies by outmigration year
   vector<lower=0,upper=1>[N] s_MS;       // true SAR by outmigration year
   // H/W spawner abundance, removals
   vector[N] p_HOS_all;                   // true p_HOS in all years (can == 0)
@@ -185,17 +185,17 @@ transformed parameters {
   vector<lower=0>[N] S;                  // true total spawner abundance
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   // spawner age structure
-  row_vector[N_age-1] mu_gamma;          // mean of log-ratio cohort age distributions
-  matrix[N_pop,N_age-1] gamma;           // population mean log-ratio age distributions
+  row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
+  matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio age distributions
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
   
   // Multivariate Matt trick for [log(alpha), log(Mmax)]
   {
-    matrix[2,2] L_alphaMmax;           // Cholesky factor of corr matrix of log(alpha), log(Mmax)
-    matrix[N_pop,2] zeta_alphaMmax;    // [log(alpha), log(Mmax)] random effects (z-scored)
-    matrix[N_pop,2] epsilon_alphaMmax; // [log(alpha), log(Mmax)] random effects
-    vector[2] sigma_alphaMmax;         // SD vector of [log(alpha), log(Mmax)]
+    matrix[2,2] L_alphaMmax;        // Cholesky factor of corr matrix of log(alpha), log(Mmax)
+    matrix[N_pop,2] zeta_alphaMmax; // [log(alpha), log(Mmax)] random effects (z-scored)
+    matrix[N_pop,2] eta_alphaMmax;  // [log(alpha), log(Mmax)] random effects
+    vector[2] sigma_alphaMmax;      // SD vector of [log(alpha), log(Mmax)]
     
     L_alphaMmax[1,1] = 1;
     L_alphaMmax[2,1] = rho_alphaMmax;
@@ -204,24 +204,24 @@ transformed parameters {
     sigma_alphaMmax[1] = sigma_alpha;
     sigma_alphaMmax[2] = sigma_Mmax;
     zeta_alphaMmax = append_col(zeta_alpha, zeta_Mmax);
-    epsilon_alphaMmax = diag_pre_multiply(sigma_alphaMmax, L_alphaMmax * zeta_alphaMmax')';
-    alpha = exp(mu_alpha + epsilon_alphaMmax[,1]);
-    Mmax = exp(mu_Mmax + epsilon_alphaMmax[,2]);
+    eta_alphaMmax = diag_pre_multiply(sigma_alphaMmax, L_alphaMmax * zeta_alphaMmax')';
+    alpha = exp(mu_alpha + eta_alphaMmax[,1]);
+    Mmax = exp(mu_Mmax + eta_alphaMmax[,2]);
   }
   
   // AR(1) model for spawner-smolt productivity and SAR anomalies
-  phi_M[1] = zeta_phi_M[1]*sigma_phi_M/sqrt(1 - rho_phi_M^2);     // initial anomaly
-  phi_MS[1] = zeta_phi_MS[1]*sigma_phi_MS/sqrt(1 - rho_phi_MS^2); // initial anomaly
+  eta_year_M[1] = zeta_year_M[1]*sigma_year_M/sqrt(1 - rho_M^2);     // initial anomaly
+  eta_year_MS[1] = zeta_year_MS[1]*sigma_year_MS/sqrt(1 - rho_MS^2); // initial anomaly
   for(i in 2:N_year)
   {
-    phi_M[i] = rho_phi_M*phi_M[i-1] + zeta_phi_M[i]*sigma_phi_M;
-    phi_MS[i] = rho_phi_MS*phi_MS[i-1] + zeta_phi_MS[i]*sigma_phi_MS;
+    eta_year_M[i] = rho_M*eta_year_M[i-1] + zeta_year_M[i]*sigma_year_M;
+    eta_year_MS[i] = rho_MS*eta_year_MS[i-1] + zeta_year_MS[i]*sigma_year_MS;
   }
   // constrain "fitted" log or logit anomalies to sum to 0 (X should be centered)
-  phi_M = phi_M - mean(phi_M[1:N_year]) + mat_lmult(X_M,beta_phi_M);
-  phi_MS = phi_MS - mean(phi_MS[1:N_year]) + mat_lmult(X_MS,beta_phi_MS);
+  eta_year_M = eta_year_M - mean(eta_year_M[1:N_year]) + mat_lmult(X_M,beta_M);
+  eta_year_MS = eta_year_MS - mean(eta_year_MS[1:N_year]) + mat_lmult(X_MS,beta_MS);
   // annual population-specific SAR
-  s_MS = inv_logit(logit(mu_MS) + phi_MS[year] + zeta_MS*sigma_MS);
+  s_MS = inv_logit(logit(mu_MS) + eta_year_MS[year] + zeta_MS*sigma_MS);
   
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -230,9 +230,9 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
-  mu_gamma = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
-  gamma = rep_matrix(mu_gamma,N_pop) + diag_pre_multiply(sigma_gamma, L_gamma * zeta_gamma')';
-  p = append_col(gamma[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
+  mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
+  p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
 
   // Calculate true total wild and hatchery spawners, spawner age distribution, and smolts,
   // and predict smolt recruitment from brood year i
@@ -284,7 +284,7 @@ transformed parameters {
 
     // Smolt production from brood year i
     M_hat[i] = A[i] * SR(SR_fun, alpha[pop[i]], Mmax[pop[i]], S[i], A[i]);
-    M0[i] = M_hat[i] * exp(phi_M[year[i]] + sigma_M*zeta_M[i]);
+    M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + sigma_M*zeta_M[i]);
   }
 }
 
@@ -298,33 +298,33 @@ model {
   sigma_alpha ~ normal(0,3);
   mu_Mmax ~ normal(mu_mu_Mmax, sigma_mu_Mmax);
   sigma_Mmax ~ normal(0,3);
-  zeta_alpha ~ std_normal(); // [log(alpha), log(Mmax)] ~ MVN([mu_alpha, mu_Mmax], D*R_aMmax*D),
-  zeta_Mmax ~ std_normal();  // where D = diag_matrix(sigma_alpha, sigma_Mmax)
-  beta_phi_M ~ normal(0,3);
-  rho_phi_M ~ pexp(0,0.85,20); // mildly regularize to ensure stationarity
-  sigma_phi_M ~ normal(0,3);
-  zeta_phi_M ~ std_normal();   // phi_M[i] ~ N(rho_phi_M*phi_M[i-1], sigma_phi_M)
+  zeta_alpha ~ std_normal();   // [log(alpha), log(Mmax)] ~ MVN([mu_alpha, mu_Mmax], D*R_aMmax*D),
+  zeta_Mmax ~ std_normal();    // where D = diag_matrix(sigma_alpha, sigma_Mmax)
+  beta_M ~ normal(0,3);
+  rho_M ~ pexp(0,0.85,20);     // mildly regularize to ensure stationarity
+  sigma_year_M ~ normal(0,3);
+  zeta_year_M ~ std_normal();  // eta_year_M[i] ~ N(rho_M*eta_year_M[i-1], sigma_year_M)
   sigma_M ~ normal(0,3);
-  zeta_M ~ std_normal();      // total recruits: M ~ lognormal(log(M_hat), sigma)
+  zeta_M ~ std_normal();       // total recruits: M ~ lognormal(log(M_hat), sigma)
 
   // SAR
-  beta_phi_MS ~ normal(0,3);
-  rho_phi_MS ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
-  sigma_phi_MS ~ normal(0,3);
-  zeta_phi_MS ~ std_normal();   // phi_MS[i] ~ N(rho_phi_MS*phi_MS[i-1], sigma_phi_MS)
+  beta_MS ~ normal(0,3);
+  rho_MS ~ pexp(0,0.85,20);    // mildly regularize rho to ensure stationarity
+  sigma_year_MS ~ normal(0,3);
+  zeta_year_MS ~ std_normal(); // eta_year_MS[i] ~ N(rho_MS*eta_year_MS[i-1], sigma_year_MS)
   sigma_MS ~ normal(0,3);
-  zeta_MS ~ std_normal();       // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
+  zeta_MS ~ std_normal();      // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
 
   // spawner age structure
-  to_vector(sigma_gamma) ~ normal(0,3);
+  to_vector(sigma_pop_p) ~ normal(0,3);
   to_vector(sigma_p) ~ normal(0,3);
-  L_gamma ~ lkj_corr_cholesky(1);
+  L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 
-  // gamma[i,] ~ MVN(mu_gamma,D*R_gamma*D), where D = diag_matrix(sigma_gamma)
-  to_vector(zeta_gamma) ~ std_normal();
+  // mu_pop_alr_p[i,] ~ MVN(mu_alr_p,D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
+  to_vector(zeta_pop_p) ~ std_normal();
   // age probs logistic MVN: 
-  // alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
+  // alr_p[i,] ~ MVN(mu_pop_alr_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
 
   // removals
@@ -354,7 +354,7 @@ model {
 }
 
 generated quantities {
-  corr_matrix[N_age-1] R_gamma; // among-pop correlation matrix of mean log-ratio age distns 
+  corr_matrix[N_age-1] R_pop_p; // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;     // correlation matrix of within-pop cohort log-ratio age distns 
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
@@ -362,7 +362,7 @@ generated quantities {
   vector[N] LL_n_age_obs;       // pointwise log-likelihood of wild age frequencies
   vector[N] LL;                 // total pointwise log-likelihood                              
   
-  R_gamma = multiply_lower_tri_self_transpose(L_gamma);
+  R_pop_p = multiply_lower_tri_self_transpose(L_pop_p);
   R_p = multiply_lower_tri_self_transpose(L_p);
   
   LL_M_obs = rep_vector(0,N);

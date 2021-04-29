@@ -61,8 +61,8 @@ stan_init <- function(data, stan_model, chains = 1)
       alr_p <- sweep(log(p[, 1:(N_age-1), drop = FALSE]), 1, log(p[,N_age]), "-")
       zeta_p <- apply(alr_p, 2, scale)
       mu_p <- aggregate(p, list(pop), mean)
-      zeta_gamma <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
-      zeta_gamma <- apply(zeta_gamma, 2, scale)
+      zeta_pop_p <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
+      zeta_pop_p <- apply(zeta_pop_p, 2, scale)
       
       if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp","IPM_LCRchum_pp")) 
       {
@@ -83,9 +83,9 @@ stan_init <- function(data, stan_model, chains = 1)
             # recruitment
             alpha = as.vector(exp(runif(N_pop, 1, 3))),
             Rmax = as.vector(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5)),
-            beta = matrix(rnorm(N_X*N_pop, 0,1), N_pop, N_X),
-            rho = as.vector(runif(N_pop, 0.1, 0.7)),
-            sigma = as.vector(runif(N_pop, 0.05, 2)), 
+            beta_R = matrix(rnorm(N_X*N_pop, 0,1), N_pop, N_X),
+            rho_R = as.vector(runif(N_pop, 0.1, 0.7)),
+            sigma_R = as.vector(runif(N_pop, 0.05, 2)), 
             zeta_R = as.vector(scale(log(R)))*0.1,
             # spawner age structure
             mu_p = mu_p,
@@ -111,16 +111,16 @@ stan_init <- function(data, stan_model, chains = 1)
             sigma_Rmax = runif(1, 0.1, 0.5),
             zeta_Rmax = as.vector(runif(N_pop,-1,1)),
             rho_alphaRmax = runif(1, -0.5, 0.5),
-            beta_phi = as.vector(rnorm(N_X, 0, 1)),
-            rho_phi = runif(1, 0.1, 0.7),
-            sigma_phi = runif(1, 0.1, 0.5),
-            zeta_phi = as.vector(rnorm(max(year, year_fwd), 0, 0.1)),
-            sigma = runif(1, 0.5, 1),
+            beta_R = as.vector(rnorm(N_X, 0, 1)),
+            rho_R = runif(1, 0.1, 0.7),
+            sigma_year_R = runif(1, 0.1, 0.5),
+            zeta_year_R = as.vector(rnorm(max(year, year_fwd), 0, 0.1)),
+            sigma_R = runif(1, 0.5, 1),
             zeta_R = as.vector(scale(log(R)))*0.1,
             # spawner age structure
             mu_p = colMeans(p),
-            sigma_gamma = as.vector(runif(N_age - 1, 0.5, 1)),
-            zeta_gamma = zeta_gamma,
+            sigma_pop_p = as.vector(runif(N_age - 1, 0.5, 1)),
+            zeta_pop_p = zeta_pop_p,
             sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             # H/W composition, removals
@@ -174,23 +174,23 @@ stan_init <- function(data, stan_model, chains = 1)
             sigma_Mmax = runif(1, 0.1, 0.5),
             zeta_Mmax = as.vector(rnorm(N_pop, 0, 1)),
             rho_alphaMmax = runif(1, -0.5, 0.5),
-            beta_phi_M = as.vector(rnorm(N_X_M, 0, 1)),
-            rho_phi_M = runif(1, 0.1, 0.7),
-            sigma_phi_M = runif(1, 0.1, 0.5),
-            zeta_phi_M = as.vector(rnorm(max(year), 0, 0.1)),
+            beta_M = as.vector(rnorm(N_X_M, 0, 1)),
+            rho_M = runif(1, 0.1, 0.7),
+            sigma_year__M = runif(1, 0.1, 0.5),
+            zeta_year__M = as.vector(rnorm(max(year), 0, 0.1)),
             sigma_M = runif(1, 0.5, 1),
             zeta_M = as.vector(scale(log(M_obs)))*0.1,
             # SAR
             mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
-            beta_phi_MS = as.vector(rnorm(N_X_MS,0,1)),
-            rho_phi_MS = runif(1, 0.1, 0.7),
-            sigma_phi_MS = runif(1, 0.05, 2), 
+            beta_MS = as.vector(rnorm(N_X_MS,0,1)),
+            rho_MS = runif(1, 0.1, 0.7),
+            sigma_year__MS = runif(1, 0.05, 2), 
             sigma_MS = runif(1, 0.5, 1),
             zeta_MS = as.vector(scale(qlogis(s_MS))),
             # spawner age structure
             mu_p = colMeans(p),
-            sigma_gamma = as.vector(runif(N_age - 1, 0.5, 1)),
-            zeta_gamma = zeta_gamma,
+            sigma_pop_p = as.vector(runif(N_age - 1, 0.5, 1)),
+            zeta_pop_p = zeta_pop_p,
             sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             # H/W composition, removals
@@ -235,7 +235,7 @@ stan_init <- function(data, stan_model, chains = 1)
             # spawner age structure and sex ratio
             mu_p = colMeans(p),
             sigma_pop_p = as.vector(runif(N_age - 1, 0.5, 1)),
-            zeta_pop_p = zeta_gamma,
+            zeta_pop_p = zeta_pop_p,
             sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             mu_F = runif(1,0.4,0.6),
@@ -290,8 +290,8 @@ stan_init <- function(data, stan_model, chains = 1)
             zeta_U = as.vector(rnorm(max(year,year_fwd), 0, 0.1)),
             # spawner age structure
             mu_p = colMeans(p),
-            sigma_gamma = as.vector(runif(N_age - 1, 0.5, 1)),
-            zeta_gamma = zeta_gamma,
+            sigma_pop_p = as.vector(runif(N_age - 1, 0.5, 1)),
+            zeta_pop_p = zeta_pop_p,
             sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             # H/W composition, removals
@@ -384,16 +384,16 @@ stan_init <- function(data, stan_model, chains = 1)
                sigma_Rmax = runif(1, 0.1, 0.5),
                zeta_Rmax = as.vector(runif(N_pop, -1, 1)), 
                rho_alphaRmax = runif(1, -0.5, 0.5),
-               rho_phi = runif(1, 0.1, 0.7),
-               sigma_phi = runif(1, 0.1, 0.5), 
-               zeta_phi = as.vector(rnorm(N_year, 0, 0.1)),
-               sigma = runif(1, 0.1, 2))))
+               rho_R = runif(1, 0.1, 0.7),
+               sigma_year_R = runif(1, 0.1, 0.5), 
+               zeta_R = as.vector(rnorm(N_year, 0, 0.1)),
+               sigma_R = runif(1, 0.1, 2))))
       } else {
         return(lapply(1:chains, function(i)
           list(alpha = as.vector(exp(runif(N_pop, 1, 3))),
                Rmax = as.vector(exp(runif(N_pop, -1, 0))),
-               rho = as.vector(runif(N_pop, 0.1, 0.7)),
-               sigma = as.vector(runif(N_pop, 0.5, 1)))))
+               rho_R = as.vector(runif(N_pop, 0.1, 0.7)),
+               sigma_R = as.vector(runif(N_pop, 0.5, 1)))))
       }
     })
   }

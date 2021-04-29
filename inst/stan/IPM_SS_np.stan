@@ -14,11 +14,11 @@ functions {
   }
 
   // Generalized normal (aka power-exponential) unnormalized log-probability
-  real pexp_lpdf(vector y, real mu, real sigma, real shape) {
+  real pexp_lpdf(vector y, real mu, real sigma_R, real shape) {
     vector[num_elements(y)] LL;
 
     for(i in 1:num_elements(LL))
-      LL[i] = -pow(fabs(y[i] - mu)/sigma, shape);
+      LL[i] = -pow(fabs(y[i] - mu)/sigma_R, shape);
 
     return(sum(LL));
   }
@@ -69,15 +69,15 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
-  int<lower=2> ages[N_age];       // adult ages
-  int<lower=1> min_age;           // minimum adult age
-  int<lower=1> pop_year_indx[N];  // index of years within each pop, starting at 1
-  int<lower=0> n_HW_obs[N_H];     // total sample sizes for H/W frequencies
+  int<lower=2> ages[N_age];                // adult ages
+  int<lower=1> min_age;                    // minimum adult age
+  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
+  int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   real mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior log-mean of Rmax
   real sigma_Rmax = sd(log(S_obs[which_S_obs])); // prior log-SD of Rmax
-  vector[max_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_age
+  vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
-  matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age
+  matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of wild spawner age distns in years 1:max_age
 
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
@@ -96,7 +96,7 @@ transformed data {
   for(i in 1:max_age)
   {
     int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan age classes
-    int N_amalg_age = N_age - N_orphan_age + 1; // number of amalgamated age classes
+    int N_amalg_age = N_age - N_orphan_age + 1;     // number of amalgamated age classes
     
     for(j in 1:N_pop)
     {
@@ -116,9 +116,9 @@ parameters {
   // recruitment
   vector<lower=0>[N_pop] alpha;           // intrinsic productivity
   vector<lower=0>[N_pop] Rmax;            // asymptotic recruitment
-  matrix[N_pop,N_X] beta;                 // regression coefs for log productivity anomalies
-  vector<lower=-1,upper=1>[N_pop] rho;    // AR(1) coefs for log productivity anomalies
-  vector<lower=0>[N_pop] sigma;           // process error SDs
+  matrix[N_pop,N_X] beta_R;               // regression coefs for log productivity anomalies
+  vector<lower=-1,upper=1>[N_pop] rho_R;  // AR(1) coefs for log productivity anomalies
+  vector<lower=0>[N_pop] sigma_R;         // process error SDs
   vector[N] zeta_R;                       // recruitment process errors (z-scored)
   // spawner age structure
   simplex[N_age] mu_p[N_pop];             // population mean age distributions
@@ -146,7 +146,7 @@ transformed parameters {
   vector<lower=0>[N] S;               // true total spawner abundance
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   // spawner age structure
-  matrix[N_pop,N_age-1] gamma;        // population mean log ratio age distributions
+  matrix[N_pop,N_age-1] mu_alr_p;     // population mean log ratio age distributions
   matrix<lower=0,upper=1>[N,N_age] p; // cohort age distributions
   matrix<lower=0,upper=1>[N,N_age] q; // true spawner age distributions
 
@@ -158,7 +158,7 @@ transformed parameters {
 
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
-    gamma[j,] = to_row_vector(log(mu_p[j,1:(N_age-1)]) - log(mu_p[j,N_age]));
+    mu_alr_p[j,] = to_row_vector(log(mu_p[j,1:(N_age-1)]) - log(mu_p[j,N_age]));
 
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
@@ -173,7 +173,7 @@ transformed parameters {
 
     // Multivariate Matt trick for within-pop, time-varying age vectors
     alr_p = rep_row_vector(0,N_age);
-    alr_p[1:(N_age-1)] = gamma[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
+    alr_p[1:(N_age-1)] = mu_alr_p[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
     alr_p = exp(alr_p);
     p[i,] = alr_p/sum(alr_p);
     
@@ -205,10 +205,10 @@ transformed parameters {
     // Recruitment
     R_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
     if(pop_year_indx[i] == 1) // initial process error
-      epsilon_R[i] = zeta_R[i]*sigma[pop[i]]/sqrt(1 - rho[pop[i]]^2);
+      epsilon_R[i] = zeta_R[i]*sigma_R[pop[i]]/sqrt(1 - rho_R[pop[i]]^2);
     else
-      epsilon_R[i] = rho[pop[i]]*epsilon_R[i-1] + zeta_R[i]*sigma[pop[i]];
-    R[i] = R_hat[i]*exp(dot_product(X[year[i],], beta[pop[i],]) + epsilon_R[i]);
+      epsilon_R[i] = rho_R[pop[i]]*epsilon_R[i-1] + zeta_R[i]*sigma_R[pop[i]];
+    R[i] = R_hat[i]*exp(dot_product(X[year[i],], beta_R[pop[i],]) + epsilon_R[i]);
   }
 }
 
@@ -220,16 +220,16 @@ model {
   // recruitment
   alpha ~ lognormal(2.0,2.0);
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
-  to_vector(beta) ~ normal(0,5);
-  rho ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
-  sigma ~ normal(0,5);
-  zeta_R ~ std_normal();  // total recruits: R ~ lognormal(log(R_hat), sigma)
+  to_vector(beta_R) ~ normal(0,5);
+  rho_R ~ pexp(0,0.85,20); // mildly regularize rho_R to ensure stationarity
+  sigma_R ~ normal(0,5);
+  zeta_R ~ std_normal();   // total recruits: R ~ lognormal(log(R_hat), sigma_R)
 
   // spawner age structure
   to_vector(sigma_p) ~ normal(0,5);
   for(j in 1:N_pop)
     L_p[j] ~ lkj_corr_cholesky(3);
-  // age probs logistic MVN: alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
+  // age probs logistic MVN: alr_p[i,] ~ MVN(mu_alr_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
 
   // removals
