@@ -22,6 +22,18 @@ functions {
       
     return(sum(LL));
   }
+  
+  // Quantiles of a vector
+  real quantile(vector v, real p) {
+    int N = num_elements(v);
+    real Np = round(N*p);
+    real q;
+    
+    for(i in 1:N) {
+      if(i - Np == 0.0) q = v[i];
+    }
+    return(q);
+  }
 }
 
 data {
@@ -70,6 +82,11 @@ transformed data {
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
+  real mu_mu_Mmax = quantile(log(M_obs[which_M_obs]), 0.9); // prior mean of mu_Mmax
+  real sigma_mu_Mmax = 2*sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
+  real mu_M_init = mean(log(M_obs[which_M_obs])); // prior log-mean of smolt abundance in years 1:smolt_age
+  real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
+  real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
   vector[max_ocean_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_ocean_age
   matrix[N_age,max_ocean_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_ocean_age
   
@@ -94,8 +111,8 @@ transformed data {
     {
       int ii = (j - 1)*max_ocean_age + i; // index into S_init, q_init
 
-      // prior mean that scales S_init by number of orphan age classes
-      mu_S_init[ii] = log(1.0*N_orphan_age/N_age);
+      // S_init prior mean that scales observed log-mean by fraction of orphan age classes
+      mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
       
       // prior on q_init that implies q_orphan ~ Dir(1)
       mu_q_init[,ii] = append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), 
@@ -107,7 +124,7 @@ transformed data {
 parameters {
   // smolt recruitment
   vector<lower=0>[N_pop] alpha;             // intrinsic spawner-smolt productivity
-  vector<lower=0>[N_pop] Rmax;              // asymptotic smolt recruitment
+  vector<lower=0>[N_pop] Mmax;              // asymptotic smolt recruitment
   matrix[N_pop,N_X_M] beta_M;               // regression coefs for spawner-smolt productivity
   vector<lower=-1,upper=1>[N_pop] rho_M;    // AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;           // spawner-smolt process error SDs
@@ -229,28 +246,28 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    M_hat[i] = SR(SR_fun, alpha[pop[i]], Mmax[pop[i]], S[i], A[i]);
     M0[i] = M_hat[i] * exp(dot_product(X_M[year[i],], beta_M[pop[i],]) + epsilon_M[i]);
   }
 }
 
 model {
-  vector[N_B] B_take; // true broodstock take when B_take_obs > 0
+  vector[N_B] log_B_take; // log of true broodstock take when B_take_obs > 0
   
   // Priors
   
   // smolt recruitment
   alpha ~ lognormal(2.0,2.0);
-  Rmax ~ lognormal(2.0,3.0);
+  Mmax ~ lognormal(mu_mu_Mmax, sigma_mu_Mmax);
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
-  sigma_M ~ pexp(0,1,10);
+  sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();    // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
   // SAR
-  to_vector(beta_MS) ~ normal(0,5);
+  to_vector(beta_MS) ~ normal(0,3);
   rho_MS ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
-  sigma_MS ~ pexp(0,1,10);
+  sigma_MS ~ normal(0,3);
   zeta_MS ~ std_normal();   // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
 
   // spawner age structure
@@ -260,15 +277,15 @@ model {
   // age probs logistic MVN: 
   // alr_p[i,] ~ MVN(gamma[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
-
+  
   // removals
-  B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
-  B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
+  log_B_take = log(S_W[which_B]) + log1m(q[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q[,1])*B_rate/(1 - B_rate)
+  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
 
   // initial states
   // (accounting for amalgamation of q_init to q_orphan)
-  M_init ~ lognormal(0.0,5.0);
-  S_init ~ lognormal(mu_S_init, 5.0);
+  M_init ~ lognormal(mu_M_init, sigma_M_init);
+  S_init ~ lognormal(mu_S_init, sigma_S_init);
   {
     matrix[N_age,max_ocean_age*N_pop] q_init_mat;
     

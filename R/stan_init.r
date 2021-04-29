@@ -137,7 +137,7 @@ stan_init <- function(data, stan_model, chains = 1)
           list(
             # smolt recruitment
             alpha = as.vector(exp(runif(N_pop,1,3))),
-            Rmax = as.vector(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5)),
+            Mmax = as.vector(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5)),
             beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
             rho_M = as.vector(runif(N_pop, 0.1, 0.7)),
             sigma_M = as.vector(runif(N_pop, 0.05, 2)), 
@@ -170,10 +170,10 @@ stan_init <- function(data, stan_model, chains = 1)
             mu_alpha = runif(1, 1, 3),
             sigma_alpha = runif(1, 0.1, 0.5),
             zeta_alpha = as.vector(rnorm(N_pop, 0, 1)),
-            mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
-            sigma_Rmax = runif(1, 0.1, 0.5),
-            zeta_Rmax = as.vector(rnorm(N_pop, 0, 1)),
-            rho_alphaRmax = runif(1, -0.5, 0.5),
+            mu_Mmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
+            sigma_Mmax = runif(1, 0.1, 0.5),
+            zeta_Mmax = as.vector(rnorm(N_pop, 0, 1)),
+            rho_alphaMmax = runif(1, -0.5, 0.5),
             beta_phi_M = as.vector(rnorm(N_X_M, 0, 1)),
             rho_phi_M = runif(1, 0.1, 0.7),
             sigma_phi_M = runif(1, 0.1, 0.5),
@@ -263,10 +263,10 @@ stan_init <- function(data, stan_model, chains = 1)
             mu_alpha = runif(1, 1, 3),
             sigma_alpha = runif(1, 0.1, 0.5),
             zeta_alpha = as.vector(runif(N_pop, -1, 1)),
-            mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
-            sigma_Rmax = runif(1, 0.1, 0.5),
-            zeta_Rmax = as.vector(runif(N_pop, -1, 1)),
-            rho_alphaRmax = runif(1, -0.5, 0.5),
+            mu_Mmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
+            sigma_Mmax = runif(1, 0.1, 0.5),
+            zeta_Mmax = as.vector(runif(N_pop, -1, 1)),
+            rho_alphaMmax = runif(1, -0.5, 0.5),
             beta_M = as.vector(rnorm(N_X_M, 0, 1)),
             rho_M = runif(1, 0.1, 0.7),
             sigma_M = runif(1, 0.05, 2), 
@@ -307,7 +307,7 @@ stan_init <- function(data, stan_model, chains = 1)
     })
   } else if(stan_model == "IPM_SMaS_np") {
     with(data, {
-      # This is a bit of a hack to avoid tedious age-structured run reconstuction
+      # This is a bit of a hack to avoid tedious age-structured run reconstruction
       N_pop <- max(pop)
       N_year <- max(year)
       N_GRage <- N_Mage*N_MSage
@@ -335,7 +335,7 @@ stan_init <- function(data, stan_model, chains = 1)
         list(
           # smolt recruitment
           alpha = as.vector(rlnorm(N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
-          Rmax = as.vector(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
+          Mmax = as.vector(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
           beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
           rho_M = as.vector(runif(N_pop, 0.1, 0.7)),
           sigma_M = as.vector(runif(N_pop, 0.05, 2)), 

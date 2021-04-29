@@ -59,8 +59,7 @@ functions {
   
   // Left multiply vector by matrix
   // works even if size is zero
-  vector mat_lmult(matrix X, vector v)
-  {
+  vector mat_lmult(matrix X, vector v) {
     vector[rows(X)] Xv;
     Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
     return(Xv); 
@@ -137,6 +136,7 @@ transformed data {
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   vector[max_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_age
+  real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
   matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age
   
   N_year_all = max(append_array(year, year_fwd));
@@ -175,8 +175,8 @@ transformed data {
     {
       int ii = (j - 1)*max_ocean_age + i; // index into S_init, q_init
 
-      // prior mean that scales S_init by number of orphan age classes
-      mu_S_init[ii] = log(1.0*N_orphan_age/N_age);
+      // S_init prior mean that scales observed log-mean by fraction of orphan age classes
+      mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
       
       // prior on q_init that implies q_orphan ~ Dir(1)
       mu_q_init[,ii] = append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), 
@@ -190,10 +190,10 @@ parameters {
   real mu_alpha;                         // hyper-mean log intrinsic productivity
   real<lower=0> sigma_alpha;             // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;              // log intrinsic prod (Z-scores)
-  real mu_Rmax;                          // hyper-mean log asymptotic recruitment
-  real<lower=0> sigma_Rmax;              // hyper-SD log asymptotic recruitment
-  vector[N_pop] zeta_Rmax;               // log asymptotic recruitment (Z-scores)
-  real<lower=-1,upper=1> rho_alphaRmax;  // correlation between log(alpha) and log(Rmax)
+  real mu_Mmax;                          // hyper-mean log asymptotic recruitment
+  real<lower=0> sigma_Mmax;              // hyper-SD log asymptotic recruitment
+  vector[N_pop] zeta_Mmax;               // log asymptotic recruitment (Z-scores)
+  real<lower=-1,upper=1> rho_alphaMmax;  // correlation between log(alpha) and log(Mmax)
   vector[N_X_M] beta_M;                  // regression coefs for spawner-smolt productivity
   real<lower=-1,upper=1> rho_M;          // AR(1) coef for spawner-smolt productivity
   real<lower=0> sigma_M;                 // spawner-smolt process error SD
@@ -235,7 +235,7 @@ parameters {
 transformed parameters {
   // smolt recruitment
   vector<lower=0>[N_pop] alpha;          // intrinsic productivity 
-  vector<lower=0>[N_pop] Rmax;           // asymptotic recruitment 
+  vector<lower=0>[N_pop] Mmax;           // asymptotic recruitment 
   vector<lower=0>[N] M_hat;              // expected smolt abundance (not density) by brood year
   vector[N] epsilon_M;                   // process error in smolt abundance by brood year 
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
@@ -259,23 +259,23 @@ transformed parameters {
   vector[N] p_HOS_all;                   // true p_HOS in all years (can == 0)
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   
-  // Multivariate Matt trick for [log(alpha), log(Rmax)]
+  // Multivariate Matt trick for [log(alpha), log(Mmax)]
   {
-    matrix[2,2] L_alphaRmax;           // temp variable: Cholesky factor of corr matrix of log(alpha), log(Rmax)
-    matrix[N_pop,2] zeta_alphaRmax;    // temp variable [log(alpha), log(Rmax)] random effects (z-scored)
-    matrix[N_pop,2] epsilon_alphaRmax; // temp variable: [log(alpha), log(Rmax)] random effects
-    vector[2] sigma_alphaRmax;         // temp variable: SD vector of [log(alpha), log(Rmax)]
+    matrix[2,2] L_alphaMmax;           // temp variable: Cholesky factor of corr matrix of log(alpha), log(Mmax)
+    matrix[N_pop,2] zeta_alphaMmax;    // temp variable [log(alpha), log(Mmax)] random effects (z-scored)
+    matrix[N_pop,2] epsilon_alphaMmax; // temp variable: [log(alpha), log(Mmax)] random effects
+    vector[2] sigma_alphaMmax;         // temp variable: SD vector of [log(alpha), log(Mmax)]
     
-    L_alphaRmax[1,1] = 1;
-    L_alphaRmax[2,1] = rho_alphaRmax;
-    L_alphaRmax[1,2] = 0;
-    L_alphaRmax[2,2] = sqrt(1 - rho_alphaRmax^2);
-    sigma_alphaRmax[1] = sigma_alpha;
-    sigma_alphaRmax[2] = sigma_Rmax;
-    zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
-    epsilon_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
-    alpha = exp(mu_alpha + epsilon_alphaRmax[,1]);
-    Rmax = exp(mu_Rmax + epsilon_alphaRmax[,2]);
+    L_alphaMmax[1,1] = 1;
+    L_alphaMmax[2,1] = rho_alphaMmax;
+    L_alphaMmax[1,2] = 0;
+    L_alphaMmax[2,2] = sqrt(1 - rho_alphaMmax^2);
+    sigma_alphaMmax[1] = sigma_alpha;
+    sigma_alphaMmax[2] = sigma_Mmax;
+    zeta_alphaMmax = append_col(zeta_alpha, zeta_Mmax);
+    epsilon_alphaMmax = diag_pre_multiply(sigma_alphaMmax, L_alphaMmax * zeta_alphaMmax')';
+    alpha = exp(mu_alpha + epsilon_alphaMmax[,1]);
+    Mmax = exp(mu_Mmax + epsilon_alphaMmax[,2]);
   }
 
   // AR(1) models for downstream, SAR, upstream survival
@@ -362,27 +362,27 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    M_hat[i] = SR(SR_fun, alpha[pop[i]], Mmax[pop[i]], S[i], A[i]);
     M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M) + epsilon_M[i]); 
   }
 }
 
 model {
-  vector[N_B] B_take; // true broodstock take when B_take_obs > 0
+  vector[N_B] log_B_take; // log of true broodstock take when B_take_obs > 0
   
   // Priors
   
   // smolt production
   mu_alpha ~ normal(2,5);
-  sigma_alpha ~ pexp(0,3,10);
-  mu_Rmax ~ normal(0,10);
-  sigma_Rmax ~ pexp(0,3,10);
-  // log([alpha,Rmax]) ~ MVN([mu_alpha,mu_Rmax], D*R_aRmax*D), where D = diag_matrix(sigma_alpha,sigma_Rmax)
+  sigma_alpha ~ normal(0,3);
+  mu_Mmax ~ normal(0,10);
+  sigma_Mmax ~ normal(0,3);
+  // log([alpha,Mmax]) ~ MVN([mu_alpha,mu_Mmax], D*R_aMmax*D), where D = diag_matrix(sigma_alpha,sigma_Mmax)
   zeta_alpha ~ std_normal();
-  zeta_Rmax ~ std_normal();
-  beta_M ~ normal(0,5);
+  zeta_Mmax ~ std_normal();
+  beta_M ~ normal(0,3);
   rho_M ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
-  sigma_M ~ pexp(0,2,10);
+  sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();   // epsilon_M ~ AR1(rho_M, sigma_M)
   M_init ~ lognormal(0.0,5.0);
 
@@ -411,8 +411,8 @@ model {
   // spawner age structure
   for(i in 1:(N_age-1))
   {
-    sigma_gamma[i] ~ pexp(0,2,5);
-    sigma_p[i] ~ pexp(0,2,5); 
+    sigma_gamma[i] ~ normal(0,3);
+    sigma_p[i] ~ normal(0,3); 
   }
   L_gamma ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
@@ -424,12 +424,12 @@ model {
   to_vector(zeta_p) ~ std_normal();
   
   // removals
-  B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
-  B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match 
+  log_B_take = log(S_W[which_B]) + logit(B_rate); // B_take = S_W*B_rate/(1 - B_rate)
+  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
   
   // initial spawners and wild spawner age distribution
   // (accounting for amalgamation of q_init to q_orphan)
-  S_init ~ lognormal(mu_S_init, 10.0);
+  S_init ~ lognormal(mu_S_init, sigma_S_init);
   {
     matrix[N_age,max_ocean_age*N_pop] q_init_mat;
     
@@ -496,7 +496,7 @@ generated quantities {
   //   S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
   //   q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
   //   S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-  //   R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
+  //   R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Mmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
   //   R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
   // }
   
