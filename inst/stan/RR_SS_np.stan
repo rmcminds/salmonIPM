@@ -106,7 +106,7 @@ transformed parameters {
 model {
   // Priors
   alpha ~ lognormal(2.0,2.0);
-  Rmax ~ lognormal(mu_mu_Rmax, sigma_mu_Rmax);
+  Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   for(i in 1:N_pop)
   {
     rho[i] ~ pexp(0,0.85,20);   // mildly regularize rho to ensure stationarity
