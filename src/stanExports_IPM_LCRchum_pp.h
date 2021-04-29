@@ -33,7 +33,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_IPM_LCRchum_pp");
-    reader.add_event(424, 422, "end", "model_IPM_LCRchum_pp");
+    reader.add_event(452, 450, "end", "model_IPM_LCRchum_pp");
     return reader;
 }
 template <typename T1__, typename T2__, typename T3__, typename T4__>
@@ -175,8 +175,6 @@ private:
         int N_E;
         std::vector<int> age_E;
         vector_d E_obs;
-        std::vector<int> n_M_obs;
-        std::vector<int> n_F_obs;
         int SR_fun;
         vector_d A;
         int N_X_M;
@@ -206,6 +204,8 @@ private:
         int N_age;
         int max_age;
         matrix_d n_age_obs;
+        std::vector<int> n_M_obs;
+        std::vector<int> n_F_obs;
         int N_H;
         std::vector<int> which_H;
         std::vector<int> n_W_obs;
@@ -323,42 +323,14 @@ public:
                 E_obs(j_1__) = vals_r__[pos__++];
             }
             check_greater_or_equal(function__, "E_obs", E_obs, 0);
-            current_statement_begin__ = 40;
-            validate_non_negative_index("n_M_obs", "N", N);
-            context__.validate_dims("data initialization", "n_M_obs", "int", context__.to_vec(N));
-            n_M_obs = std::vector<int>(N, int(0));
-            vals_i__ = context__.vals_i("n_M_obs");
-            pos__ = 0;
-            size_t n_M_obs_k_0_max__ = N;
-            for (size_t k_0__ = 0; k_0__ < n_M_obs_k_0_max__; ++k_0__) {
-                n_M_obs[k_0__] = vals_i__[pos__++];
-            }
-            size_t n_M_obs_i_0_max__ = N;
-            for (size_t i_0__ = 0; i_0__ < n_M_obs_i_0_max__; ++i_0__) {
-                check_greater_or_equal(function__, "n_M_obs[i_0__]", n_M_obs[i_0__], 0);
-            }
             current_statement_begin__ = 41;
-            validate_non_negative_index("n_F_obs", "N", N);
-            context__.validate_dims("data initialization", "n_F_obs", "int", context__.to_vec(N));
-            n_F_obs = std::vector<int>(N, int(0));
-            vals_i__ = context__.vals_i("n_F_obs");
-            pos__ = 0;
-            size_t n_F_obs_k_0_max__ = N;
-            for (size_t k_0__ = 0; k_0__ < n_F_obs_k_0_max__; ++k_0__) {
-                n_F_obs[k_0__] = vals_i__[pos__++];
-            }
-            size_t n_F_obs_i_0_max__ = N;
-            for (size_t i_0__ = 0; i_0__ < n_F_obs_i_0_max__; ++i_0__) {
-                check_greater_or_equal(function__, "n_F_obs[i_0__]", n_F_obs[i_0__], 0);
-            }
-            current_statement_begin__ = 43;
             context__.validate_dims("data initialization", "SR_fun", "int", context__.to_vec());
             SR_fun = int(0);
             vals_i__ = context__.vals_i("SR_fun");
             pos__ = 0;
             SR_fun = vals_i__[pos__++];
             check_greater_or_equal(function__, "SR_fun", SR_fun, 1);
-            current_statement_begin__ = 44;
+            current_statement_begin__ = 42;
             validate_non_negative_index("A", "N", N);
             context__.validate_dims("data initialization", "A", "vector_d", context__.to_vec(N));
             A = Eigen::Matrix<double, Eigen::Dynamic, 1>(N);
@@ -368,14 +340,14 @@ public:
             for (size_t j_1__ = 0; j_1__ < A_j_1_max__; ++j_1__) {
                 A(j_1__) = vals_r__[pos__++];
             }
-            current_statement_begin__ = 45;
+            current_statement_begin__ = 43;
             context__.validate_dims("data initialization", "N_X_M", "int", context__.to_vec());
             N_X_M = int(0);
             vals_i__ = context__.vals_i("N_X_M");
             pos__ = 0;
             N_X_M = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_X_M", N_X_M, 0);
-            current_statement_begin__ = 46;
+            current_statement_begin__ = 44;
             validate_non_negative_index("X_M", "max(year)", max(year));
             validate_non_negative_index("X_M", "N_X_M", N_X_M);
             context__.validate_dims("data initialization", "X_M", "matrix_d", context__.to_vec(max(year),N_X_M));
@@ -389,14 +361,14 @@ public:
                     X_M(j_1__, j_2__) = vals_r__[pos__++];
                 }
             }
-            current_statement_begin__ = 47;
+            current_statement_begin__ = 45;
             context__.validate_dims("data initialization", "smolt_age", "int", context__.to_vec());
             smolt_age = int(0);
             vals_i__ = context__.vals_i("smolt_age");
             pos__ = 0;
             smolt_age = vals_i__[pos__++];
             check_greater_or_equal(function__, "smolt_age", smolt_age, 1);
-            current_statement_begin__ = 49;
+            current_statement_begin__ = 47;
             context__.validate_dims("data initialization", "N_M_obs", "int", context__.to_vec());
             N_M_obs = int(0);
             vals_i__ = context__.vals_i("N_M_obs");
@@ -404,7 +376,7 @@ public:
             N_M_obs = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_M_obs", N_M_obs, 1);
             check_less_or_equal(function__, "N_M_obs", N_M_obs, N);
-            current_statement_begin__ = 50;
+            current_statement_begin__ = 48;
             validate_non_negative_index("which_M_obs", "N_M_obs", N_M_obs);
             context__.validate_dims("data initialization", "which_M_obs", "int", context__.to_vec(N_M_obs));
             which_M_obs = std::vector<int>(N_M_obs, int(0));
@@ -419,7 +391,7 @@ public:
                 check_greater_or_equal(function__, "which_M_obs[i_0__]", which_M_obs[i_0__], 1);
                 check_less_or_equal(function__, "which_M_obs[i_0__]", which_M_obs[i_0__], N);
             }
-            current_statement_begin__ = 51;
+            current_statement_begin__ = 49;
             validate_non_negative_index("M_obs", "N", N);
             context__.validate_dims("data initialization", "M_obs", "vector_d", context__.to_vec(N));
             M_obs = Eigen::Matrix<double, Eigen::Dynamic, 1>(N);
@@ -430,7 +402,7 @@ public:
                 M_obs(j_1__) = vals_r__[pos__++];
             }
             check_greater_or_equal(function__, "M_obs", M_obs, 0);
-            current_statement_begin__ = 52;
+            current_statement_begin__ = 50;
             context__.validate_dims("data initialization", "N_tau_M_obs", "int", context__.to_vec());
             N_tau_M_obs = int(0);
             vals_i__ = context__.vals_i("N_tau_M_obs");
@@ -438,7 +410,7 @@ public:
             N_tau_M_obs = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_tau_M_obs", N_tau_M_obs, 1);
             check_less_or_equal(function__, "N_tau_M_obs", N_tau_M_obs, N);
-            current_statement_begin__ = 53;
+            current_statement_begin__ = 51;
             validate_non_negative_index("which_tau_M_obs", "N_tau_M_obs", N_tau_M_obs);
             context__.validate_dims("data initialization", "which_tau_M_obs", "int", context__.to_vec(N_tau_M_obs));
             which_tau_M_obs = std::vector<int>(N_tau_M_obs, int(0));
@@ -453,7 +425,7 @@ public:
                 check_greater_or_equal(function__, "which_tau_M_obs[i_0__]", which_tau_M_obs[i_0__], 1);
                 check_less_or_equal(function__, "which_tau_M_obs[i_0__]", which_tau_M_obs[i_0__], N);
             }
-            current_statement_begin__ = 54;
+            current_statement_begin__ = 52;
             validate_non_negative_index("tau_M_obs", "N", N);
             context__.validate_dims("data initialization", "tau_M_obs", "vector_d", context__.to_vec(N));
             tau_M_obs = Eigen::Matrix<double, Eigen::Dynamic, 1>(N);
@@ -464,7 +436,7 @@ public:
                 tau_M_obs(j_1__) = vals_r__[pos__++];
             }
             check_greater_or_equal(function__, "tau_M_obs", tau_M_obs, 0);
-            current_statement_begin__ = 55;
+            current_statement_begin__ = 53;
             context__.validate_dims("data initialization", "N_upstream", "int", context__.to_vec());
             N_upstream = int(0);
             vals_i__ = context__.vals_i("N_upstream");
@@ -472,7 +444,7 @@ public:
             N_upstream = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_upstream", N_upstream, 0);
             check_less_or_equal(function__, "N_upstream", N_upstream, N);
-            current_statement_begin__ = 56;
+            current_statement_begin__ = 54;
             validate_non_negative_index("which_upstream", "N_upstream", N_upstream);
             context__.validate_dims("data initialization", "which_upstream", "int", context__.to_vec(N_upstream));
             which_upstream = std::vector<int>(N_upstream, int(0));
@@ -487,7 +459,7 @@ public:
                 check_greater_or_equal(function__, "which_upstream[i_0__]", which_upstream[i_0__], 1);
                 check_less_or_equal(function__, "which_upstream[i_0__]", which_upstream[i_0__], N);
             }
-            current_statement_begin__ = 57;
+            current_statement_begin__ = 55;
             validate_non_negative_index("downstream_trap", "N_upstream", N_upstream);
             context__.validate_dims("data initialization", "downstream_trap", "int", context__.to_vec(N_upstream));
             downstream_trap = std::vector<int>(N_upstream, int(0));
@@ -502,14 +474,14 @@ public:
                 check_greater_or_equal(function__, "downstream_trap[i_0__]", downstream_trap[i_0__], 1);
                 check_less_or_equal(function__, "downstream_trap[i_0__]", downstream_trap[i_0__], N);
             }
-            current_statement_begin__ = 59;
+            current_statement_begin__ = 57;
             context__.validate_dims("data initialization", "N_X_MS", "int", context__.to_vec());
             N_X_MS = int(0);
             vals_i__ = context__.vals_i("N_X_MS");
             pos__ = 0;
             N_X_MS = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_X_MS", N_X_MS, 0);
-            current_statement_begin__ = 60;
+            current_statement_begin__ = 58;
             validate_non_negative_index("X_MS", "max(year)", max(year));
             validate_non_negative_index("X_MS", "N_X_MS", N_X_MS);
             context__.validate_dims("data initialization", "X_MS", "matrix_d", context__.to_vec(max(year),N_X_MS));
@@ -523,7 +495,7 @@ public:
                     X_MS(j_1__, j_2__) = vals_r__[pos__++];
                 }
             }
-            current_statement_begin__ = 62;
+            current_statement_begin__ = 60;
             validate_non_negative_index("F_rate", "N", N);
             context__.validate_dims("data initialization", "F_rate", "vector_d", context__.to_vec(N));
             F_rate = Eigen::Matrix<double, Eigen::Dynamic, 1>(N);
@@ -533,7 +505,7 @@ public:
             for (size_t j_1__ = 0; j_1__ < F_rate_j_1_max__; ++j_1__) {
                 F_rate(j_1__) = vals_r__[pos__++];
             }
-            current_statement_begin__ = 63;
+            current_statement_begin__ = 61;
             context__.validate_dims("data initialization", "N_B", "int", context__.to_vec());
             N_B = int(0);
             vals_i__ = context__.vals_i("N_B");
@@ -541,7 +513,7 @@ public:
             N_B = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_B", N_B, 0);
             check_less_or_equal(function__, "N_B", N_B, N);
-            current_statement_begin__ = 64;
+            current_statement_begin__ = 62;
             validate_non_negative_index("which_B", "N_B", N_B);
             context__.validate_dims("data initialization", "which_B", "int", context__.to_vec(N_B));
             which_B = std::vector<int>(N_B, int(0));
@@ -556,7 +528,7 @@ public:
                 check_greater_or_equal(function__, "which_B[i_0__]", which_B[i_0__], 1);
                 check_less_or_equal(function__, "which_B[i_0__]", which_B[i_0__], N);
             }
-            current_statement_begin__ = 65;
+            current_statement_begin__ = 63;
             validate_non_negative_index("B_take_obs", "N_B", N_B);
             context__.validate_dims("data initialization", "B_take_obs", "vector_d", context__.to_vec(N_B));
             B_take_obs = Eigen::Matrix<double, Eigen::Dynamic, 1>(N_B);
@@ -566,7 +538,7 @@ public:
             for (size_t j_1__ = 0; j_1__ < B_take_obs_j_1_max__; ++j_1__) {
                 B_take_obs(j_1__) = vals_r__[pos__++];
             }
-            current_statement_begin__ = 67;
+            current_statement_begin__ = 65;
             context__.validate_dims("data initialization", "N_S_obs", "int", context__.to_vec());
             N_S_obs = int(0);
             vals_i__ = context__.vals_i("N_S_obs");
@@ -574,7 +546,7 @@ public:
             N_S_obs = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_S_obs", N_S_obs, 1);
             check_less_or_equal(function__, "N_S_obs", N_S_obs, N);
-            current_statement_begin__ = 68;
+            current_statement_begin__ = 66;
             validate_non_negative_index("which_S_obs", "N_S_obs", N_S_obs);
             context__.validate_dims("data initialization", "which_S_obs", "int", context__.to_vec(N_S_obs));
             which_S_obs = std::vector<int>(N_S_obs, int(0));
@@ -589,7 +561,7 @@ public:
                 check_greater_or_equal(function__, "which_S_obs[i_0__]", which_S_obs[i_0__], 1);
                 check_less_or_equal(function__, "which_S_obs[i_0__]", which_S_obs[i_0__], N);
             }
-            current_statement_begin__ = 69;
+            current_statement_begin__ = 67;
             validate_non_negative_index("S_obs", "N", N);
             context__.validate_dims("data initialization", "S_obs", "vector_d", context__.to_vec(N));
             S_obs = Eigen::Matrix<double, Eigen::Dynamic, 1>(N);
@@ -600,7 +572,7 @@ public:
                 S_obs(j_1__) = vals_r__[pos__++];
             }
             check_greater_or_equal(function__, "S_obs", S_obs, 0);
-            current_statement_begin__ = 70;
+            current_statement_begin__ = 68;
             context__.validate_dims("data initialization", "N_tau_S_obs", "int", context__.to_vec());
             N_tau_S_obs = int(0);
             vals_i__ = context__.vals_i("N_tau_S_obs");
@@ -608,7 +580,7 @@ public:
             N_tau_S_obs = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_tau_S_obs", N_tau_S_obs, 1);
             check_less_or_equal(function__, "N_tau_S_obs", N_tau_S_obs, N);
-            current_statement_begin__ = 71;
+            current_statement_begin__ = 69;
             validate_non_negative_index("which_tau_S_obs", "N_tau_S_obs", N_tau_S_obs);
             context__.validate_dims("data initialization", "which_tau_S_obs", "int", context__.to_vec(N_tau_S_obs));
             which_tau_S_obs = std::vector<int>(N_tau_S_obs, int(0));
@@ -623,7 +595,7 @@ public:
                 check_greater_or_equal(function__, "which_tau_S_obs[i_0__]", which_tau_S_obs[i_0__], 1);
                 check_less_or_equal(function__, "which_tau_S_obs[i_0__]", which_tau_S_obs[i_0__], N);
             }
-            current_statement_begin__ = 72;
+            current_statement_begin__ = 70;
             validate_non_negative_index("tau_S_obs", "N", N);
             context__.validate_dims("data initialization", "tau_S_obs", "vector_d", context__.to_vec(N));
             tau_S_obs = Eigen::Matrix<double, Eigen::Dynamic, 1>(N);
@@ -634,21 +606,21 @@ public:
                 tau_S_obs(j_1__) = vals_r__[pos__++];
             }
             check_greater_or_equal(function__, "tau_S_obs", tau_S_obs, 0);
-            current_statement_begin__ = 74;
+            current_statement_begin__ = 72;
             context__.validate_dims("data initialization", "N_age", "int", context__.to_vec());
             N_age = int(0);
             vals_i__ = context__.vals_i("N_age");
             pos__ = 0;
             N_age = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_age", N_age, 2);
-            current_statement_begin__ = 75;
+            current_statement_begin__ = 73;
             context__.validate_dims("data initialization", "max_age", "int", context__.to_vec());
             max_age = int(0);
             vals_i__ = context__.vals_i("max_age");
             pos__ = 0;
             max_age = vals_i__[pos__++];
             check_greater_or_equal(function__, "max_age", max_age, 2);
-            current_statement_begin__ = 76;
+            current_statement_begin__ = 74;
             validate_non_negative_index("n_age_obs", "N", N);
             validate_non_negative_index("n_age_obs", "N_age", N_age);
             context__.validate_dims("data initialization", "n_age_obs", "matrix_d", context__.to_vec(N,N_age));
@@ -663,6 +635,34 @@ public:
                 }
             }
             check_greater_or_equal(function__, "n_age_obs", n_age_obs, 0);
+            current_statement_begin__ = 75;
+            validate_non_negative_index("n_M_obs", "N", N);
+            context__.validate_dims("data initialization", "n_M_obs", "int", context__.to_vec(N));
+            n_M_obs = std::vector<int>(N, int(0));
+            vals_i__ = context__.vals_i("n_M_obs");
+            pos__ = 0;
+            size_t n_M_obs_k_0_max__ = N;
+            for (size_t k_0__ = 0; k_0__ < n_M_obs_k_0_max__; ++k_0__) {
+                n_M_obs[k_0__] = vals_i__[pos__++];
+            }
+            size_t n_M_obs_i_0_max__ = N;
+            for (size_t i_0__ = 0; i_0__ < n_M_obs_i_0_max__; ++i_0__) {
+                check_greater_or_equal(function__, "n_M_obs[i_0__]", n_M_obs[i_0__], 0);
+            }
+            current_statement_begin__ = 76;
+            validate_non_negative_index("n_F_obs", "N", N);
+            context__.validate_dims("data initialization", "n_F_obs", "int", context__.to_vec(N));
+            n_F_obs = std::vector<int>(N, int(0));
+            vals_i__ = context__.vals_i("n_F_obs");
+            pos__ = 0;
+            size_t n_F_obs_k_0_max__ = N;
+            for (size_t k_0__ = 0; k_0__ < n_F_obs_k_0_max__; ++k_0__) {
+                n_F_obs[k_0__] = vals_i__[pos__++];
+            }
+            size_t n_F_obs_i_0_max__ = N;
+            for (size_t i_0__ = 0; i_0__ < n_F_obs_i_0_max__; ++i_0__) {
+                check_greater_or_equal(function__, "n_F_obs[i_0__]", n_F_obs[i_0__], 0);
+            }
             current_statement_begin__ = 78;
             context__.validate_dims("data initialization", "N_H", "int", context__.to_vec());
             N_H = int(0);
@@ -917,108 +917,120 @@ public:
             current_statement_begin__ = 136;
             validate_non_negative_index("sigma_E", "N_age", N_age);
             num_params_r__ += N_age;
-            current_statement_begin__ = 137;
-            validate_non_negative_index("p_F", "N", N);
-            num_params_r__ += N;
+            current_statement_begin__ = 138;
+            num_params_r__ += 1;
             current_statement_begin__ = 139;
             num_params_r__ += 1;
             current_statement_begin__ = 140;
-            num_params_r__ += 1;
-            current_statement_begin__ = 141;
             validate_non_negative_index("zeta_psi", "N_pop", N_pop);
             num_params_r__ += N_pop;
+            current_statement_begin__ = 141;
+            num_params_r__ += 1;
             current_statement_begin__ = 142;
             num_params_r__ += 1;
             current_statement_begin__ = 143;
-            num_params_r__ += 1;
-            current_statement_begin__ = 144;
             validate_non_negative_index("zeta_Mmax", "N_pop", N_pop);
             num_params_r__ += N_pop;
-            current_statement_begin__ = 145;
+            current_statement_begin__ = 144;
             validate_non_negative_index("beta_M", "N_X_M", N_X_M);
             num_params_r__ += N_X_M;
+            current_statement_begin__ = 145;
+            num_params_r__ += 1;
             current_statement_begin__ = 146;
             num_params_r__ += 1;
             current_statement_begin__ = 147;
-            num_params_r__ += 1;
-            current_statement_begin__ = 148;
             validate_non_negative_index("zeta_year_M", "N_year", N_year);
             num_params_r__ += N_year;
-            current_statement_begin__ = 149;
+            current_statement_begin__ = 148;
             num_params_r__ += 1;
-            current_statement_begin__ = 150;
+            current_statement_begin__ = 149;
             validate_non_negative_index("zeta_M", "N", N);
             num_params_r__ += N;
-            current_statement_begin__ = 152;
+            current_statement_begin__ = 151;
             num_params_r__ += 1;
-            current_statement_begin__ = 153;
+            current_statement_begin__ = 152;
             validate_non_negative_index("beta_MS", "N_X_MS", N_X_MS);
             num_params_r__ += N_X_MS;
+            current_statement_begin__ = 153;
+            num_params_r__ += 1;
             current_statement_begin__ = 154;
             num_params_r__ += 1;
             current_statement_begin__ = 155;
-            num_params_r__ += 1;
-            current_statement_begin__ = 156;
             validate_non_negative_index("zeta_year_MS", "N_year", N_year);
             num_params_r__ += N_year;
-            current_statement_begin__ = 157;
+            current_statement_begin__ = 156;
             num_params_r__ += 1;
-            current_statement_begin__ = 158;
+            current_statement_begin__ = 157;
             validate_non_negative_index("zeta_MS", "N", N);
             num_params_r__ += N;
-            current_statement_begin__ = 160;
+            current_statement_begin__ = 159;
             validate_non_negative_index("mu_p", "N_age", N_age);
             num_params_r__ += (N_age - 1);
-            current_statement_begin__ = 161;
+            current_statement_begin__ = 160;
             validate_non_negative_index("sigma_pop_p", "(N_age - 1)", (N_age - 1));
             num_params_r__ += (N_age - 1);
-            current_statement_begin__ = 162;
+            current_statement_begin__ = 161;
             validate_non_negative_index("L_pop_p", "(N_age - 1)", (N_age - 1));
             validate_non_negative_index("L_pop_p", "(N_age - 1)", (N_age - 1));
             num_params_r__ += (((N_age - 1) * ((N_age - 1) - 1)) / 2);
-            current_statement_begin__ = 163;
+            current_statement_begin__ = 162;
             validate_non_negative_index("zeta_pop_p", "N_pop", N_pop);
             validate_non_negative_index("zeta_pop_p", "(N_age - 1)", (N_age - 1));
             num_params_r__ += (N_pop * (N_age - 1));
-            current_statement_begin__ = 164;
+            current_statement_begin__ = 163;
             validate_non_negative_index("sigma_p", "(N_age - 1)", (N_age - 1));
             num_params_r__ += (N_age - 1);
-            current_statement_begin__ = 165;
+            current_statement_begin__ = 164;
             validate_non_negative_index("L_p", "(N_age - 1)", (N_age - 1));
             validate_non_negative_index("L_p", "(N_age - 1)", (N_age - 1));
             num_params_r__ += (((N_age - 1) * ((N_age - 1) - 1)) / 2);
-            current_statement_begin__ = 166;
+            current_statement_begin__ = 165;
             validate_non_negative_index("zeta_p", "N", N);
             validate_non_negative_index("zeta_p", "(N_age - 1)", (N_age - 1));
             num_params_r__ += (N * (N_age - 1));
+            current_statement_begin__ = 167;
+            num_params_r__ += 1;
             current_statement_begin__ = 168;
+            num_params_r__ += 1;
+            current_statement_begin__ = 169;
+            validate_non_negative_index("zeta_pop_F", "N_pop", N_pop);
+            num_params_r__ += N_pop;
+            current_statement_begin__ = 170;
+            num_params_r__ += 1;
+            current_statement_begin__ = 171;
+            validate_non_negative_index("zeta_F", "N", N);
+            num_params_r__ += N;
+            current_statement_begin__ = 173;
             validate_non_negative_index("p_HOS", "N_H", N_H);
             num_params_r__ += N_H;
-            current_statement_begin__ = 169;
+            current_statement_begin__ = 174;
             validate_non_negative_index("B_rate", "N_B", N_B);
             num_params_r__ += N_B;
-            current_statement_begin__ = 171;
+            current_statement_begin__ = 176;
             validate_non_negative_index("M_init", "(smolt_age * N_pop)", (smolt_age * N_pop));
             num_params_r__ += (smolt_age * N_pop);
-            current_statement_begin__ = 172;
+            current_statement_begin__ = 177;
             validate_non_negative_index("S_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
             num_params_r__ += (max_ocean_age * N_pop);
-            current_statement_begin__ = 173;
+            current_statement_begin__ = 178;
             validate_non_negative_index("q_init", "N_age", N_age);
             validate_non_negative_index("q_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
             num_params_r__ += ((N_age - 1) * (max_ocean_age * N_pop));
-            current_statement_begin__ = 174;
+            current_statement_begin__ = 179;
+            validate_non_negative_index("q_F_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+            num_params_r__ += (max_ocean_age * N_pop);
+            current_statement_begin__ = 180;
             num_params_r__ += 1;
-            current_statement_begin__ = 175;
+            current_statement_begin__ = 181;
             num_params_r__ += 1;
-            current_statement_begin__ = 176;
+            current_statement_begin__ = 182;
             validate_non_negative_index("tau_M_z", "N", N);
             num_params_r__ += N;
-            current_statement_begin__ = 177;
+            current_statement_begin__ = 183;
             num_params_r__ += 1;
-            current_statement_begin__ = 178;
+            current_statement_begin__ = 184;
             num_params_r__ += 1;
-            current_statement_begin__ = 179;
+            current_statement_begin__ = 185;
             validate_non_negative_index("tau_S_z", "N", N);
             num_params_r__ += N;
         } catch (const std::exception& e) {
@@ -1072,24 +1084,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_E: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 137;
-        if (!(context__.contains_r("p_F")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable p_F missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("p_F");
-        pos__ = 0U;
-        validate_non_negative_index("p_F", "N", N);
-        context__.validate_dims("parameter initialization", "p_F", "vector_d", context__.to_vec(N));
-        Eigen::Matrix<double, Eigen::Dynamic, 1> p_F(N);
-        size_t p_F_j_1_max__ = N;
-        for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
-            p_F(j_1__) = vals_r__[pos__++];
-        }
-        try {
-            writer__.vector_lub_unconstrain(0, 1, p_F);
-        } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable p_F: ") + e.what()), current_statement_begin__, prog_reader__());
-        }
-        current_statement_begin__ = 139;
+        current_statement_begin__ = 138;
         if (!(context__.contains_r("mu_psi")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_psi missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("mu_psi");
@@ -1102,7 +1097,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_psi: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 140;
+        current_statement_begin__ = 139;
         if (!(context__.contains_r("sigma_psi")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_psi missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_psi");
@@ -1115,7 +1110,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_psi: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 141;
+        current_statement_begin__ = 140;
         if (!(context__.contains_r("zeta_psi")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_psi missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_psi");
@@ -1132,7 +1127,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_psi: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 142;
+        current_statement_begin__ = 141;
         if (!(context__.contains_r("mu_Mmax")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_Mmax missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("mu_Mmax");
@@ -1145,7 +1140,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_Mmax: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 143;
+        current_statement_begin__ = 142;
         if (!(context__.contains_r("sigma_Mmax")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_Mmax missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_Mmax");
@@ -1158,7 +1153,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_Mmax: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 144;
+        current_statement_begin__ = 143;
         if (!(context__.contains_r("zeta_Mmax")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_Mmax missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_Mmax");
@@ -1175,7 +1170,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_Mmax: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 145;
+        current_statement_begin__ = 144;
         if (!(context__.contains_r("beta_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable beta_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("beta_M");
@@ -1192,7 +1187,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable beta_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 146;
+        current_statement_begin__ = 145;
         if (!(context__.contains_r("rho_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable rho_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("rho_M");
@@ -1205,7 +1200,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 147;
+        current_statement_begin__ = 146;
         if (!(context__.contains_r("sigma_year_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_year_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_year_M");
@@ -1218,7 +1213,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_year_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 148;
+        current_statement_begin__ = 147;
         if (!(context__.contains_r("zeta_year_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_year_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_year_M");
@@ -1235,7 +1230,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_year_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 149;
+        current_statement_begin__ = 148;
         if (!(context__.contains_r("sigma_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_M");
@@ -1248,7 +1243,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 150;
+        current_statement_begin__ = 149;
         if (!(context__.contains_r("zeta_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_M");
@@ -1265,7 +1260,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 152;
+        current_statement_begin__ = 151;
         if (!(context__.contains_r("mu_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("mu_MS");
@@ -1278,7 +1273,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 153;
+        current_statement_begin__ = 152;
         if (!(context__.contains_r("beta_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable beta_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("beta_MS");
@@ -1295,7 +1290,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable beta_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 154;
+        current_statement_begin__ = 153;
         if (!(context__.contains_r("rho_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable rho_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("rho_MS");
@@ -1308,7 +1303,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 155;
+        current_statement_begin__ = 154;
         if (!(context__.contains_r("sigma_year_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_year_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_year_MS");
@@ -1321,7 +1316,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_year_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 156;
+        current_statement_begin__ = 155;
         if (!(context__.contains_r("zeta_year_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_year_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_year_MS");
@@ -1338,7 +1333,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_year_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 157;
+        current_statement_begin__ = 156;
         if (!(context__.contains_r("sigma_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_MS");
@@ -1351,7 +1346,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 158;
+        current_statement_begin__ = 157;
         if (!(context__.contains_r("zeta_MS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_MS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_MS");
@@ -1368,7 +1363,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_MS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 160;
+        current_statement_begin__ = 159;
         if (!(context__.contains_r("mu_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("mu_p");
@@ -1385,7 +1380,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 161;
+        current_statement_begin__ = 160;
         if (!(context__.contains_r("sigma_pop_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_pop_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_pop_p");
@@ -1402,7 +1397,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_pop_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 162;
+        current_statement_begin__ = 161;
         if (!(context__.contains_r("L_pop_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable L_pop_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("L_pop_p");
@@ -1423,7 +1418,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable L_pop_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 163;
+        current_statement_begin__ = 162;
         if (!(context__.contains_r("zeta_pop_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_pop_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_pop_p");
@@ -1444,7 +1439,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_pop_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 164;
+        current_statement_begin__ = 163;
         if (!(context__.contains_r("sigma_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_p");
@@ -1461,7 +1456,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 165;
+        current_statement_begin__ = 164;
         if (!(context__.contains_r("L_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable L_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("L_p");
@@ -1482,7 +1477,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable L_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 166;
+        current_statement_begin__ = 165;
         if (!(context__.contains_r("zeta_p")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_p missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("zeta_p");
@@ -1503,7 +1498,80 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_p: ") + e.what()), current_statement_begin__, prog_reader__());
         }
+        current_statement_begin__ = 167;
+        if (!(context__.contains_r("mu_F")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_F missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("mu_F");
+        pos__ = 0U;
+        context__.validate_dims("parameter initialization", "mu_F", "double", context__.to_vec());
+        double mu_F(0);
+        mu_F = vals_r__[pos__++];
+        try {
+            writer__.scalar_lub_unconstrain(0, 1, mu_F);
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_F: ") + e.what()), current_statement_begin__, prog_reader__());
+        }
         current_statement_begin__ = 168;
+        if (!(context__.contains_r("sigma_pop_F")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_pop_F missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("sigma_pop_F");
+        pos__ = 0U;
+        context__.validate_dims("parameter initialization", "sigma_pop_F", "double", context__.to_vec());
+        double sigma_pop_F(0);
+        sigma_pop_F = vals_r__[pos__++];
+        try {
+            writer__.scalar_lb_unconstrain(0, sigma_pop_F);
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_pop_F: ") + e.what()), current_statement_begin__, prog_reader__());
+        }
+        current_statement_begin__ = 169;
+        if (!(context__.contains_r("zeta_pop_F")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_pop_F missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("zeta_pop_F");
+        pos__ = 0U;
+        validate_non_negative_index("zeta_pop_F", "N_pop", N_pop);
+        context__.validate_dims("parameter initialization", "zeta_pop_F", "vector_d", context__.to_vec(N_pop));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_pop_F(N_pop);
+        size_t zeta_pop_F_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < zeta_pop_F_j_1_max__; ++j_1__) {
+            zeta_pop_F(j_1__) = vals_r__[pos__++];
+        }
+        try {
+            writer__.vector_unconstrain(zeta_pop_F);
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_pop_F: ") + e.what()), current_statement_begin__, prog_reader__());
+        }
+        current_statement_begin__ = 170;
+        if (!(context__.contains_r("sigma_F")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_F missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("sigma_F");
+        pos__ = 0U;
+        context__.validate_dims("parameter initialization", "sigma_F", "double", context__.to_vec());
+        double sigma_F(0);
+        sigma_F = vals_r__[pos__++];
+        try {
+            writer__.scalar_lb_unconstrain(0, sigma_F);
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_F: ") + e.what()), current_statement_begin__, prog_reader__());
+        }
+        current_statement_begin__ = 171;
+        if (!(context__.contains_r("zeta_F")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_F missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("zeta_F");
+        pos__ = 0U;
+        validate_non_negative_index("zeta_F", "N", N);
+        context__.validate_dims("parameter initialization", "zeta_F", "vector_d", context__.to_vec(N));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_F(N);
+        size_t zeta_F_j_1_max__ = N;
+        for (size_t j_1__ = 0; j_1__ < zeta_F_j_1_max__; ++j_1__) {
+            zeta_F(j_1__) = vals_r__[pos__++];
+        }
+        try {
+            writer__.vector_unconstrain(zeta_F);
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_F: ") + e.what()), current_statement_begin__, prog_reader__());
+        }
+        current_statement_begin__ = 173;
         if (!(context__.contains_r("p_HOS")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable p_HOS missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("p_HOS");
@@ -1520,7 +1588,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable p_HOS: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 169;
+        current_statement_begin__ = 174;
         if (!(context__.contains_r("B_rate")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable B_rate missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("B_rate");
@@ -1537,7 +1605,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable B_rate: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 171;
+        current_statement_begin__ = 176;
         if (!(context__.contains_r("M_init")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable M_init missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("M_init");
@@ -1554,7 +1622,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable M_init: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 172;
+        current_statement_begin__ = 177;
         if (!(context__.contains_r("S_init")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable S_init missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("S_init");
@@ -1571,7 +1639,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable S_init: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 173;
+        current_statement_begin__ = 178;
         if (!(context__.contains_r("q_init")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable q_init missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("q_init");
@@ -1595,7 +1663,24 @@ public:
                 stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable q_init: ") + e.what()), current_statement_begin__, prog_reader__());
             }
         }
-        current_statement_begin__ = 174;
+        current_statement_begin__ = 179;
+        if (!(context__.contains_r("q_F_init")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable q_F_init missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("q_F_init");
+        pos__ = 0U;
+        validate_non_negative_index("q_F_init", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
+        context__.validate_dims("parameter initialization", "q_F_init", "vector_d", context__.to_vec((max_ocean_age * N_pop)));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> q_F_init((max_ocean_age * N_pop));
+        size_t q_F_init_j_1_max__ = (max_ocean_age * N_pop);
+        for (size_t j_1__ = 0; j_1__ < q_F_init_j_1_max__; ++j_1__) {
+            q_F_init(j_1__) = vals_r__[pos__++];
+        }
+        try {
+            writer__.vector_lub_unconstrain(0, 1, q_F_init);
+        } catch (const std::exception& e) {
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable q_F_init: ") + e.what()), current_statement_begin__, prog_reader__());
+        }
+        current_statement_begin__ = 180;
         if (!(context__.contains_r("mu_tau_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_tau_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("mu_tau_M");
@@ -1608,7 +1693,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_tau_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 175;
+        current_statement_begin__ = 181;
         if (!(context__.contains_r("sigma_tau_M")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_tau_M missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_tau_M");
@@ -1621,7 +1706,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_tau_M: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 176;
+        current_statement_begin__ = 182;
         if (!(context__.contains_r("tau_M_z")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable tau_M_z missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("tau_M_z");
@@ -1638,7 +1723,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable tau_M_z: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 177;
+        current_statement_begin__ = 183;
         if (!(context__.contains_r("mu_tau_S")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable mu_tau_S missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("mu_tau_S");
@@ -1651,7 +1736,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable mu_tau_S: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 178;
+        current_statement_begin__ = 184;
         if (!(context__.contains_r("sigma_tau_S")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_tau_S missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("sigma_tau_S");
@@ -1664,7 +1749,7 @@ public:
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_tau_S: ") + e.what()), current_statement_begin__, prog_reader__());
         }
-        current_statement_begin__ = 179;
+        current_statement_begin__ = 185;
         if (!(context__.contains_r("tau_S_z")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable tau_S_z missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("tau_S_z");
@@ -1720,224 +1805,252 @@ public:
                 sigma_E = in__.vector_lb_constrain(0, N_age, lp__);
             else
                 sigma_E = in__.vector_lb_constrain(0, N_age);
-            current_statement_begin__ = 137;
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> p_F;
-            (void) p_F;  // dummy to suppress unused var warning
-            if (jacobian__)
-                p_F = in__.vector_lub_constrain(0, 1, N, lp__);
-            else
-                p_F = in__.vector_lub_constrain(0, 1, N);
-            current_statement_begin__ = 139;
+            current_statement_begin__ = 138;
             local_scalar_t__ mu_psi;
             (void) mu_psi;  // dummy to suppress unused var warning
             if (jacobian__)
                 mu_psi = in__.scalar_lub_constrain(0, 1, lp__);
             else
                 mu_psi = in__.scalar_lub_constrain(0, 1);
-            current_statement_begin__ = 140;
+            current_statement_begin__ = 139;
             local_scalar_t__ sigma_psi;
             (void) sigma_psi;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_psi = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_psi = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 141;
+            current_statement_begin__ = 140;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_psi;
             (void) zeta_psi;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_psi = in__.vector_constrain(N_pop, lp__);
             else
                 zeta_psi = in__.vector_constrain(N_pop);
-            current_statement_begin__ = 142;
+            current_statement_begin__ = 141;
             local_scalar_t__ mu_Mmax;
             (void) mu_Mmax;  // dummy to suppress unused var warning
             if (jacobian__)
                 mu_Mmax = in__.scalar_constrain(lp__);
             else
                 mu_Mmax = in__.scalar_constrain();
-            current_statement_begin__ = 143;
+            current_statement_begin__ = 142;
             local_scalar_t__ sigma_Mmax;
             (void) sigma_Mmax;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_Mmax = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_Mmax = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 144;
+            current_statement_begin__ = 143;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_Mmax;
             (void) zeta_Mmax;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_Mmax = in__.vector_constrain(N_pop, lp__);
             else
                 zeta_Mmax = in__.vector_constrain(N_pop);
-            current_statement_begin__ = 145;
+            current_statement_begin__ = 144;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> beta_M;
             (void) beta_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 beta_M = in__.vector_constrain(N_X_M, lp__);
             else
                 beta_M = in__.vector_constrain(N_X_M);
-            current_statement_begin__ = 146;
+            current_statement_begin__ = 145;
             local_scalar_t__ rho_M;
             (void) rho_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 rho_M = in__.scalar_lub_constrain(-(1), 1, lp__);
             else
                 rho_M = in__.scalar_lub_constrain(-(1), 1);
-            current_statement_begin__ = 147;
+            current_statement_begin__ = 146;
             local_scalar_t__ sigma_year_M;
             (void) sigma_year_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_year_M = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_year_M = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 148;
+            current_statement_begin__ = 147;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_year_M;
             (void) zeta_year_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_year_M = in__.vector_constrain(N_year, lp__);
             else
                 zeta_year_M = in__.vector_constrain(N_year);
-            current_statement_begin__ = 149;
+            current_statement_begin__ = 148;
             local_scalar_t__ sigma_M;
             (void) sigma_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_M = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_M = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 150;
+            current_statement_begin__ = 149;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_M;
             (void) zeta_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_M = in__.vector_constrain(N, lp__);
             else
                 zeta_M = in__.vector_constrain(N);
-            current_statement_begin__ = 152;
+            current_statement_begin__ = 151;
             local_scalar_t__ mu_MS;
             (void) mu_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 mu_MS = in__.scalar_lub_constrain(0, 1, lp__);
             else
                 mu_MS = in__.scalar_lub_constrain(0, 1);
-            current_statement_begin__ = 153;
+            current_statement_begin__ = 152;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> beta_MS;
             (void) beta_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 beta_MS = in__.vector_constrain(N_X_MS, lp__);
             else
                 beta_MS = in__.vector_constrain(N_X_MS);
-            current_statement_begin__ = 154;
+            current_statement_begin__ = 153;
             local_scalar_t__ rho_MS;
             (void) rho_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 rho_MS = in__.scalar_lub_constrain(-(1), 1, lp__);
             else
                 rho_MS = in__.scalar_lub_constrain(-(1), 1);
-            current_statement_begin__ = 155;
+            current_statement_begin__ = 154;
             local_scalar_t__ sigma_year_MS;
             (void) sigma_year_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_year_MS = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_year_MS = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 156;
+            current_statement_begin__ = 155;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_year_MS;
             (void) zeta_year_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_year_MS = in__.vector_constrain(N_year, lp__);
             else
                 zeta_year_MS = in__.vector_constrain(N_year);
-            current_statement_begin__ = 157;
+            current_statement_begin__ = 156;
             local_scalar_t__ sigma_MS;
             (void) sigma_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_MS = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_MS = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 158;
+            current_statement_begin__ = 157;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_MS;
             (void) zeta_MS;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_MS = in__.vector_constrain(N, lp__);
             else
                 zeta_MS = in__.vector_constrain(N);
-            current_statement_begin__ = 160;
+            current_statement_begin__ = 159;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> mu_p;
             (void) mu_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 mu_p = in__.simplex_constrain(N_age, lp__);
             else
                 mu_p = in__.simplex_constrain(N_age);
-            current_statement_begin__ = 161;
+            current_statement_begin__ = 160;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_pop_p;
             (void) sigma_pop_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_pop_p = in__.vector_lb_constrain(0, (N_age - 1), lp__);
             else
                 sigma_pop_p = in__.vector_lb_constrain(0, (N_age - 1));
-            current_statement_begin__ = 162;
+            current_statement_begin__ = 161;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> L_pop_p;
             (void) L_pop_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 L_pop_p = in__.cholesky_factor_corr_constrain((N_age - 1), lp__);
             else
                 L_pop_p = in__.cholesky_factor_corr_constrain((N_age - 1));
-            current_statement_begin__ = 163;
+            current_statement_begin__ = 162;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> zeta_pop_p;
             (void) zeta_pop_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_pop_p = in__.matrix_constrain(N_pop, (N_age - 1), lp__);
             else
                 zeta_pop_p = in__.matrix_constrain(N_pop, (N_age - 1));
-            current_statement_begin__ = 164;
+            current_statement_begin__ = 163;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_p;
             (void) sigma_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_p = in__.vector_lb_constrain(0, (N_age - 1), lp__);
             else
                 sigma_p = in__.vector_lb_constrain(0, (N_age - 1));
-            current_statement_begin__ = 165;
+            current_statement_begin__ = 164;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> L_p;
             (void) L_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 L_p = in__.cholesky_factor_corr_constrain((N_age - 1), lp__);
             else
                 L_p = in__.cholesky_factor_corr_constrain((N_age - 1));
-            current_statement_begin__ = 166;
+            current_statement_begin__ = 165;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> zeta_p;
             (void) zeta_p;  // dummy to suppress unused var warning
             if (jacobian__)
                 zeta_p = in__.matrix_constrain(N, (N_age - 1), lp__);
             else
                 zeta_p = in__.matrix_constrain(N, (N_age - 1));
+            current_statement_begin__ = 167;
+            local_scalar_t__ mu_F;
+            (void) mu_F;  // dummy to suppress unused var warning
+            if (jacobian__)
+                mu_F = in__.scalar_lub_constrain(0, 1, lp__);
+            else
+                mu_F = in__.scalar_lub_constrain(0, 1);
             current_statement_begin__ = 168;
+            local_scalar_t__ sigma_pop_F;
+            (void) sigma_pop_F;  // dummy to suppress unused var warning
+            if (jacobian__)
+                sigma_pop_F = in__.scalar_lb_constrain(0, lp__);
+            else
+                sigma_pop_F = in__.scalar_lb_constrain(0);
+            current_statement_begin__ = 169;
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_pop_F;
+            (void) zeta_pop_F;  // dummy to suppress unused var warning
+            if (jacobian__)
+                zeta_pop_F = in__.vector_constrain(N_pop, lp__);
+            else
+                zeta_pop_F = in__.vector_constrain(N_pop);
+            current_statement_begin__ = 170;
+            local_scalar_t__ sigma_F;
+            (void) sigma_F;  // dummy to suppress unused var warning
+            if (jacobian__)
+                sigma_F = in__.scalar_lb_constrain(0, lp__);
+            else
+                sigma_F = in__.scalar_lb_constrain(0);
+            current_statement_begin__ = 171;
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_F;
+            (void) zeta_F;  // dummy to suppress unused var warning
+            if (jacobian__)
+                zeta_F = in__.vector_constrain(N, lp__);
+            else
+                zeta_F = in__.vector_constrain(N);
+            current_statement_begin__ = 173;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> p_HOS;
             (void) p_HOS;  // dummy to suppress unused var warning
             if (jacobian__)
                 p_HOS = in__.vector_lub_constrain(0, 1, N_H, lp__);
             else
                 p_HOS = in__.vector_lub_constrain(0, 1, N_H);
-            current_statement_begin__ = 169;
+            current_statement_begin__ = 174;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> B_rate;
             (void) B_rate;  // dummy to suppress unused var warning
             if (jacobian__)
                 B_rate = in__.vector_lub_constrain(0, 1, N_B, lp__);
             else
                 B_rate = in__.vector_lub_constrain(0, 1, N_B);
-            current_statement_begin__ = 171;
+            current_statement_begin__ = 176;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> M_init;
             (void) M_init;  // dummy to suppress unused var warning
             if (jacobian__)
                 M_init = in__.vector_lb_constrain(0, (smolt_age * N_pop), lp__);
             else
                 M_init = in__.vector_lb_constrain(0, (smolt_age * N_pop));
-            current_statement_begin__ = 172;
+            current_statement_begin__ = 177;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> S_init;
             (void) S_init;  // dummy to suppress unused var warning
             if (jacobian__)
                 S_init = in__.vector_lb_constrain(0, (max_ocean_age * N_pop), lp__);
             else
                 S_init = in__.vector_lb_constrain(0, (max_ocean_age * N_pop));
-            current_statement_begin__ = 173;
+            current_statement_begin__ = 178;
             std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> > q_init;
             size_t q_init_d_0_max__ = (max_ocean_age * N_pop);
             q_init.reserve(q_init_d_0_max__);
@@ -1947,42 +2060,49 @@ public:
                 else
                     q_init.push_back(in__.simplex_constrain(N_age));
             }
-            current_statement_begin__ = 174;
+            current_statement_begin__ = 179;
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_F_init;
+            (void) q_F_init;  // dummy to suppress unused var warning
+            if (jacobian__)
+                q_F_init = in__.vector_lub_constrain(0, 1, (max_ocean_age * N_pop), lp__);
+            else
+                q_F_init = in__.vector_lub_constrain(0, 1, (max_ocean_age * N_pop));
+            current_statement_begin__ = 180;
             local_scalar_t__ mu_tau_M;
             (void) mu_tau_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 mu_tau_M = in__.scalar_lb_constrain(0, lp__);
             else
                 mu_tau_M = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 175;
+            current_statement_begin__ = 181;
             local_scalar_t__ sigma_tau_M;
             (void) sigma_tau_M;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_tau_M = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_tau_M = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 176;
+            current_statement_begin__ = 182;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> tau_M_z;
             (void) tau_M_z;  // dummy to suppress unused var warning
             if (jacobian__)
                 tau_M_z = in__.vector_constrain(N, lp__);
             else
                 tau_M_z = in__.vector_constrain(N);
-            current_statement_begin__ = 177;
+            current_statement_begin__ = 183;
             local_scalar_t__ mu_tau_S;
             (void) mu_tau_S;  // dummy to suppress unused var warning
             if (jacobian__)
                 mu_tau_S = in__.scalar_lb_constrain(0, lp__);
             else
                 mu_tau_S = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 178;
+            current_statement_begin__ = 184;
             local_scalar_t__ sigma_tau_S;
             (void) sigma_tau_S;  // dummy to suppress unused var warning
             if (jacobian__)
                 sigma_tau_S = in__.scalar_lb_constrain(0, lp__);
             else
                 sigma_tau_S = in__.scalar_lb_constrain(0);
-            current_statement_begin__ = 179;
+            current_statement_begin__ = 185;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> tau_S_z;
             (void) tau_S_z;  // dummy to suppress unused var warning
             if (jacobian__)
@@ -1990,288 +2110,335 @@ public:
             else
                 tau_S_z = in__.vector_constrain(N);
             // transformed parameters
-            current_statement_begin__ = 184;
+            current_statement_begin__ = 190;
             validate_non_negative_index("E_hat", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> E_hat(N);
             stan::math::initialize(E_hat, DUMMY_VAR__);
             stan::math::fill(E_hat, DUMMY_VAR__);
-            current_statement_begin__ = 186;
+            current_statement_begin__ = 192;
             validate_non_negative_index("psi", "N_pop", N_pop);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> psi(N_pop);
             stan::math::initialize(psi, DUMMY_VAR__);
             stan::math::fill(psi, DUMMY_VAR__);
-            current_statement_begin__ = 187;
+            current_statement_begin__ = 193;
             validate_non_negative_index("Mmax", "N_pop", N_pop);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> Mmax(N_pop);
             stan::math::initialize(Mmax, DUMMY_VAR__);
             stan::math::fill(Mmax, DUMMY_VAR__);
-            current_statement_begin__ = 188;
+            current_statement_begin__ = 194;
             validate_non_negative_index("eta_year_M", "N_year", N_year);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> eta_year_M(N_year);
             stan::math::initialize(eta_year_M, DUMMY_VAR__);
             stan::math::fill(eta_year_M, DUMMY_VAR__);
-            current_statement_begin__ = 189;
+            current_statement_begin__ = 195;
             validate_non_negative_index("M_hat", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> M_hat(N);
             stan::math::initialize(M_hat, DUMMY_VAR__);
             stan::math::fill(M_hat, DUMMY_VAR__);
-            current_statement_begin__ = 190;
+            current_statement_begin__ = 196;
             validate_non_negative_index("M0", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> M0(N);
             stan::math::initialize(M0, DUMMY_VAR__);
             stan::math::fill(M0, DUMMY_VAR__);
-            current_statement_begin__ = 191;
+            current_statement_begin__ = 197;
             validate_non_negative_index("M", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> M(N);
             stan::math::initialize(M, DUMMY_VAR__);
             stan::math::fill(M, DUMMY_VAR__);
-            current_statement_begin__ = 193;
+            current_statement_begin__ = 199;
             validate_non_negative_index("eta_year_MS", "N_year", N_year);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> eta_year_MS(N_year);
             stan::math::initialize(eta_year_MS, DUMMY_VAR__);
             stan::math::fill(eta_year_MS, DUMMY_VAR__);
-            current_statement_begin__ = 194;
+            current_statement_begin__ = 200;
             validate_non_negative_index("s_MS", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> s_MS(N);
             stan::math::initialize(s_MS, DUMMY_VAR__);
             stan::math::fill(s_MS, DUMMY_VAR__);
-            current_statement_begin__ = 196;
+            current_statement_begin__ = 202;
             validate_non_negative_index("p_HOS_all", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> p_HOS_all(N);
             stan::math::initialize(p_HOS_all, DUMMY_VAR__);
             stan::math::fill(p_HOS_all, DUMMY_VAR__);
-            current_statement_begin__ = 197;
+            current_statement_begin__ = 203;
             validate_non_negative_index("S_W", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> S_W(N);
             stan::math::initialize(S_W, DUMMY_VAR__);
             stan::math::fill(S_W, DUMMY_VAR__);
-            current_statement_begin__ = 198;
+            current_statement_begin__ = 204;
             validate_non_negative_index("S_H", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> S_H(N);
             stan::math::initialize(S_H, DUMMY_VAR__);
             stan::math::fill(S_H, DUMMY_VAR__);
-            current_statement_begin__ = 199;
+            current_statement_begin__ = 205;
             validate_non_negative_index("S", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> S(N);
             stan::math::initialize(S, DUMMY_VAR__);
             stan::math::fill(S, DUMMY_VAR__);
-            current_statement_begin__ = 200;
+            current_statement_begin__ = 206;
             validate_non_negative_index("B_rate_all", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> B_rate_all(N);
             stan::math::initialize(B_rate_all, DUMMY_VAR__);
             stan::math::fill(B_rate_all, DUMMY_VAR__);
-            current_statement_begin__ = 202;
+            current_statement_begin__ = 208;
             validate_non_negative_index("mu_alr_p", "(N_age - 1)", (N_age - 1));
             Eigen::Matrix<local_scalar_t__, 1, Eigen::Dynamic> mu_alr_p((N_age - 1));
             stan::math::initialize(mu_alr_p, DUMMY_VAR__);
             stan::math::fill(mu_alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 203;
+            current_statement_begin__ = 209;
             validate_non_negative_index("mu_pop_alr_p", "N_pop", N_pop);
             validate_non_negative_index("mu_pop_alr_p", "(N_age - 1)", (N_age - 1));
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> mu_pop_alr_p(N_pop, (N_age - 1));
             stan::math::initialize(mu_pop_alr_p, DUMMY_VAR__);
             stan::math::fill(mu_pop_alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 204;
+            current_statement_begin__ = 210;
             validate_non_negative_index("alr_p", "N", N);
             validate_non_negative_index("alr_p", "N_age", N_age);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> alr_p(N, N_age);
             stan::math::initialize(alr_p, DUMMY_VAR__);
             stan::math::fill(alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 205;
+            current_statement_begin__ = 211;
             validate_non_negative_index("exp_alr_p", "N", N);
             validate_non_negative_index("exp_alr_p", "N_age", N_age);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> exp_alr_p(N, N_age);
             stan::math::initialize(exp_alr_p, DUMMY_VAR__);
             stan::math::fill(exp_alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 206;
+            current_statement_begin__ = 212;
             validate_non_negative_index("p", "N", N);
             validate_non_negative_index("p", "N_age", N_age);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> p(N, N_age);
             stan::math::initialize(p, DUMMY_VAR__);
             stan::math::fill(p, DUMMY_VAR__);
-            current_statement_begin__ = 207;
+            current_statement_begin__ = 213;
             validate_non_negative_index("q", "N", N);
             validate_non_negative_index("q", "N_age", N_age);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> q(N, N_age);
             stan::math::initialize(q, DUMMY_VAR__);
             stan::math::fill(q, DUMMY_VAR__);
-            current_statement_begin__ = 209;
+            current_statement_begin__ = 215;
+            validate_non_negative_index("p_F", "N", N);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> p_F(N);
+            stan::math::initialize(p_F, DUMMY_VAR__);
+            stan::math::fill(p_F, DUMMY_VAR__);
+            current_statement_begin__ = 216;
+            validate_non_negative_index("q_F", "N", N);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_F(N);
+            stan::math::initialize(q_F, DUMMY_VAR__);
+            stan::math::fill(q_F, DUMMY_VAR__);
+            current_statement_begin__ = 218;
             validate_non_negative_index("tau_M", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> tau_M(N);
             stan::math::initialize(tau_M, DUMMY_VAR__);
             stan::math::fill(tau_M, DUMMY_VAR__);
-            current_statement_begin__ = 210;
+            current_statement_begin__ = 219;
             validate_non_negative_index("tau_S", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> tau_S(N);
             stan::math::initialize(tau_S, DUMMY_VAR__);
             stan::math::fill(tau_S, DUMMY_VAR__);
             // transformed parameters block statements
-            current_statement_begin__ = 213;
+            current_statement_begin__ = 222;
             stan::math::assign(p_HOS_all, rep_vector(0, N));
-            current_statement_begin__ = 214;
+            current_statement_begin__ = 223;
             stan::model::assign(p_HOS_all, 
                         stan::model::cons_list(stan::model::index_multi(which_H), stan::model::nil_index_list()), 
                         p_HOS, 
                         "assigning variable p_HOS_all");
-            current_statement_begin__ = 215;
+            current_statement_begin__ = 224;
             stan::math::assign(B_rate_all, rep_vector(0, N));
-            current_statement_begin__ = 216;
+            current_statement_begin__ = 225;
             stan::model::assign(B_rate_all, 
                         stan::model::cons_list(stan::model::index_multi(which_B), stan::model::nil_index_list()), 
                         B_rate, 
                         "assigning variable B_rate_all");
-            current_statement_begin__ = 219;
+            current_statement_begin__ = 228;
             stan::math::assign(psi, inv_logit(add(logit(mu_psi), multiply(sigma_psi, zeta_psi))));
-            current_statement_begin__ = 220;
+            current_statement_begin__ = 229;
             stan::math::assign(Mmax, stan::math::exp(add(mu_Mmax, multiply(sigma_Mmax, zeta_Mmax))));
-            current_statement_begin__ = 223;
+            current_statement_begin__ = 232;
             stan::model::assign(eta_year_M, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
                         ((get_base1(zeta_year_M, 1, "zeta_year_M", 1) * sigma_year_M) / stan::math::sqrt((1 - pow(rho_M, 2)))), 
                         "assigning variable eta_year_M");
-            current_statement_begin__ = 224;
+            current_statement_begin__ = 233;
             stan::model::assign(eta_year_MS, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
                         ((get_base1(zeta_year_MS, 1, "zeta_year_MS", 1) * sigma_year_MS) / stan::math::sqrt((1 - pow(rho_MS, 2)))), 
                         "assigning variable eta_year_MS");
-            current_statement_begin__ = 225;
+            current_statement_begin__ = 234;
             for (int i = 2; i <= N_year; ++i) {
-                current_statement_begin__ = 227;
+                current_statement_begin__ = 236;
                 stan::model::assign(eta_year_M, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((rho_M * get_base1(eta_year_M, (i - 1), "eta_year_M", 1)) + (get_base1(zeta_year_M, i, "zeta_year_M", 1) * sigma_year_M)), 
                             "assigning variable eta_year_M");
-                current_statement_begin__ = 228;
+                current_statement_begin__ = 237;
                 stan::model::assign(eta_year_MS, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((rho_MS * get_base1(eta_year_MS, (i - 1), "eta_year_MS", 1)) + (get_base1(zeta_year_MS, i, "zeta_year_MS", 1) * sigma_year_MS)), 
                             "assigning variable eta_year_MS");
             }
-            current_statement_begin__ = 231;
+            current_statement_begin__ = 240;
             stan::math::assign(eta_year_M, add(subtract(eta_year_M, mean(stan::model::rvalue(eta_year_M, stan::model::cons_list(stan::model::index_min_max(1, N_year), stan::model::nil_index_list()), "eta_year_M"))), mat_lmult(X_M, beta_M, pstream__)));
-            current_statement_begin__ = 232;
-            stan::math::assign(eta_year_MS, add(subtract(eta_year_MS, mean(stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_min_max(1, N_year), stan::model::nil_index_list()), "eta_year_MS"))), mat_lmult(X_MS, beta_MS, pstream__)));
-            current_statement_begin__ = 234;
-            stan::math::assign(s_MS, inv_logit(add(add(logit(mu_MS), stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_multi(year), stan::model::nil_index_list()), "eta_year_MS")), multiply(sigma_MS, zeta_MS))));
-            current_statement_begin__ = 237;
-            stan::math::assign(mu_alr_p, to_row_vector(subtract(stan::math::log(stan::model::rvalue(mu_p, stan::model::cons_list(stan::model::index_min_max(1, (N_age - 1)), stan::model::nil_index_list()), "mu_p")), stan::math::log(get_base1(mu_p, N_age, "mu_p", 1)))));
-            current_statement_begin__ = 238;
-            stan::math::assign(mu_pop_alr_p, add(rep_matrix(mu_alr_p, N_pop), transpose(diag_pre_multiply(sigma_pop_p, multiply(L_pop_p, transpose(zeta_pop_p))))));
-            current_statement_begin__ = 239;
-            stan::math::assign(alr_p, append_col(add(stan::model::rvalue(mu_pop_alr_p, stan::model::cons_list(stan::model::index_multi(pop), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_pop_alr_p"), transpose(diag_pre_multiply(sigma_p, multiply(L_p, transpose(zeta_p))))), rep_vector(0, N)));
             current_statement_begin__ = 241;
-            stan::math::assign(exp_alr_p, stan::math::exp(alr_p));
-            current_statement_begin__ = 242;
-            stan::math::assign(p, diag_pre_multiply(elt_divide(ones_N, multiply(exp_alr_p, ones_N_age)), exp_alr_p));
+            stan::math::assign(eta_year_MS, add(subtract(eta_year_MS, mean(stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_min_max(1, N_year), stan::model::nil_index_list()), "eta_year_MS"))), mat_lmult(X_MS, beta_MS, pstream__)));
+            current_statement_begin__ = 243;
+            stan::math::assign(s_MS, inv_logit(add(add(logit(mu_MS), stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_multi(year), stan::model::nil_index_list()), "eta_year_MS")), multiply(sigma_MS, zeta_MS))));
             current_statement_begin__ = 246;
+            stan::math::assign(mu_alr_p, to_row_vector(subtract(stan::math::log(stan::model::rvalue(mu_p, stan::model::cons_list(stan::model::index_min_max(1, (N_age - 1)), stan::model::nil_index_list()), "mu_p")), stan::math::log(get_base1(mu_p, N_age, "mu_p", 1)))));
+            current_statement_begin__ = 247;
+            stan::math::assign(mu_pop_alr_p, add(rep_matrix(mu_alr_p, N_pop), transpose(diag_pre_multiply(sigma_pop_p, multiply(L_pop_p, transpose(zeta_pop_p))))));
+            current_statement_begin__ = 248;
+            stan::math::assign(alr_p, append_col(add(stan::model::rvalue(mu_pop_alr_p, stan::model::cons_list(stan::model::index_multi(pop), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_pop_alr_p"), transpose(diag_pre_multiply(sigma_p, multiply(L_p, transpose(zeta_p))))), rep_vector(0, N)));
+            current_statement_begin__ = 250;
+            stan::math::assign(exp_alr_p, stan::math::exp(alr_p));
+            current_statement_begin__ = 251;
+            stan::math::assign(p, diag_pre_multiply(elt_divide(ones_N, multiply(exp_alr_p, ones_N_age)), exp_alr_p));
+            current_statement_begin__ = 254;
+            stan::math::assign(p_F, inv_logit(add(add(logit(mu_F), multiply(sigma_pop_F, stan::model::rvalue(zeta_pop_F, stan::model::cons_list(stan::model::index_multi(pop), stan::model::nil_index_list()), "zeta_pop_F"))), multiply(sigma_F, zeta_F))));
+            current_statement_begin__ = 258;
             for (int i = 1; i <= N; ++i) {
                 {
-                current_statement_begin__ = 248;
+                current_statement_begin__ = 260;
                 validate_non_negative_index("S_W_a", "N_age", N_age);
                 Eigen::Matrix<local_scalar_t__, 1, Eigen::Dynamic> S_W_a(N_age);
                 stan::math::initialize(S_W_a, DUMMY_VAR__);
                 stan::math::fill(S_W_a, DUMMY_VAR__);
-                current_statement_begin__ = 249;
+                current_statement_begin__ = 261;
                 int ii(0);
                 (void) ii;  // dummy to suppress unused var warning
                 stan::math::fill(ii, std::numeric_limits<int>::min());
-                current_statement_begin__ = 251;
+                current_statement_begin__ = 263;
                 int N_orphan_age(0);
                 (void) N_orphan_age;  // dummy to suppress unused var warning
                 stan::math::fill(N_orphan_age, std::numeric_limits<int>::min());
                 stan::math::assign(N_orphan_age,std::max((N_age - std::max((get_base1(pop_year_indx, i, "pop_year_indx", 1) - min_ocean_age), 0)), N_age));
-                current_statement_begin__ = 252;
+                current_statement_begin__ = 264;
                 validate_non_negative_index("q_orphan", "N_orphan_age", N_orphan_age);
                 Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_orphan(N_orphan_age);
                 stan::math::initialize(q_orphan, DUMMY_VAR__);
                 stan::math::fill(q_orphan, DUMMY_VAR__);
-                current_statement_begin__ = 255;
+                current_statement_begin__ = 265;
+                validate_non_negative_index("q_F_a", "N_age", N_age);
+                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_F_a(N_age);
+                stan::math::initialize(q_F_a, DUMMY_VAR__);
+                stan::math::fill(q_F_a, DUMMY_VAR__);
+                current_statement_begin__ = 268;
                 if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), smolt_age))) {
-                    current_statement_begin__ = 256;
+                    current_statement_begin__ = 269;
                     stan::model::assign(M, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 get_base1(M_init, (((get_base1(pop, i, "pop", 1) - 1) * smolt_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)), "M_init", 1), 
                                 "assigning variable M");
                 } else {
-                    current_statement_begin__ = 258;
+                    current_statement_begin__ = 271;
                     stan::model::assign(M, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 get_base1(M0, (i - smolt_age), "M0", 1), 
                                 "assigning variable M");
                 }
-                current_statement_begin__ = 262;
+                current_statement_begin__ = 275;
                 if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_ocean_age))) {
-                    current_statement_begin__ = 264;
+                    current_statement_begin__ = 277;
                     stan::math::assign(ii, (((get_base1(pop, i, "pop", 1) - 1) * max_ocean_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)));
-                    current_statement_begin__ = 265;
+                    current_statement_begin__ = 278;
                     stan::math::assign(q_orphan, append_row(sum(head(get_base1(q_init, ii, "q_init", 1), ((N_age - N_orphan_age) + 1))), tail(get_base1(q_init, ii, "q_init", 1), (N_orphan_age - 1))));
                 }
-                current_statement_begin__ = 269;
+                current_statement_begin__ = 282;
                 for (int a = 1; a <= N_age; ++a) {
-                    current_statement_begin__ = 271;
+                    current_statement_begin__ = 284;
                     if (as_bool(logical_lt(get_base1(ocean_ages, a, "ocean_ages", 1), get_base1(pop_year_indx, i, "pop_year_indx", 1)))) {
-                        current_statement_begin__ = 273;
+                        current_statement_begin__ = 287;
                         stan::model::assign(S_W_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
                                     ((get_base1(M, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), "M", 1) * get_base1(s_MS, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), "s_MS", 1)) * get_base1(p, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), a, "p", 1)), 
                                     "assigning variable S_W_a");
+                        current_statement_begin__ = 288;
+                        stan::model::assign(q_F_a, 
+                                    stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
+                                    get_base1(p_F, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), "p_F", 1), 
+                                    "assigning variable q_F_a");
                     } else {
-                        current_statement_begin__ = 276;
+                        current_statement_begin__ = 293;
                         stan::model::assign(S_W_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
                                     ((get_base1(S_init, ii, "S_init", 1) * (1 - get_base1(p_HOS_all, i, "p_HOS_all", 1))) * get_base1(q_orphan, (a - (N_age - N_orphan_age)), "q_orphan", 1)), 
                                     "assigning variable S_W_a");
+                        current_statement_begin__ = 294;
+                        stan::model::assign(q_F_a, 
+                                    stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
+                                    get_base1(q_F_init, ii, "q_F_init", 1), 
+                                    "assigning variable q_F_a");
                     }
                 }
-                current_statement_begin__ = 280;
+                current_statement_begin__ = 299;
                 stan::math::assign(S_W_a, multiply(multiply(S_W_a, (1 - get_base1(F_rate, i, "F_rate", 1))), (1 - get_base1(B_rate_all, i, "B_rate_all", 1))));
-                current_statement_begin__ = 281;
+                current_statement_begin__ = 300;
                 stan::model::assign(S_W, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             sum(S_W_a), 
                             "assigning variable S_W");
-                current_statement_begin__ = 282;
+                current_statement_begin__ = 301;
                 stan::model::assign(S_H, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((get_base1(S_W, i, "S_W", 1) * get_base1(p_HOS_all, i, "p_HOS_all", 1)) / (1 - get_base1(p_HOS_all, i, "p_HOS_all", 1))), 
                             "assigning variable S_H");
-                current_statement_begin__ = 283;
+                current_statement_begin__ = 302;
                 stan::model::assign(S, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             (get_base1(S_W, i, "S_W", 1) + get_base1(S_H, i, "S_H", 1)), 
                             "assigning variable S");
-                current_statement_begin__ = 284;
+                current_statement_begin__ = 303;
                 stan::model::assign(q, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
                             divide(S_W_a, get_base1(S_W, i, "S_W", 1)), 
                             "assigning variable q");
-                current_statement_begin__ = 288;
+                current_statement_begin__ = 304;
+                stan::model::assign(q_F, 
+                            stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
+                            multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), q_F_a), 
+                            "assigning variable q_F");
+                current_statement_begin__ = 308;
+                if (as_bool(is_nan(((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(q_F, i, "q_F", 1)) * get_base1(S, i, "S", 1))))) {
+                    current_statement_begin__ = 309;
+                    if (pstream__) {
+                        stan_print(pstream__,"q[i,] = ");
+                        stan_print(pstream__,stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"));
+                        stan_print(pstream__,"  q_F[i] = ");
+                        stan_print(pstream__,get_base1(q_F, i, "q_F", 1));
+                        stan_print(pstream__,"  S[i] = ");
+                        stan_print(pstream__,get_base1(S, i, "S", 1));
+                        stan_print(pstream__,"  E_hat[i] = ");
+                        stan_print(pstream__,((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(p_F, i, "p_F", 1)) * get_base1(S, i, "S", 1)));
+                        *pstream__ << std::endl;
+                    }
+                }
+                current_statement_begin__ = 310;
                 stan::model::assign(E_hat, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            ((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(p_F, i, "p_F", 1)) * get_base1(S, i, "S", 1)), 
+                            ((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(q_F, i, "q_F", 1)) * get_base1(S, i, "S", 1)), 
                             "assigning variable E_hat");
-                current_statement_begin__ = 292;
+                current_statement_begin__ = 314;
                 stan::model::assign(M_hat, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             SR(SR_fun, get_base1(psi, get_base1(pop, i, "pop", 1), "psi", 1), (get_base1(Mmax, get_base1(pop, i, "pop", 1), "Mmax", 1) * 1e3), get_base1(E_hat, i, "E_hat", 1), get_base1(A, i, "A", 1), pstream__), 
                             "assigning variable M_hat");
-                current_statement_begin__ = 293;
+                current_statement_begin__ = 315;
                 stan::model::assign(M0, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             (get_base1(M_hat, i, "M_hat", 1) * stan::math::exp((get_base1(eta_year_M, get_base1(year, i, "year", 1), "eta_year_M", 1) + (sigma_M * get_base1(zeta_M, i, "zeta_M", 1))))), 
                             "assigning variable M0");
                 }
             }
-            current_statement_begin__ = 298;
+            current_statement_begin__ = 320;
             stan::math::assign(tau_M, stan::math::exp(add(stan::math::log(mu_tau_M), multiply(sigma_tau_M, tau_M_z))));
-            current_statement_begin__ = 299;
+            current_statement_begin__ = 321;
             stan::model::assign(tau_M, 
                         stan::model::cons_list(stan::model::index_multi(which_tau_M_obs), stan::model::nil_index_list()), 
                         stan::model::rvalue(tau_M_obs, stan::model::cons_list(stan::model::index_multi(which_tau_M_obs), stan::model::nil_index_list()), "tau_M_obs"), 
                         "assigning variable tau_M");
-            current_statement_begin__ = 300;
+            current_statement_begin__ = 322;
             stan::math::assign(tau_S, stan::math::exp(add(stan::math::log(mu_tau_S), multiply(sigma_tau_S, tau_S_z))));
-            current_statement_begin__ = 301;
+            current_statement_begin__ = 323;
             stan::model::assign(tau_S, 
                         stan::model::cons_list(stan::model::index_multi(which_tau_S_obs), stan::model::nil_index_list()), 
                         stan::model::rvalue(tau_S_obs, stan::model::cons_list(stan::model::index_multi(which_tau_S_obs), stan::model::nil_index_list()), "tau_S_obs"), 
@@ -2279,7 +2446,7 @@ public:
             // validate transformed parameters
             const char* function__ = "validate transformed params";
             (void) function__;  // dummy to suppress unused var warning
-            current_statement_begin__ = 184;
+            current_statement_begin__ = 190;
             size_t E_hat_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < E_hat_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(E_hat(j_1__))) {
@@ -2289,7 +2456,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "E_hat", E_hat, 0);
-            current_statement_begin__ = 186;
+            current_statement_begin__ = 192;
             size_t psi_j_1_max__ = N_pop;
             for (size_t j_1__ = 0; j_1__ < psi_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(psi(j_1__))) {
@@ -2300,7 +2467,7 @@ public:
             }
             check_greater_or_equal(function__, "psi", psi, 0);
             check_less_or_equal(function__, "psi", psi, 1);
-            current_statement_begin__ = 187;
+            current_statement_begin__ = 193;
             size_t Mmax_j_1_max__ = N_pop;
             for (size_t j_1__ = 0; j_1__ < Mmax_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(Mmax(j_1__))) {
@@ -2310,7 +2477,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "Mmax", Mmax, 0);
-            current_statement_begin__ = 188;
+            current_statement_begin__ = 194;
             size_t eta_year_M_j_1_max__ = N_year;
             for (size_t j_1__ = 0; j_1__ < eta_year_M_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(eta_year_M(j_1__))) {
@@ -2319,7 +2486,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable eta_year_M: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 189;
+            current_statement_begin__ = 195;
             size_t M_hat_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < M_hat_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(M_hat(j_1__))) {
@@ -2329,7 +2496,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "M_hat", M_hat, 0);
-            current_statement_begin__ = 190;
+            current_statement_begin__ = 196;
             size_t M0_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < M0_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(M0(j_1__))) {
@@ -2339,7 +2506,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "M0", M0, 0);
-            current_statement_begin__ = 191;
+            current_statement_begin__ = 197;
             size_t M_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < M_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(M(j_1__))) {
@@ -2349,7 +2516,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "M", M, 0);
-            current_statement_begin__ = 193;
+            current_statement_begin__ = 199;
             size_t eta_year_MS_j_1_max__ = N_year;
             for (size_t j_1__ = 0; j_1__ < eta_year_MS_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(eta_year_MS(j_1__))) {
@@ -2358,7 +2525,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable eta_year_MS: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 194;
+            current_statement_begin__ = 200;
             size_t s_MS_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < s_MS_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(s_MS(j_1__))) {
@@ -2369,7 +2536,7 @@ public:
             }
             check_greater_or_equal(function__, "s_MS", s_MS, 0);
             check_less_or_equal(function__, "s_MS", s_MS, 1);
-            current_statement_begin__ = 196;
+            current_statement_begin__ = 202;
             size_t p_HOS_all_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < p_HOS_all_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(p_HOS_all(j_1__))) {
@@ -2378,7 +2545,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable p_HOS_all: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 197;
+            current_statement_begin__ = 203;
             size_t S_W_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < S_W_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(S_W(j_1__))) {
@@ -2388,7 +2555,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "S_W", S_W, 0);
-            current_statement_begin__ = 198;
+            current_statement_begin__ = 204;
             size_t S_H_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < S_H_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(S_H(j_1__))) {
@@ -2397,7 +2564,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable S_H: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 199;
+            current_statement_begin__ = 205;
             size_t S_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < S_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(S(j_1__))) {
@@ -2407,7 +2574,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "S", S, 0);
-            current_statement_begin__ = 200;
+            current_statement_begin__ = 206;
             size_t B_rate_all_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < B_rate_all_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(B_rate_all(j_1__))) {
@@ -2418,7 +2585,7 @@ public:
             }
             check_greater_or_equal(function__, "B_rate_all", B_rate_all, 0);
             check_less_or_equal(function__, "B_rate_all", B_rate_all, 1);
-            current_statement_begin__ = 202;
+            current_statement_begin__ = 208;
             size_t mu_alr_p_j_1_max__ = (N_age - 1);
             for (size_t j_1__ = 0; j_1__ < mu_alr_p_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(mu_alr_p(j_1__))) {
@@ -2427,7 +2594,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable mu_alr_p: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 203;
+            current_statement_begin__ = 209;
             size_t mu_pop_alr_p_j_1_max__ = N_pop;
             size_t mu_pop_alr_p_j_2_max__ = (N_age - 1);
             for (size_t j_1__ = 0; j_1__ < mu_pop_alr_p_j_1_max__; ++j_1__) {
@@ -2439,7 +2606,7 @@ public:
                     }
                 }
             }
-            current_statement_begin__ = 204;
+            current_statement_begin__ = 210;
             size_t alr_p_j_1_max__ = N;
             size_t alr_p_j_2_max__ = N_age;
             for (size_t j_1__ = 0; j_1__ < alr_p_j_1_max__; ++j_1__) {
@@ -2451,7 +2618,7 @@ public:
                     }
                 }
             }
-            current_statement_begin__ = 205;
+            current_statement_begin__ = 211;
             size_t exp_alr_p_j_1_max__ = N;
             size_t exp_alr_p_j_2_max__ = N_age;
             for (size_t j_1__ = 0; j_1__ < exp_alr_p_j_1_max__; ++j_1__) {
@@ -2464,7 +2631,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "exp_alr_p", exp_alr_p, 0);
-            current_statement_begin__ = 206;
+            current_statement_begin__ = 212;
             size_t p_j_1_max__ = N;
             size_t p_j_2_max__ = N_age;
             for (size_t j_1__ = 0; j_1__ < p_j_1_max__; ++j_1__) {
@@ -2478,7 +2645,7 @@ public:
             }
             check_greater_or_equal(function__, "p", p, 0);
             check_less_or_equal(function__, "p", p, 1);
-            current_statement_begin__ = 207;
+            current_statement_begin__ = 213;
             size_t q_j_1_max__ = N;
             size_t q_j_2_max__ = N_age;
             for (size_t j_1__ = 0; j_1__ < q_j_1_max__; ++j_1__) {
@@ -2492,7 +2659,25 @@ public:
             }
             check_greater_or_equal(function__, "q", q, 0);
             check_less_or_equal(function__, "q", q, 1);
-            current_statement_begin__ = 209;
+            current_statement_begin__ = 215;
+            size_t p_F_j_1_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
+                if (stan::math::is_uninitialized(p_F(j_1__))) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: p_F" << "(" << j_1__ << ")";
+                    stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable p_F: ") + msg__.str()), current_statement_begin__, prog_reader__());
+                }
+            }
+            current_statement_begin__ = 216;
+            size_t q_F_j_1_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < q_F_j_1_max__; ++j_1__) {
+                if (stan::math::is_uninitialized(q_F(j_1__))) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: q_F" << "(" << j_1__ << ")";
+                    stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable q_F: ") + msg__.str()), current_statement_begin__, prog_reader__());
+                }
+            }
+            current_statement_begin__ = 218;
             size_t tau_M_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < tau_M_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(tau_M(j_1__))) {
@@ -2502,7 +2687,7 @@ public:
                 }
             }
             check_greater_or_equal(function__, "tau_M", tau_M, 0);
-            current_statement_begin__ = 210;
+            current_statement_begin__ = 219;
             size_t tau_S_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < tau_S_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(tau_S(j_1__))) {
@@ -2514,133 +2699,141 @@ public:
             check_greater_or_equal(function__, "tau_S", tau_S, 0);
             // model body
             {
-            current_statement_begin__ = 305;
+            current_statement_begin__ = 327;
             validate_non_negative_index("B_take", "N_B", N_B);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> B_take(N_B);
             stan::math::initialize(B_take, DUMMY_VAR__);
             stan::math::fill(B_take, DUMMY_VAR__);
-            current_statement_begin__ = 306;
+            current_statement_begin__ = 328;
             validate_non_negative_index("M_downstream", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> M_downstream(N);
             stan::math::initialize(M_downstream, DUMMY_VAR__);
             stan::math::fill(M_downstream, DUMMY_VAR__);
-            current_statement_begin__ = 311;
-            lp_accum__.add(normal_log<propto__>(mu_E, 2500, 500));
-            current_statement_begin__ = 312;
-            lp_accum__.add(normal_log<propto__>(sigma_E, 500, 1000));
-            current_statement_begin__ = 313;
-            lp_accum__.add(uniform_log<propto__>(p_F, 0, 1));
-            current_statement_begin__ = 316;
-            lp_accum__.add(pexp_lpdf<propto__>(mu_psi, 0, 0.85, 20, pstream__));
-            current_statement_begin__ = 317;
-            lp_accum__.add(normal_log<propto__>(sigma_psi, 0, 2));
-            current_statement_begin__ = 318;
-            lp_accum__.add(normal_log<propto__>(mu_Mmax, 5, 5));
-            current_statement_begin__ = 319;
-            lp_accum__.add(normal_log<propto__>(sigma_Mmax, 0, 3));
-            current_statement_begin__ = 320;
-            lp_accum__.add(std_normal_log<propto__>(zeta_psi));
-            current_statement_begin__ = 321;
-            lp_accum__.add(std_normal_log<propto__>(zeta_Mmax));
-            current_statement_begin__ = 322;
-            lp_accum__.add(normal_log<propto__>(beta_M, 0, 2));
-            current_statement_begin__ = 323;
-            lp_accum__.add(pexp_lpdf<propto__>(rho_M, 0, 0.85, 20, pstream__));
-            current_statement_begin__ = 324;
-            lp_accum__.add(normal_log<propto__>(sigma_year_M, 0, 2));
-            current_statement_begin__ = 325;
-            lp_accum__.add(std_normal_log<propto__>(zeta_year_M));
-            current_statement_begin__ = 326;
-            lp_accum__.add(normal_log<propto__>(sigma_M, 0, 2));
-            current_statement_begin__ = 327;
-            lp_accum__.add(std_normal_log<propto__>(zeta_M));
-            current_statement_begin__ = 330;
-            lp_accum__.add(normal_log<propto__>(beta_MS, 0, 2));
-            current_statement_begin__ = 331;
-            lp_accum__.add(pexp_lpdf<propto__>(rho_MS, 0, 0.85, 20, pstream__));
-            current_statement_begin__ = 332;
-            lp_accum__.add(normal_log<propto__>(sigma_year_MS, 0, 2));
             current_statement_begin__ = 333;
-            lp_accum__.add(std_normal_log<propto__>(zeta_year_MS));
+            lp_accum__.add(normal_log<propto__>(mu_E, 2500, 500));
             current_statement_begin__ = 334;
-            lp_accum__.add(normal_log<propto__>(sigma_MS, 0, 2));
-            current_statement_begin__ = 335;
-            lp_accum__.add(std_normal_log<propto__>(zeta_MS));
+            lp_accum__.add(normal_log<propto__>(sigma_E, 500, 1000));
+            current_statement_begin__ = 337;
+            lp_accum__.add(pexp_lpdf<propto__>(mu_psi, 0, 0.85, 20, pstream__));
             current_statement_begin__ = 338;
-            lp_accum__.add(normal_log<propto__>(to_vector(sigma_pop_p), 0, 2));
+            lp_accum__.add(normal_log<propto__>(sigma_psi, 0, 2));
             current_statement_begin__ = 339;
-            lp_accum__.add(normal_log<propto__>(to_vector(sigma_p), 0, 2));
+            lp_accum__.add(normal_log<propto__>(mu_Mmax, 5, 5));
             current_statement_begin__ = 340;
-            lp_accum__.add(lkj_corr_cholesky_log<propto__>(L_pop_p, 1));
+            lp_accum__.add(normal_log<propto__>(sigma_Mmax, 0, 3));
             current_statement_begin__ = 341;
-            lp_accum__.add(lkj_corr_cholesky_log<propto__>(L_p, 1));
+            lp_accum__.add(std_normal_log<propto__>(zeta_psi));
+            current_statement_begin__ = 342;
+            lp_accum__.add(std_normal_log<propto__>(zeta_Mmax));
+            current_statement_begin__ = 343;
+            lp_accum__.add(normal_log<propto__>(beta_M, 0, 2));
             current_statement_begin__ = 344;
-            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_pop_p)));
+            lp_accum__.add(pexp_lpdf<propto__>(rho_M, 0, 0.85, 20, pstream__));
+            current_statement_begin__ = 345;
+            lp_accum__.add(normal_log<propto__>(sigma_year_M, 0, 2));
+            current_statement_begin__ = 346;
+            lp_accum__.add(std_normal_log<propto__>(zeta_year_M));
             current_statement_begin__ = 347;
-            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_p)));
-            current_statement_begin__ = 350;
-            stan::math::assign(B_take, elt_divide(elt_multiply(B_rate, stan::model::rvalue(S_W, stan::model::cons_list(stan::model::index_multi(which_B), stan::model::nil_index_list()), "S_W")), subtract(1, B_rate)));
+            lp_accum__.add(normal_log<propto__>(sigma_M, 0, 2));
+            current_statement_begin__ = 348;
+            lp_accum__.add(std_normal_log<propto__>(zeta_M));
             current_statement_begin__ = 351;
-            lp_accum__.add(lognormal_log<propto__>(B_take_obs, stan::math::log(B_take), 0.1));
+            lp_accum__.add(normal_log<propto__>(beta_MS, 0, 2));
+            current_statement_begin__ = 352;
+            lp_accum__.add(pexp_lpdf<propto__>(rho_MS, 0, 0.85, 20, pstream__));
+            current_statement_begin__ = 353;
+            lp_accum__.add(normal_log<propto__>(sigma_year_MS, 0, 2));
+            current_statement_begin__ = 354;
+            lp_accum__.add(std_normal_log<propto__>(zeta_year_MS));
             current_statement_begin__ = 355;
-            lp_accum__.add(lognormal_log<propto__>(M_init, 0.0, 5.0));
+            lp_accum__.add(normal_log<propto__>(sigma_MS, 0, 2));
             current_statement_begin__ = 356;
+            lp_accum__.add(std_normal_log<propto__>(zeta_MS));
+            current_statement_begin__ = 359;
+            lp_accum__.add(normal_log<propto__>(to_vector(sigma_pop_p), 0, 2));
+            current_statement_begin__ = 360;
+            lp_accum__.add(normal_log<propto__>(to_vector(sigma_p), 0, 2));
+            current_statement_begin__ = 361;
+            lp_accum__.add(lkj_corr_cholesky_log<propto__>(L_pop_p, 1));
+            current_statement_begin__ = 362;
+            lp_accum__.add(lkj_corr_cholesky_log<propto__>(L_p, 1));
+            current_statement_begin__ = 365;
+            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_pop_p)));
+            current_statement_begin__ = 368;
+            lp_accum__.add(std_normal_log<propto__>(to_vector(zeta_p)));
+            current_statement_begin__ = 371;
+            lp_accum__.add(normal_log<propto__>(sigma_pop_F, 0, 2));
+            current_statement_begin__ = 372;
+            lp_accum__.add(std_normal_log<propto__>(zeta_pop_F));
+            current_statement_begin__ = 373;
+            lp_accum__.add(normal_log<propto__>(sigma_F, 0, 2));
+            current_statement_begin__ = 374;
+            lp_accum__.add(std_normal_log<propto__>(zeta_F));
+            current_statement_begin__ = 375;
+            lp_accum__.add(beta_log<propto__>(q_F_init, 3, 3));
+            current_statement_begin__ = 378;
+            stan::math::assign(B_take, elt_divide(elt_multiply(B_rate, stan::model::rvalue(S_W, stan::model::cons_list(stan::model::index_multi(which_B), stan::model::nil_index_list()), "S_W")), subtract(1, B_rate)));
+            current_statement_begin__ = 379;
+            lp_accum__.add(lognormal_log<propto__>(B_take_obs, stan::math::log(B_take), 0.1));
+            current_statement_begin__ = 383;
+            lp_accum__.add(lognormal_log<propto__>(M_init, 0.0, 5.0));
+            current_statement_begin__ = 384;
             lp_accum__.add(lognormal_log<propto__>(S_init, mu_S_init, 5.0));
             {
-            current_statement_begin__ = 358;
+            current_statement_begin__ = 386;
             validate_non_negative_index("q_init_mat", "N_age", N_age);
             validate_non_negative_index("q_init_mat", "(max_ocean_age * N_pop)", (max_ocean_age * N_pop));
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> q_init_mat(N_age, (max_ocean_age * N_pop));
             stan::math::initialize(q_init_mat, DUMMY_VAR__);
             stan::math::fill(q_init_mat, DUMMY_VAR__);
-            current_statement_begin__ = 360;
+            current_statement_begin__ = 388;
             for (int j = 1; j <= size(q_init); ++j) {
-                current_statement_begin__ = 360;
+                current_statement_begin__ = 388;
                 stan::model::assign(q_init_mat, 
                             stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(j), stan::model::nil_index_list())), 
                             get_base1(q_init, j, "q_init", 1), 
                             "assigning variable q_init_mat");
             }
-            current_statement_begin__ = 361;
+            current_statement_begin__ = 389;
             lp_accum__.add(sum(elt_multiply(subtract(mu_q_init, 1), stan::math::log(q_init_mat))));
             }
-            current_statement_begin__ = 366;
+            current_statement_begin__ = 394;
             lp_accum__.add(normal_log<propto__>(mu_tau_M, 0, 1));
-            current_statement_begin__ = 367;
+            current_statement_begin__ = 395;
             lp_accum__.add(normal_log<propto__>(sigma_tau_M, 0, 5));
-            current_statement_begin__ = 368;
+            current_statement_begin__ = 396;
             lp_accum__.add(normal_log<propto__>(mu_tau_S, 0, 1));
-            current_statement_begin__ = 369;
+            current_statement_begin__ = 397;
             lp_accum__.add(normal_log<propto__>(sigma_tau_S, 0, 5));
-            current_statement_begin__ = 371;
+            current_statement_begin__ = 399;
             lp_accum__.add(std_normal_log<propto__>(tau_M_z));
-            current_statement_begin__ = 372;
+            current_statement_begin__ = 400;
             lp_accum__.add(std_normal_log<propto__>(tau_S_z));
-            current_statement_begin__ = 374;
+            current_statement_begin__ = 402;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(tau_M_obs, stan::model::cons_list(stan::model::index_multi(which_tau_M_obs), stan::model::nil_index_list()), "tau_M_obs"), stan::math::log(mu_tau_M), sigma_tau_M));
-            current_statement_begin__ = 375;
+            current_statement_begin__ = 403;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(tau_S_obs, stan::model::cons_list(stan::model::index_multi(which_tau_S_obs), stan::model::nil_index_list()), "tau_S_obs"), stan::math::log(mu_tau_S), sigma_tau_S));
-            current_statement_begin__ = 378;
+            current_statement_begin__ = 406;
             lp_accum__.add(normal_log<propto__>(E_obs, stan::model::rvalue(mu_E, stan::model::cons_list(stan::model::index_multi(a_E), stan::model::nil_index_list()), "mu_E"), stan::model::rvalue(sigma_E, stan::model::cons_list(stan::model::index_multi(a_E), stan::model::nil_index_list()), "sigma_E")));
-            current_statement_begin__ = 379;
+            current_statement_begin__ = 407;
             lp_accum__.add(-(normal_ccdf_log(0, stan::model::rvalue(mu_E, stan::model::cons_list(stan::model::index_multi(a_E), stan::model::nil_index_list()), "mu_E"), stan::model::rvalue(sigma_E, stan::model::cons_list(stan::model::index_multi(a_E), stan::model::nil_index_list()), "sigma_E"))));
-            current_statement_begin__ = 380;
-            lp_accum__.add(binomial_log<propto__>(n_F_obs, n_MF_obs, p_F));
-            current_statement_begin__ = 381;
+            current_statement_begin__ = 408;
             stan::math::assign(M_downstream, M);
-            current_statement_begin__ = 382;
+            current_statement_begin__ = 409;
             stan::model::assign(M_downstream, 
                         stan::model::cons_list(stan::model::index_multi(downstream_trap), stan::model::nil_index_list()), 
                         add(stan::model::rvalue(M_downstream, stan::model::cons_list(stan::model::index_multi(downstream_trap), stan::model::nil_index_list()), "M_downstream"), stan::model::rvalue(M, stan::model::cons_list(stan::model::index_multi(which_upstream), stan::model::nil_index_list()), "M")), 
                         "assigning variable M_downstream");
-            current_statement_begin__ = 383;
+            current_statement_begin__ = 410;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(M_downstream, stan::model::cons_list(stan::model::index_multi(which_M_obs), stan::model::nil_index_list()), "M_downstream"), stan::math::log(stan::model::rvalue(M_obs, stan::model::cons_list(stan::model::index_multi(which_M_obs), stan::model::nil_index_list()), "M_obs")), stan::model::rvalue(tau_M, stan::model::cons_list(stan::model::index_multi(which_M_obs), stan::model::nil_index_list()), "tau_M")));
-            current_statement_begin__ = 384;
+            current_statement_begin__ = 411;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(S, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S"), stan::math::log(stan::model::rvalue(S_obs, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "S_obs")), stan::model::rvalue(tau_S, stan::model::cons_list(stan::model::index_multi(which_S_obs), stan::model::nil_index_list()), "tau_S")));
-            current_statement_begin__ = 385;
+            current_statement_begin__ = 412;
             lp_accum__.add(binomial_log<propto__>(n_H_obs, n_HW_obs, p_HOS));
-            current_statement_begin__ = 386;
+            current_statement_begin__ = 413;
             lp_accum__.add(sum(elt_multiply(n_age_obs, stan::math::log(q))));
+            current_statement_begin__ = 414;
+            lp_accum__.add(binomial_log<propto__>(n_F_obs, n_MF_obs, q_F));
             }
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -2664,7 +2857,6 @@ public:
         names__.resize(0);
         names__.push_back("mu_E");
         names__.push_back("sigma_E");
-        names__.push_back("p_F");
         names__.push_back("mu_psi");
         names__.push_back("sigma_psi");
         names__.push_back("zeta_psi");
@@ -2691,11 +2883,17 @@ public:
         names__.push_back("sigma_p");
         names__.push_back("L_p");
         names__.push_back("zeta_p");
+        names__.push_back("mu_F");
+        names__.push_back("sigma_pop_F");
+        names__.push_back("zeta_pop_F");
+        names__.push_back("sigma_F");
+        names__.push_back("zeta_F");
         names__.push_back("p_HOS");
         names__.push_back("B_rate");
         names__.push_back("M_init");
         names__.push_back("S_init");
         names__.push_back("q_init");
+        names__.push_back("q_F_init");
         names__.push_back("mu_tau_M");
         names__.push_back("sigma_tau_M");
         names__.push_back("tau_M_z");
@@ -2722,6 +2920,8 @@ public:
         names__.push_back("exp_alr_p");
         names__.push_back("p");
         names__.push_back("q");
+        names__.push_back("p_F");
+        names__.push_back("q_F");
         names__.push_back("tau_M");
         names__.push_back("tau_S");
         names__.push_back("R_pop_p");
@@ -2742,9 +2942,6 @@ public:
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(N_age);
-        dimss__.push_back(dims__);
-        dims__.resize(0);
-        dims__.push_back(N);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dimss__.push_back(dims__);
@@ -2818,6 +3015,18 @@ public:
         dims__.push_back((N_age - 1));
         dimss__.push_back(dims__);
         dims__.resize(0);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N_pop);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
         dims__.push_back(N_H);
         dimss__.push_back(dims__);
         dims__.resize(0);
@@ -2834,6 +3043,9 @@ public:
         dims__.push_back(N_age);
         dimss__.push_back(dims__);
         dims__.resize(0);
+        dims__.push_back((max_ocean_age * N_pop));
+        dimss__.push_back(dims__);
+        dims__.resize(0);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dimss__.push_back(dims__);
@@ -2911,6 +3123,12 @@ public:
         dims__.resize(0);
         dims__.push_back(N);
         dims__.push_back(N_age);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(N);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(N);
@@ -2971,11 +3189,6 @@ public:
         size_t sigma_E_j_1_max__ = N_age;
         for (size_t j_1__ = 0; j_1__ < sigma_E_j_1_max__; ++j_1__) {
             vars__.push_back(sigma_E(j_1__));
-        }
-        Eigen::Matrix<double, Eigen::Dynamic, 1> p_F = in__.vector_lub_constrain(0, 1, N);
-        size_t p_F_j_1_max__ = N;
-        for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
-            vars__.push_back(p_F(j_1__));
         }
         double mu_psi = in__.scalar_lub_constrain(0, 1);
         vars__.push_back(mu_psi);
@@ -3086,6 +3299,22 @@ public:
                 vars__.push_back(zeta_p(j_1__, j_2__));
             }
         }
+        double mu_F = in__.scalar_lub_constrain(0, 1);
+        vars__.push_back(mu_F);
+        double sigma_pop_F = in__.scalar_lb_constrain(0);
+        vars__.push_back(sigma_pop_F);
+        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_pop_F = in__.vector_constrain(N_pop);
+        size_t zeta_pop_F_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < zeta_pop_F_j_1_max__; ++j_1__) {
+            vars__.push_back(zeta_pop_F(j_1__));
+        }
+        double sigma_F = in__.scalar_lb_constrain(0);
+        vars__.push_back(sigma_F);
+        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_F = in__.vector_constrain(N);
+        size_t zeta_F_j_1_max__ = N;
+        for (size_t j_1__ = 0; j_1__ < zeta_F_j_1_max__; ++j_1__) {
+            vars__.push_back(zeta_F(j_1__));
+        }
         Eigen::Matrix<double, Eigen::Dynamic, 1> p_HOS = in__.vector_lub_constrain(0, 1, N_H);
         size_t p_HOS_j_1_max__ = N_H;
         for (size_t j_1__ = 0; j_1__ < p_HOS_j_1_max__; ++j_1__) {
@@ -3119,6 +3348,11 @@ public:
                 vars__.push_back(q_init[k_0__](j_1__));
             }
         }
+        Eigen::Matrix<double, Eigen::Dynamic, 1> q_F_init = in__.vector_lub_constrain(0, 1, (max_ocean_age * N_pop));
+        size_t q_F_init_j_1_max__ = (max_ocean_age * N_pop);
+        for (size_t j_1__ = 0; j_1__ < q_F_init_j_1_max__; ++j_1__) {
+            vars__.push_back(q_F_init(j_1__));
+        }
         double mu_tau_M = in__.scalar_lb_constrain(0);
         vars__.push_back(mu_tau_M);
         double sigma_tau_M = in__.scalar_lb_constrain(0);
@@ -3145,288 +3379,335 @@ public:
         if (!include_tparams__ && !include_gqs__) return;
         try {
             // declare and define transformed parameters
-            current_statement_begin__ = 184;
+            current_statement_begin__ = 190;
             validate_non_negative_index("E_hat", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> E_hat(N);
             stan::math::initialize(E_hat, DUMMY_VAR__);
             stan::math::fill(E_hat, DUMMY_VAR__);
-            current_statement_begin__ = 186;
+            current_statement_begin__ = 192;
             validate_non_negative_index("psi", "N_pop", N_pop);
             Eigen::Matrix<double, Eigen::Dynamic, 1> psi(N_pop);
             stan::math::initialize(psi, DUMMY_VAR__);
             stan::math::fill(psi, DUMMY_VAR__);
-            current_statement_begin__ = 187;
+            current_statement_begin__ = 193;
             validate_non_negative_index("Mmax", "N_pop", N_pop);
             Eigen::Matrix<double, Eigen::Dynamic, 1> Mmax(N_pop);
             stan::math::initialize(Mmax, DUMMY_VAR__);
             stan::math::fill(Mmax, DUMMY_VAR__);
-            current_statement_begin__ = 188;
+            current_statement_begin__ = 194;
             validate_non_negative_index("eta_year_M", "N_year", N_year);
             Eigen::Matrix<double, Eigen::Dynamic, 1> eta_year_M(N_year);
             stan::math::initialize(eta_year_M, DUMMY_VAR__);
             stan::math::fill(eta_year_M, DUMMY_VAR__);
-            current_statement_begin__ = 189;
+            current_statement_begin__ = 195;
             validate_non_negative_index("M_hat", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> M_hat(N);
             stan::math::initialize(M_hat, DUMMY_VAR__);
             stan::math::fill(M_hat, DUMMY_VAR__);
-            current_statement_begin__ = 190;
+            current_statement_begin__ = 196;
             validate_non_negative_index("M0", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> M0(N);
             stan::math::initialize(M0, DUMMY_VAR__);
             stan::math::fill(M0, DUMMY_VAR__);
-            current_statement_begin__ = 191;
+            current_statement_begin__ = 197;
             validate_non_negative_index("M", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> M(N);
             stan::math::initialize(M, DUMMY_VAR__);
             stan::math::fill(M, DUMMY_VAR__);
-            current_statement_begin__ = 193;
+            current_statement_begin__ = 199;
             validate_non_negative_index("eta_year_MS", "N_year", N_year);
             Eigen::Matrix<double, Eigen::Dynamic, 1> eta_year_MS(N_year);
             stan::math::initialize(eta_year_MS, DUMMY_VAR__);
             stan::math::fill(eta_year_MS, DUMMY_VAR__);
-            current_statement_begin__ = 194;
+            current_statement_begin__ = 200;
             validate_non_negative_index("s_MS", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> s_MS(N);
             stan::math::initialize(s_MS, DUMMY_VAR__);
             stan::math::fill(s_MS, DUMMY_VAR__);
-            current_statement_begin__ = 196;
+            current_statement_begin__ = 202;
             validate_non_negative_index("p_HOS_all", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> p_HOS_all(N);
             stan::math::initialize(p_HOS_all, DUMMY_VAR__);
             stan::math::fill(p_HOS_all, DUMMY_VAR__);
-            current_statement_begin__ = 197;
+            current_statement_begin__ = 203;
             validate_non_negative_index("S_W", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> S_W(N);
             stan::math::initialize(S_W, DUMMY_VAR__);
             stan::math::fill(S_W, DUMMY_VAR__);
-            current_statement_begin__ = 198;
+            current_statement_begin__ = 204;
             validate_non_negative_index("S_H", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> S_H(N);
             stan::math::initialize(S_H, DUMMY_VAR__);
             stan::math::fill(S_H, DUMMY_VAR__);
-            current_statement_begin__ = 199;
+            current_statement_begin__ = 205;
             validate_non_negative_index("S", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> S(N);
             stan::math::initialize(S, DUMMY_VAR__);
             stan::math::fill(S, DUMMY_VAR__);
-            current_statement_begin__ = 200;
+            current_statement_begin__ = 206;
             validate_non_negative_index("B_rate_all", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> B_rate_all(N);
             stan::math::initialize(B_rate_all, DUMMY_VAR__);
             stan::math::fill(B_rate_all, DUMMY_VAR__);
-            current_statement_begin__ = 202;
+            current_statement_begin__ = 208;
             validate_non_negative_index("mu_alr_p", "(N_age - 1)", (N_age - 1));
             Eigen::Matrix<double, 1, Eigen::Dynamic> mu_alr_p((N_age - 1));
             stan::math::initialize(mu_alr_p, DUMMY_VAR__);
             stan::math::fill(mu_alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 203;
+            current_statement_begin__ = 209;
             validate_non_negative_index("mu_pop_alr_p", "N_pop", N_pop);
             validate_non_negative_index("mu_pop_alr_p", "(N_age - 1)", (N_age - 1));
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> mu_pop_alr_p(N_pop, (N_age - 1));
             stan::math::initialize(mu_pop_alr_p, DUMMY_VAR__);
             stan::math::fill(mu_pop_alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 204;
+            current_statement_begin__ = 210;
             validate_non_negative_index("alr_p", "N", N);
             validate_non_negative_index("alr_p", "N_age", N_age);
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> alr_p(N, N_age);
             stan::math::initialize(alr_p, DUMMY_VAR__);
             stan::math::fill(alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 205;
+            current_statement_begin__ = 211;
             validate_non_negative_index("exp_alr_p", "N", N);
             validate_non_negative_index("exp_alr_p", "N_age", N_age);
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> exp_alr_p(N, N_age);
             stan::math::initialize(exp_alr_p, DUMMY_VAR__);
             stan::math::fill(exp_alr_p, DUMMY_VAR__);
-            current_statement_begin__ = 206;
+            current_statement_begin__ = 212;
             validate_non_negative_index("p", "N", N);
             validate_non_negative_index("p", "N_age", N_age);
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> p(N, N_age);
             stan::math::initialize(p, DUMMY_VAR__);
             stan::math::fill(p, DUMMY_VAR__);
-            current_statement_begin__ = 207;
+            current_statement_begin__ = 213;
             validate_non_negative_index("q", "N", N);
             validate_non_negative_index("q", "N_age", N_age);
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> q(N, N_age);
             stan::math::initialize(q, DUMMY_VAR__);
             stan::math::fill(q, DUMMY_VAR__);
-            current_statement_begin__ = 209;
+            current_statement_begin__ = 215;
+            validate_non_negative_index("p_F", "N", N);
+            Eigen::Matrix<double, Eigen::Dynamic, 1> p_F(N);
+            stan::math::initialize(p_F, DUMMY_VAR__);
+            stan::math::fill(p_F, DUMMY_VAR__);
+            current_statement_begin__ = 216;
+            validate_non_negative_index("q_F", "N", N);
+            Eigen::Matrix<double, Eigen::Dynamic, 1> q_F(N);
+            stan::math::initialize(q_F, DUMMY_VAR__);
+            stan::math::fill(q_F, DUMMY_VAR__);
+            current_statement_begin__ = 218;
             validate_non_negative_index("tau_M", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> tau_M(N);
             stan::math::initialize(tau_M, DUMMY_VAR__);
             stan::math::fill(tau_M, DUMMY_VAR__);
-            current_statement_begin__ = 210;
+            current_statement_begin__ = 219;
             validate_non_negative_index("tau_S", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> tau_S(N);
             stan::math::initialize(tau_S, DUMMY_VAR__);
             stan::math::fill(tau_S, DUMMY_VAR__);
             // do transformed parameters statements
-            current_statement_begin__ = 213;
+            current_statement_begin__ = 222;
             stan::math::assign(p_HOS_all, rep_vector(0, N));
-            current_statement_begin__ = 214;
+            current_statement_begin__ = 223;
             stan::model::assign(p_HOS_all, 
                         stan::model::cons_list(stan::model::index_multi(which_H), stan::model::nil_index_list()), 
                         p_HOS, 
                         "assigning variable p_HOS_all");
-            current_statement_begin__ = 215;
+            current_statement_begin__ = 224;
             stan::math::assign(B_rate_all, rep_vector(0, N));
-            current_statement_begin__ = 216;
+            current_statement_begin__ = 225;
             stan::model::assign(B_rate_all, 
                         stan::model::cons_list(stan::model::index_multi(which_B), stan::model::nil_index_list()), 
                         B_rate, 
                         "assigning variable B_rate_all");
-            current_statement_begin__ = 219;
+            current_statement_begin__ = 228;
             stan::math::assign(psi, inv_logit(add(logit(mu_psi), multiply(sigma_psi, zeta_psi))));
-            current_statement_begin__ = 220;
+            current_statement_begin__ = 229;
             stan::math::assign(Mmax, stan::math::exp(add(mu_Mmax, multiply(sigma_Mmax, zeta_Mmax))));
-            current_statement_begin__ = 223;
+            current_statement_begin__ = 232;
             stan::model::assign(eta_year_M, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
                         ((get_base1(zeta_year_M, 1, "zeta_year_M", 1) * sigma_year_M) / stan::math::sqrt((1 - pow(rho_M, 2)))), 
                         "assigning variable eta_year_M");
-            current_statement_begin__ = 224;
+            current_statement_begin__ = 233;
             stan::model::assign(eta_year_MS, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
                         ((get_base1(zeta_year_MS, 1, "zeta_year_MS", 1) * sigma_year_MS) / stan::math::sqrt((1 - pow(rho_MS, 2)))), 
                         "assigning variable eta_year_MS");
-            current_statement_begin__ = 225;
+            current_statement_begin__ = 234;
             for (int i = 2; i <= N_year; ++i) {
-                current_statement_begin__ = 227;
+                current_statement_begin__ = 236;
                 stan::model::assign(eta_year_M, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((rho_M * get_base1(eta_year_M, (i - 1), "eta_year_M", 1)) + (get_base1(zeta_year_M, i, "zeta_year_M", 1) * sigma_year_M)), 
                             "assigning variable eta_year_M");
-                current_statement_begin__ = 228;
+                current_statement_begin__ = 237;
                 stan::model::assign(eta_year_MS, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((rho_MS * get_base1(eta_year_MS, (i - 1), "eta_year_MS", 1)) + (get_base1(zeta_year_MS, i, "zeta_year_MS", 1) * sigma_year_MS)), 
                             "assigning variable eta_year_MS");
             }
-            current_statement_begin__ = 231;
+            current_statement_begin__ = 240;
             stan::math::assign(eta_year_M, add(subtract(eta_year_M, mean(stan::model::rvalue(eta_year_M, stan::model::cons_list(stan::model::index_min_max(1, N_year), stan::model::nil_index_list()), "eta_year_M"))), mat_lmult(X_M, beta_M, pstream__)));
-            current_statement_begin__ = 232;
-            stan::math::assign(eta_year_MS, add(subtract(eta_year_MS, mean(stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_min_max(1, N_year), stan::model::nil_index_list()), "eta_year_MS"))), mat_lmult(X_MS, beta_MS, pstream__)));
-            current_statement_begin__ = 234;
-            stan::math::assign(s_MS, inv_logit(add(add(logit(mu_MS), stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_multi(year), stan::model::nil_index_list()), "eta_year_MS")), multiply(sigma_MS, zeta_MS))));
-            current_statement_begin__ = 237;
-            stan::math::assign(mu_alr_p, to_row_vector(subtract(stan::math::log(stan::model::rvalue(mu_p, stan::model::cons_list(stan::model::index_min_max(1, (N_age - 1)), stan::model::nil_index_list()), "mu_p")), stan::math::log(get_base1(mu_p, N_age, "mu_p", 1)))));
-            current_statement_begin__ = 238;
-            stan::math::assign(mu_pop_alr_p, add(rep_matrix(mu_alr_p, N_pop), transpose(diag_pre_multiply(sigma_pop_p, multiply(L_pop_p, transpose(zeta_pop_p))))));
-            current_statement_begin__ = 239;
-            stan::math::assign(alr_p, append_col(add(stan::model::rvalue(mu_pop_alr_p, stan::model::cons_list(stan::model::index_multi(pop), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_pop_alr_p"), transpose(diag_pre_multiply(sigma_p, multiply(L_p, transpose(zeta_p))))), rep_vector(0, N)));
             current_statement_begin__ = 241;
-            stan::math::assign(exp_alr_p, stan::math::exp(alr_p));
-            current_statement_begin__ = 242;
-            stan::math::assign(p, diag_pre_multiply(elt_divide(ones_N, multiply(exp_alr_p, ones_N_age)), exp_alr_p));
+            stan::math::assign(eta_year_MS, add(subtract(eta_year_MS, mean(stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_min_max(1, N_year), stan::model::nil_index_list()), "eta_year_MS"))), mat_lmult(X_MS, beta_MS, pstream__)));
+            current_statement_begin__ = 243;
+            stan::math::assign(s_MS, inv_logit(add(add(logit(mu_MS), stan::model::rvalue(eta_year_MS, stan::model::cons_list(stan::model::index_multi(year), stan::model::nil_index_list()), "eta_year_MS")), multiply(sigma_MS, zeta_MS))));
             current_statement_begin__ = 246;
+            stan::math::assign(mu_alr_p, to_row_vector(subtract(stan::math::log(stan::model::rvalue(mu_p, stan::model::cons_list(stan::model::index_min_max(1, (N_age - 1)), stan::model::nil_index_list()), "mu_p")), stan::math::log(get_base1(mu_p, N_age, "mu_p", 1)))));
+            current_statement_begin__ = 247;
+            stan::math::assign(mu_pop_alr_p, add(rep_matrix(mu_alr_p, N_pop), transpose(diag_pre_multiply(sigma_pop_p, multiply(L_pop_p, transpose(zeta_pop_p))))));
+            current_statement_begin__ = 248;
+            stan::math::assign(alr_p, append_col(add(stan::model::rvalue(mu_pop_alr_p, stan::model::cons_list(stan::model::index_multi(pop), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_pop_alr_p"), transpose(diag_pre_multiply(sigma_p, multiply(L_p, transpose(zeta_p))))), rep_vector(0, N)));
+            current_statement_begin__ = 250;
+            stan::math::assign(exp_alr_p, stan::math::exp(alr_p));
+            current_statement_begin__ = 251;
+            stan::math::assign(p, diag_pre_multiply(elt_divide(ones_N, multiply(exp_alr_p, ones_N_age)), exp_alr_p));
+            current_statement_begin__ = 254;
+            stan::math::assign(p_F, inv_logit(add(add(logit(mu_F), multiply(sigma_pop_F, stan::model::rvalue(zeta_pop_F, stan::model::cons_list(stan::model::index_multi(pop), stan::model::nil_index_list()), "zeta_pop_F"))), multiply(sigma_F, zeta_F))));
+            current_statement_begin__ = 258;
             for (int i = 1; i <= N; ++i) {
                 {
-                current_statement_begin__ = 248;
+                current_statement_begin__ = 260;
                 validate_non_negative_index("S_W_a", "N_age", N_age);
                 Eigen::Matrix<local_scalar_t__, 1, Eigen::Dynamic> S_W_a(N_age);
                 stan::math::initialize(S_W_a, DUMMY_VAR__);
                 stan::math::fill(S_W_a, DUMMY_VAR__);
-                current_statement_begin__ = 249;
+                current_statement_begin__ = 261;
                 int ii(0);
                 (void) ii;  // dummy to suppress unused var warning
                 stan::math::fill(ii, std::numeric_limits<int>::min());
-                current_statement_begin__ = 251;
+                current_statement_begin__ = 263;
                 int N_orphan_age(0);
                 (void) N_orphan_age;  // dummy to suppress unused var warning
                 stan::math::fill(N_orphan_age, std::numeric_limits<int>::min());
                 stan::math::assign(N_orphan_age,std::max((N_age - std::max((get_base1(pop_year_indx, i, "pop_year_indx", 1) - min_ocean_age), 0)), N_age));
-                current_statement_begin__ = 252;
+                current_statement_begin__ = 264;
                 validate_non_negative_index("q_orphan", "N_orphan_age", N_orphan_age);
                 Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_orphan(N_orphan_age);
                 stan::math::initialize(q_orphan, DUMMY_VAR__);
                 stan::math::fill(q_orphan, DUMMY_VAR__);
-                current_statement_begin__ = 255;
+                current_statement_begin__ = 265;
+                validate_non_negative_index("q_F_a", "N_age", N_age);
+                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> q_F_a(N_age);
+                stan::math::initialize(q_F_a, DUMMY_VAR__);
+                stan::math::fill(q_F_a, DUMMY_VAR__);
+                current_statement_begin__ = 268;
                 if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), smolt_age))) {
-                    current_statement_begin__ = 256;
+                    current_statement_begin__ = 269;
                     stan::model::assign(M, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 get_base1(M_init, (((get_base1(pop, i, "pop", 1) - 1) * smolt_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)), "M_init", 1), 
                                 "assigning variable M");
                 } else {
-                    current_statement_begin__ = 258;
+                    current_statement_begin__ = 271;
                     stan::model::assign(M, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                                 get_base1(M0, (i - smolt_age), "M0", 1), 
                                 "assigning variable M");
                 }
-                current_statement_begin__ = 262;
+                current_statement_begin__ = 275;
                 if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_ocean_age))) {
-                    current_statement_begin__ = 264;
+                    current_statement_begin__ = 277;
                     stan::math::assign(ii, (((get_base1(pop, i, "pop", 1) - 1) * max_ocean_age) + get_base1(pop_year_indx, i, "pop_year_indx", 1)));
-                    current_statement_begin__ = 265;
+                    current_statement_begin__ = 278;
                     stan::math::assign(q_orphan, append_row(sum(head(get_base1(q_init, ii, "q_init", 1), ((N_age - N_orphan_age) + 1))), tail(get_base1(q_init, ii, "q_init", 1), (N_orphan_age - 1))));
                 }
-                current_statement_begin__ = 269;
+                current_statement_begin__ = 282;
                 for (int a = 1; a <= N_age; ++a) {
-                    current_statement_begin__ = 271;
+                    current_statement_begin__ = 284;
                     if (as_bool(logical_lt(get_base1(ocean_ages, a, "ocean_ages", 1), get_base1(pop_year_indx, i, "pop_year_indx", 1)))) {
-                        current_statement_begin__ = 273;
+                        current_statement_begin__ = 287;
                         stan::model::assign(S_W_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
                                     ((get_base1(M, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), "M", 1) * get_base1(s_MS, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), "s_MS", 1)) * get_base1(p, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), a, "p", 1)), 
                                     "assigning variable S_W_a");
+                        current_statement_begin__ = 288;
+                        stan::model::assign(q_F_a, 
+                                    stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
+                                    get_base1(p_F, (i - get_base1(ocean_ages, a, "ocean_ages", 1)), "p_F", 1), 
+                                    "assigning variable q_F_a");
                     } else {
-                        current_statement_begin__ = 276;
+                        current_statement_begin__ = 293;
                         stan::model::assign(S_W_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
                                     ((get_base1(S_init, ii, "S_init", 1) * (1 - get_base1(p_HOS_all, i, "p_HOS_all", 1))) * get_base1(q_orphan, (a - (N_age - N_orphan_age)), "q_orphan", 1)), 
                                     "assigning variable S_W_a");
+                        current_statement_begin__ = 294;
+                        stan::model::assign(q_F_a, 
+                                    stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
+                                    get_base1(q_F_init, ii, "q_F_init", 1), 
+                                    "assigning variable q_F_a");
                     }
                 }
-                current_statement_begin__ = 280;
+                current_statement_begin__ = 299;
                 stan::math::assign(S_W_a, multiply(multiply(S_W_a, (1 - get_base1(F_rate, i, "F_rate", 1))), (1 - get_base1(B_rate_all, i, "B_rate_all", 1))));
-                current_statement_begin__ = 281;
+                current_statement_begin__ = 300;
                 stan::model::assign(S_W, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             sum(S_W_a), 
                             "assigning variable S_W");
-                current_statement_begin__ = 282;
+                current_statement_begin__ = 301;
                 stan::model::assign(S_H, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             ((get_base1(S_W, i, "S_W", 1) * get_base1(p_HOS_all, i, "p_HOS_all", 1)) / (1 - get_base1(p_HOS_all, i, "p_HOS_all", 1))), 
                             "assigning variable S_H");
-                current_statement_begin__ = 283;
+                current_statement_begin__ = 302;
                 stan::model::assign(S, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             (get_base1(S_W, i, "S_W", 1) + get_base1(S_H, i, "S_H", 1)), 
                             "assigning variable S");
-                current_statement_begin__ = 284;
+                current_statement_begin__ = 303;
                 stan::model::assign(q, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
                             divide(S_W_a, get_base1(S_W, i, "S_W", 1)), 
                             "assigning variable q");
-                current_statement_begin__ = 288;
+                current_statement_begin__ = 304;
+                stan::model::assign(q_F, 
+                            stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
+                            multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), q_F_a), 
+                            "assigning variable q_F");
+                current_statement_begin__ = 308;
+                if (as_bool(is_nan(((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(q_F, i, "q_F", 1)) * get_base1(S, i, "S", 1))))) {
+                    current_statement_begin__ = 309;
+                    if (pstream__) {
+                        stan_print(pstream__,"q[i,] = ");
+                        stan_print(pstream__,stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"));
+                        stan_print(pstream__,"  q_F[i] = ");
+                        stan_print(pstream__,get_base1(q_F, i, "q_F", 1));
+                        stan_print(pstream__,"  S[i] = ");
+                        stan_print(pstream__,get_base1(S, i, "S", 1));
+                        stan_print(pstream__,"  E_hat[i] = ");
+                        stan_print(pstream__,((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(p_F, i, "p_F", 1)) * get_base1(S, i, "S", 1)));
+                        *pstream__ << std::endl;
+                    }
+                }
+                current_statement_begin__ = 310;
                 stan::model::assign(E_hat, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            ((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(p_F, i, "p_F", 1)) * get_base1(S, i, "S", 1)), 
+                            ((multiply(stan::model::rvalue(q, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "q"), mu_E) * get_base1(q_F, i, "q_F", 1)) * get_base1(S, i, "S", 1)), 
                             "assigning variable E_hat");
-                current_statement_begin__ = 292;
+                current_statement_begin__ = 314;
                 stan::model::assign(M_hat, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             SR(SR_fun, get_base1(psi, get_base1(pop, i, "pop", 1), "psi", 1), (get_base1(Mmax, get_base1(pop, i, "pop", 1), "Mmax", 1) * 1e3), get_base1(E_hat, i, "E_hat", 1), get_base1(A, i, "A", 1), pstream__), 
                             "assigning variable M_hat");
-                current_statement_begin__ = 293;
+                current_statement_begin__ = 315;
                 stan::model::assign(M0, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             (get_base1(M_hat, i, "M_hat", 1) * stan::math::exp((get_base1(eta_year_M, get_base1(year, i, "year", 1), "eta_year_M", 1) + (sigma_M * get_base1(zeta_M, i, "zeta_M", 1))))), 
                             "assigning variable M0");
                 }
             }
-            current_statement_begin__ = 298;
+            current_statement_begin__ = 320;
             stan::math::assign(tau_M, stan::math::exp(add(stan::math::log(mu_tau_M), multiply(sigma_tau_M, tau_M_z))));
-            current_statement_begin__ = 299;
+            current_statement_begin__ = 321;
             stan::model::assign(tau_M, 
                         stan::model::cons_list(stan::model::index_multi(which_tau_M_obs), stan::model::nil_index_list()), 
                         stan::model::rvalue(tau_M_obs, stan::model::cons_list(stan::model::index_multi(which_tau_M_obs), stan::model::nil_index_list()), "tau_M_obs"), 
                         "assigning variable tau_M");
-            current_statement_begin__ = 300;
+            current_statement_begin__ = 322;
             stan::math::assign(tau_S, stan::math::exp(add(stan::math::log(mu_tau_S), multiply(sigma_tau_S, tau_S_z))));
-            current_statement_begin__ = 301;
+            current_statement_begin__ = 323;
             stan::model::assign(tau_S, 
                         stan::model::cons_list(stan::model::index_multi(which_tau_S_obs), stan::model::nil_index_list()), 
                         stan::model::rvalue(tau_S_obs, stan::model::cons_list(stan::model::index_multi(which_tau_S_obs), stan::model::nil_index_list()), "tau_S_obs"), 
@@ -3435,40 +3716,40 @@ public:
             // validate transformed parameters
             const char* function__ = "validate transformed params";
             (void) function__;  // dummy to suppress unused var warning
-            current_statement_begin__ = 184;
+            current_statement_begin__ = 190;
             check_greater_or_equal(function__, "E_hat", E_hat, 0);
-            current_statement_begin__ = 186;
+            current_statement_begin__ = 192;
             check_greater_or_equal(function__, "psi", psi, 0);
             check_less_or_equal(function__, "psi", psi, 1);
-            current_statement_begin__ = 187;
+            current_statement_begin__ = 193;
             check_greater_or_equal(function__, "Mmax", Mmax, 0);
-            current_statement_begin__ = 189;
+            current_statement_begin__ = 195;
             check_greater_or_equal(function__, "M_hat", M_hat, 0);
-            current_statement_begin__ = 190;
+            current_statement_begin__ = 196;
             check_greater_or_equal(function__, "M0", M0, 0);
-            current_statement_begin__ = 191;
+            current_statement_begin__ = 197;
             check_greater_or_equal(function__, "M", M, 0);
-            current_statement_begin__ = 194;
+            current_statement_begin__ = 200;
             check_greater_or_equal(function__, "s_MS", s_MS, 0);
             check_less_or_equal(function__, "s_MS", s_MS, 1);
-            current_statement_begin__ = 197;
+            current_statement_begin__ = 203;
             check_greater_or_equal(function__, "S_W", S_W, 0);
-            current_statement_begin__ = 199;
+            current_statement_begin__ = 205;
             check_greater_or_equal(function__, "S", S, 0);
-            current_statement_begin__ = 200;
+            current_statement_begin__ = 206;
             check_greater_or_equal(function__, "B_rate_all", B_rate_all, 0);
             check_less_or_equal(function__, "B_rate_all", B_rate_all, 1);
-            current_statement_begin__ = 205;
+            current_statement_begin__ = 211;
             check_greater_or_equal(function__, "exp_alr_p", exp_alr_p, 0);
-            current_statement_begin__ = 206;
+            current_statement_begin__ = 212;
             check_greater_or_equal(function__, "p", p, 0);
             check_less_or_equal(function__, "p", p, 1);
-            current_statement_begin__ = 207;
+            current_statement_begin__ = 213;
             check_greater_or_equal(function__, "q", q, 0);
             check_less_or_equal(function__, "q", q, 1);
-            current_statement_begin__ = 209;
+            current_statement_begin__ = 218;
             check_greater_or_equal(function__, "tau_M", tau_M, 0);
-            current_statement_begin__ = 210;
+            current_statement_begin__ = 219;
             check_greater_or_equal(function__, "tau_S", tau_S, 0);
             // write transformed parameters
             if (include_tparams__) {
@@ -3567,6 +3848,14 @@ public:
                         vars__.push_back(q(j_1__, j_2__));
                     }
                 }
+                size_t p_F_j_1_max__ = N;
+                for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
+                    vars__.push_back(p_F(j_1__));
+                }
+                size_t q_F_j_1_max__ = N;
+                for (size_t j_1__ = 0; j_1__ < q_F_j_1_max__; ++j_1__) {
+                    vars__.push_back(q_F(j_1__));
+                }
                 size_t tau_M_j_1_max__ = N;
                 for (size_t j_1__ = 0; j_1__ < tau_M_j_1_max__; ++j_1__) {
                     vars__.push_back(tau_M(j_1__));
@@ -3578,114 +3867,114 @@ public:
             }
             if (!include_gqs__) return;
             // declare and define generated quantities
-            current_statement_begin__ = 390;
+            current_statement_begin__ = 418;
             validate_non_negative_index("R_pop_p", "(N_age - 1)", (N_age - 1));
             validate_non_negative_index("R_pop_p", "(N_age - 1)", (N_age - 1));
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> R_pop_p((N_age - 1), (N_age - 1));
             stan::math::initialize(R_pop_p, DUMMY_VAR__);
             stan::math::fill(R_pop_p, DUMMY_VAR__);
-            current_statement_begin__ = 391;
+            current_statement_begin__ = 419;
             validate_non_negative_index("R_p", "(N_age - 1)", (N_age - 1));
             validate_non_negative_index("R_p", "(N_age - 1)", (N_age - 1));
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> R_p((N_age - 1), (N_age - 1));
             stan::math::initialize(R_p, DUMMY_VAR__);
             stan::math::fill(R_p, DUMMY_VAR__);
-            current_statement_begin__ = 393;
+            current_statement_begin__ = 421;
             validate_non_negative_index("M_downstream", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> M_downstream(N);
             stan::math::initialize(M_downstream, DUMMY_VAR__);
             stan::math::fill(M_downstream, DUMMY_VAR__);
-            current_statement_begin__ = 394;
+            current_statement_begin__ = 422;
             validate_non_negative_index("LL_M_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_M_obs(N);
             stan::math::initialize(LL_M_obs, DUMMY_VAR__);
             stan::math::fill(LL_M_obs, DUMMY_VAR__);
-            current_statement_begin__ = 395;
+            current_statement_begin__ = 423;
             validate_non_negative_index("LL_S_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_S_obs(N);
             stan::math::initialize(LL_S_obs, DUMMY_VAR__);
             stan::math::fill(LL_S_obs, DUMMY_VAR__);
-            current_statement_begin__ = 396;
+            current_statement_begin__ = 424;
             validate_non_negative_index("LL_n_F_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_F_obs(N);
             stan::math::initialize(LL_n_F_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_F_obs, DUMMY_VAR__);
-            current_statement_begin__ = 397;
+            current_statement_begin__ = 425;
             validate_non_negative_index("LL_n_H_obs", "N_H", N_H);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_H_obs(N_H);
             stan::math::initialize(LL_n_H_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_H_obs, DUMMY_VAR__);
-            current_statement_begin__ = 398;
+            current_statement_begin__ = 426;
             validate_non_negative_index("LL_n_age_obs", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL_n_age_obs(N);
             stan::math::initialize(LL_n_age_obs, DUMMY_VAR__);
             stan::math::fill(LL_n_age_obs, DUMMY_VAR__);
-            current_statement_begin__ = 399;
+            current_statement_begin__ = 427;
             validate_non_negative_index("LL", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> LL(N);
             stan::math::initialize(LL, DUMMY_VAR__);
             stan::math::fill(LL, DUMMY_VAR__);
             // generated quantities statements
-            current_statement_begin__ = 401;
+            current_statement_begin__ = 429;
             stan::math::assign(R_pop_p, multiply_lower_tri_self_transpose(L_pop_p));
-            current_statement_begin__ = 402;
+            current_statement_begin__ = 430;
             stan::math::assign(R_p, multiply_lower_tri_self_transpose(L_p));
-            current_statement_begin__ = 404;
+            current_statement_begin__ = 432;
             stan::math::assign(M_downstream, M);
-            current_statement_begin__ = 405;
+            current_statement_begin__ = 433;
             stan::model::assign(M_downstream, 
                         stan::model::cons_list(stan::model::index_multi(downstream_trap), stan::model::nil_index_list()), 
                         add(stan::model::rvalue(M_downstream, stan::model::cons_list(stan::model::index_multi(downstream_trap), stan::model::nil_index_list()), "M_downstream"), stan::model::rvalue(M, stan::model::cons_list(stan::model::index_multi(which_upstream), stan::model::nil_index_list()), "M")), 
                         "assigning variable M_downstream");
-            current_statement_begin__ = 406;
+            current_statement_begin__ = 434;
             stan::math::assign(LL_M_obs, rep_vector(0, N));
-            current_statement_begin__ = 407;
+            current_statement_begin__ = 435;
             for (int i = 1; i <= N_M_obs; ++i) {
-                current_statement_begin__ = 408;
+                current_statement_begin__ = 436;
                 stan::model::assign(LL_M_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_M_obs, i, "which_M_obs", 1)), stan::model::nil_index_list()), 
                             lognormal_log(get_base1(M, get_base1(which_M_obs, i, "which_M_obs", 1), "M", 1), stan::math::log(get_base1(M_obs, get_base1(which_M_obs, i, "which_M_obs", 1), "M_obs", 1)), get_base1(tau_M, get_base1(which_M_obs, i, "which_M_obs", 1), "tau_M", 1)), 
                             "assigning variable LL_M_obs");
             }
-            current_statement_begin__ = 410;
+            current_statement_begin__ = 438;
             stan::math::assign(LL_S_obs, rep_vector(0, N));
-            current_statement_begin__ = 411;
+            current_statement_begin__ = 439;
             for (int i = 1; i <= N_S_obs; ++i) {
-                current_statement_begin__ = 412;
+                current_statement_begin__ = 440;
                 stan::model::assign(LL_S_obs, 
                             stan::model::cons_list(stan::model::index_uni(get_base1(which_S_obs, i, "which_S_obs", 1)), stan::model::nil_index_list()), 
                             lognormal_log(get_base1(S, get_base1(which_S_obs, i, "which_S_obs", 1), "S", 1), stan::math::log(get_base1(S_obs, get_base1(which_S_obs, i, "which_S_obs", 1), "S_obs", 1)), get_base1(tau_S, get_base1(which_S_obs, i, "which_S_obs", 1), "tau_S", 1)), 
                             "assigning variable LL_S_obs");
             }
-            current_statement_begin__ = 414;
+            current_statement_begin__ = 442;
             for (int i = 1; i <= N; ++i) {
-                current_statement_begin__ = 415;
+                current_statement_begin__ = 443;
                 stan::model::assign(LL_n_F_obs, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            binomial_log(get_base1(n_F_obs, i, "n_F_obs", 1), get_base1(n_MF_obs, i, "n_MF_obs", 1), get_base1(p_F, i, "p_F", 1)), 
+                            binomial_log(get_base1(n_F_obs, i, "n_F_obs", 1), get_base1(n_MF_obs, i, "n_MF_obs", 1), get_base1(q_F, i, "q_F", 1)), 
                             "assigning variable LL_n_F_obs");
             }
-            current_statement_begin__ = 416;
+            current_statement_begin__ = 444;
             stan::math::assign(LL_n_H_obs, rep_vector(0, N_H));
-            current_statement_begin__ = 417;
+            current_statement_begin__ = 445;
             for (int i = 1; i <= N_H; ++i) {
-                current_statement_begin__ = 418;
+                current_statement_begin__ = 446;
                 stan::model::assign(LL_n_H_obs, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             binomial_log(get_base1(n_H_obs, i, "n_H_obs", 1), get_base1(n_HW_obs, i, "n_HW_obs", 1), get_base1(p_HOS, i, "p_HOS", 1)), 
                             "assigning variable LL_n_H_obs");
             }
-            current_statement_begin__ = 419;
+            current_statement_begin__ = 447;
             stan::math::assign(LL_n_age_obs, multiply(elt_multiply(n_age_obs, stan::math::log(q)), rep_vector(1, N_age)));
-            current_statement_begin__ = 420;
+            current_statement_begin__ = 448;
             stan::math::assign(LL, add(add(LL_M_obs, LL_S_obs), LL_n_age_obs));
-            current_statement_begin__ = 421;
+            current_statement_begin__ = 449;
             stan::model::assign(LL, 
                         stan::model::cons_list(stan::model::index_multi(which_H), stan::model::nil_index_list()), 
                         stan::model::deep_copy(add(stan::model::rvalue(LL, stan::model::cons_list(stan::model::index_multi(which_H), stan::model::nil_index_list()), "LL"), LL_n_H_obs)), 
                         "assigning variable LL");
             // validate, write generated quantities
-            current_statement_begin__ = 390;
+            current_statement_begin__ = 418;
             stan::math::check_corr_matrix(function__, "R_pop_p", R_pop_p);
             size_t R_pop_p_j_2_max__ = (N_age - 1);
             size_t R_pop_p_j_1_max__ = (N_age - 1);
@@ -3694,7 +3983,7 @@ public:
                     vars__.push_back(R_pop_p(j_1__, j_2__));
                 }
             }
-            current_statement_begin__ = 391;
+            current_statement_begin__ = 419;
             stan::math::check_corr_matrix(function__, "R_p", R_p);
             size_t R_p_j_2_max__ = (N_age - 1);
             size_t R_p_j_1_max__ = (N_age - 1);
@@ -3703,37 +3992,37 @@ public:
                     vars__.push_back(R_p(j_1__, j_2__));
                 }
             }
-            current_statement_begin__ = 393;
+            current_statement_begin__ = 421;
             size_t M_downstream_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < M_downstream_j_1_max__; ++j_1__) {
                 vars__.push_back(M_downstream(j_1__));
             }
-            current_statement_begin__ = 394;
+            current_statement_begin__ = 422;
             size_t LL_M_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_M_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_M_obs(j_1__));
             }
-            current_statement_begin__ = 395;
+            current_statement_begin__ = 423;
             size_t LL_S_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_S_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_S_obs(j_1__));
             }
-            current_statement_begin__ = 396;
+            current_statement_begin__ = 424;
             size_t LL_n_F_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_n_F_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_F_obs(j_1__));
             }
-            current_statement_begin__ = 397;
+            current_statement_begin__ = 425;
             size_t LL_n_H_obs_j_1_max__ = N_H;
             for (size_t j_1__ = 0; j_1__ < LL_n_H_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_H_obs(j_1__));
             }
-            current_statement_begin__ = 398;
+            current_statement_begin__ = 426;
             size_t LL_n_age_obs_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_n_age_obs_j_1_max__; ++j_1__) {
                 vars__.push_back(LL_n_age_obs(j_1__));
             }
-            current_statement_begin__ = 399;
+            current_statement_begin__ = 427;
             size_t LL_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < LL_j_1_max__; ++j_1__) {
                 vars__.push_back(LL(j_1__));
@@ -3778,12 +4067,6 @@ public:
         for (size_t j_1__ = 0; j_1__ < sigma_E_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "sigma_E" << '.' << j_1__ + 1;
-            param_names__.push_back(param_name_stream__.str());
-        }
-        size_t p_F_j_1_max__ = N;
-        for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
-            param_name_stream__.str(std::string());
-            param_name_stream__ << "p_F" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         param_name_stream__.str(std::string());
@@ -3921,6 +4204,27 @@ public:
                 param_names__.push_back(param_name_stream__.str());
             }
         }
+        param_name_stream__.str(std::string());
+        param_name_stream__ << "mu_F";
+        param_names__.push_back(param_name_stream__.str());
+        param_name_stream__.str(std::string());
+        param_name_stream__ << "sigma_pop_F";
+        param_names__.push_back(param_name_stream__.str());
+        size_t zeta_pop_F_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < zeta_pop_F_j_1_max__; ++j_1__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "zeta_pop_F" << '.' << j_1__ + 1;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        param_name_stream__.str(std::string());
+        param_name_stream__ << "sigma_F";
+        param_names__.push_back(param_name_stream__.str());
+        size_t zeta_F_j_1_max__ = N;
+        for (size_t j_1__ = 0; j_1__ < zeta_F_j_1_max__; ++j_1__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "zeta_F" << '.' << j_1__ + 1;
+            param_names__.push_back(param_name_stream__.str());
+        }
         size_t p_HOS_j_1_max__ = N_H;
         for (size_t j_1__ = 0; j_1__ < p_HOS_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
@@ -3953,6 +4257,12 @@ public:
                 param_name_stream__ << "q_init" << '.' << k_0__ + 1 << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
+        }
+        size_t q_F_init_j_1_max__ = (max_ocean_age * N_pop);
+        for (size_t j_1__ = 0; j_1__ < q_F_init_j_1_max__; ++j_1__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "q_F_init" << '.' << j_1__ + 1;
+            param_names__.push_back(param_name_stream__.str());
         }
         param_name_stream__.str(std::string());
         param_name_stream__ << "mu_tau_M";
@@ -4115,6 +4425,18 @@ public:
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
+            size_t p_F_j_1_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "p_F" << '.' << j_1__ + 1;
+                param_names__.push_back(param_name_stream__.str());
+            }
+            size_t q_F_j_1_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < q_F_j_1_max__; ++j_1__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "q_F" << '.' << j_1__ + 1;
+                param_names__.push_back(param_name_stream__.str());
+            }
             size_t tau_M_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < tau_M_j_1_max__; ++j_1__) {
                 param_name_stream__.str(std::string());
@@ -4204,12 +4526,6 @@ public:
         for (size_t j_1__ = 0; j_1__ < sigma_E_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
             param_name_stream__ << "sigma_E" << '.' << j_1__ + 1;
-            param_names__.push_back(param_name_stream__.str());
-        }
-        size_t p_F_j_1_max__ = N;
-        for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
-            param_name_stream__.str(std::string());
-            param_name_stream__ << "p_F" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         param_name_stream__.str(std::string());
@@ -4341,6 +4657,27 @@ public:
                 param_names__.push_back(param_name_stream__.str());
             }
         }
+        param_name_stream__.str(std::string());
+        param_name_stream__ << "mu_F";
+        param_names__.push_back(param_name_stream__.str());
+        param_name_stream__.str(std::string());
+        param_name_stream__ << "sigma_pop_F";
+        param_names__.push_back(param_name_stream__.str());
+        size_t zeta_pop_F_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < zeta_pop_F_j_1_max__; ++j_1__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "zeta_pop_F" << '.' << j_1__ + 1;
+            param_names__.push_back(param_name_stream__.str());
+        }
+        param_name_stream__.str(std::string());
+        param_name_stream__ << "sigma_F";
+        param_names__.push_back(param_name_stream__.str());
+        size_t zeta_F_j_1_max__ = N;
+        for (size_t j_1__ = 0; j_1__ < zeta_F_j_1_max__; ++j_1__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "zeta_F" << '.' << j_1__ + 1;
+            param_names__.push_back(param_name_stream__.str());
+        }
         size_t p_HOS_j_1_max__ = N_H;
         for (size_t j_1__ = 0; j_1__ < p_HOS_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
@@ -4373,6 +4710,12 @@ public:
                 param_name_stream__ << "q_init" << '.' << k_0__ + 1 << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
+        }
+        size_t q_F_init_j_1_max__ = (max_ocean_age * N_pop);
+        for (size_t j_1__ = 0; j_1__ < q_F_init_j_1_max__; ++j_1__) {
+            param_name_stream__.str(std::string());
+            param_name_stream__ << "q_F_init" << '.' << j_1__ + 1;
+            param_names__.push_back(param_name_stream__.str());
         }
         param_name_stream__.str(std::string());
         param_name_stream__ << "mu_tau_M";
@@ -4534,6 +4877,18 @@ public:
                     param_name_stream__ << "q" << '.' << j_1__ + 1 << '.' << j_2__ + 1;
                     param_names__.push_back(param_name_stream__.str());
                 }
+            }
+            size_t p_F_j_1_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < p_F_j_1_max__; ++j_1__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "p_F" << '.' << j_1__ + 1;
+                param_names__.push_back(param_name_stream__.str());
+            }
+            size_t q_F_j_1_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < q_F_j_1_max__; ++j_1__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "q_F" << '.' << j_1__ + 1;
+                param_names__.push_back(param_name_stream__.str());
             }
             size_t tau_M_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < tau_M_j_1_max__; ++j_1__) {

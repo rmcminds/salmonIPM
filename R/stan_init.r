@@ -81,11 +81,11 @@ stan_init <- function(data, stan_model, chains = 1)
         return(lapply(1:chains, function(i)
           list(
             # recruitment
-            alpha = array(exp(runif(N_pop, 1, 3)), dim = N_pop),
-            Rmax = array(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = N_pop),
+            alpha = as.vector(exp(runif(N_pop, 1, 3))),
+            Rmax = as.vector(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5)),
             beta = matrix(rnorm(N_X*N_pop, 0,1), N_pop, N_X),
-            rho = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
-            sigma = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+            rho = as.vector(runif(N_pop, 0.1, 0.7)),
+            sigma = as.vector(runif(N_pop, 0.05, 2)), 
             zeta_R = as.vector(scale(log(R)))*0.1,
             # spawner age structure
             mu_p = mu_p,
@@ -97,7 +97,7 @@ stan_init <- function(data, stan_model, chains = 1)
             # initial spawners, observation error
             S_init = rep(median(S_obs_noNA), max_age*N_pop),
             q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = T),
-            tau = array(runif(N_pop, 0.5, 1), dim = N_pop)
+            tau = as.vector(runif(N_pop, 0.5, 1))
           )
         ))
       } else if(stan_model %in% c("IPM_SS_pp","IPM_SSpa_pp")) {
@@ -106,22 +106,22 @@ stan_init <- function(data, stan_model, chains = 1)
             # recruitment
             mu_alpha = runif(1, 1, 3),
             sigma_alpha = runif(1, 0.1, 0.5),
-            zeta_alpha = array(runif(N_pop, -1, 1), dim = N_pop),
+            zeta_alpha = as.vector(runif(N_pop, -1, 1)),
             mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
             sigma_Rmax = runif(1, 0.1, 0.5),
-            zeta_Rmax = array(runif(N_pop,-1,1), dim = N_pop),
+            zeta_Rmax = as.vector(runif(N_pop,-1,1)),
             rho_alphaRmax = runif(1, -0.5, 0.5),
-            beta_phi = array(rnorm(N_X, 0, 1), dim = N_X),
+            beta_phi = as.vector(rnorm(N_X, 0, 1)),
             rho_phi = runif(1, 0.1, 0.7),
             sigma_phi = runif(1, 0.1, 0.5),
-            zeta_phi = array(rnorm(max(year,year_fwd), 0, 0.1), dim = max(year,year_fwd)),
+            zeta_phi = as.vector(rnorm(max(year, year_fwd), 0, 0.1)),
             sigma = runif(1, 0.5, 1),
             zeta_R = as.vector(scale(log(R)))*0.1,
             # spawner age structure
             mu_p = colMeans(p),
-            sigma_gamma = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
+            sigma_gamma = as.vector(runif(N_age - 1, 0.5, 1)),
             zeta_gamma = zeta_gamma,
-            sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
+            sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             # H/W composition, removals
             p_HOS = p_HOS_obs,
@@ -136,17 +136,17 @@ stan_init <- function(data, stan_model, chains = 1)
         return(lapply(1:chains, function(i)
           list(
             # smolt recruitment
-            alpha = array(exp(runif(N_pop,1,3)), dim = N_pop),
-            Rmax = array(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5), dim = N_pop),
+            alpha = as.vector(exp(runif(N_pop,1,3))),
+            Mmax = as.vector(rlnorm(N_pop, log(tapply(R/A, pop, quantile, 0.9)), 0.5)),
             beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
-            rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
-            sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+            rho_M = as.vector(runif(N_pop, 0.1, 0.7)),
+            sigma_M = as.vector(runif(N_pop, 0.05, 2)), 
             zeta_M = as.vector(scale(log(M_obs)))*0.1,
             # SAR
-            mu_MS = array(plogis(rnorm(N_pop, mean(qlogis(s_MS)), 0.5)), dim = N_pop),
+            mu_MS = as.vector(plogis(rnorm(N_pop, mean(qlogis(s_MS)), 0.5))),
             beta_MS = matrix(rnorm(N_X_MS*N_pop,0,1), N_pop, N_X_MS),
-            rho_MS = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
-            sigma_MS = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+            rho_MS = as.vector(runif(N_pop, 0.1, 0.7)),
+            sigma_MS = as.vector(runif(N_pop, 0.05, 2)), 
             zeta_MS = as.vector(scale(qlogis(s_MS))),
             # spawner age structure
             mu_p = mu_p,
@@ -156,11 +156,11 @@ stan_init <- function(data, stan_model, chains = 1)
             p_HOS = p_HOS_obs,
             B_rate = B_rate,
             # initial states, observation error
-            M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
+            M_init = as.vector(rep(median(M_obs), smolt_age*N_pop)),
             S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
             q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
-            tau_M = array(runif(N_pop, 0.5, 1), dim = N_pop),
-            tau_S = array(runif(N_pop, 0.5, 1), dim = N_pop)
+            tau_M = as.vector(runif(N_pop, 0.5, 1)),
+            tau_S = as.vector(runif(N_pop, 0.5, 1))
           )
         ))
       } else if(stan_model == "IPM_SMS_pp") {
@@ -169,35 +169,35 @@ stan_init <- function(data, stan_model, chains = 1)
             # smolt recruitment
             mu_alpha = runif(1, 1, 3),
             sigma_alpha = runif(1, 0.1, 0.5),
-            zeta_alpha = array(rnorm(N_pop, 0, 1), dim = N_pop),
-            mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
-            sigma_Rmax = runif(1, 0.1, 0.5),
-            zeta_Rmax = array(rnorm(N_pop, 0, 1), dim = N_pop),
-            rho_alphaRmax = runif(1, -0.5, 0.5),
-            beta_phi_M = array(rnorm(N_X_M, 0, 1), dim = N_X_M),
+            zeta_alpha = as.vector(rnorm(N_pop, 0, 1)),
+            mu_Mmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
+            sigma_Mmax = runif(1, 0.1, 0.5),
+            zeta_Mmax = as.vector(rnorm(N_pop, 0, 1)),
+            rho_alphaMmax = runif(1, -0.5, 0.5),
+            beta_phi_M = as.vector(rnorm(N_X_M, 0, 1)),
             rho_phi_M = runif(1, 0.1, 0.7),
             sigma_phi_M = runif(1, 0.1, 0.5),
-            zeta_phi_M = array(rnorm(max(year), 0, 0.1), dim = max(year)),
+            zeta_phi_M = as.vector(rnorm(max(year), 0, 0.1)),
             sigma_M = runif(1, 0.5, 1),
             zeta_M = as.vector(scale(log(M_obs)))*0.1,
             # SAR
             mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
-            beta_phi_MS = array(rnorm(N_X_MS,0,1), dim = N_X_MS),
+            beta_phi_MS = as.vector(rnorm(N_X_MS,0,1)),
             rho_phi_MS = runif(1, 0.1, 0.7),
             sigma_phi_MS = runif(1, 0.05, 2), 
             sigma_MS = runif(1, 0.5, 1),
             zeta_MS = as.vector(scale(qlogis(s_MS))),
             # spawner age structure
             mu_p = colMeans(p),
-            sigma_gamma = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
+            sigma_gamma = as.vector(runif(N_age - 1, 0.5, 1)),
             zeta_gamma = zeta_gamma,
-            sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
+            sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             # H/W composition, removals
             p_HOS = p_HOS_obs,
             B_rate = B_rate,
             # initial states, observation error
-            M_init = array(rep(median(M_obs), smolt_age*N_pop), dim = smolt_age*N_pop),
+            M_init = as.vector(rep(median(M_obs), smolt_age*N_pop)),
             S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
             q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
             tau_M = runif(1, 0.5, 1),
@@ -208,26 +208,28 @@ stan_init <- function(data, stan_model, chains = 1)
         return(lapply(1:chains, function(i)
           list(
             # egg deposition
-            mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 1),
-            sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 1), 
+            mu_E = rlnorm(N_age, tapply(log(E_obs), age_E, mean), 0.5),
+            sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 0.5), 
+            delta_NG = runif(1, 0.7, 1),
             # egg-smolt survival
             mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
             sigma_psi = runif(1, 0.1, 1),
             zeta_psi = as.vector(rnorm(N_pop, 0, 1)),
-            mu_Mmax = rnorm(1, 10, 5),
+            mu_Mmax = rnorm(1, mean(log(S_obs[which_S_obs])), 3),
             sigma_Mmax = runif(1, 0.5, 2),
             zeta_Mmax = as.vector(rnorm(N_pop, 0, 1)),
             beta_M = as.vector(rnorm(N_X_M, 0, 1)),
             rho_M = runif(1, 0.1, 0.7),
             sigma_year_M = runif(1, 0.1, 0.5),
             zeta_year_M = as.vector(rnorm(max(year), 0, 0.1)),
-            sigma_M = runif(1, 0.5, 1),
+            sigma_M = runif(1, 0.1, 0.5),
             zeta_M = as.vector(scale(log(M_obs)))*0.1,
             # SAR
             mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
             beta_MS = as.vector(rnorm(N_X_MS,0,1)),
             rho_MS = runif(1, 0.1, 0.7),
             sigma_year_MS = runif(1, 0.05, 2), 
+            zeta_year_MS = as.vector(tapply(scale(qlogis(s_MS)), year, mean)),
             sigma_MS = runif(1, 0.5, 1),
             zeta_MS = as.vector(scale(qlogis(s_MS))),
             # spawner age structure and sex ratio
@@ -248,10 +250,10 @@ stan_init <- function(data, stan_model, chains = 1)
             M_init = as.vector(rep(median(M_obs), smolt_age*N_pop)),
             S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
             q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = T),
-            mu_tau_M = runif(1, 0, 1),
-            sigma_tau_M = runif(1, 0, 1),
-            mu_tau_S = runif(1, 0, 1),
-            sigma_tau_S = runif(1, 0, 1)
+            mu_tau_M = runif(1, 0, 0.5),
+            sigma_tau_M = runif(1, 0, 0.5),
+            mu_tau_S = runif(1, 0, 0.5),
+            sigma_tau_S = runif(1, 0, 0.5)
           )
         ))
       } else if(stan_model == "IPM_ICchinook_pp") {
@@ -260,37 +262,37 @@ stan_init <- function(data, stan_model, chains = 1)
             # smolt recruitment
             mu_alpha = runif(1, 1, 3),
             sigma_alpha = runif(1, 0.1, 0.5),
-            zeta_alpha = array(runif(N_pop, -1, 1), dim = N_pop),
-            mu_Rmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
-            sigma_Rmax = runif(1, 0.1, 0.5),
-            zeta_Rmax = array(runif(N_pop, -1, 1), dim = N_pop),
-            rho_alphaRmax = runif(1, -0.5, 0.5),
-            beta_M = array(rnorm(N_X_M, 0, 1), dim = N_X_M),
+            zeta_alpha = as.vector(runif(N_pop, -1, 1)),
+            mu_Mmax = rnorm(1, log(quantile(R/A,0.9)), 0.5),
+            sigma_Mmax = runif(1, 0.1, 0.5),
+            zeta_Mmax = as.vector(runif(N_pop, -1, 1)),
+            rho_alphaMmax = runif(1, -0.5, 0.5),
+            beta_M = as.vector(rnorm(N_X_M, 0, 1)),
             rho_M = runif(1, 0.1, 0.7),
             sigma_M = runif(1, 0.05, 2), 
             zeta_M = as.vector(scale(log(R)))*0.01,
-            M_init = array(rep(median(S_obs_noNA)*100, smolt_age*N_pop), dim = smolt_age*N_pop),
+            M_init = as.vector(rep(median(S_obs_noNA)*100, smolt_age*N_pop)),
             # downstream, SAR, upstream survival
             mu_D = qlogis(0.8),
-            beta_D = array(rnorm(N_X_D, 0, 1), dim = N_X_D),
+            beta_D = as.vector(rnorm(N_X_D, 0, 1)),
             rho_D = runif(1, 0.1, 0.7),
             sigma_D = runif(1, 0.05, 2),
-            zeta_D = array(rnorm(max(year,year_fwd), 0, 0.1), dim = max(year,year_fwd)),
+            zeta_D = as.vector(rnorm(max(year,year_fwd), 0, 0.1)),
             mu_SAR = qlogis(0.01),
-            beta_SAR = array(rnorm(N_X_SAR, 0, 1), dim = N_X_SAR),
+            beta_SAR = as.vector(rnorm(N_X_SAR, 0, 1)),
             rho_SAR = runif(1, 0.1, 0.7),
             sigma_SAR = runif(1, 0.05, 2),
-            zeta_SAR = array(rnorm(max(year,year_fwd), 0, 0.1), dim = max(year,year_fwd)),
+            zeta_SAR = as.vector(rnorm(max(year,year_fwd), 0, 0.1)),
             mu_U = qlogis(0.8),
-            beta_U = array(rnorm(N_X_U, 0, 1), dim = N_X_U),
+            beta_U = as.vector(rnorm(N_X_U, 0, 1)),
             rho_U = runif(1, 0.1, 0.7),
             sigma_U = runif(1, 0.05, 2),
-            zeta_U = array(rnorm(max(year,year_fwd), 0, 0.1), dim = max(year,year_fwd)),
+            zeta_U = as.vector(rnorm(max(year,year_fwd), 0, 0.1)),
             # spawner age structure
             mu_p = colMeans(p),
-            sigma_gamma = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
+            sigma_gamma = as.vector(runif(N_age - 1, 0.5, 1)),
             zeta_gamma = zeta_gamma,
-            sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age-1),
+            sigma_p = as.vector(runif(N_age-1, 0.5, 1)),
             zeta_p = zeta_p,
             # H/W composition, removals
             p_HOS = p_HOS_obs,
@@ -305,7 +307,7 @@ stan_init <- function(data, stan_model, chains = 1)
     })
   } else if(stan_model == "IPM_SMaS_np") {
     with(data, {
-      # This is a bit of a hack to avoid tedious age-structured run reconstuction
+      # This is a bit of a hack to avoid tedious age-structured run reconstruction
       N_pop <- max(pop)
       N_year <- max(year)
       N_GRage <- N_Mage*N_MSage
@@ -332,11 +334,11 @@ stan_init <- function(data, stan_model, chains = 1)
       return(lapply(1:chains, function(i)
         list(
           # smolt recruitment
-          alpha = array(rlnorm(N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1), dim = N_pop),
-          Rmax = array(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5), dim = N_pop),
+          alpha = as.vector(rlnorm(N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
+          Mmax = as.vector(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
           beta_M = matrix(rnorm(N_X_M*N_pop,0,1), N_pop, N_X_M),
-          rho_M = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
-          sigma_M = array(runif(N_pop, 0.05, 2), dim = N_pop), 
+          rho_M = as.vector(runif(N_pop, 0.1, 0.7)),
+          sigma_M = as.vector(runif(N_pop, 0.05, 2)), 
           zeta_M = rnorm(N,0,0.1), 
           # smolt age structure
           mu_p_M = aggregate(q_M_obs, list(pop), mean, na.rm = TRUE),
@@ -357,12 +359,12 @@ stan_init <- function(data, stan_model, chains = 1)
           p_HOS = p_HOS_obs,
           B_rate = B_rate,
           # initial states, observation error
-          M_init = array(rep(median(M_obs), max_Mage*N_pop), dim = max_Mage*N_pop),
+          M_init = as.vector(rep(median(M_obs), max_Mage*N_pop)),
           q_M_init = matrix(colMeans(q_M_obs, na.rm = TRUE), max_Mage*N_pop, N_Mage, byrow = T),
-          S_init = array(rep(median(S_obs, na.rm = TRUE), N_pop*max_MSage), dim = N_pop*max_MSage),
+          S_init = as.vector(rep(median(S_obs, na.rm = TRUE), N_pop*max_MSage)),
           q_GR_init = matrix(colMeans(q_GR_obs, na.rm = TRUE), max_MSage*N_pop, N_GRage, byrow = T),
-          tau_S = array(runif(N_pop, 0.01, 0.05), dim = N_pop),
-          tau_M = array(runif(N_pop, 0.01, 0.05), dim = N_pop)
+          tau_S = as.vector(runif(N_pop, 0.01, 0.05)),
+          tau_M = as.vector(runif(N_pop, 0.01, 0.05))
         )
       ))
     })
@@ -377,21 +379,21 @@ stan_init <- function(data, stan_model, chains = 1)
         return(lapply(1:chains, function(i)
           list(mu_alpha = runif(1, 3, 6), 
                sigma_alpha = runif(1, 0.1, 0.5),
-               zeta_alpha = array(runif(N_pop, -1, 1), dim = N_pop), 
+               zeta_alpha = as.vector(runif(N_pop, -1, 1)), 
                mu_Rmax = rnorm(1, log(quantile(S/A, 0.9, na.rm = T)), 0.5),
                sigma_Rmax = runif(1, 0.1, 0.5),
-               zeta_Rmax = array(runif(N_pop, -1, 1), dim = N_pop), 
+               zeta_Rmax = as.vector(runif(N_pop, -1, 1)), 
                rho_alphaRmax = runif(1, -0.5, 0.5),
                rho_phi = runif(1, 0.1, 0.7),
                sigma_phi = runif(1, 0.1, 0.5), 
-               zeta_phi = array(rnorm(N_year, 0, 0.1), dim = N_year),
+               zeta_phi = as.vector(rnorm(N_year, 0, 0.1)),
                sigma = runif(1, 0.1, 2))))
       } else {
         return(lapply(1:chains, function(i)
-          list(alpha = array(exp(runif(N_pop, 1, 3)), dim = N_pop),
-               Rmax = array(exp(runif(N_pop, -1, 0)), dim = N_pop),
-               rho = array(runif(N_pop, 0.1, 0.7), dim = N_pop),
-               sigma = array(runif(N_pop, 0.5, 1), dim = N_pop))))
+          list(alpha = as.vector(exp(runif(N_pop, 1, 3))),
+               Rmax = as.vector(exp(runif(N_pop, -1, 0))),
+               rho = as.vector(runif(N_pop, 0.1, 0.7)),
+               sigma = as.vector(runif(N_pop, 0.5, 1)))))
       }
     })
   }

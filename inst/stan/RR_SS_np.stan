@@ -17,6 +17,18 @@ functions {
   real pexp_lpdf(real y, real mu, real sigma, real shape) {
     return(-(fabs(y - mu)/sigma)^shape);
   }
+    
+  // Quantiles of a vector
+  real quantile(vector v, real p) {
+    int N = num_elements(v);
+    real Np = round(N*p);
+    real q;
+    
+    for(i in 1:N) {
+      if(i - Np == 0.0) q = v[i];
+    }
+    return(q);
+  }
 }
 
 data {
@@ -37,12 +49,12 @@ data {
 }
 
 transformed data {
-  int<lower=1,upper=N> N_pop;  // number of populations
-  int<lower=1,upper=N> N_year; // number of years
-  int<lower=2> ages[N_age];    // adult ages
+  int<lower=1,upper=N> N_pop = max(pop);   // number of populations
+  int<lower=1,upper=N> N_year = max(year); // number of years, not incl fwd simulations
+  int<lower=2> ages[N_age];                // adult ages
+  real mu_mu_Rmax = quantile(log(R[which_fit]), 0.9);  // prior mean of mu_Rmax
+  real sigma_mu_Rmax = 2*sd(log(R[which_fit]));  // prior SD of mu_Rmax
   
-  N_pop = max(pop);
-  N_year = max(year);
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
 }
@@ -94,11 +106,11 @@ transformed parameters {
 model {
   // Priors
   alpha ~ lognormal(2.0,2.0);
-  Rmax ~ lognormal(2.0,3.0);
+  Rmax ~ lognormal(mu_mu_Rmax, sigma_mu_Rmax);
   for(i in 1:N_pop)
   {
     rho[i] ~ pexp(0,0.85,20);   // mildly regularize rho to ensure stationarity
-    sigma[i] ~ pexp(0,2,10);
+    sigma[i] ~ normal(0,3);
   }
 
   // Likelihood

@@ -22,6 +22,18 @@ functions {
 
     return(sum(LL));
   }
+    
+  // Quantiles of a vector
+  real quantile(vector v, real p) {
+    int N = num_elements(v);
+    real Np = round(N*p);
+    real q;
+    
+    for(i in 1:N) {
+      if(i - Np == 0.0) q = v[i];
+    }
+    return(q);
+  }
 }
 
 data {
@@ -61,7 +73,10 @@ transformed data {
   int<lower=1> min_age;           // minimum adult age
   int<lower=1> pop_year_indx[N];  // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];     // total sample sizes for H/W frequencies
+  real mu_mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior mean of mu_Rmax
+  real sigma_mu_Rmax = 2*sd(log(S_obs[which_S_obs])); // prior SD of mu_Rmax
   vector[max_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_age
+  real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age
 
   for(a in 1:N_age)
@@ -87,8 +102,8 @@ transformed data {
     {
       int ii = (j - 1)*max_age + i; // index into S_init, q_init
 
-      // prior mean that scales S_init by number of orphan age classes
-      mu_S_init[ii] = log(1.0*N_orphan_age/N_age);
+      // S_init prior mean that scales observed log-mean by fraction of orphan age classes
+      mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
       
       // prior on q_init that implies q_orphan ~ Dir(1)
       mu_q_init[,ii] = append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), 
@@ -198,16 +213,16 @@ transformed parameters {
 }
 
 model {
-  vector[N_B] B_take; // true broodstock take when B_take_obs > 0
+  vector[N_B] log_B_take; // log of true broodstock take when B_take_obs > 0
   
   // Priors
   
   // recruitment
   alpha ~ lognormal(2.0,2.0);
-  Rmax ~ lognormal(2.0,3.0);
+  Rmax ~ lognormal(mu_mu_Rmax, sigma_mu_Rmax);
   to_vector(beta) ~ normal(0,5);
   rho ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
-  sigma ~ pexp(0,1,10);
+  sigma ~ normal(0,5);
   zeta_R ~ std_normal();  // total recruits: R ~ lognormal(log(R_hat), sigma)
 
   // spawner age structure
@@ -218,12 +233,12 @@ model {
   to_vector(zeta_p) ~ std_normal();
 
   // removals
-  B_take = B_rate .* S_W[which_B] .* (1 - q[which_B,1]) ./ (1 - B_rate);
-  B_take_obs ~ lognormal(log(B_take), 0.1); // penalty to force pred and obs broodstock take to match
+  log_B_take = log(S_W[which_B]) + log1m(q[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q[,1])*B_rate/(1 - B_rate)
+  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
 
   // initial spawners and wild spawner age distribution
   // (accounting for amalgamation of q_init to q_orphan)
-  S_init ~ lognormal(mu_S_init, 10.0);
+  S_init ~ lognormal(mu_S_init, sigma_S_init);
   {
     matrix[N_age,max_age*N_pop] q_init_mat;
     

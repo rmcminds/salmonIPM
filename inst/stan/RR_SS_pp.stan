@@ -17,6 +17,18 @@ functions {
   real pexp_lpdf(real y, real mu, real sigma, real shape) {
     return(-(fabs(y - mu)/sigma)^shape);
   }
+    
+  // Quantiles of a vector
+  real quantile(vector v, real p) {
+    int N = num_elements(v);
+    real Np = round(N*p);
+    real q;
+    
+    for(i in 1:N) {
+      if(i - Np == 0.0) q = v[i];
+    }
+    return(q);
+  }
 }
 
 data {
@@ -40,6 +52,8 @@ transformed data {
   int<lower=1,upper=N> N_pop;   // number of populations
   int<lower=1,upper=N> N_year;  // number of years
   int<lower=2> ages[N_age];     // adult ages
+  real mu_mu_Rmax = quantile(log(R[which_fit]), 0.9);  // prior mean of mu_Rmax
+  real sigma_mu_Rmax = 2*sd(log(R[which_fit]));  // prior SD of mu_Rmax
   
   N_pop = max(pop);
   N_year = max(year);
@@ -103,11 +117,11 @@ model {
   // Priors
   mu_alpha ~ normal(0,5);
   sigma_alpha ~ pexp(0,3,10);
-  mu_Rmax ~ normal(0,10);
-  sigma_Rmax ~ pexp(0,3,10);
+  mu_Rmax ~ normal(mu_mu_Rmax, sigma_mu_Rmax);
+  sigma_Rmax ~ normal(0,3);
   rho_phi ~ pexp(0,0.85,50);  // mildly regularize to ensure stationarity
-  sigma_phi ~ pexp(0,3,10);
-  sigma ~ pexp(0,2,10);
+  sigma_phi ~ normal(0,3);
+  sigma ~ normal(0,2);
   
   // Hierarchical priors
   // [log(alpha), log(Rmax)] ~ MVN(0, D*R_log_aRmax*D), where D = diag_matrix(sigma_alpha, sigma_Rmax)

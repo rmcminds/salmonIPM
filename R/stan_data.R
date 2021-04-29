@@ -41,12 +41,16 @@
 #'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs") 
 #'   * `n_M_obs`  If `stan_model=="IPM_LCRchum_pp`, observed frequency of male spawners.
 #'   * `n_F_obs`  If `stan_model=="IPM_LCRchum_pp`, observed frequency of female spawners.
+#'   * `p_G_obs`  If `stan_model=="IPM_LCRchum_pp`, observed proportion (assumed known
+#'   without error) of female spawners that are "green", i.e. fully fecund.
 #'   * `n_W_obs`  Observed frequency of natural-origin spawners.   
 #'   * `n_H_obs`  Observed frequency of hatchery-origin spawners.   
 #'   * `fit_p_HOS`  Logical or 0/1 indicating for each row in fish_data whether the 
 #'   model should estimate `p_HOS > 0`. This is only required if `model == "IPM"`.  
 #'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
 #'   * `B_take_obs`  Number of adults taken for hatchery broodstock.   
+#'   * `S_add_obs`  If `stan_model=="IPM_LCRchum_pp`, number of adults translocated into 
+#'   population.   
 #' @param fish_data_fwd Only if `stan_model == "IPM_SS_pp"`, optional data frame
 #'   with the following columns, representing "forward" or "future"
 #'   simulations: 
@@ -274,12 +278,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         year = year,
         # info for forward simulations
         N_fwd = N_fwd,
-        pop_fwd = array(fish_data_fwd$pop, dim = nrow(fish_data_fwd)),
-        year_fwd = array(fish_data_fwd$year, dim = nrow(fish_data_fwd)),
-        A_fwd = array(fish_data_fwd$A, dim = nrow(fish_data_fwd)),
-        B_rate_fwd = array(fish_data_fwd$B_rate, dim = nrow(fish_data_fwd)),
-        F_rate_fwd = array(fish_data_fwd$F_rate, dim = nrow(fish_data_fwd)),
-        p_HOS_fwd = array(fish_data_fwd$p_HOS, dim = nrow(fish_data_fwd)),
+        pop_fwd = as.vector(fish_data_fwd$pop),
+        year_fwd = as.vector(fish_data_fwd$year),
+        A_fwd = as.vector(fish_data_fwd$A),
+        B_rate_fwd = as.vector(fish_data_fwd$B_rate),
+        F_rate_fwd = as.vector(fish_data_fwd$F_rate),
+        p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
         # recruitment
         SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
         A = A,
@@ -288,11 +292,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         # fishery and hatchery removals
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
-        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
         # spawner abundance
         N_S_obs = sum(!is.na(S_obs)),
-        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        which_S_obs = as.vector(which(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
         # spawner age structure
         N_age = sum(grepl("n_age", names(fish_data))), 
@@ -300,9 +304,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
         # H/W composition
         N_H = sum(fit_p_HOS),
-        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
-        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
-        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+        which_H = as.vector(which(fit_p_HOS)),
+        n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
+        n_H_obs = as.vector(n_H_obs[fit_p_HOS])
       )
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
@@ -321,12 +325,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         year = year,
         # info for forward simulations
         N_fwd = N_fwd,
-        pop_fwd = array(fish_data_fwd$pop, dim = nrow(fish_data_fwd)),
-        year_fwd = array(fish_data_fwd$year, dim = nrow(fish_data_fwd)),
-        A_fwd = array(fish_data_fwd$A, dim = nrow(fish_data_fwd)),
-        B_rate_fwd = array(fish_data_fwd$B_rate, dim = nrow(fish_data_fwd)),
-        F_rate_fwd = array(fish_data_fwd$F_rate, dim = nrow(fish_data_fwd)),
-        p_HOS_fwd = array(fish_data_fwd$p_HOS, dim = nrow(fish_data_fwd)),
+        pop_fwd = as.vector(fish_data_fwd$pop),
+        year_fwd = as.vector(fish_data_fwd$year),
+        A_fwd = as.vector(fish_data_fwd$A),
+        B_rate_fwd = as.vector(fish_data_fwd$B_rate),
+        F_rate_fwd = as.vector(fish_data_fwd$F_rate),
+        p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
         # recruitment
         SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
         A = A,
@@ -335,23 +339,23 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         # fishery and hatchery removals
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
-        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
         # spawner abundance
         N_S_obs = sum(!is.na(S_obs)),
-        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        which_S_obs = as.vector(which(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
         # spawner age structure
         N_age = sum(grepl("n_age", names(fish_data))), 
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
-        age_S_obs = array(age_S_obs, dim = length(age_S_obs)),
-        age_S_eff = array(age_S_eff, dim = length(age_S_eff)),
+        age_S_obs = as.vector(age_S_obs),
+        age_S_eff = as.vector(age_S_eff),
         # H/W composition
         N_H = sum(fit_p_HOS),
-        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
-        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
-        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+        which_H = as.vector(which(fit_p_HOS)),
+        n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
+        n_H_obs = as.vector(n_H_obs[fit_p_HOS])
       )
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
@@ -374,7 +378,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         X_M = as.matrix(env_data$M),
         # smolt abundance
         N_M_obs = sum(!is.na(M_obs)),
-        which_M_obs = array(which(!is.na(M_obs)), dim = sum(!is.na(M_obs))),
+        which_M_obs = as.vector(which(!is.na(M_obs))),
         M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
         N_age = sum(grepl("n_age", names(fish_data))), 
         smolt_age = ages$M,
@@ -384,20 +388,20 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         # fishery and hatchery removals
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
-        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
         # spawner abundance
         N_S_obs = sum(!is.na(S_obs)),
-        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        which_S_obs = as.vector(which(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
         # spawner age structure
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
         # H/W composition
         N_H = sum(fit_p_HOS),
-        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
-        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
-        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+        which_H = as.vector(which(fit_p_HOS)),
+        n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
+        n_H_obs = as.vector(n_H_obs[fit_p_HOS])
       )
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
@@ -420,7 +424,7 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         X_M = as.matrix(env_data$M),
         # smolt abundance
         N_M_obs = sum(!is.na(M_obs)),
-        which_M_obs = array(which(!is.na(M_obs)), dim = sum(!is.na(M_obs))),
+        which_M_obs = as.vector(which(!is.na(M_obs))),
         M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
         # smolt age structure
         N_Mage = sum(grepl("n_Mage", names(fish_data))),
@@ -432,11 +436,11 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         # fishery and hatchery removals
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
-        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
         # spawner abundance
         N_S_obs = sum(!is.na(S_obs)),
-        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        which_S_obs = as.vector(which(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
         # spawner ocean and Gilbert-Rich age structure
         N_MSage = sum(grepl("n_MSage", names(fish_data))), 
@@ -446,9 +450,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         conditionGRonMS = as.numeric(conditionGRonMS),
         # H/W composition
         N_H = sum(fit_p_HOS),
-        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
-        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
-        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+        which_H = as.vector(which(fit_p_HOS)),
+        n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
+        n_H_obs = as.vector(n_H_obs[fit_p_HOS])
       )
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
@@ -476,40 +480,42 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         smolt_age = ages$M,
         # smolt abundance and observation error
         N_M_obs = sum(!is.na(M_obs)),
-        which_M_obs = array(which(!is.na(M_obs)), dim = sum(!is.na(M_obs))),
+        which_M_obs = as.vector(which(!is.na(M_obs))),
         M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
         N_age = sum(grepl("n_age", names(fish_data))), 
         N_tau_M_obs = sum(!is.na(tau_M_obs)),
-        which_tau_M_obs = array(which(!is.na(tau_M_obs)), dim = sum(!is.na(tau_M_obs))),
+        which_tau_M_obs = as.vector(which(!is.na(tau_M_obs))),
         tau_M_obs = replace(tau_M_obs, is.na(tau_M_obs), 0),
         N_upstream = sum(!is.na(downstream_trap)),
-        which_upstream = array(which(!is.na(downstream_trap)), dim = sum(!is.na(downstream_trap))),
+        which_upstream = as.vector(which(!is.na(downstream_trap))),
         downstream_trap = na.omit(downstream_trap),
         # SAR
         N_X_MS = ncol(env_data$MS), 
         X_MS = as.matrix(env_data$MS),
-        # fishery and hatchery removals
+        # fishery and hatchery removals and translocations
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
-        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
+        S_add_obs = replace(S_add_obs, is.na(S_add_obs), 0),
         # spawner abundance and observation error
         N_S_obs = sum(!is.na(S_obs)),
-        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        which_S_obs = as.vector(which(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
         N_tau_S_obs = sum(!is.na(tau_S_obs)),
-        which_tau_S_obs = array(which(!is.na(tau_S_obs)), dim = sum(!is.na(tau_S_obs))),
+        which_tau_S_obs = as.vector(which(!is.na(tau_S_obs))),
         tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), 0),
         # spawner age structure and sex ratio
         max_age = max_age,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
-        n_M_obs = array(n_M_obs, dim = nrow(fish_data)),
-        n_F_obs = array(n_F_obs, dim = nrow(fish_data)),
+        n_M_obs = as.vector(n_M_obs),
+        n_F_obs = as.vector(n_F_obs),
+        p_G_obs = as.vector(p_G_obs),
         # H/W composition
         N_H = sum(fit_p_HOS),
-        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
-        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
-        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+        which_H = as.vector(which(fit_p_HOS)),
+        n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
+        n_H_obs = as.vector(n_H_obs[fit_p_HOS])
       )
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
@@ -527,12 +533,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         year = year,
         # info for forward simulations
         N_fwd = N_fwd,
-        pop_fwd = array(fish_data_fwd$pop, dim = nrow(fish_data_fwd)),
-        year_fwd = array(fish_data_fwd$year, dim = nrow(fish_data_fwd)),
-        A_fwd = array(fish_data_fwd$A, dim = nrow(fish_data_fwd)),
-        B_rate_fwd = array(fish_data_fwd$B_rate, dim = nrow(fish_data_fwd)),
-        F_rate_fwd = array(fish_data_fwd$F_rate, dim = nrow(fish_data_fwd)),
-        p_HOS_fwd = array(fish_data_fwd$p_HOS, dim = nrow(fish_data_fwd)),
+        pop_fwd = as.vector(fish_data_fwd$pop),
+        year_fwd = as.vector(fish_data_fwd$year),
+        A_fwd = as.vector(fish_data_fwd$A),
+        B_rate_fwd = as.vector(fish_data_fwd$B_rate),
+        F_rate_fwd = as.vector(fish_data_fwd$F_rate),
+        p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
         # recruitment
         SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
         A = A,
@@ -543,29 +549,29 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         N_X_D = ncol(env_data$s_D),
         X_D = as.matrix(env_data$s_D),
         N_prior_D = N_prior_D,
-        which_prior_D = array(which_prior_D, dim = N_prior_D),
-        mu_prior_D = array(mu_prior_D, dim = N_prior_D),
-        sigma_prior_D = array(sigma_prior_D, dim = N_prior_D),
+        which_prior_D = as.vector(which_prior_D),
+        mu_prior_D = as.vector(mu_prior_D),
+        sigma_prior_D = as.vector(sigma_prior_D),
         N_X_SAR = ncol(env_data$s_SAR),
         X_SAR = as.matrix(env_data$s_SAR),
         N_prior_SAR = N_prior_SAR,
-        which_prior_SAR = array(which_prior_SAR, dim = N_prior_SAR),
-        mu_prior_SAR = array(mu_prior_SAR, dim = N_prior_SAR),
-        sigma_prior_SAR = array(sigma_prior_SAR, dim = N_prior_SAR),
+        which_prior_SAR = as.vector(which_prior_SAR),
+        mu_prior_SAR = as.vector(mu_prior_SAR),
+        sigma_prior_SAR = as.vector(sigma_prior_SAR),
         N_X_U = ncol(env_data$s_U),
         X_U = as.matrix(env_data$s_U),
         N_prior_U = N_prior_U,
-        which_prior_U = array(which_prior_U, dim = N_prior_U),
-        mu_prior_U = array(mu_prior_U, dim = N_prior_U),
-        sigma_prior_U = array(sigma_prior_U, dim = N_prior_U),
+        which_prior_U = as.vector(which_prior_U),
+        mu_prior_U = as.vector(mu_prior_U),
+        sigma_prior_U = as.vector(sigma_prior_U),
         # fishery and hatchery removals
         F_rate = replace(F_rate, is.na(F_rate), 0),
         N_B = sum(B_take_obs > 0),
-        which_B = array(which(B_take_obs > 0), dim = sum(B_take_obs > 0)),
+        which_B = as.vector(which(B_take_obs > 0)),
         B_take_obs = B_take_obs[B_take_obs > 0],
         # spawner abundance
         N_S_obs = sum(!is.na(S_obs)),
-        which_S_obs = array(which(!is.na(S_obs)), dim = sum(!is.na(S_obs))),
+        which_S_obs = as.vector(which(!is.na(S_obs))),
         S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
         # spawner age structure
         N_age = sum(grepl("n_age", names(fish_data))), 
@@ -573,9 +579,9 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
         n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
         # H/W composition
         N_H = sum(fit_p_HOS),
-        which_H = array(which(fit_p_HOS), dim = sum(fit_p_HOS)),
-        n_W_obs = array(n_W_obs[fit_p_HOS], dim = sum(fit_p_HOS)),
-        n_H_obs = array(n_H_obs[fit_p_HOS], dim = sum(fit_p_HOS))
+        which_H = as.vector(which(fit_p_HOS)),
+        n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
+        n_H_obs = as.vector(n_H_obs[fit_p_HOS])
       )
       
       dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
@@ -596,12 +602,12 @@ stan_data <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
                   pop = pop, 
                   year = year,
                   N_fit = N_fit,
-                  which_fit = array(which_fit, dim = N_fit),
+                  which_fit = as.vector(which_fit),
                   S = replace(S, S == 0 | is.na(S), 1),
                   R = replace(R, R == 0 | is.na(R), 1),
                   A = A,
-                  S_NA = array(as.integer(is.na(S)), dim = length(S)),
-                  R_NA = array(as.integer(is.na(R)), dim = length(R)),
+                  S_NA = as.vector(as.integer(is.na(S))),
+                  R_NA = as.vector(as.integer(is.na(R))),
                   N_age = sum(grepl("p_age", names(recon_dat))),
                   max_age = max(as.numeric(substring(names(recon_dat)[grep("p_age", names(recon_dat))], 6, 6))),
                   p = as.matrix(p))
