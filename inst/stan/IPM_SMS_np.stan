@@ -82,8 +82,8 @@ transformed data {
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  real mu_mu_Mmax = quantile(log(M_obs[which_M_obs]), 0.9); // prior mean of mu_Mmax
-  real sigma_mu_Mmax = 2*sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
+  real mu_Mmax = quantile(log(M_obs[which_M_obs]), 0.9); // prior log-mean of Mmax
+  real sigma_Mmax = sd(log(M_obs[which_M_obs])); // prior log-SD of Mmax
   real mu_M_init = mean(log(M_obs[which_M_obs])); // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
@@ -258,7 +258,7 @@ model {
   
   // smolt recruitment
   alpha ~ lognormal(2.0,2.0);
-  Mmax ~ lognormal(mu_mu_Mmax, sigma_mu_Mmax);
+  Mmax ~ lognormal(mu_Mmax, sigma_Mmax);
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);

@@ -126,7 +126,7 @@ transformed data {
   int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   real mu_mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior mean of mu_Rmax
-  real sigma_mu_Rmax = 2*sd(log(S_obs[which_S_obs])); // prior SD of mu_Rmax
+  real sigma_mu_Rmax = sd(log(S_obs[which_S_obs])); // prior SD of mu_Rmax
   vector[max_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age

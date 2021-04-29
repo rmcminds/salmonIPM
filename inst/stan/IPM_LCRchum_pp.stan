@@ -109,7 +109,8 @@ transformed data {
   vector<lower=0,upper=1>[N] p_NG_obs = 1 - p_G_obs; // proportion non-green females
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   real mu_mu_Mmax = quantile(log(M_obs[which_M_obs]/1000), 0.9); // prior mean of mu_Mmax (thousands of smolts)
-  real mu_M_init = mean(log(M_obs[which_M_obs])); // prior log-mean of smolt abundance in years 1:smolt_age
+  real sigma_mu_Mmax = sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
+  real mu_M_init = mean(log(M_obs[which_M_obs]));  // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
   vector[max_ocean_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_ocean_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
@@ -355,7 +356,7 @@ model {
 
   // spawner-smolt productivity
   sigma_psi ~ normal(0,1);        // mildly regularize long right tail
-  mu_Mmax ~ normal(mu_mu_Mmax,3); // units of Mmax: thousands of smolts
+  mu_Mmax ~ normal(mu_mu_Mmax, sigma_mu_Mmax); // units of Mmax: thousands of smolts
   sigma_Mmax ~ normal(0,3);
   zeta_psi ~ std_normal();        // logit(psi) ~ N(logit(mu_psi), sigma_psi)
   zeta_Mmax ~ std_normal();       // log(Mmax) ~ N(mu_Mmax, sigma_Mmax)

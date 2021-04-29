@@ -53,7 +53,7 @@ transformed data {
   int<lower=1,upper=N> N_year;  // number of years
   int<lower=2> ages[N_age];     // adult ages
   real mu_mu_Rmax = quantile(log(R[which_fit]), 0.9);  // prior mean of mu_Rmax
-  real sigma_mu_Rmax = 2*sd(log(R[which_fit]));  // prior SD of mu_Rmax
+  real sigma_mu_Rmax = sd(log(R[which_fit]));  // prior SD of mu_Rmax
   
   N_pop = max(pop);
   N_year = max(year);

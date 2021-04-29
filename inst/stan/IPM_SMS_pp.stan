@@ -87,7 +87,7 @@ transformed data {
   int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   real mu_mu_Mmax = quantile(log(M_obs[which_M_obs]), 0.9); // prior mean of mu_Mmax
-  real sigma_mu_Mmax = 2*sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
+  real sigma_mu_Mmax = sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
   real mu_M_init = mean(log(M_obs[which_M_obs])); // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
   vector[max_ocean_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_ocean_age
