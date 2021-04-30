@@ -122,11 +122,13 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
+  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=1,upper=N> N_year_all;         // total number of years, including forward simulations
   int<lower=2> ages[N_age];                // adult ages
   int<lower=1> min_age;                    // minimum adult age
+  vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
+  vector[N] ones_N = rep_vector(1,N);      // for elementwise inverse of rowsums 
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   real mu_mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior mean of mu_Rmax
   real sigma_mu_Rmax = sd(log(S_obs[which_S_obs])); // prior SD of mu_Rmax
@@ -233,7 +235,7 @@ transformed parameters {
   {
     matrix[2,2] L_alphaRmax;        // Cholesky factor of corr matrix of log(alpha), log(Rmax)
     matrix[N_pop,2] zeta_alphaRmax; // [log(alpha), log(Rmax)] random effects (z-scored)
-    matrix[N_pop,2] eta_alphaRmax;  // log(alpha), log(Rmax)] random effects
+    matrix[N_pop,2] eta_alphaRmax;  // [log(alpha), log(Rmax)] random effects
     vector[2] sigma_alphaRmax;      // SD vector of [log(alpha), log(Rmax)]
     
     L_alphaRmax[1,1] = 1;
@@ -262,26 +264,25 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
-  mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  // Inverse log-ratio (softmax) transform of cohort age distn
+  {
+    matrix[N,N_age-1] alr_p = mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')';
+    matrix[N,N_age] exp_alr_p = append_col(exp(alr_p), ones_N);
+    p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
+  }
   
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii; // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
-    
-    // Inverse log-ratio transform of cohort age distn
-    // (built-in softmax function doesn't accept row vectors)
-    exp_p = exp(p[i,]);
-    p[i,] = exp_p/sum(exp_p);
-    
+
     // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)
     {
@@ -323,7 +324,7 @@ model {
   // recruitment
   mu_alpha ~ normal(2,5);
   sigma_alpha ~ normal(0,3);
-  mu_Rmax ~ normal(mu_mu_Rmax,3);
+  mu_Rmax ~ normal(mu_mu_Rmax, sigma_mu_Rmax);
   sigma_Rmax ~ normal(0,3);
   zeta_alpha ~ std_normal();  // [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D),
   zeta_Rmax ~ std_normal();   // where D = diag_matrix(sigma_alpha, sigma_Rmax)
@@ -337,8 +338,8 @@ model {
   // spawner age structure
   for(i in 1:(N_age-1))
   {
-    sigma_pop_p[i] ~ pexp(0,2,5);
-    sigma_p[i] ~ pexp(0,2,5); 
+    sigma_pop_p[i] ~ normal(0,2);
+    sigma_p[i] ~ normal(0,2); 
   }
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
@@ -423,7 +424,7 @@ generated quantities {
     S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
     q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
     S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-    R_hat_fwd[i] = A_fwd[i] * SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i]*q_fwd[i,]*age_S_eff, A_fwd[i]);
+    R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i]*q_fwd[i,]*age_S_eff, A_fwd[i]);
     R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + eta_year_R[year_fwd[i]], sigma_R);
   }
   

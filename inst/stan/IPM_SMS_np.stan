@@ -167,8 +167,8 @@ transformed parameters {
   vector<lower=0>[N] S;                  // true total spawner abundance
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   // spawner age structure
-  matrix[N_pop,N_age-1] mu_alr_p;        // population mean log ratio age distributions
-  matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
+  vector[N_age-1] mu_alr_p[N_pop];       // population mean log ratio age distributions
+  simplex[N_age] p[N];                   // true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
   
   // Pad p_HOS and B_rate
@@ -179,13 +179,13 @@ transformed parameters {
   
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
-    mu_alr_p[j,] = to_row_vector(log(mu_p[j,1:(N_age-1)]) - log(mu_p[j,N_age]));
+    mu_alr_p[j] = log(head(mu_p[j], N_age-1)) - log(tail(mu_p[j], 1));
   
   // Calculate true total wild and hatchery spawners, spawner age distribution, and smolts,
   // and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] alr_p; // alr(p[i,])
+    vector[N_age] alr_p;     // alr(p[i,])
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
@@ -194,10 +194,10 @@ transformed parameters {
     
     // Within-pop, time-varying IID age vectors
     // (multivariate Matt trick)
-    alr_p = rep_row_vector(0,N_age);
-    alr_p[1:(N_age-1)] = mu_alr_p[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
+    alr_p = rep_vector(0,N_age);
+    alr_p[1:(N_age-1)] = mu_alr_p[pop[i]] + sigma_p[pop[i],]' .* (L_p[pop[i]] * zeta_p[i,]');
     alr_p = exp(alr_p);
-    p[i,] = alr_p/sum(alr_p);
+    p[i] = alr_p / sum(alr_p);
     
     // AR(1) smolt recruitment and SAR process errors  
     if(pop_year_indx[i] == 1) // initial process error

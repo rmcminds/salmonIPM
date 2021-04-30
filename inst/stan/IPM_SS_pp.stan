@@ -120,10 +120,12 @@ transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
   int<lower=1,upper=N> N_year_all;         // total number of years, including forward simulations
+  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=2> ages[N_age];                // adult ages
   int<lower=1> min_age;                    // minimum adult age
+  vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
+  vector[N] ones_N = rep_vector(1,N);      // for elementwise inverse of rowsums 
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   real mu_mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior mean of mu_Rmax
   real sigma_mu_Rmax = sd(log(S_obs[which_S_obs])); // prior SD of mu_Rmax
@@ -259,26 +261,25 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
-  mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  // Inverse log-ratio (softmax) transform of cohort age distn
+  {
+    matrix[N,N_age-1] alr_p = mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')';
+    matrix[N,N_age] exp_alr_p = append_col(exp(alr_p), ones_N);
+    p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
+  }
   
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii; // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
-    
-    // Inverse log-ratio transform of cohort age distn
-    // (built-in softmax function doesn't accept row vectors)
-    exp_p = exp(p[i,]);
-    p[i,] = exp_p/sum(exp_p);
-    
+
     // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)
     {

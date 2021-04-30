@@ -127,17 +127,19 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
-  int<lower=1,upper=N> N_year_all;   // total number of years, including forward simulations
-  int<lower=1> ocean_ages[N_age];    // ocean ages
+  int<lower=1> pop_year_indx[N];          // index of years within each pop, starting at 1
+  int<lower=1,upper=N> N_year_all;         // total number of years, including forward simulations
+  int<lower=1> ocean_ages[N_age];          // ocean ages
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
-  int<lower=2> ages[N_age];          // adult ages
-  int<lower=0> n_HW_obs[N_H];        // total sample sizes for H/W frequencies
-  int<lower=1> pop_year_indx[N];     // index of years within each pop, starting at 1
+  int<lower=2> ages[N_age];               // adult ages
+  vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
+  vector[N] ones_N = rep_vector(1,N);     // for elementwise inverse of rowsums 
+  int<lower=0> n_HW_obs[N_H];             // total sample sizes for H/W frequencies
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
-  vector[max_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_age
+  vector[max_age*N_pop] mu_S_init;        // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
-  matrix[N_age,max_age*N_pop] mu_q_init; // prior counts of wild spawner age distns in years 1:max_age
+  matrix[N_age,max_age*N_pop] mu_q_init;  // prior counts of wild spawner age distns in years 1:max_age
   
   N_year_all = max(append_array(year, year_fwd));
   for(a in min_ocean_age:max_ocean_age)
@@ -300,11 +302,14 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors
-  mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
-  // pop-specific mean
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  // within-pop, time-varying IID
-  p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
+  // Inverse log-ratio (softmax) transform of cohort age distn
+  {
+    matrix[N,N_age-1] alr_p = mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')';
+    matrix[N,N_age] exp_alr_p = append_col(exp(alr_p), ones_N);
+    p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
+  }
   
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
@@ -316,12 +321,7 @@ transformed parameters {
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
-    
-    // Inverse log-ratio transform of cohort age distn
-    // (built-in softmax function doesn't accept row vectors)
-    exp_p = exp(p[i,]);
-    p[i,] = exp_p/sum(exp_p);
-    
+
     // AR(1) smolt recruitment process errors  
     if(pop_year_indx[i] == 1) 
       epsilon_M[i] = zeta_M[i]*sigma_M/sqrt(1 - rho_M^2);

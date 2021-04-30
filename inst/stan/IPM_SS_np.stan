@@ -136,19 +136,19 @@ parameters {
 
 transformed parameters {
   // recruitment
-  vector<lower=0>[N] R_hat;           // expected recruit abundance (not density) by brood year
-  vector[N] epsilon_R;                // process error in recruit abundance by brood year
-  vector<lower=0>[N] R;               // true recruit abundance (not density) by brood year
+  vector<lower=0>[N] R_hat;            // expected recruit abundance (not density) by brood year
+  vector[N] epsilon_R;                 // process error in recruit abundance by brood year
+  vector<lower=0>[N] R;                // true recruit abundance (not density) by brood year
   // H/W spawner abundance, removals
-  vector[N] p_HOS_all;                // true p_HOS in all years (can == 0)
-  vector<lower=0>[N] S_W;             // true total wild spawner abundance
-  vector[N] S_H;                      // true total hatchery spawner abundance (can == 0)
-  vector<lower=0>[N] S;               // true total spawner abundance
+  vector[N] p_HOS_all;                 // true p_HOS in all years (can == 0)
+  vector<lower=0>[N] S_W;              // true total wild spawner abundance
+  vector[N] S_H;                       // true total hatchery spawner abundance (can == 0)
+  vector<lower=0>[N] S;                // true total spawner abundance
   vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   // spawner age structure
-  matrix[N_pop,N_age-1] mu_alr_p;     // population mean log ratio age distributions
-  matrix<lower=0,upper=1>[N,N_age] p; // cohort age distributions
-  matrix<lower=0,upper=1>[N,N_age] q; // true spawner age distributions
+  vector[N_age-1] mu_alr_p[N_pop];     // population mean log ratio age distributions
+  simplex[N_age] p[N];                 // cohort age distributions
+  matrix<lower=0,upper=1>[N,N_age] q;  // true spawner age distributions
 
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -158,13 +158,13 @@ transformed parameters {
 
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
-    mu_alr_p[j,] = to_row_vector(log(mu_p[j,1:(N_age-1)]) - log(mu_p[j,N_age]));
+    mu_alr_p[j] = log(head(mu_p[j], N_age-1)) - log(tail(mu_p[j], 1));
 
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_age] alr_p; // alr(p[i,])
+    vector[N_age] alr_p;     // alr(p[i,])
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
@@ -172,10 +172,10 @@ transformed parameters {
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
 
     // Multivariate Matt trick for within-pop, time-varying age vectors
-    alr_p = rep_row_vector(0,N_age);
-    alr_p[1:(N_age-1)] = mu_alr_p[pop[i],] + sigma_p[pop[i],] .* (L_p[pop[i]] * zeta_p[i,]')';
+    alr_p = rep_vector(0,N_age);
+    alr_p[1:(N_age-1)] = mu_alr_p[pop[i]] + sigma_p[pop[i],]' .* (L_p[pop[i]] * zeta_p[i,]');
     alr_p = exp(alr_p);
-    p[i,] = alr_p/sum(alr_p);
+    p[i] = alr_p / sum(alr_p);
     
     // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)

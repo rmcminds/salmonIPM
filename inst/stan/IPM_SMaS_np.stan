@@ -220,8 +220,8 @@ transformed parameters {
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
   vector<lower=0>[N] M;                  // true smolt abundance (not density) by outmigration year
   // smolt age structure
-  matrix[N_pop,N_Mage-1] mu_alr_p_M;     //?// population mean log ratio smolt age distributions
-  matrix<lower=0,upper=1>[N,N_Mage] p_M; //?// true smolt age distributions by brood year
+  vector[N_Mage-1] mu_alr_p_M[N_pop];    // population mean log ratio smolt age distributions
+  simplex[N_Mage] p_M[N];                // true smolt age distributions by brood year
   matrix<lower=0,upper=1>[N,N_Mage] q_M; // true smolt age distributions by calendar year
   // SAR
   matrix[N,N_Mage] epsilon_MS;           //?// SAR process errors by smolt age and outmigration year
@@ -248,18 +248,18 @@ transformed parameters {
   for(j in 1:N_pop)
   {
     // Smolt age 
-    mu_alr_p_M[j,] = to_row_vector(log(mu_p_M[j,1:(N_Mage-1)]) - log(mu_p_M[j,N_Mage]));
+    mu_alr_p_M[j] = log(head(mu_p_M[j], N_Mage-1)) - log(tail(mu_p_M[j], 1));
     
     // Ocean age
     for(a in 1:N_Mage)
-      mu_alr_p_MS[j,a] = log(mu_p_MS[j,a,1:(N_MSage-1)]) - log(mu_p_MS[j,a,N_MSage]);
+      mu_alr_p_MS[j,a] = log(head(mu_p_MS[j,a,], N_MSage-1)) - log(tail(mu_p_MS[j,a,], 1));
   }
   
   // Calculate true smolts and total wild and hatchery spawners by age,
   // and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
-    row_vector[N_Mage] alr_p_M;               // alr(p_M[i,])
+    vector[N_Mage] alr_p_M;                   // alr(p_M[i,])
     row_vector[N_Mage] M_a;                   // true smolts by age
     int mm;                                   // index into M_init, q_M_init
     // number of orphan smolt age classes <lower=0,upper=N_Mage>
@@ -278,10 +278,10 @@ transformed parameters {
     
     // Time-varying IID age vectors (multivariate Matt trick)
     // Smolt age
-    alr_p_M = rep_row_vector(0,N_Mage);
-    alr_p_M[1:(N_Mage-1)] = mu_alr_p_M[pop[i],] + sigma_p_M[pop[i],] .* (L_p_M[pop[i]] * zeta_p_M[i,]')';
+    alr_p_M = rep_vector(0,N_Mage);
+    alr_p_M[1:(N_Mage-1)] = mu_alr_p_M[pop[i]] + sigma_p_M[pop[i],]' .* (L_p_M[pop[i]] * zeta_p_M[i,]');
     alr_p_M = exp(alr_p_M);
-    p_M[i,] = alr_p_M/sum(alr_p_M);
+    p_M[i] = alr_p_M / sum(alr_p_M);
     
     // Ocean age
     // assemble mean and SD vectors by flattening across smolt age
@@ -295,7 +295,7 @@ transformed parameters {
     for(a in 1:N_Mage)
     {
       p_MS[i,a] = exp(append_row(alr_p_MS[((a-1)*(N_MSage-1) + 1):(a*(N_MSage-1))], 0));
-      p_MS[i,a] = p_MS[i,a]/sum(p_MS[i,a]);
+      p_MS[i,a] = p_MS[i,a] / sum(p_MS[i,a]);
     }
     
     // AR(1) smolt recruitment process errors and MAR(1) SAR process errors  
@@ -333,7 +333,7 @@ transformed parameters {
     }
     
     M[i] = sum(M_a);
-    q_M[i,] = M_a/M[i];
+    q_M[i,] = M_a / M[i];
     
     // Spawners and age structure
     // Use initial values for orphan age classes, otherwise use process model

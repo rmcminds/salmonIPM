@@ -15,17 +15,17 @@ N_pop <- 20
 N_year <- 30
 N <- N_pop * N_year
 
-sim_out <- IPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5,
-                               rho_alphaRmax = 0.3, beta_phi = 0, rho_phi = 0.7, sigma_phi = 0.5, 
-                               sigma = 0.3, tau = 0.5, 
-                               mu_p = c(0.05, 0.55, 0.4), sigma_gamma = c(0.1, 0.2), 
-                               R_gamma = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2),
-                               S_init_K = 0.7),
-                   fish_data = data.frame(pop = rep(1:N_pop, each = N_year),
-                                          year = rep(1:N_year, N_pop),
-                                          A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
-                                          n_age_obs = 50, n_HW_obs = 0),
-                   N_age = 3, max_age = 5)
+sim_out <- salmonIPM_sim(pars = list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5,
+                                     rho_alphaRmax = 0.3, beta_R = 0, rho_R = 0.7, sigma_year_R = 0.5, 
+                                     sigma_R = 0.3, tau = 0.5, 
+                                     mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = c(0.1, 0.2), 
+                                     R_pop_p = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2),
+                                     S_init_K = 0.7),
+                         fish_data = data.frame(pop = rep(1:N_pop, each = N_year),
+                                                year = rep(1:N_year, N_pop),
+                                                A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
+                                                n_age_obs = 50, n_HW_obs = 0),
+                         N_age = 3, max_age = 5)
 
 no_age_data <- 1:N_year
 sim_out$sim_dat[no_age_data,c("n_age3_obs","n_age4_obs","n_age5_obs")] <- 0
@@ -39,30 +39,30 @@ sim_out$sim_dat$S_obs[which_S_NA] <- NA
 
 # No pooling across populations
 fit_SS_np <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_np",
-                       chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                       chains = 3, iter = 1500, warmup = 500, thin = 1, cores = 3,
                        control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
                        seed = 123)
 
-print(fit_SS_np, pars = c("gamma","p","B_rate_all","S","R","q"), 
+print(fit_SS_np, pars = c("mu_p","sigma_p","p","R_p","B_rate","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling
 fit_SS_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SS_pp",
-                       chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                       chains = 3, iter = 1500, warmup = 500, thin = 1, cores = 3,
                        control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
                        seed = 123)
 
-print(fit_SS_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_SS_pp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p","B_rate","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling with partially observed and partially effective spawner ages
 fit_SSpa_pp <- salmonIPM(fish_data = sim_out$sim_dat, stan_model = "IPM_SSpa_pp",
                          age_S_obs = rep(1,3), age_S_eff = rep(1,3),
-                         chains = 3, iter = 1000, warmup = 500, thin = 1, cores = 3,
+                         chains = 3, iter = 1500, warmup = 500, thin = 1, cores = 3,
                          control = list(adapt_delta = 0.95, stepsize = 0.1, max_treedepth = 13),
                          seed = 123)
 
-print(fit_SSpa_pp, pars = c("alpha","Rmax","phi","gamma","p","B_rate_all","S","R","q"), 
+print(fit_SSpa_pp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p","B_rate","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 
@@ -194,11 +194,11 @@ plot(density(extract1(mod,"mu_Rmax")), xlab = bquote(mu[b]), ylab="", main="", c
 abline(v = sim_out$sim_dat$pars_out$mu_Rmax, lwd = 3)
 plot(density(extract1(mod,"sigma_Rmax")), xlab = bquote(sigma[b]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
 abline(v = sim_out$sim_dat$pars_out$sigma_Rmax, lwd = 3)
-plot(density(extract1(mod,"beta_phi")), xlab = bquote(beta[phi]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
+plot(density(extract1(mod,"beta_phi")), xlab = bquote(beta[eta_year_R]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
 abline(v = sim_out$sim_dat$pars_out$beta_phi, lwd = 3)
-plot(density(extract1(mod,"rho_phi")), xlab = bquote(rho[phi]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
+plot(density(extract1(mod,"rho_phi")), xlab = bquote(rho[eta_year_R]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
 abline(v = plogis(sim_out$sim_dat$pars_out$logit_rho_log_phi), lwd = 3)
-plot(density(extract1(mod,"sigma_phi")), xlab = bquote(sigma[phi]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
+plot(density(extract1(mod,"sigma_phi")), xlab = bquote(sigma[eta_year_R]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1)
 abline(v = sim_out$sim_dat$pars_out$sigma_phi, lwd = 3)
 plot(density(extract1(mod,"mu_p")[,1]), xlab = bquote(mu[p]), ylab="", main="", cex.axis=1.2, cex.lab=2, las=1, 
      xlim = range(extract1(mod,"mu_p")), col = "lightgray")

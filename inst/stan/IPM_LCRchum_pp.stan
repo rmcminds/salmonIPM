@@ -97,14 +97,14 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
+  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> ocean_ages[N_age];          // ocean ages
-  vector<lower=1,upper=1>[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
-  vector<lower=1,upper=1>[N] ones_N = rep_vector(1,N); // for elementwise inverse of rowsums 
+  vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
+  vector[N] ones_N = rep_vector(1,N);      // for elementwise inverse of rowsums 
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   int<lower=1> min_age = max_age - N_age + 1; // minimum adult age
   int<lower=1> a_E[N_E];                   // female age index for fecundity observations
-  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> n_MF_obs[N];                // total sample sizes for sex frequencies
   vector<lower=0,upper=1>[N] p_NG_obs = 1 - p_G_obs; // proportion non-green females
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
@@ -227,8 +227,6 @@ transformed parameters {
   // spawner age structure
   row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
   matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio age distributions
-  matrix[N,N_age] alr_p;                 // alr(p[i,])
-  matrix<lower=0>[N,N_age] exp_alr_p;    // exp(alr(p[i,]))
   matrix<lower=0,upper=1>[N,N_age] p;    // true adult age distributions by outmigration year
   matrix<lower=0,upper=1>[N,N_age] q;    // true spawner age distributions
   // spawner sex ratio
@@ -263,12 +261,14 @@ transformed parameters {
   s_MS = inv_logit(logit(mu_MS) + eta_year_MS[year] + sigma_MS*zeta_MS);
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
-  mu_alr_p = to_row_vector(log(mu_p[1:(N_age-1)]) - log(mu_p[N_age]));
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
-  alr_p = append_col(mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')', rep_vector(0,N));
   // Inverse log-ratio (softmax) transform of cohort age distn
-  exp_alr_p = exp(alr_p);
-  p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
+  {
+    matrix[N,N_age-1] alr_p = mu_pop_alr_p[pop,] + diag_pre_multiply(sigma_p, L_p * zeta_p')';
+    matrix[N,N_age] exp_alr_p = append_col(exp(alr_p), ones_N);
+    p = diag_pre_multiply(ones_N ./ (exp_alr_p * ones_N_age), exp_alr_p);
+  }
   
   // Annual population-specific proportion females
   p_F = inv_logit(logit(mu_F) + sigma_pop_F*zeta_pop_F[pop] + sigma_F*zeta_F);
