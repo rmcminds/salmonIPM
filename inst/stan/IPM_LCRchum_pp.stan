@@ -51,9 +51,13 @@ data {
   // spawner-smolt productivity
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector[N] A;                         // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
-  matrix[max(year),N_X_M] X_M;         // spawner-smolt productivity covariates
   int<lower=1> smolt_age;              // smolt age
+  int<lower=0> N_X_psi;                // number of egg-to-smolt survival covariates
+  row_vector[N_X_psi] X_psi[N];        // egg-to-smolt survival covariates
+  int<lower=0> N_X_Mmax;               // number of maximum smolt recruitment covariates
+  row_vector[N_X_Mmax] X_Mmax[N];      // maximum smolt recruitment covariates
+  int<lower=0> N_X_M;                  // number of smolt recruitment covariates
+  row_vector[N_X_M] X_M[N];            // smolt recruitment covariates
   // smolt abundance and observation error
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
@@ -65,8 +69,8 @@ data {
   int<lower=1,upper=N> which_upstream[N_upstream]; // smolt obs upstream of a trap in another pop
   int<lower=1,upper=N> downstream_trap[N_upstream]; // row index for the downstream trap
   // SAR (smolt-spawner survival)
-  int<lower=0> N_X_MS;                 // number of SAR productivity covariates
-  matrix[max(year),N_X_MS] X_MS;       // SAR covariates
+  int<lower=0> N_X_MS;                 // number of SAR covariates
+  matrix[N,N_X_MS] X_MS;               // SAR covariates
   // fishery and hatchery removals and translocations
   vector[N] F_rate;                    // fishing mortality rate of wild adults (no fishing on jacks)
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -156,9 +160,11 @@ parameters {
   real<lower=0,upper=1> delta_NG;        // fecundity of non-green females as proportion of green
   // spawner-smolt productivity
   real<lower=0,upper=1> mu_psi;          // hyper-mean density-independent egg-smolt survival
+  vector[N_X_psi] beta_psi;              // regression coefs for logit psi
   real<lower=0> sigma_psi;               // hyper-SD logit density-independent egg-smolt survival
   vector[N_pop] zeta_psi;                // logit density-independent egg-smolt survival (Z-scores)
   real mu_Mmax;                          // hyper-mean log maximum smolt recruitment (thousands)
+  vector[N_X_Mmax] beta_Mmax;            // regression coefs for log Mmax
   real<lower=0> sigma_Mmax;              // among-pop hyper-SD of log maximum smolt recruitment
   vector[N_pop] zeta_Mmax;               // log maximum smolt recruitment (Z-scores)
   vector[N_X_M] beta_M;                  // regression coefs for annual spawner-smolt productivity anomalies
@@ -247,21 +253,21 @@ transformed parameters {
   Mmax = exp(mu_Mmax + sigma_Mmax*zeta_Mmax);
   
   // AR(1) model for spawner-smolt productivity and SAR anomalies
-  eta_year_M[1] = zeta_year_M[1]*sigma_year_M/sqrt(1 - rho_M^2);     // initial anomaly
-  eta_year_MS[1] = zeta_year_MS[1]*sigma_year_MS/sqrt(1 - rho_MS^2); // initial anomaly
+  eta_year_M[1] = zeta_year_M[1] * sigma_year_M / sqrt(1 - rho_M^2);     // initial anomaly
+  eta_year_MS[1] = zeta_year_MS[1] * sigma_year_MS / sqrt(1 - rho_MS^2); // initial anomaly
   for(i in 2:N_year)
   {
-    eta_year_M[i] = rho_M*eta_year_M[i-1] + zeta_year_M[i]*sigma_year_M;
-    eta_year_MS[i] = rho_MS*eta_year_MS[i-1] + zeta_year_MS[i]*sigma_year_MS;
+    eta_year_M[i] = rho_M * eta_year_M[i-1] + zeta_year_M[i] * sigma_year_M;
+    eta_year_MS[i] = rho_MS * eta_year_MS[i-1] + zeta_year_MS[i] * sigma_year_MS;
   }
   // constrain "fitted" anomalies to sum to 0 (columns of X should be centered)
-  eta_year_M = eta_year_M - mean(eta_year_M[1:N_year]) + mat_lmult(X_M, beta_M);
-  eta_year_MS = eta_year_MS - mean(eta_year_MS[1:N_year]) + mat_lmult(X_MS, beta_MS);
+  eta_year_M = eta_year_M - mean(eta_year_M);
+  eta_year_MS = eta_year_MS - mean(eta_year_MS);
   // annual population-specific SAR
-  s_MS = inv_logit(logit(mu_MS) + eta_year_MS[year] + sigma_MS*zeta_MS);
+  s_MS = inv_logit(logit(mu_MS) + mat_lmult(X_MS, beta_MS) + eta_year_MS[year] + zeta_MS*sigma_MS);
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
-  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(mu_p[N_age]));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
   // Inverse log-ratio (softmax) transform of cohort age distn
   {
@@ -277,6 +283,10 @@ transformed parameters {
   // eggs and smolts, and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
+    // density-independent egg-to-smolt survival and maximum recruitment 
+    // adjusted for covariate effects
+    real psi_i = psi[pop[i]] * exp(dot_product(X_psi[i], beta_psi));
+    real Mmax_i = Mmax[pop[i]] * exp(dot_product(X_Mmax[i], beta_Mmax));
     row_vector[N_age] S_W_a;       // wild spawners by age
     int ii;                        // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
@@ -332,8 +342,8 @@ transformed parameters {
 
     // Smolt production from brood year i
     // Density-dependent egg-to-smolt survival
-    M_hat[i] = SR(SR_fun, psi[pop[i]], Mmax[pop[i]]*1e3, E_hat[i], A[i]);
-    M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + sigma_M*zeta_M[i]);
+    M_hat[i] = SR(SR_fun, psi_i, Mmax_i*1e3, E_hat[i], A[i]);
+    M0[i] = M_hat[i] * exp(eta_year_M[i] + dot_product(X_M[i], beta_M) + sigma_M*zeta_M[i]);
   }
   
   // Impute missing observation error SDs from lognormal hyperdistribution
@@ -355,12 +365,14 @@ model {
   sigma_E ~ normal(500,1000);
 
   // spawner-smolt productivity
+  beta_psi ~ normal(0,5);
   sigma_psi ~ normal(0,1);        // mildly regularize long right tail
   mu_Mmax ~ normal(mu_mu_Mmax, sigma_mu_Mmax); // units of Mmax: thousands of smolts
+  beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   zeta_psi ~ std_normal();        // logit(psi) ~ N(logit(mu_psi), sigma_psi)
   zeta_Mmax ~ std_normal();       // log(Mmax) ~ N(mu_Mmax, sigma_Mmax)
-  beta_M ~ normal(0,2);
+  beta_M ~ normal(0,5);
   rho_M ~ pexp(0,0.85,20);        // regularize away from 1 to ensure stationarity
   sigma_year_M ~ normal(0,2);
   zeta_year_M ~ std_normal();     // eta_year_M[i] ~ N(rho_M*phi_M[i-1], sigma_year_M)
@@ -368,7 +380,7 @@ model {
   zeta_M ~ std_normal();          // M0 ~ lognormal(log(M_hat) + eta_year_M, sigma_M)
   
   // SAR
-  beta_MS ~ normal(0,2);
+  beta_MS ~ normal(0,3);
   rho_MS ~ pexp(0,0.85,20);       // regularize away from 1 to ensure stationarity
   sigma_year_MS ~ normal(0,2);
   zeta_year_MS ~ std_normal();    // phi_MS[i] ~ N(rho_MS*phi_MS[i-1], sigma_year_MS)

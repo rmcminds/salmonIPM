@@ -92,7 +92,7 @@ template <bool propto, typename T0__, typename T1__, typename T2__, typename T3_
 typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type
 pexp_lpdf(const T0__& y,
               const T1__& mu,
-              const T2__& sigma,
+              const T2__& sigma_R,
               const T3__& shape, std::ostream* pstream__) {
     typedef typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type local_scalar_t__;
     typedef local_scalar_t__ fun_return_scalar_t__;
@@ -103,7 +103,7 @@ pexp_lpdf(const T0__& y,
     int current_statement_begin__ = -1;
     try {
         current_statement_begin__ = 18;
-        return stan::math::promote_scalar<fun_return_scalar_t__>(-(pow((stan::math::fabs((y - mu)) / sigma), shape)));
+        return stan::math::promote_scalar<fun_return_scalar_t__>(-(pow((stan::math::fabs((y - mu)) / sigma_R), shape)));
     } catch (const std::exception& e) {
         stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
         // Next line prevents compiler griping about no return
@@ -114,18 +114,18 @@ template <typename T0__, typename T1__, typename T2__, typename T3__>
 typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type
 pexp_lpdf(const T0__& y,
               const T1__& mu,
-              const T2__& sigma,
+              const T2__& sigma_R,
               const T3__& shape, std::ostream* pstream__) {
-    return pexp_lpdf<false>(y,mu,sigma,shape, pstream__);
+    return pexp_lpdf<false>(y,mu,sigma_R,shape, pstream__);
 }
 struct pexp_lpdf_functor__ {
     template <bool propto, typename T0__, typename T1__, typename T2__, typename T3__>
         typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type
     operator()(const T0__& y,
               const T1__& mu,
-              const T2__& sigma,
+              const T2__& sigma_R,
               const T3__& shape, std::ostream* pstream__) const {
-        return pexp_lpdf(y, mu, sigma, shape, pstream__);
+        return pexp_lpdf(y, mu, sigma_R, shape, pstream__);
     }
 };
 template <typename T0__, typename T1__>
@@ -462,7 +462,7 @@ public:
             current_statement_begin__ = 73;
             num_params_r__ += 1;
             current_statement_begin__ = 74;
-            validate_non_negative_index("zeta_phi", "max(year)", max(year));
+            validate_non_negative_index("zeta_year", "max(year)", max(year));
             num_params_r__ += max(year);
             current_statement_begin__ = 75;
             num_params_r__ += 1;
@@ -583,60 +583,60 @@ public:
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho_alphaRmax: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         current_statement_begin__ = 72;
-        if (!(context__.contains_r("rho_phi")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable rho_phi missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("rho_phi");
+        if (!(context__.contains_r("rho_R")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable rho_R missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("rho_R");
         pos__ = 0U;
-        context__.validate_dims("parameter initialization", "rho_phi", "double", context__.to_vec());
-        double rho_phi(0);
-        rho_phi = vals_r__[pos__++];
+        context__.validate_dims("parameter initialization", "rho_R", "double", context__.to_vec());
+        double rho_R(0);
+        rho_R = vals_r__[pos__++];
         try {
-            writer__.scalar_lub_unconstrain(-(1), 1, rho_phi);
+            writer__.scalar_lub_unconstrain(-(1), 1, rho_R);
         } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho_phi: ") + e.what()), current_statement_begin__, prog_reader__());
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho_R: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         current_statement_begin__ = 73;
-        if (!(context__.contains_r("sigma_phi")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_phi missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("sigma_phi");
+        if (!(context__.contains_r("sigma_year_R")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_year_R missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("sigma_year_R");
         pos__ = 0U;
-        context__.validate_dims("parameter initialization", "sigma_phi", "double", context__.to_vec());
-        double sigma_phi(0);
-        sigma_phi = vals_r__[pos__++];
+        context__.validate_dims("parameter initialization", "sigma_year_R", "double", context__.to_vec());
+        double sigma_year_R(0);
+        sigma_year_R = vals_r__[pos__++];
         try {
-            writer__.scalar_lb_unconstrain(0, sigma_phi);
+            writer__.scalar_lb_unconstrain(0, sigma_year_R);
         } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_phi: ") + e.what()), current_statement_begin__, prog_reader__());
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_year_R: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         current_statement_begin__ = 74;
-        if (!(context__.contains_r("zeta_phi")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_phi missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("zeta_phi");
+        if (!(context__.contains_r("zeta_year")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable zeta_year missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("zeta_year");
         pos__ = 0U;
-        validate_non_negative_index("zeta_phi", "max(year)", max(year));
-        context__.validate_dims("parameter initialization", "zeta_phi", "vector_d", context__.to_vec(max(year)));
-        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_phi(max(year));
-        size_t zeta_phi_j_1_max__ = max(year);
-        for (size_t j_1__ = 0; j_1__ < zeta_phi_j_1_max__; ++j_1__) {
-            zeta_phi(j_1__) = vals_r__[pos__++];
+        validate_non_negative_index("zeta_year", "max(year)", max(year));
+        context__.validate_dims("parameter initialization", "zeta_year", "vector_d", context__.to_vec(max(year)));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_year(max(year));
+        size_t zeta_year_j_1_max__ = max(year);
+        for (size_t j_1__ = 0; j_1__ < zeta_year_j_1_max__; ++j_1__) {
+            zeta_year(j_1__) = vals_r__[pos__++];
         }
         try {
-            writer__.vector_unconstrain(zeta_phi);
+            writer__.vector_unconstrain(zeta_year);
         } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_phi: ") + e.what()), current_statement_begin__, prog_reader__());
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable zeta_year: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         current_statement_begin__ = 75;
-        if (!(context__.contains_r("sigma")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("sigma");
+        if (!(context__.contains_r("sigma_R")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_R missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("sigma_R");
         pos__ = 0U;
-        context__.validate_dims("parameter initialization", "sigma", "double", context__.to_vec());
-        double sigma(0);
-        sigma = vals_r__[pos__++];
+        context__.validate_dims("parameter initialization", "sigma_R", "double", context__.to_vec());
+        double sigma_R(0);
+        sigma_R = vals_r__[pos__++];
         try {
-            writer__.scalar_lb_unconstrain(0, sigma);
+            writer__.scalar_lb_unconstrain(0, sigma_R);
         } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma: ") + e.what()), current_statement_begin__, prog_reader__());
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_R: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         params_r__ = writer__.data_r();
         params_i__ = writer__.data_i();
@@ -713,33 +713,33 @@ public:
             else
                 rho_alphaRmax = in__.scalar_lub_constrain(-(1), 1);
             current_statement_begin__ = 72;
-            local_scalar_t__ rho_phi;
-            (void) rho_phi;  // dummy to suppress unused var warning
+            local_scalar_t__ rho_R;
+            (void) rho_R;  // dummy to suppress unused var warning
             if (jacobian__)
-                rho_phi = in__.scalar_lub_constrain(-(1), 1, lp__);
+                rho_R = in__.scalar_lub_constrain(-(1), 1, lp__);
             else
-                rho_phi = in__.scalar_lub_constrain(-(1), 1);
+                rho_R = in__.scalar_lub_constrain(-(1), 1);
             current_statement_begin__ = 73;
-            local_scalar_t__ sigma_phi;
-            (void) sigma_phi;  // dummy to suppress unused var warning
+            local_scalar_t__ sigma_year_R;
+            (void) sigma_year_R;  // dummy to suppress unused var warning
             if (jacobian__)
-                sigma_phi = in__.scalar_lb_constrain(0, lp__);
+                sigma_year_R = in__.scalar_lb_constrain(0, lp__);
             else
-                sigma_phi = in__.scalar_lb_constrain(0);
+                sigma_year_R = in__.scalar_lb_constrain(0);
             current_statement_begin__ = 74;
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_phi;
-            (void) zeta_phi;  // dummy to suppress unused var warning
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> zeta_year;
+            (void) zeta_year;  // dummy to suppress unused var warning
             if (jacobian__)
-                zeta_phi = in__.vector_constrain(max(year), lp__);
+                zeta_year = in__.vector_constrain(max(year), lp__);
             else
-                zeta_phi = in__.vector_constrain(max(year));
+                zeta_year = in__.vector_constrain(max(year));
             current_statement_begin__ = 75;
-            local_scalar_t__ sigma;
-            (void) sigma;  // dummy to suppress unused var warning
+            local_scalar_t__ sigma_R;
+            (void) sigma_R;  // dummy to suppress unused var warning
             if (jacobian__)
-                sigma = in__.scalar_lb_constrain(0, lp__);
+                sigma_R = in__.scalar_lb_constrain(0, lp__);
             else
-                sigma = in__.scalar_lb_constrain(0);
+                sigma_R = in__.scalar_lb_constrain(0);
             // transformed parameters
             current_statement_begin__ = 79;
             validate_non_negative_index("alpha", "N_pop", N_pop);
@@ -752,10 +752,10 @@ public:
             stan::math::initialize(Rmax, DUMMY_VAR__);
             stan::math::fill(Rmax, DUMMY_VAR__);
             current_statement_begin__ = 81;
-            validate_non_negative_index("phi", "N_year", N_year);
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> phi(N_year);
-            stan::math::initialize(phi, DUMMY_VAR__);
-            stan::math::fill(phi, DUMMY_VAR__);
+            validate_non_negative_index("eta_year_R", "N_year", N_year);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> eta_year_R(N_year);
+            stan::math::initialize(eta_year_R, DUMMY_VAR__);
+            stan::math::fill(eta_year_R, DUMMY_VAR__);
             current_statement_begin__ = 82;
             validate_non_negative_index("R_hat", "N", N);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> R_hat(N);
@@ -776,11 +776,11 @@ public:
             stan::math::initialize(zeta_alphaRmax, DUMMY_VAR__);
             stan::math::fill(zeta_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 88;
-            validate_non_negative_index("epsilon_alphaRmax", "N_pop", N_pop);
-            validate_non_negative_index("epsilon_alphaRmax", "2", 2);
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> epsilon_alphaRmax(N_pop, 2);
-            stan::math::initialize(epsilon_alphaRmax, DUMMY_VAR__);
-            stan::math::fill(epsilon_alphaRmax, DUMMY_VAR__);
+            validate_non_negative_index("eta_alphaRmax", "N_pop", N_pop);
+            validate_non_negative_index("eta_alphaRmax", "2", 2);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> eta_alphaRmax(N_pop, 2);
+            stan::math::initialize(eta_alphaRmax, DUMMY_VAR__);
+            stan::math::fill(eta_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 89;
             validate_non_negative_index("sigma_alphaRmax", "2", 2);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_alphaRmax(2);
@@ -819,27 +819,27 @@ public:
             current_statement_begin__ = 97;
             stan::math::assign(zeta_alphaRmax, append_col(zeta_alpha, zeta_Rmax));
             current_statement_begin__ = 98;
-            stan::math::assign(epsilon_alphaRmax, transpose(diag_pre_multiply(sigma_alphaRmax, multiply(L_alphaRmax, transpose(zeta_alphaRmax)))));
+            stan::math::assign(eta_alphaRmax, transpose(diag_pre_multiply(sigma_alphaRmax, multiply(L_alphaRmax, transpose(zeta_alphaRmax)))));
             current_statement_begin__ = 99;
-            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
+            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, stan::model::rvalue(eta_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "eta_alphaRmax"))));
             current_statement_begin__ = 100;
-            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
+            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, stan::model::rvalue(eta_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), "eta_alphaRmax"))));
             }
             current_statement_begin__ = 104;
-            stan::model::assign(phi, 
+            stan::model::assign(eta_year_R, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
-                        ((get_base1(zeta_phi, 1, "zeta_phi", 1) * sigma_phi) / stan::math::sqrt((1 - pow(rho_phi, 2)))), 
-                        "assigning variable phi");
+                        ((get_base1(zeta_year, 1, "zeta_year", 1) * sigma_year_R) / stan::math::sqrt((1 - pow(rho_R, 2)))), 
+                        "assigning variable eta_year_R");
             current_statement_begin__ = 105;
             for (int i = 2; i <= N_year; ++i) {
                 current_statement_begin__ = 106;
-                stan::model::assign(phi, 
+                stan::model::assign(eta_year_R, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            ((rho_phi * get_base1(phi, (i - 1), "phi", 1)) + (get_base1(zeta_phi, i, "zeta_phi", 1) * sigma_phi)), 
-                            "assigning variable phi");
+                            ((rho_R * get_base1(eta_year_R, (i - 1), "eta_year_R", 1)) + (get_base1(zeta_year, i, "zeta_year", 1) * sigma_year_R)), 
+                            "assigning variable eta_year_R");
             }
             current_statement_begin__ = 107;
-            stan::math::assign(phi, subtract(phi, mean(phi)));
+            stan::math::assign(eta_year_R, subtract(eta_year_R, mean(eta_year_R)));
             current_statement_begin__ = 110;
             stan::math::assign(R_hat, rep_vector(0, N));
             current_statement_begin__ = 111;
@@ -874,15 +874,15 @@ public:
             }
             check_greater_or_equal(function__, "Rmax", Rmax, 0);
             current_statement_begin__ = 81;
-            size_t phi_j_1_max__ = N_year;
-            for (size_t j_1__ = 0; j_1__ < phi_j_1_max__; ++j_1__) {
-                if (stan::math::is_uninitialized(phi(j_1__))) {
+            size_t eta_year_R_j_1_max__ = N_year;
+            for (size_t j_1__ = 0; j_1__ < eta_year_R_j_1_max__; ++j_1__) {
+                if (stan::math::is_uninitialized(eta_year_R(j_1__))) {
                     std::stringstream msg__;
-                    msg__ << "Undefined transformed parameter: phi" << "(" << j_1__ << ")";
-                    stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable phi: ") + msg__.str()), current_statement_begin__, prog_reader__());
+                    msg__ << "Undefined transformed parameter: eta_year_R" << "(" << j_1__ << ")";
+                    stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable eta_year_R: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            check_greater_or_equal(function__, "phi", phi, 0);
+            check_greater_or_equal(function__, "eta_year_R", eta_year_R, 0);
             current_statement_begin__ = 82;
             size_t R_hat_j_1_max__ = N;
             for (size_t j_1__ = 0; j_1__ < R_hat_j_1_max__; ++j_1__) {
@@ -903,19 +903,19 @@ public:
             current_statement_begin__ = 121;
             lp_accum__.add(normal_log<propto__>(sigma_Rmax, 0, 3));
             current_statement_begin__ = 122;
-            lp_accum__.add(pexp_lpdf<propto__>(rho_phi, 0, 0.85, 50, pstream__));
+            lp_accum__.add(pexp_lpdf<propto__>(rho_R, 0, 0.85, 50, pstream__));
             current_statement_begin__ = 123;
-            lp_accum__.add(normal_log<propto__>(sigma_phi, 0, 3));
+            lp_accum__.add(normal_log<propto__>(sigma_year_R, 0, 3));
             current_statement_begin__ = 124;
-            lp_accum__.add(normal_log<propto__>(sigma, 0, 2));
+            lp_accum__.add(normal_log<propto__>(sigma_R, 0, 2));
             current_statement_begin__ = 128;
             lp_accum__.add(std_normal_log<propto__>(zeta_alpha));
             current_statement_begin__ = 129;
             lp_accum__.add(std_normal_log<propto__>(zeta_Rmax));
             current_statement_begin__ = 130;
-            lp_accum__.add(std_normal_log<propto__>(zeta_phi));
+            lp_accum__.add(std_normal_log<propto__>(zeta_year));
             current_statement_begin__ = 133;
-            lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(R, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R"), add(stan::math::log(stan::model::rvalue(R_hat, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R_hat")), stan::model::rvalue(phi, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(year, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "year")), stan::model::nil_index_list()), "phi")), sigma));
+            lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(R, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R"), add(stan::math::log(stan::model::rvalue(R_hat, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R_hat")), stan::model::rvalue(eta_year_R, stan::model::cons_list(stan::model::index_multi(stan::model::rvalue(year, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "year")), stan::model::nil_index_list()), "eta_year_R")), sigma_R));
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
             // Next line prevents compiler griping about no return
@@ -943,13 +943,13 @@ public:
         names__.push_back("sigma_Rmax");
         names__.push_back("zeta_Rmax");
         names__.push_back("rho_alphaRmax");
-        names__.push_back("rho_phi");
-        names__.push_back("sigma_phi");
-        names__.push_back("zeta_phi");
-        names__.push_back("sigma");
+        names__.push_back("rho_R");
+        names__.push_back("sigma_year_R");
+        names__.push_back("zeta_year");
+        names__.push_back("sigma_R");
         names__.push_back("alpha");
         names__.push_back("Rmax");
-        names__.push_back("phi");
+        names__.push_back("eta_year_R");
         names__.push_back("R_hat");
         names__.push_back("S_sim");
         names__.push_back("R_sim");
@@ -1035,17 +1035,17 @@ public:
         }
         double rho_alphaRmax = in__.scalar_lub_constrain(-(1), 1);
         vars__.push_back(rho_alphaRmax);
-        double rho_phi = in__.scalar_lub_constrain(-(1), 1);
-        vars__.push_back(rho_phi);
-        double sigma_phi = in__.scalar_lb_constrain(0);
-        vars__.push_back(sigma_phi);
-        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_phi = in__.vector_constrain(max(year));
-        size_t zeta_phi_j_1_max__ = max(year);
-        for (size_t j_1__ = 0; j_1__ < zeta_phi_j_1_max__; ++j_1__) {
-            vars__.push_back(zeta_phi(j_1__));
+        double rho_R = in__.scalar_lub_constrain(-(1), 1);
+        vars__.push_back(rho_R);
+        double sigma_year_R = in__.scalar_lb_constrain(0);
+        vars__.push_back(sigma_year_R);
+        Eigen::Matrix<double, Eigen::Dynamic, 1> zeta_year = in__.vector_constrain(max(year));
+        size_t zeta_year_j_1_max__ = max(year);
+        for (size_t j_1__ = 0; j_1__ < zeta_year_j_1_max__; ++j_1__) {
+            vars__.push_back(zeta_year(j_1__));
         }
-        double sigma = in__.scalar_lb_constrain(0);
-        vars__.push_back(sigma);
+        double sigma_R = in__.scalar_lb_constrain(0);
+        vars__.push_back(sigma_R);
         double lp__ = 0.0;
         (void) lp__;  // dummy to suppress unused var warning
         stan::math::accumulator<double> lp_accum__;
@@ -1065,10 +1065,10 @@ public:
             stan::math::initialize(Rmax, DUMMY_VAR__);
             stan::math::fill(Rmax, DUMMY_VAR__);
             current_statement_begin__ = 81;
-            validate_non_negative_index("phi", "N_year", N_year);
-            Eigen::Matrix<double, Eigen::Dynamic, 1> phi(N_year);
-            stan::math::initialize(phi, DUMMY_VAR__);
-            stan::math::fill(phi, DUMMY_VAR__);
+            validate_non_negative_index("eta_year_R", "N_year", N_year);
+            Eigen::Matrix<double, Eigen::Dynamic, 1> eta_year_R(N_year);
+            stan::math::initialize(eta_year_R, DUMMY_VAR__);
+            stan::math::fill(eta_year_R, DUMMY_VAR__);
             current_statement_begin__ = 82;
             validate_non_negative_index("R_hat", "N", N);
             Eigen::Matrix<double, Eigen::Dynamic, 1> R_hat(N);
@@ -1089,11 +1089,11 @@ public:
             stan::math::initialize(zeta_alphaRmax, DUMMY_VAR__);
             stan::math::fill(zeta_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 88;
-            validate_non_negative_index("epsilon_alphaRmax", "N_pop", N_pop);
-            validate_non_negative_index("epsilon_alphaRmax", "2", 2);
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> epsilon_alphaRmax(N_pop, 2);
-            stan::math::initialize(epsilon_alphaRmax, DUMMY_VAR__);
-            stan::math::fill(epsilon_alphaRmax, DUMMY_VAR__);
+            validate_non_negative_index("eta_alphaRmax", "N_pop", N_pop);
+            validate_non_negative_index("eta_alphaRmax", "2", 2);
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> eta_alphaRmax(N_pop, 2);
+            stan::math::initialize(eta_alphaRmax, DUMMY_VAR__);
+            stan::math::fill(eta_alphaRmax, DUMMY_VAR__);
             current_statement_begin__ = 89;
             validate_non_negative_index("sigma_alphaRmax", "2", 2);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_alphaRmax(2);
@@ -1132,27 +1132,27 @@ public:
             current_statement_begin__ = 97;
             stan::math::assign(zeta_alphaRmax, append_col(zeta_alpha, zeta_Rmax));
             current_statement_begin__ = 98;
-            stan::math::assign(epsilon_alphaRmax, transpose(diag_pre_multiply(sigma_alphaRmax, multiply(L_alphaRmax, transpose(zeta_alphaRmax)))));
+            stan::math::assign(eta_alphaRmax, transpose(diag_pre_multiply(sigma_alphaRmax, multiply(L_alphaRmax, transpose(zeta_alphaRmax)))));
             current_statement_begin__ = 99;
-            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
+            stan::math::assign(alpha, stan::math::exp(add(mu_alpha, stan::model::rvalue(eta_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list())), "eta_alphaRmax"))));
             current_statement_begin__ = 100;
-            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, stan::model::rvalue(epsilon_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), "epsilon_alphaRmax"))));
+            stan::math::assign(Rmax, stan::math::exp(add(mu_Rmax, stan::model::rvalue(eta_alphaRmax, stan::model::cons_list(stan::model::index_omni(), stan::model::cons_list(stan::model::index_uni(2), stan::model::nil_index_list())), "eta_alphaRmax"))));
             }
             current_statement_begin__ = 104;
-            stan::model::assign(phi, 
+            stan::model::assign(eta_year_R, 
                         stan::model::cons_list(stan::model::index_uni(1), stan::model::nil_index_list()), 
-                        ((get_base1(zeta_phi, 1, "zeta_phi", 1) * sigma_phi) / stan::math::sqrt((1 - pow(rho_phi, 2)))), 
-                        "assigning variable phi");
+                        ((get_base1(zeta_year, 1, "zeta_year", 1) * sigma_year_R) / stan::math::sqrt((1 - pow(rho_R, 2)))), 
+                        "assigning variable eta_year_R");
             current_statement_begin__ = 105;
             for (int i = 2; i <= N_year; ++i) {
                 current_statement_begin__ = 106;
-                stan::model::assign(phi, 
+                stan::model::assign(eta_year_R, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            ((rho_phi * get_base1(phi, (i - 1), "phi", 1)) + (get_base1(zeta_phi, i, "zeta_phi", 1) * sigma_phi)), 
-                            "assigning variable phi");
+                            ((rho_R * get_base1(eta_year_R, (i - 1), "eta_year_R", 1)) + (get_base1(zeta_year, i, "zeta_year", 1) * sigma_year_R)), 
+                            "assigning variable eta_year_R");
             }
             current_statement_begin__ = 107;
-            stan::math::assign(phi, subtract(phi, mean(phi)));
+            stan::math::assign(eta_year_R, subtract(eta_year_R, mean(eta_year_R)));
             current_statement_begin__ = 110;
             stan::math::assign(R_hat, rep_vector(0, N));
             current_statement_begin__ = 111;
@@ -1172,7 +1172,7 @@ public:
             current_statement_begin__ = 80;
             check_greater_or_equal(function__, "Rmax", Rmax, 0);
             current_statement_begin__ = 81;
-            check_greater_or_equal(function__, "phi", phi, 0);
+            check_greater_or_equal(function__, "eta_year_R", eta_year_R, 0);
             current_statement_begin__ = 82;
             check_greater_or_equal(function__, "R_hat", R_hat, 0);
             // write transformed parameters
@@ -1185,9 +1185,9 @@ public:
                 for (size_t j_1__ = 0; j_1__ < Rmax_j_1_max__; ++j_1__) {
                     vars__.push_back(Rmax(j_1__));
                 }
-                size_t phi_j_1_max__ = N_year;
-                for (size_t j_1__ = 0; j_1__ < phi_j_1_max__; ++j_1__) {
-                    vars__.push_back(phi(j_1__));
+                size_t eta_year_R_j_1_max__ = N_year;
+                for (size_t j_1__ = 0; j_1__ < eta_year_R_j_1_max__; ++j_1__) {
+                    vars__.push_back(eta_year_R(j_1__));
                 }
                 size_t R_hat_j_1_max__ = N;
                 for (size_t j_1__ = 0; j_1__ < R_hat_j_1_max__; ++j_1__) {
@@ -1237,7 +1237,7 @@ public:
                     current_statement_begin__ = 156;
                     stan::model::assign(R_sim, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                                (SR(SR_fun, get_base1(alpha, get_base1(pop, i, "pop", 1), "alpha", 1), get_base1(Rmax, get_base1(pop, i, "pop", 1), "Rmax", 1), get_base1(S_sim, i, "S_sim", 1), get_base1(A, i, "A", 1), pstream__) * lognormal_rng(get_base1(phi, get_base1(year, i, "year", 1), "phi", 1), sigma, base_rng__)), 
+                                (SR(SR_fun, get_base1(alpha, get_base1(pop, i, "pop", 1), "alpha", 1), get_base1(Rmax, get_base1(pop, i, "pop", 1), "Rmax", 1), get_base1(S_sim, i, "S_sim", 1), get_base1(A, i, "A", 1), pstream__) * lognormal_rng(get_base1(eta_year_R, get_base1(year, i, "year", 1), "eta_year_R", 1), sigma_R, base_rng__)), 
                                 "assigning variable R_sim");
                 }
             }
@@ -1310,19 +1310,19 @@ public:
         param_name_stream__ << "rho_alphaRmax";
         param_names__.push_back(param_name_stream__.str());
         param_name_stream__.str(std::string());
-        param_name_stream__ << "rho_phi";
+        param_name_stream__ << "rho_R";
         param_names__.push_back(param_name_stream__.str());
         param_name_stream__.str(std::string());
-        param_name_stream__ << "sigma_phi";
+        param_name_stream__ << "sigma_year_R";
         param_names__.push_back(param_name_stream__.str());
-        size_t zeta_phi_j_1_max__ = max(year);
-        for (size_t j_1__ = 0; j_1__ < zeta_phi_j_1_max__; ++j_1__) {
+        size_t zeta_year_j_1_max__ = max(year);
+        for (size_t j_1__ = 0; j_1__ < zeta_year_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "zeta_phi" << '.' << j_1__ + 1;
+            param_name_stream__ << "zeta_year" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         param_name_stream__.str(std::string());
-        param_name_stream__ << "sigma";
+        param_name_stream__ << "sigma_R";
         param_names__.push_back(param_name_stream__.str());
         if (!include_gqs__ && !include_tparams__) return;
         if (include_tparams__) {
@@ -1338,10 +1338,10 @@ public:
                 param_name_stream__ << "Rmax" << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
-            size_t phi_j_1_max__ = N_year;
-            for (size_t j_1__ = 0; j_1__ < phi_j_1_max__; ++j_1__) {
+            size_t eta_year_R_j_1_max__ = N_year;
+            for (size_t j_1__ = 0; j_1__ < eta_year_R_j_1_max__; ++j_1__) {
                 param_name_stream__.str(std::string());
-                param_name_stream__ << "phi" << '.' << j_1__ + 1;
+                param_name_stream__ << "eta_year_R" << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
             size_t R_hat_j_1_max__ = N;
@@ -1397,19 +1397,19 @@ public:
         param_name_stream__ << "rho_alphaRmax";
         param_names__.push_back(param_name_stream__.str());
         param_name_stream__.str(std::string());
-        param_name_stream__ << "rho_phi";
+        param_name_stream__ << "rho_R";
         param_names__.push_back(param_name_stream__.str());
         param_name_stream__.str(std::string());
-        param_name_stream__ << "sigma_phi";
+        param_name_stream__ << "sigma_year_R";
         param_names__.push_back(param_name_stream__.str());
-        size_t zeta_phi_j_1_max__ = max(year);
-        for (size_t j_1__ = 0; j_1__ < zeta_phi_j_1_max__; ++j_1__) {
+        size_t zeta_year_j_1_max__ = max(year);
+        for (size_t j_1__ = 0; j_1__ < zeta_year_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "zeta_phi" << '.' << j_1__ + 1;
+            param_name_stream__ << "zeta_year" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         param_name_stream__.str(std::string());
-        param_name_stream__ << "sigma";
+        param_name_stream__ << "sigma_R";
         param_names__.push_back(param_name_stream__.str());
         if (!include_gqs__ && !include_tparams__) return;
         if (include_tparams__) {
@@ -1425,10 +1425,10 @@ public:
                 param_name_stream__ << "Rmax" << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
-            size_t phi_j_1_max__ = N_year;
-            for (size_t j_1__ = 0; j_1__ < phi_j_1_max__; ++j_1__) {
+            size_t eta_year_R_j_1_max__ = N_year;
+            for (size_t j_1__ = 0; j_1__ < eta_year_R_j_1_max__; ++j_1__) {
                 param_name_stream__.str(std::string());
-                param_name_stream__ << "phi" << '.' << j_1__ + 1;
+                param_name_stream__ << "eta_year_R" << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
             size_t R_hat_j_1_max__ = N;

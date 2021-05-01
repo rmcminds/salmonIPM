@@ -4,15 +4,15 @@
 \alias{stan_init}
 \title{Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.}
 \usage{
-stan_init(data, stan_model, chains = 1)
+stan_init(stan_model, data, chains = 1)
 }
 \arguments{
+\item{stan_model}{Character string giving the name of the Stan model being
+fit (\code{".stan"} filetype extension is not included).}
+
 \item{data}{Named list of input data for fitting either an IPM or
 run-reconstruction spawner-recruit model in \href{http://mc-stan.org}{Stan},
 as returned by \code{\link[=stan_data]{stan_data()}}.}
-
-\item{stan_model}{Character string giving the name of the Stan model being
-fit (\code{".stan"} filetype extension is not included).}
 
 \item{chains}{A positive integer specifying the number of Markov chains.}
 }

@@ -5,20 +5,21 @@
 \title{Fits an integrated or run-reconstruction spawner-recruit model.}
 \usage{
 salmonIPM(
+  model = "IPM",
+  life_cycle = "SS",
+  pool_pops = TRUE,
+  SR_fun = "BH",
+  stan_model = NULL,
+  ages = NULL,
+  par_models = NULL,
+  scale = TRUE,
   fish_data,
   fish_data_fwd = NULL,
-  env_data = NULL,
   fecundity_data = NULL,
   prior_data = NULL,
-  ages = NULL,
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
-  model,
-  life_cycle = "SS",
-  pool_pops = TRUE,
-  stan_model = NULL,
-  SR_fun = "BH",
   init = NULL,
   pars = NULL,
   include = TRUE,
@@ -32,41 +33,54 @@ salmonIPM(
 )
 }
 \arguments{
+\item{model}{Either \code{"IPM"} or \code{"RR"}, indicating whether the data
+are intended for an integrated or run-reconstruction model.}
+
+\item{life_cycle}{Character string indicating which life-cycle model to fit.
+One of the following options (must be \code{"SS"} if \code{model == "RR"}):
+\itemize{
+\item \code{"SS"}  Spawner-to-spawner (the default)
+\item \code{"SSpa"}  Spawner-to-spawner with partially observed and partially
+reproductively effective adult age classes
+\item \code{"SMS"}  Spawner-smolt-spawner
+\item \code{"SMaS"}  Spawner-smolt-spawner with multiple smolt age classes (currently only
+available for \code{pool_pops == FALSE})
+\item \code{"LCRchum"}  Customized spawner-egg-smolt-spawner model for Lower Columbia chum
+(\code{pool_pops == TRUE})
+\item \code{"ICchinook"}  Customized spawner-smolt-spawner model with downstream, SAR,
+and upstream survival (\code{"pool_pops == TRUE"})
+}}
+
+\item{pool_pops}{Logical scalar defaulting to \code{TRUE}, indicating whether or not
+to treat the different populations as hierarchical rather than
+fixed/independent.}
+
+\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"},
+indicating which spawner-recruit function to fit.}
+
+\item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
+fit (".stan" filetype extension is not included). A more concise alternative to
+specifying \code{model}, \code{life_cycle}, and \code{pool_pops} (and will override those arguments).}
+
+\item{ages}{See \code{\link[=stan_data]{stan_data()}}.}
+
+\item{par_models}{See \code{\link[=stan_data]{stan_data()}}.}
+
+\item{scale}{See \code{\link[=stan_data]{stan_data()}}.}
+
 \item{fish_data}{See \code{\link[=stan_data]{stan_data()}}.}
 
 \item{fish_data_fwd}{See \code{\link[=stan_data]{stan_data()}}.}
 
-\item{env_data}{See \code{\link[=stan_data]{stan_data()}}.}
-
 \item{fecundity_data}{See \code{\link[=stan_data]{stan_data()}}.}
 
 \item{prior_data}{See \code{\link[=stan_data]{stan_data()}}.}
-
-\item{ages}{See \code{\link[=stan_data]{stan_data()}}.}
 
 \item{age_S_obs}{See \code{\link[=stan_data]{stan_data()}}.}
 
 \item{age_S_eff}{See \code{\link[=stan_data]{stan_data()}}.}
 
 \item{conditionGRonMS}{See \code{\link[=stan_data]{stan_data()}}.}
-
-\item{model}{Either \code{"IPM"} or \code{"RR"}, indicating whether the data
-are intended for an integrated or run-reconstruction model.}
-
-\item{life_cycle}{Character string indicating which life-cycle model to fit.
-Currently available options are spawner-to-spawner (\code{"SS"}, the
-default), spawner-to-spawner "harvest model" (\code{"SS_F"}), or
-spawner-smolt-spawner (\code{"SMS"}).}
-
-\item{pool_pops}{Logical scalar defaulting to \code{TRUE}, indicating whether or not
-to treat the different populations as hierarchical rather than
-fixed/independent.}
-
-\item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
-fit (".stan" filetype extension is not included).}
-
-\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or
-\code{"Ricker"}, indicating which spawner-recruit function to fit.}
 
 \item{init}{A list of named lists of initial values to be passed to
 \code{\link[rstan:stan]{rstan::stan()}}. If \code{NULL}, initial values will be automatically

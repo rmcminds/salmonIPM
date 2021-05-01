@@ -57,14 +57,14 @@ functions {
       return(which_cond);
   }
   
-  // Left multiply vector by matrix
-  // works even if size is zero
-  vector mat_lmult(matrix X, vector v)
-  {
-    vector[rows(X)] Xv;
-    Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
-    return(Xv); 
-  }
+  // // Left multiply vector by matrix
+  // // works even if size is zero
+  // vector mat_lmult(matrix X, vector v)
+  // {
+  //   vector[rows(X)] Xv;
+  //   Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
+  //   return(Xv); 
+  // }
     
   // Quantiles of a vector
   real quantile(vector v, real p) {
@@ -95,8 +95,12 @@ data {
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X;                    // number of productivity covariates
-  matrix[max(append_array(year,year_fwd)),N_X] X; // brood-year productivity covariates
+  int<lower=0> N_X_alpha;              // number of intrinsic productivity covariates
+  row_vector[N_X_alpha] X_alpha[N];    // intrinsic productivity covariates
+  int<lower=0> N_X_Rmax;               // number of maximum recruitment covariates
+  row_vector[N_X_Rmax] X_Rmax[N];      // maximum recruitment covariates
+  int<lower=0> N_X_R;                  // number of recruitment covariates
+  row_vector[N_X_R] X_R[N];            // brood-year productivity covariates
   // fishery and hatchery removals
   vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -183,13 +187,15 @@ transformed data {
 parameters {
   // recruitment
   real mu_alpha;                         // hyper-mean log intrinsic productivity
+  vector[N_X_alpha] beta_alpha;          // regression coefs for log alpha
   real<lower=0> sigma_alpha;             // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;              // log intrinsic prod (Z-scores)
-  real mu_Rmax;                          // hyper-mean log asymptotic recruitment
-  real<lower=0> sigma_Rmax;              // hyper-SD log asymptotic recruitment
-  vector[N_pop] zeta_Rmax;               // log asymptotic recruitment (Z-scores)
+  real mu_Rmax;                          // hyper-mean log maximum recruitment
+  vector[N_X_Rmax] beta_Rmax;            // regression coefs for log Rmax
+  real<lower=0> sigma_Rmax;              // hyper-SD log maximum recruitment
+  vector[N_pop] zeta_Rmax;               // log maximum recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaRmax;  // correlation between log(alpha) and log(Rmax)
-  vector[N_X] beta_R;                    // regression coefs for log productivity anomalies
+  vector[N_X_R] beta_R;                  // regression coefs for log recruitment
   real<lower=-1,upper=1> rho_R;          // AR(1) coef for log productivity anomalies
   real<lower=0> sigma_year_R;            // hyper-SD of brood year log productivity anomalies
   vector[N_year_all] zeta_year_R;        // log brood year productivity anomalies (Z-scores)
@@ -215,7 +221,7 @@ parameters {
 transformed parameters {
   // recruitment
   vector<lower=0>[N_pop] alpha;          // intrinsic productivity 
-  vector<lower=0>[N_pop] Rmax;           // asymptotic recruitment 
+  vector<lower=0>[N_pop] Rmax;           // maximum recruitment 
   vector[N_year_all] eta_year_R;         // log brood year productivity anomalies
   vector<lower=0>[N] R_hat;              // expected recruit abundance (not density) by brood year
   vector<lower=0>[N] R;                  // true recruit abundance (not density) by brood year
@@ -254,8 +260,8 @@ transformed parameters {
   eta_year_R[1] = zeta_year_R[1]*sigma_year_R/sqrt(1 - rho_R^2); // initial anomaly
   for(i in 2:N_year_all)
     eta_year_R[i] = rho_R*eta_year_R[i-1] + zeta_year_R[i]*sigma_year_R;
-  // constrain "fitted" log anomalies to sum to 0 (X should be centered)
-  eta_year_R = eta_year_R - mean(eta_year_R[1:N_year]) + mat_lmult(X,beta_R);
+  // constrain "fitted" log anomalies to sum to 0
+  eta_year_R = eta_year_R - mean(head(eta_year_R, N_year));
   
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -264,7 +270,7 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
-  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(mu_p[N_age]));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
   // Inverse log-ratio (softmax) transform of cohort age distn
   {
@@ -277,6 +283,9 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
+    // intrinsic productivity and maximum recruitment adjusted for covariate effects
+    real alpha_i = alpha[pop[i]] * exp(dot_product(X_alpha[i], beta_alpha));
+    real Rmax_i = Rmax[pop[i]] * exp(dot_product(X_Rmax[i], beta_Rmax));
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii; // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
@@ -311,8 +320,8 @@ transformed parameters {
     // Recruitment
     // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
     // (assumes age structure is the same for W and H spawners)
-    R_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i]*q[i,]*age_S_eff, A[i]);
-    R[i] = R_hat[i] * exp(eta_year_R[year[i]] + sigma_R*zeta_R[i]);
+    R_hat[i] = SR(SR_fun, alpha_i, Rmax_i, S[i]*q[i,]*age_S_eff, A[i]);
+    R[i] = R_hat[i] * exp(eta_year_R[year[i]] + dot_product(X_R[i], beta_R) + sigma_R*zeta_R[i]);
   }
 }
 
@@ -323,8 +332,10 @@ model {
   
   // recruitment
   mu_alpha ~ normal(2,5);
+  beta_alpha ~ normal(0,5);
   sigma_alpha ~ normal(0,3);
   mu_Rmax ~ normal(mu_mu_Rmax, sigma_mu_Rmax);
+  beta_Rmax ~ normal(0,5);
   sigma_Rmax ~ normal(0,3);
   zeta_alpha ~ std_normal();  // [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D),
   zeta_Rmax ~ std_normal();   // where D = diag_matrix(sigma_alpha, sigma_Rmax)
@@ -375,6 +386,7 @@ model {
 }
 
 generated quantities {
+  // NOTE: DOES NOT INCLUDE COVARIATE EFFECTS //
   corr_matrix[N_age-1] R_pop_p;     // among-pop correlation matrix of mean log-ratio age distns 
   corr_matrix[N_age-1] R_p;         // correlation matrix of within-pop cohort log-ratio age distns 
   vector<lower=0>[N_fwd] S_W_fwd;   // true total wild spawner abundance in forward simulations
@@ -397,8 +409,8 @@ generated quantities {
   // (Note that if N_fwd == 0, this block will not execute)
   for(i in 1:N_fwd)
   {
-    vector[N_age-1] alr_p_fwd;   // alr(p_fwd[i,])'
-    row_vector[N_age] S_W_a_fwd; // true wild spawners by age
+    vector[N_age-1] alr_p_fwd;     // alr(p_fwd[i,])'
+    row_vector[N_age] S_W_a_fwd;   // true wild spawners by age
     
     // Inverse log-ratio transform of cohort age distn
     alr_p_fwd = multi_normal_cholesky_rng(to_vector(mu_pop_alr_p[pop_fwd[i],]), L_p);
@@ -424,13 +436,13 @@ generated quantities {
     S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
     q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
     S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-    R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i]*q_fwd[i,]*age_S_eff, A_fwd[i]);
+    R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Rmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
     R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + eta_year_R[year_fwd[i]], sigma_R);
   }
   
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
-    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]] .* (q[which_S_obs[i],] * age_S_obs)), tau); 
+    LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau); 
   LL_n_age_obs = (n_age_obs .* log(q)) * rep_vector(1,N_age);
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)

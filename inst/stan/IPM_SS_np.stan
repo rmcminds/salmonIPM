@@ -41,11 +41,11 @@ data {
   int<lower=1> N;                      // total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];         // population identifier
   int<lower=1,upper=N> year[N];        // brood year identifier
-  vector[N] A;                         // habitat area associated with each spawner abundance obs
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  int<lower=0> N_X;                    // number of productivity covariates
-  matrix[max(year),N_X] X;             // brood-year productivity covariates
+  vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
+  int<lower=0> N_X_R;                  // number of recruitment covariates
+  row_vector[N_X_R] X_R[N];            // brood-year productivity covariates
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -115,8 +115,8 @@ transformed data {
 parameters {
   // recruitment
   vector<lower=0>[N_pop] alpha;           // intrinsic productivity
-  vector<lower=0>[N_pop] Rmax;            // asymptotic recruitment
-  matrix[N_pop,N_X] beta_R;               // regression coefs for log productivity anomalies
+  vector<lower=0>[N_pop] Rmax;            // maximum recruitment
+  matrix[N_pop,N_X_R] beta_R;             // regression coefs for log recruitment
   vector<lower=-1,upper=1>[N_pop] rho_R;  // AR(1) coefs for log productivity anomalies
   vector<lower=0>[N_pop] sigma_R;         // process error SDs
   vector[N] zeta_R;                       // recruitment process errors (z-scored)
@@ -158,7 +158,7 @@ transformed parameters {
 
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
-    mu_alr_p[j] = log(head(mu_p[j], N_age-1)) - log(tail(mu_p[j], 1));
+    mu_alr_p[j] = log(head(mu_p[j], N_age-1)) - log(mu_p[j,N_age]);
 
   // Calculate true total wild and hatchery spawners and spawner age distribution
   // and predict recruitment from brood year i
@@ -208,7 +208,7 @@ transformed parameters {
       epsilon_R[i] = zeta_R[i]*sigma_R[pop[i]]/sqrt(1 - rho_R[pop[i]]^2);
     else
       epsilon_R[i] = rho_R[pop[i]]*epsilon_R[i-1] + zeta_R[i]*sigma_R[pop[i]];
-    R[i] = R_hat[i]*exp(dot_product(X[year[i],], beta_R[pop[i],]) + epsilon_R[i]);
+    R[i] = R_hat[i] * exp(dot_product(X_R[i], beta_R[pop[i],]) + epsilon_R[i]);
   }
 }
 

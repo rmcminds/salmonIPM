@@ -81,10 +81,14 @@ data {
   vector<lower=0,upper=1>[N_fwd] p_HOS_fwd;  // p_HOS for forward simulations
   // smolt production
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=1> smolt_age;              // smolt age
-  int<lower=0> N_X_M;                  // number of spawner-smolt productivity covariates
-  matrix[max(append_array(year,year_fwd)),N_X_M] X_M; // spawner-smolt covariates (if none, use vector of zeros)
+  vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
+  int<lower=0> N_X_alpha;              // number of intrinsic productivity covariates
+  row_vector[N_X_alpha] X_alpha[N];    // intrinsic productivity covariates
+  int<lower=0> N_X_Mmax;               // number of maximum smolt recruitment covariates
+  row_vector[N_X_Mmax] X_Mmax[N];      // maximum smolt recruitment covariates
+  int<lower=0> N_X_M;                  // number of smolt recruitment covariates
+  row_vector[N_X_M] X_M[N];            // smolt recruitment covariates
   // downstream, SAR, upstream survival
   int<lower=0> N_X_D;                  // number of juvenile downstream survival covariates
   matrix[max(append_array(year,year_fwd)),N_X_D] X_D; // downstream survival covariates (if none, use vector of zeros)
@@ -190,13 +194,15 @@ transformed data {
 parameters {
   // smolt recruitment
   real mu_alpha;                         // hyper-mean log intrinsic productivity
+  vector[N_X_alpha] beta_alpha;          // regression coefs for log alpha
   real<lower=0> sigma_alpha;             // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;              // log intrinsic prod (Z-scores)
   real mu_Mmax;                          // hyper-mean log asymptotic recruitment
+  vector[N_X_Mmax] beta_Mmax;            // regression coefs for log Mmax
   real<lower=0> sigma_Mmax;              // hyper-SD log asymptotic recruitment
   vector[N_pop] zeta_Mmax;               // log asymptotic recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaMmax;  // correlation between log(alpha) and log(Mmax)
-  vector[N_X_M] beta_M;                  // regression coefs for spawner-smolt productivity
+  vector[N_X_M] beta_M;                  // regression coefs for smolt recruitment
   real<lower=-1,upper=1> rho_M;          // AR(1) coef for spawner-smolt productivity
   real<lower=0> sigma_M;                 // spawner-smolt process error SD
   vector[N] zeta_M;                      // smolt recruitment process errors (Z-scores)
@@ -281,14 +287,14 @@ transformed parameters {
   }
 
   // AR(1) models for downstream, SAR, upstream survival
-  epsilon_D[1] = zeta_D[1]*sigma_D/sqrt(1 - rho_D^2); 
-  epsilon_SAR[1] = zeta_SAR[1]*sigma_SAR/sqrt(1 - rho_SAR^2); 
-  epsilon_U[1] = zeta_U[1]*sigma_U/sqrt(1 - rho_U^2);
+  epsilon_D[1] = zeta_D[1] * sigma_D / sqrt(1 - rho_D^2); 
+  epsilon_SAR[1] = zeta_SAR[1] * sigma_SAR / sqrt(1 - rho_SAR^2); 
+  epsilon_U[1] = zeta_U[1] * sigma_U / sqrt(1 - rho_U^2);
   for(i in 2:N_year_all)
   {
-    epsilon_D[i] = rho_D*epsilon_D[i-1] + zeta_D[i]*sigma_D;
-    epsilon_SAR[i] = rho_SAR*epsilon_SAR[i-1] + zeta_SAR[i]*sigma_SAR;
-    epsilon_U[i] = rho_U*epsilon_U[i-1] + zeta_U[i]*sigma_U;
+    epsilon_D[i] = rho_D * epsilon_D[i-1] + zeta_D[i] * sigma_D;
+    epsilon_SAR[i] = rho_SAR * epsilon_SAR[i-1] + zeta_SAR[i] * sigma_SAR;
+    epsilon_U[i] = rho_U * epsilon_U[i-1] + zeta_U[i] * sigma_U;
   }
   // constrain process errors to sum to 0 (columns of X should be centered)
   s_D = inv_logit(mu_D + mat_lmult(X_D,beta_D) + epsilon_D - mean(epsilon_D[1:N_year]));
@@ -302,7 +308,7 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors
-  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(tail(mu_p, 1)));
+  mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(mu_p[N_age]));
   mu_pop_alr_p = rep_matrix(mu_alr_p,N_pop) + diag_pre_multiply(sigma_pop_p, L_pop_p * zeta_pop_p')';
   // Inverse log-ratio (softmax) transform of cohort age distn
   {
@@ -315,6 +321,9 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
+    // intrinsic productivity and maximum recruitment adjusted for covariate effects
+    real alpha_i = alpha[pop[i]] * dot_product(X_alpha[i], beta_alpha);
+    real Mmax_i = Mmax[pop[i]] * dot_product(X_Mmax[i], beta_Mmax);
     row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
@@ -362,8 +371,8 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha[pop[i]], Mmax[pop[i]], S[i], A[i]);
-    M0[i] = M_hat[i]*exp(dot_product(X_M[year[i],], beta_M) + epsilon_M[i]); 
+    M_hat[i] = SR(SR_fun, alpha_i, Mmax_i, S[i], A[i]);
+    M0[i] = M_hat[i] * exp(dot_product(X_M[i], beta_M) + epsilon_M[i]); 
   }
 }
 
@@ -374,13 +383,15 @@ model {
   
   // smolt production
   mu_alpha ~ normal(2,5);
+  beta_alpha ~ normal(0,5);
   sigma_alpha ~ normal(0,3);
   mu_Mmax ~ normal(0,10);
+  beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   // log([alpha,Mmax]) ~ MVN([mu_alpha,mu_Mmax], D*R_aMmax*D), where D = diag_matrix(sigma_alpha,sigma_Mmax)
   zeta_alpha ~ std_normal();
   zeta_Mmax ~ std_normal();
-  beta_M ~ normal(0,3);
+  beta_M ~ normal(0,5);
   rho_M ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();     // epsilon_M ~ AR1(rho_M, sigma_M)

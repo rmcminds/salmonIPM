@@ -92,7 +92,7 @@ template <bool propto, typename T0__, typename T1__, typename T2__, typename T3_
 typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type
 pexp_lpdf(const T0__& y,
               const T1__& mu,
-              const T2__& sigma,
+              const T2__& sigma_R,
               const T3__& shape, std::ostream* pstream__) {
     typedef typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type local_scalar_t__;
     typedef local_scalar_t__ fun_return_scalar_t__;
@@ -103,7 +103,7 @@ pexp_lpdf(const T0__& y,
     int current_statement_begin__ = -1;
     try {
         current_statement_begin__ = 18;
-        return stan::math::promote_scalar<fun_return_scalar_t__>(-(pow((stan::math::fabs((y - mu)) / sigma), shape)));
+        return stan::math::promote_scalar<fun_return_scalar_t__>(-(pow((stan::math::fabs((y - mu)) / sigma_R), shape)));
     } catch (const std::exception& e) {
         stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
         // Next line prevents compiler griping about no return
@@ -114,18 +114,18 @@ template <typename T0__, typename T1__, typename T2__, typename T3__>
 typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type
 pexp_lpdf(const T0__& y,
               const T1__& mu,
-              const T2__& sigma,
+              const T2__& sigma_R,
               const T3__& shape, std::ostream* pstream__) {
-    return pexp_lpdf<false>(y,mu,sigma,shape, pstream__);
+    return pexp_lpdf<false>(y,mu,sigma_R,shape, pstream__);
 }
 struct pexp_lpdf_functor__ {
     template <bool propto, typename T0__, typename T1__, typename T2__, typename T3__>
         typename boost::math::tools::promote_args<T0__, T1__, T2__, T3__>::type
     operator()(const T0__& y,
               const T1__& mu,
-              const T2__& sigma,
+              const T2__& sigma_R,
               const T3__& shape, std::ostream* pstream__) const {
-        return pexp_lpdf(y, mu, sigma, shape, pstream__);
+        return pexp_lpdf(y, mu, sigma_R, shape, pstream__);
     }
 };
 template <typename T0__, typename T1__>
@@ -446,10 +446,10 @@ public:
             validate_non_negative_index("Rmax", "N_pop", N_pop);
             num_params_r__ += N_pop;
             current_statement_begin__ = 65;
-            validate_non_negative_index("rho", "N_pop", N_pop);
+            validate_non_negative_index("rho_R", "N_pop", N_pop);
             num_params_r__ += N_pop;
             current_statement_begin__ = 66;
-            validate_non_negative_index("sigma", "N_pop", N_pop);
+            validate_non_negative_index("sigma_R", "N_pop", N_pop);
             num_params_r__ += N_pop;
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -503,38 +503,38 @@ public:
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable Rmax: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         current_statement_begin__ = 65;
-        if (!(context__.contains_r("rho")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable rho missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("rho");
+        if (!(context__.contains_r("rho_R")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable rho_R missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("rho_R");
         pos__ = 0U;
-        validate_non_negative_index("rho", "N_pop", N_pop);
-        context__.validate_dims("parameter initialization", "rho", "vector_d", context__.to_vec(N_pop));
-        Eigen::Matrix<double, Eigen::Dynamic, 1> rho(N_pop);
-        size_t rho_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < rho_j_1_max__; ++j_1__) {
-            rho(j_1__) = vals_r__[pos__++];
+        validate_non_negative_index("rho_R", "N_pop", N_pop);
+        context__.validate_dims("parameter initialization", "rho_R", "vector_d", context__.to_vec(N_pop));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> rho_R(N_pop);
+        size_t rho_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < rho_R_j_1_max__; ++j_1__) {
+            rho_R(j_1__) = vals_r__[pos__++];
         }
         try {
-            writer__.vector_lub_unconstrain(-(1), 1, rho);
+            writer__.vector_lub_unconstrain(-(1), 1, rho_R);
         } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho: ") + e.what()), current_statement_begin__, prog_reader__());
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable rho_R: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         current_statement_begin__ = 66;
-        if (!(context__.contains_r("sigma")))
-            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma missing")), current_statement_begin__, prog_reader__());
-        vals_r__ = context__.vals_r("sigma");
+        if (!(context__.contains_r("sigma_R")))
+            stan::lang::rethrow_located(std::runtime_error(std::string("Variable sigma_R missing")), current_statement_begin__, prog_reader__());
+        vals_r__ = context__.vals_r("sigma_R");
         pos__ = 0U;
-        validate_non_negative_index("sigma", "N_pop", N_pop);
-        context__.validate_dims("parameter initialization", "sigma", "vector_d", context__.to_vec(N_pop));
-        Eigen::Matrix<double, Eigen::Dynamic, 1> sigma(N_pop);
-        size_t sigma_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < sigma_j_1_max__; ++j_1__) {
-            sigma(j_1__) = vals_r__[pos__++];
+        validate_non_negative_index("sigma_R", "N_pop", N_pop);
+        context__.validate_dims("parameter initialization", "sigma_R", "vector_d", context__.to_vec(N_pop));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> sigma_R(N_pop);
+        size_t sigma_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < sigma_R_j_1_max__; ++j_1__) {
+            sigma_R(j_1__) = vals_r__[pos__++];
         }
         try {
-            writer__.vector_lb_unconstrain(0, sigma);
+            writer__.vector_lb_unconstrain(0, sigma_R);
         } catch (const std::exception& e) {
-            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma: ") + e.what()), current_statement_begin__, prog_reader__());
+            stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable sigma_R: ") + e.what()), current_statement_begin__, prog_reader__());
         }
         params_r__ = writer__.data_r();
         params_i__ = writer__.data_i();
@@ -576,19 +576,19 @@ public:
             else
                 Rmax = in__.vector_lb_constrain(0, N_pop);
             current_statement_begin__ = 65;
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> rho;
-            (void) rho;  // dummy to suppress unused var warning
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> rho_R;
+            (void) rho_R;  // dummy to suppress unused var warning
             if (jacobian__)
-                rho = in__.vector_lub_constrain(-(1), 1, N_pop, lp__);
+                rho_R = in__.vector_lub_constrain(-(1), 1, N_pop, lp__);
             else
-                rho = in__.vector_lub_constrain(-(1), 1, N_pop);
+                rho_R = in__.vector_lub_constrain(-(1), 1, N_pop);
             current_statement_begin__ = 66;
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma;
-            (void) sigma;  // dummy to suppress unused var warning
+            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_R;
+            (void) sigma_R;  // dummy to suppress unused var warning
             if (jacobian__)
-                sigma = in__.vector_lb_constrain(0, N_pop, lp__);
+                sigma_R = in__.vector_lb_constrain(0, N_pop, lp__);
             else
-                sigma = in__.vector_lb_constrain(0, N_pop);
+                sigma_R = in__.vector_lb_constrain(0, N_pop);
             // transformed parameters
             current_statement_begin__ = 70;
             validate_non_negative_index("R_hat", "N", N);
@@ -629,7 +629,7 @@ public:
                     current_statement_begin__ = 86;
                     stan::model::assign(sigma_ar1, 
                                 stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
-                                (get_base1(sigma, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma", 1) / stan::math::sqrt((1 - pow(get_base1(rho, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho", 1), 2)))), 
+                                (get_base1(sigma_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma_R", 1) / stan::math::sqrt((1 - pow(get_base1(rho_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho_R", 1), 2)))), 
                                 "assigning variable sigma_ar1");
                 } else {
                     {
@@ -654,19 +654,19 @@ public:
                     current_statement_begin__ = 96;
                     stan::model::assign(R_ar1, 
                                 stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
-                                (get_base1(R_hat, get_base1(which_fit, i, "which_fit", 1), "R_hat", 1) * stan::math::exp((pow(get_base1(rho, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho", 1), dt) * err))), 
+                                (get_base1(R_hat, get_base1(which_fit, i, "which_fit", 1), "R_hat", 1) * stan::math::exp((pow(get_base1(rho_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho_R", 1), dt) * err))), 
                                 "assigning variable R_ar1");
                     current_statement_begin__ = 98;
                     stan::math::assign(rho2j, 0);
                     current_statement_begin__ = 99;
                     for (int j = 0; j <= (dt - 1); ++j) {
                         current_statement_begin__ = 100;
-                        stan::math::assign(rho2j, (rho2j + pow(get_base1(rho, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho", 1), (2 * j))));
+                        stan::math::assign(rho2j, (rho2j + pow(get_base1(rho_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho_R", 1), (2 * j))));
                     }
                     current_statement_begin__ = 101;
                     stan::model::assign(sigma_ar1, 
                                 stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
-                                (get_base1(sigma, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma", 1) * stan::math::sqrt(rho2j)), 
+                                (get_base1(sigma_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma_R", 1) * stan::math::sqrt(rho2j)), 
                                 "assigning variable sigma_ar1");
                     }
                 }
@@ -712,9 +712,9 @@ public:
             current_statement_begin__ = 110;
             for (int i = 1; i <= N_pop; ++i) {
                 current_statement_begin__ = 112;
-                lp_accum__.add(pexp_lpdf<propto__>(get_base1(rho, i, "rho", 1), 0, 0.85, 20, pstream__));
+                lp_accum__.add(pexp_lpdf<propto__>(get_base1(rho_R, i, "rho_R", 1), 0, 0.85, 20, pstream__));
                 current_statement_begin__ = 113;
-                lp_accum__.add(normal_log<propto__>(get_base1(sigma, i, "sigma", 1), 0, 3));
+                lp_accum__.add(normal_log<propto__>(get_base1(sigma_R, i, "sigma_R", 1), 0, 3));
             }
             current_statement_begin__ = 117;
             lp_accum__.add(lognormal_log<propto__>(stan::model::rvalue(R, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R"), stan::math::log(stan::model::rvalue(R_ar1, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "R_ar1")), stan::model::rvalue(sigma_ar1, stan::model::cons_list(stan::model::index_multi(which_fit), stan::model::nil_index_list()), "sigma_ar1")));
@@ -740,8 +740,8 @@ public:
         names__.resize(0);
         names__.push_back("alpha");
         names__.push_back("Rmax");
-        names__.push_back("rho");
-        names__.push_back("sigma");
+        names__.push_back("rho_R");
+        names__.push_back("sigma_R");
         names__.push_back("R_hat");
         names__.push_back("R_ar1");
         names__.push_back("sigma_ar1");
@@ -807,15 +807,15 @@ public:
         for (size_t j_1__ = 0; j_1__ < Rmax_j_1_max__; ++j_1__) {
             vars__.push_back(Rmax(j_1__));
         }
-        Eigen::Matrix<double, Eigen::Dynamic, 1> rho = in__.vector_lub_constrain(-(1), 1, N_pop);
-        size_t rho_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < rho_j_1_max__; ++j_1__) {
-            vars__.push_back(rho(j_1__));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> rho_R = in__.vector_lub_constrain(-(1), 1, N_pop);
+        size_t rho_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < rho_R_j_1_max__; ++j_1__) {
+            vars__.push_back(rho_R(j_1__));
         }
-        Eigen::Matrix<double, Eigen::Dynamic, 1> sigma = in__.vector_lb_constrain(0, N_pop);
-        size_t sigma_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < sigma_j_1_max__; ++j_1__) {
-            vars__.push_back(sigma(j_1__));
+        Eigen::Matrix<double, Eigen::Dynamic, 1> sigma_R = in__.vector_lb_constrain(0, N_pop);
+        size_t sigma_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < sigma_R_j_1_max__; ++j_1__) {
+            vars__.push_back(sigma_R(j_1__));
         }
         double lp__ = 0.0;
         (void) lp__;  // dummy to suppress unused var warning
@@ -864,7 +864,7 @@ public:
                     current_statement_begin__ = 86;
                     stan::model::assign(sigma_ar1, 
                                 stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
-                                (get_base1(sigma, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma", 1) / stan::math::sqrt((1 - pow(get_base1(rho, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho", 1), 2)))), 
+                                (get_base1(sigma_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma_R", 1) / stan::math::sqrt((1 - pow(get_base1(rho_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho_R", 1), 2)))), 
                                 "assigning variable sigma_ar1");
                 } else {
                     {
@@ -889,19 +889,19 @@ public:
                     current_statement_begin__ = 96;
                     stan::model::assign(R_ar1, 
                                 stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
-                                (get_base1(R_hat, get_base1(which_fit, i, "which_fit", 1), "R_hat", 1) * stan::math::exp((pow(get_base1(rho, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho", 1), dt) * err))), 
+                                (get_base1(R_hat, get_base1(which_fit, i, "which_fit", 1), "R_hat", 1) * stan::math::exp((pow(get_base1(rho_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho_R", 1), dt) * err))), 
                                 "assigning variable R_ar1");
                     current_statement_begin__ = 98;
                     stan::math::assign(rho2j, 0);
                     current_statement_begin__ = 99;
                     for (int j = 0; j <= (dt - 1); ++j) {
                         current_statement_begin__ = 100;
-                        stan::math::assign(rho2j, (rho2j + pow(get_base1(rho, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho", 1), (2 * j))));
+                        stan::math::assign(rho2j, (rho2j + pow(get_base1(rho_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "rho_R", 1), (2 * j))));
                     }
                     current_statement_begin__ = 101;
                     stan::model::assign(sigma_ar1, 
                                 stan::model::cons_list(stan::model::index_uni(get_base1(which_fit, i, "which_fit", 1)), stan::model::nil_index_list()), 
-                                (get_base1(sigma, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma", 1) * stan::math::sqrt(rho2j)), 
+                                (get_base1(sigma_R, get_base1(pop, get_base1(which_fit, i, "which_fit", 1), "pop", 1), "sigma_R", 1) * stan::math::sqrt(rho2j)), 
                                 "assigning variable sigma_ar1");
                     }
                 }
@@ -981,13 +981,13 @@ public:
                     current_statement_begin__ = 142;
                     stan::model::assign(err_sim, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                                normal_rng(0, get_base1(sigma, get_base1(pop, i, "pop", 1), "sigma", 1), base_rng__), 
+                                normal_rng(0, get_base1(sigma_R, get_base1(pop, i, "pop", 1), "sigma_R", 1), base_rng__), 
                                 "assigning variable err_sim");
                 } else {
                     current_statement_begin__ = 144;
                     stan::model::assign(err_sim, 
                                 stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                                normal_rng((get_base1(rho, get_base1(pop, i, "pop", 1), "rho", 1) * get_base1(err_sim, (i - 1), "err_sim", 1)), get_base1(sigma, get_base1(pop, i, "pop", 1), "sigma", 1), base_rng__), 
+                                normal_rng((get_base1(rho_R, get_base1(pop, i, "pop", 1), "rho_R", 1) * get_base1(err_sim, (i - 1), "err_sim", 1)), get_base1(sigma_R, get_base1(pop, i, "pop", 1), "sigma_R", 1), base_rng__), 
                                 "assigning variable err_sim");
                 }
                 current_statement_begin__ = 146;
@@ -1057,16 +1057,16 @@ public:
             param_name_stream__ << "Rmax" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
-        size_t rho_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < rho_j_1_max__; ++j_1__) {
+        size_t rho_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < rho_R_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "rho" << '.' << j_1__ + 1;
+            param_name_stream__ << "rho_R" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
-        size_t sigma_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < sigma_j_1_max__; ++j_1__) {
+        size_t sigma_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < sigma_R_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "sigma" << '.' << j_1__ + 1;
+            param_name_stream__ << "sigma_R" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         if (!include_gqs__ && !include_tparams__) return;
@@ -1126,16 +1126,16 @@ public:
             param_name_stream__ << "Rmax" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
-        size_t rho_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < rho_j_1_max__; ++j_1__) {
+        size_t rho_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < rho_R_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "rho" << '.' << j_1__ + 1;
+            param_name_stream__ << "rho_R" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
-        size_t sigma_j_1_max__ = N_pop;
-        for (size_t j_1__ = 0; j_1__ < sigma_j_1_max__; ++j_1__) {
+        size_t sigma_R_j_1_max__ = N_pop;
+        for (size_t j_1__ = 0; j_1__ < sigma_R_j_1_max__; ++j_1__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "sigma" << '.' << j_1__ + 1;
+            param_name_stream__ << "sigma_R" << '.' << j_1__ + 1;
             param_names__.push_back(param_name_stream__.str());
         }
         if (!include_gqs__ && !include_tparams__) return;

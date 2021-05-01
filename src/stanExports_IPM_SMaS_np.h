@@ -345,7 +345,7 @@ private:
         int SR_fun;
         vector_d A;
         int N_X_M;
-        matrix_d X_M;
+        std::vector<row_vector_d> X_M;
         int N_M_obs;
         std::vector<int> which_M_obs;
         vector_d M_obs;
@@ -353,7 +353,7 @@ private:
         int max_Mage;
         matrix_d n_Mage_obs;
         int N_X_MS;
-        matrix_d X_MS;
+        std::vector<row_vector_d> X_MS;
         vector_d F_rate;
         int N_B;
         std::vector<int> which_B;
@@ -480,17 +480,17 @@ public:
             N_X_M = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_X_M", N_X_M, 0);
             current_statement_begin__ = 75;
-            validate_non_negative_index("X_M", "max(year)", max(year));
             validate_non_negative_index("X_M", "N_X_M", N_X_M);
-            context__.validate_dims("data initialization", "X_M", "matrix_d", context__.to_vec(max(year),N_X_M));
-            X_M = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(max(year), N_X_M);
+            validate_non_negative_index("X_M", "N", N);
+            context__.validate_dims("data initialization", "X_M", "row_vector_d", context__.to_vec(N,N_X_M));
+            X_M = std::vector<Eigen::Matrix<double, 1, Eigen::Dynamic> >(N, Eigen::Matrix<double, 1, Eigen::Dynamic>(N_X_M));
             vals_r__ = context__.vals_r("X_M");
             pos__ = 0;
-            size_t X_M_j_2_max__ = N_X_M;
-            size_t X_M_j_1_max__ = max(year);
-            for (size_t j_2__ = 0; j_2__ < X_M_j_2_max__; ++j_2__) {
-                for (size_t j_1__ = 0; j_1__ < X_M_j_1_max__; ++j_1__) {
-                    X_M(j_1__, j_2__) = vals_r__[pos__++];
+            size_t X_M_j_1_max__ = N_X_M;
+            size_t X_M_k_0_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < X_M_j_1_max__; ++j_1__) {
+                for (size_t k_0__ = 0; k_0__ < X_M_k_0_max__; ++k_0__) {
+                    X_M[k_0__](j_1__) = vals_r__[pos__++];
                 }
             }
             current_statement_begin__ = 77;
@@ -564,17 +564,17 @@ public:
             N_X_MS = vals_i__[pos__++];
             check_greater_or_equal(function__, "N_X_MS", N_X_MS, 0);
             current_statement_begin__ = 86;
-            validate_non_negative_index("X_MS", "max(year)", max(year));
             validate_non_negative_index("X_MS", "N_X_MS", N_X_MS);
-            context__.validate_dims("data initialization", "X_MS", "matrix_d", context__.to_vec(max(year),N_X_MS));
-            X_MS = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>(max(year), N_X_MS);
+            validate_non_negative_index("X_MS", "N", N);
+            context__.validate_dims("data initialization", "X_MS", "row_vector_d", context__.to_vec(N,N_X_MS));
+            X_MS = std::vector<Eigen::Matrix<double, 1, Eigen::Dynamic> >(N, Eigen::Matrix<double, 1, Eigen::Dynamic>(N_X_MS));
             vals_r__ = context__.vals_r("X_MS");
             pos__ = 0;
-            size_t X_MS_j_2_max__ = N_X_MS;
-            size_t X_MS_j_1_max__ = max(year);
-            for (size_t j_2__ = 0; j_2__ < X_MS_j_2_max__; ++j_2__) {
-                for (size_t j_1__ = 0; j_1__ < X_MS_j_1_max__; ++j_1__) {
-                    X_MS(j_1__, j_2__) = vals_r__[pos__++];
+            size_t X_MS_j_1_max__ = N_X_MS;
+            size_t X_MS_k_0_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < X_MS_j_1_max__; ++j_1__) {
+                for (size_t k_0__ = 0; k_0__ < X_MS_k_0_max__; ++k_0__) {
+                    X_MS[k_0__](j_1__) = vals_r__[pos__++];
                 }
             }
             current_statement_begin__ = 88;
@@ -1965,15 +1965,15 @@ public:
             stan::math::initialize(M, DUMMY_VAR__);
             stan::math::fill(M, DUMMY_VAR__);
             current_statement_begin__ = 223;
-            validate_non_negative_index("gamma_M", "N_pop", N_pop);
-            validate_non_negative_index("gamma_M", "(N_Mage - 1)", (N_Mage - 1));
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> gamma_M(N_pop, (N_Mage - 1));
-            stan::math::initialize(gamma_M, DUMMY_VAR__);
-            stan::math::fill(gamma_M, DUMMY_VAR__);
+            validate_non_negative_index("mu_alr_p_M", "(N_Mage - 1)", (N_Mage - 1));
+            validate_non_negative_index("mu_alr_p_M", "N_pop", N_pop);
+            std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> > mu_alr_p_M(N_pop, Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1>((N_Mage - 1)));
+            stan::math::initialize(mu_alr_p_M, DUMMY_VAR__);
+            stan::math::fill(mu_alr_p_M, DUMMY_VAR__);
             current_statement_begin__ = 224;
-            validate_non_negative_index("p_M", "N", N);
             validate_non_negative_index("p_M", "N_Mage", N_Mage);
-            Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, Eigen::Dynamic> p_M(N, N_Mage);
+            validate_non_negative_index("p_M", "N", N);
+            std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> > p_M(N, Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1>(N_Mage));
             stan::math::initialize(p_M, DUMMY_VAR__);
             stan::math::fill(p_M, DUMMY_VAR__);
             current_statement_begin__ = 225;
@@ -1995,12 +1995,12 @@ public:
             stan::math::initialize(s_MS, DUMMY_VAR__);
             stan::math::fill(s_MS, DUMMY_VAR__);
             current_statement_begin__ = 229;
-            validate_non_negative_index("gamma_MS", "(N_MSage - 1)", (N_MSage - 1));
-            validate_non_negative_index("gamma_MS", "N_pop", N_pop);
-            validate_non_negative_index("gamma_MS", "N_Mage", N_Mage);
-            std::vector<std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> > > gamma_MS(N_pop, std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> >(N_Mage, Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1>((N_MSage - 1))));
-            stan::math::initialize(gamma_MS, DUMMY_VAR__);
-            stan::math::fill(gamma_MS, DUMMY_VAR__);
+            validate_non_negative_index("mu_alr_p_MS", "(N_MSage - 1)", (N_MSage - 1));
+            validate_non_negative_index("mu_alr_p_MS", "N_pop", N_pop);
+            validate_non_negative_index("mu_alr_p_MS", "N_Mage", N_Mage);
+            std::vector<std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> > > mu_alr_p_MS(N_pop, std::vector<Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> >(N_Mage, Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1>((N_MSage - 1))));
+            stan::math::initialize(mu_alr_p_MS, DUMMY_VAR__);
+            stan::math::fill(mu_alr_p_MS, DUMMY_VAR__);
             current_statement_begin__ = 230;
             validate_non_negative_index("p_MS", "N_MSage", N_MSage);
             validate_non_negative_index("p_MS", "N", N);
@@ -2063,17 +2063,17 @@ public:
             current_statement_begin__ = 248;
             for (int j = 1; j <= N_pop; ++j) {
                 current_statement_begin__ = 251;
-                stan::model::assign(gamma_M, 
-                            stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
-                            to_row_vector(subtract(stan::math::log(stan::model::rvalue(mu_p_M, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, (N_Mage - 1)), stan::model::nil_index_list())), "mu_p_M")), stan::math::log(get_base1(get_base1(mu_p_M, j, "mu_p_M", 1), N_Mage, "mu_p_M", 2)))), 
-                            "assigning variable gamma_M");
+                stan::model::assign(mu_alr_p_M, 
+                            stan::model::cons_list(stan::model::index_uni(j), stan::model::nil_index_list()), 
+                            subtract(stan::math::log(head(get_base1(mu_p_M, j, "mu_p_M", 1), (N_Mage - 1))), stan::math::log(get_base1(get_base1(mu_p_M, j, "mu_p_M", 1), N_Mage, "mu_p_M", 2))), 
+                            "assigning variable mu_alr_p_M");
                 current_statement_begin__ = 254;
                 for (int a = 1; a <= N_Mage; ++a) {
                     current_statement_begin__ = 255;
-                    stan::model::assign(gamma_MS, 
+                    stan::model::assign(mu_alr_p_MS, 
                                 stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list())), 
-                                subtract(stan::math::log(stan::model::rvalue(mu_p_MS, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_uni(a), stan::model::cons_list(stan::model::index_min_max(1, (N_MSage - 1)), stan::model::nil_index_list()))), "mu_p_MS")), stan::math::log(get_base1(get_base1(get_base1(mu_p_MS, j, "mu_p_MS", 1), a, "mu_p_MS", 2), N_MSage, "mu_p_MS", 3))), 
-                                "assigning variable gamma_MS");
+                                subtract(stan::math::log(head(stan::model::rvalue(mu_p_MS, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_uni(a), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list()))), "mu_p_MS"), (N_MSage - 1))), stan::math::log(get_base1(get_base1(get_base1(mu_p_MS, j, "mu_p_MS", 1), a, "mu_p_MS", 2), N_MSage, "mu_p_MS", 3))), 
+                                "assigning variable mu_alr_p_MS");
                 }
             }
             current_statement_begin__ = 260;
@@ -2081,7 +2081,7 @@ public:
                 {
                 current_statement_begin__ = 262;
                 validate_non_negative_index("alr_p_M", "N_Mage", N_Mage);
-                Eigen::Matrix<local_scalar_t__, 1, Eigen::Dynamic> alr_p_M(N_Mage);
+                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> alr_p_M(N_Mage);
                 stan::math::initialize(alr_p_M, DUMMY_VAR__);
                 stan::math::fill(alr_p_M, DUMMY_VAR__);
                 current_statement_begin__ = 263;
@@ -2104,10 +2104,10 @@ public:
                 stan::math::initialize(q_M_orphan, DUMMY_VAR__);
                 stan::math::fill(q_M_orphan, DUMMY_VAR__);
                 current_statement_begin__ = 269;
-                validate_non_negative_index("gamma_MS_i", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
-                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> gamma_MS_i((N_Mage * (N_MSage - 1)));
-                stan::math::initialize(gamma_MS_i, DUMMY_VAR__);
-                stan::math::fill(gamma_MS_i, DUMMY_VAR__);
+                validate_non_negative_index("mu_alr_p_MS_i", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
+                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> mu_alr_p_MS_i((N_Mage * (N_MSage - 1)));
+                stan::math::initialize(mu_alr_p_MS_i, DUMMY_VAR__);
+                stan::math::fill(mu_alr_p_MS_i, DUMMY_VAR__);
                 current_statement_begin__ = 270;
                 validate_non_negative_index("sigma_p_MS_i", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
                 Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_p_MS_i((N_Mage * (N_MSage - 1)));
@@ -2139,26 +2139,26 @@ public:
                 stan::math::initialize(S_W_a, DUMMY_VAR__);
                 stan::math::fill(S_W_a, DUMMY_VAR__);
                 current_statement_begin__ = 281;
-                stan::math::assign(alr_p_M, rep_row_vector(0, N_Mage));
+                stan::math::assign(alr_p_M, rep_vector(0, N_Mage));
                 current_statement_begin__ = 282;
                 stan::model::assign(alr_p_M, 
                             stan::model::cons_list(stan::model::index_min_max(1, (N_Mage - 1)), stan::model::nil_index_list()), 
-                            add(stan::model::rvalue(gamma_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "gamma_M"), elt_multiply(stan::model::rvalue(sigma_p_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "sigma_p_M"), transpose(multiply(get_base1(L_p_M, get_base1(pop, i, "pop", 1), "L_p_M", 1), transpose(stan::model::rvalue(zeta_p_M, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_M")))))), 
+                            add(get_base1(mu_alr_p_M, get_base1(pop, i, "pop", 1), "mu_alr_p_M", 1), elt_multiply(transpose(stan::model::rvalue(sigma_p_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "sigma_p_M")), multiply(get_base1(L_p_M, get_base1(pop, i, "pop", 1), "L_p_M", 1), transpose(stan::model::rvalue(zeta_p_M, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_M"))))), 
                             "assigning variable alr_p_M");
                 current_statement_begin__ = 283;
                 stan::math::assign(alr_p_M, stan::math::exp(alr_p_M));
                 current_statement_begin__ = 284;
                 stan::model::assign(p_M, 
-                            stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
+                            stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             divide(alr_p_M, sum(alr_p_M)), 
                             "assigning variable p_M");
                 current_statement_begin__ = 288;
                 for (int a = 1; a <= N_Mage; ++a) {
                     current_statement_begin__ = 290;
-                    stan::model::assign(gamma_MS_i, 
+                    stan::model::assign(mu_alr_p_MS_i, 
                                 stan::model::cons_list(stan::model::index_min_max((((a - 1) * (N_MSage - 1)) + 1), (a * (N_MSage - 1))), stan::model::nil_index_list()), 
-                                get_base1(get_base1(gamma_MS, get_base1(pop, i, "pop", 1), "gamma_MS", 1), a, "gamma_MS", 2), 
-                                "assigning variable gamma_MS_i");
+                                get_base1(get_base1(mu_alr_p_MS, get_base1(pop, i, "pop", 1), "mu_alr_p_MS", 1), a, "mu_alr_p_MS", 2), 
+                                "assigning variable mu_alr_p_MS_i");
                     current_statement_begin__ = 291;
                     stan::model::assign(sigma_p_MS_i, 
                                 stan::model::cons_list(stan::model::index_min_max((((a - 1) * (N_MSage - 1)) + 1), (a * (N_MSage - 1))), stan::model::nil_index_list()), 
@@ -2166,7 +2166,7 @@ public:
                                 "assigning variable sigma_p_MS_i");
                 }
                 current_statement_begin__ = 293;
-                stan::math::assign(alr_p_MS, add(gamma_MS_i, elt_multiply(sigma_p_MS_i, multiply(get_base1(L_p_MS, get_base1(pop, i, "pop", 1), "L_p_MS", 1), transpose(stan::model::rvalue(zeta_p_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_MS"))))));
+                stan::math::assign(alr_p_MS, add(mu_alr_p_MS_i, elt_multiply(sigma_p_MS_i, multiply(get_base1(L_p_MS, get_base1(pop, i, "pop", 1), "L_p_MS", 1), transpose(stan::model::rvalue(zeta_p_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_MS"))))));
                 current_statement_begin__ = 295;
                 for (int a = 1; a <= N_Mage; ++a) {
                     current_statement_begin__ = 297;
@@ -2207,7 +2207,7 @@ public:
                 current_statement_begin__ = 314;
                 stan::model::assign(s_MS, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
-                            inv_logit(add(add(logit(stan::model::rvalue(mu_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_MS")), dot_product(stan::model::rvalue(X_MS, stan::model::cons_list(stan::model::index_uni(get_base1(year, i, "year", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "X_MS"), stan::model::rvalue(beta_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_MS"))), stan::model::rvalue(epsilon_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "epsilon_MS"))), 
+                            inv_logit(add(add(logit(stan::model::rvalue(mu_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_MS")), dot_product(get_base1(X_MS, i, "X_MS", 1), stan::model::rvalue(beta_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_MS"))), stan::model::rvalue(epsilon_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "epsilon_MS"))), 
                             "assigning variable s_MS");
                 current_statement_begin__ = 318;
                 if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_Mage))) {
@@ -2223,7 +2223,7 @@ public:
                         current_statement_begin__ = 329;
                         stan::model::assign(M_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
-                                    (get_base1(M0, (i - get_base1(Mages, a, "Mages", 1)), "M0", 1) * get_base1(p_M, (i - get_base1(Mages, a, "Mages", 1)), a, "p_M", 1)), 
+                                    (get_base1(M0, (i - get_base1(Mages, a, "Mages", 1)), "M0", 1) * get_base1(get_base1(p_M, (i - get_base1(Mages, a, "Mages", 1)), "p_M", 1), a, "p_M", 2)), 
                                     "assigning variable M_a");
                     } else {
                         current_statement_begin__ = 332;
@@ -2324,7 +2324,7 @@ public:
                 current_statement_begin__ = 376;
                 stan::model::assign(M0, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            (get_base1(M_hat, i, "M_hat", 1) * stan::math::exp((dot_product(stan::model::rvalue(X_M, stan::model::cons_list(stan::model::index_uni(get_base1(year, i, "year", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "X_M"), stan::model::rvalue(beta_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_M")) + get_base1(epsilon_M, i, "epsilon_M", 1)))), 
+                            (get_base1(M_hat, i, "M_hat", 1) * stan::math::exp((dot_product(get_base1(X_M, i, "X_M", 1), stan::model::rvalue(beta_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_M")) + get_base1(epsilon_M, i, "epsilon_M", 1)))), 
                             "assigning variable M0");
                 }
             }
@@ -2371,31 +2371,33 @@ public:
             }
             check_greater_or_equal(function__, "M", M, 0);
             current_statement_begin__ = 223;
-            size_t gamma_M_j_1_max__ = N_pop;
-            size_t gamma_M_j_2_max__ = (N_Mage - 1);
-            for (size_t j_1__ = 0; j_1__ < gamma_M_j_1_max__; ++j_1__) {
-                for (size_t j_2__ = 0; j_2__ < gamma_M_j_2_max__; ++j_2__) {
-                    if (stan::math::is_uninitialized(gamma_M(j_1__, j_2__))) {
+            size_t mu_alr_p_M_k_0_max__ = N_pop;
+            size_t mu_alr_p_M_j_1_max__ = (N_Mage - 1);
+            for (size_t k_0__ = 0; k_0__ < mu_alr_p_M_k_0_max__; ++k_0__) {
+                for (size_t j_1__ = 0; j_1__ < mu_alr_p_M_j_1_max__; ++j_1__) {
+                    if (stan::math::is_uninitialized(mu_alr_p_M[k_0__](j_1__))) {
                         std::stringstream msg__;
-                        msg__ << "Undefined transformed parameter: gamma_M" << "(" << j_1__ << ", " << j_2__ << ")";
-                        stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable gamma_M: ") + msg__.str()), current_statement_begin__, prog_reader__());
+                        msg__ << "Undefined transformed parameter: mu_alr_p_M" << "[" << k_0__ << "]" << "(" << j_1__ << ")";
+                        stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable mu_alr_p_M: ") + msg__.str()), current_statement_begin__, prog_reader__());
                     }
                 }
             }
             current_statement_begin__ = 224;
-            size_t p_M_j_1_max__ = N;
-            size_t p_M_j_2_max__ = N_Mage;
-            for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
-                for (size_t j_2__ = 0; j_2__ < p_M_j_2_max__; ++j_2__) {
-                    if (stan::math::is_uninitialized(p_M(j_1__, j_2__))) {
+            size_t p_M_k_0_max__ = N;
+            size_t p_M_j_1_max__ = N_Mage;
+            for (size_t k_0__ = 0; k_0__ < p_M_k_0_max__; ++k_0__) {
+                for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
+                    if (stan::math::is_uninitialized(p_M[k_0__](j_1__))) {
                         std::stringstream msg__;
-                        msg__ << "Undefined transformed parameter: p_M" << "(" << j_1__ << ", " << j_2__ << ")";
+                        msg__ << "Undefined transformed parameter: p_M" << "[" << k_0__ << "]" << "(" << j_1__ << ")";
                         stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable p_M: ") + msg__.str()), current_statement_begin__, prog_reader__());
                     }
                 }
             }
-            check_greater_or_equal(function__, "p_M", p_M, 0);
-            check_less_or_equal(function__, "p_M", p_M, 1);
+            size_t p_M_i_0_max__ = N;
+            for (size_t i_0__ = 0; i_0__ < p_M_i_0_max__; ++i_0__) {
+                stan::math::check_simplex(function__, "p_M[i_0__]", p_M[i_0__]);
+            }
             current_statement_begin__ = 225;
             size_t q_M_j_1_max__ = N;
             size_t q_M_j_2_max__ = N_Mage;
@@ -2437,16 +2439,16 @@ public:
             check_greater_or_equal(function__, "s_MS", s_MS, 0);
             check_less_or_equal(function__, "s_MS", s_MS, 1);
             current_statement_begin__ = 229;
-            size_t gamma_MS_k_0_max__ = N_pop;
-            size_t gamma_MS_k_1_max__ = N_Mage;
-            size_t gamma_MS_j_1_max__ = (N_MSage - 1);
-            for (size_t k_0__ = 0; k_0__ < gamma_MS_k_0_max__; ++k_0__) {
-                for (size_t k_1__ = 0; k_1__ < gamma_MS_k_1_max__; ++k_1__) {
-                    for (size_t j_1__ = 0; j_1__ < gamma_MS_j_1_max__; ++j_1__) {
-                        if (stan::math::is_uninitialized(gamma_MS[k_0__][k_1__](j_1__))) {
+            size_t mu_alr_p_MS_k_0_max__ = N_pop;
+            size_t mu_alr_p_MS_k_1_max__ = N_Mage;
+            size_t mu_alr_p_MS_j_1_max__ = (N_MSage - 1);
+            for (size_t k_0__ = 0; k_0__ < mu_alr_p_MS_k_0_max__; ++k_0__) {
+                for (size_t k_1__ = 0; k_1__ < mu_alr_p_MS_k_1_max__; ++k_1__) {
+                    for (size_t j_1__ = 0; j_1__ < mu_alr_p_MS_j_1_max__; ++j_1__) {
+                        if (stan::math::is_uninitialized(mu_alr_p_MS[k_0__][k_1__](j_1__))) {
                             std::stringstream msg__;
-                            msg__ << "Undefined transformed parameter: gamma_MS" << "[" << k_0__ << "]" << "[" << k_1__ << "]" << "(" << j_1__ << ")";
-                            stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable gamma_MS: ") + msg__.str()), current_statement_begin__, prog_reader__());
+                            msg__ << "Undefined transformed parameter: mu_alr_p_MS" << "[" << k_0__ << "]" << "[" << k_1__ << "]" << "(" << j_1__ << ")";
+                            stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable mu_alr_p_MS: ") + msg__.str()), current_statement_begin__, prog_reader__());
                         }
                     }
                 }
@@ -2562,7 +2564,7 @@ public:
             current_statement_begin__ = 387;
             lp_accum__.add(lognormal_log<propto__>(Mmax, mu_Mmax, sigma_Mmax));
             current_statement_begin__ = 388;
-            lp_accum__.add(normal_log<propto__>(to_vector(beta_M), 0, 3));
+            lp_accum__.add(normal_log<propto__>(to_vector(beta_M), 0, 5));
             current_statement_begin__ = 389;
             lp_accum__.add(pexp_lpdf<propto__>(rho_M, 0, 0.85, 20, pstream__));
             current_statement_begin__ = 390;
@@ -2716,12 +2718,12 @@ public:
         names__.push_back("epsilon_M");
         names__.push_back("M0");
         names__.push_back("M");
-        names__.push_back("gamma_M");
+        names__.push_back("mu_alr_p_M");
         names__.push_back("p_M");
         names__.push_back("q_M");
         names__.push_back("epsilon_MS");
         names__.push_back("s_MS");
-        names__.push_back("gamma_MS");
+        names__.push_back("mu_alr_p_MS");
         names__.push_back("p_MS");
         names__.push_back("p_HOS_all");
         names__.push_back("S_W");
@@ -3249,15 +3251,15 @@ public:
             stan::math::initialize(M, DUMMY_VAR__);
             stan::math::fill(M, DUMMY_VAR__);
             current_statement_begin__ = 223;
-            validate_non_negative_index("gamma_M", "N_pop", N_pop);
-            validate_non_negative_index("gamma_M", "(N_Mage - 1)", (N_Mage - 1));
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> gamma_M(N_pop, (N_Mage - 1));
-            stan::math::initialize(gamma_M, DUMMY_VAR__);
-            stan::math::fill(gamma_M, DUMMY_VAR__);
+            validate_non_negative_index("mu_alr_p_M", "(N_Mage - 1)", (N_Mage - 1));
+            validate_non_negative_index("mu_alr_p_M", "N_pop", N_pop);
+            std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > mu_alr_p_M(N_pop, Eigen::Matrix<double, Eigen::Dynamic, 1>((N_Mage - 1)));
+            stan::math::initialize(mu_alr_p_M, DUMMY_VAR__);
+            stan::math::fill(mu_alr_p_M, DUMMY_VAR__);
             current_statement_begin__ = 224;
-            validate_non_negative_index("p_M", "N", N);
             validate_non_negative_index("p_M", "N_Mage", N_Mage);
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> p_M(N, N_Mage);
+            validate_non_negative_index("p_M", "N", N);
+            std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > p_M(N, Eigen::Matrix<double, Eigen::Dynamic, 1>(N_Mage));
             stan::math::initialize(p_M, DUMMY_VAR__);
             stan::math::fill(p_M, DUMMY_VAR__);
             current_statement_begin__ = 225;
@@ -3279,12 +3281,12 @@ public:
             stan::math::initialize(s_MS, DUMMY_VAR__);
             stan::math::fill(s_MS, DUMMY_VAR__);
             current_statement_begin__ = 229;
-            validate_non_negative_index("gamma_MS", "(N_MSage - 1)", (N_MSage - 1));
-            validate_non_negative_index("gamma_MS", "N_pop", N_pop);
-            validate_non_negative_index("gamma_MS", "N_Mage", N_Mage);
-            std::vector<std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > > gamma_MS(N_pop, std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> >(N_Mage, Eigen::Matrix<double, Eigen::Dynamic, 1>((N_MSage - 1))));
-            stan::math::initialize(gamma_MS, DUMMY_VAR__);
-            stan::math::fill(gamma_MS, DUMMY_VAR__);
+            validate_non_negative_index("mu_alr_p_MS", "(N_MSage - 1)", (N_MSage - 1));
+            validate_non_negative_index("mu_alr_p_MS", "N_pop", N_pop);
+            validate_non_negative_index("mu_alr_p_MS", "N_Mage", N_Mage);
+            std::vector<std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> > > mu_alr_p_MS(N_pop, std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1> >(N_Mage, Eigen::Matrix<double, Eigen::Dynamic, 1>((N_MSage - 1))));
+            stan::math::initialize(mu_alr_p_MS, DUMMY_VAR__);
+            stan::math::fill(mu_alr_p_MS, DUMMY_VAR__);
             current_statement_begin__ = 230;
             validate_non_negative_index("p_MS", "N_MSage", N_MSage);
             validate_non_negative_index("p_MS", "N", N);
@@ -3347,17 +3349,17 @@ public:
             current_statement_begin__ = 248;
             for (int j = 1; j <= N_pop; ++j) {
                 current_statement_begin__ = 251;
-                stan::model::assign(gamma_M, 
-                            stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
-                            to_row_vector(subtract(stan::math::log(stan::model::rvalue(mu_p_M, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_min_max(1, (N_Mage - 1)), stan::model::nil_index_list())), "mu_p_M")), stan::math::log(get_base1(get_base1(mu_p_M, j, "mu_p_M", 1), N_Mage, "mu_p_M", 2)))), 
-                            "assigning variable gamma_M");
+                stan::model::assign(mu_alr_p_M, 
+                            stan::model::cons_list(stan::model::index_uni(j), stan::model::nil_index_list()), 
+                            subtract(stan::math::log(head(get_base1(mu_p_M, j, "mu_p_M", 1), (N_Mage - 1))), stan::math::log(get_base1(get_base1(mu_p_M, j, "mu_p_M", 1), N_Mage, "mu_p_M", 2))), 
+                            "assigning variable mu_alr_p_M");
                 current_statement_begin__ = 254;
                 for (int a = 1; a <= N_Mage; ++a) {
                     current_statement_begin__ = 255;
-                    stan::model::assign(gamma_MS, 
+                    stan::model::assign(mu_alr_p_MS, 
                                 stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list())), 
-                                subtract(stan::math::log(stan::model::rvalue(mu_p_MS, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_uni(a), stan::model::cons_list(stan::model::index_min_max(1, (N_MSage - 1)), stan::model::nil_index_list()))), "mu_p_MS")), stan::math::log(get_base1(get_base1(get_base1(mu_p_MS, j, "mu_p_MS", 1), a, "mu_p_MS", 2), N_MSage, "mu_p_MS", 3))), 
-                                "assigning variable gamma_MS");
+                                subtract(stan::math::log(head(stan::model::rvalue(mu_p_MS, stan::model::cons_list(stan::model::index_uni(j), stan::model::cons_list(stan::model::index_uni(a), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list()))), "mu_p_MS"), (N_MSage - 1))), stan::math::log(get_base1(get_base1(get_base1(mu_p_MS, j, "mu_p_MS", 1), a, "mu_p_MS", 2), N_MSage, "mu_p_MS", 3))), 
+                                "assigning variable mu_alr_p_MS");
                 }
             }
             current_statement_begin__ = 260;
@@ -3365,7 +3367,7 @@ public:
                 {
                 current_statement_begin__ = 262;
                 validate_non_negative_index("alr_p_M", "N_Mage", N_Mage);
-                Eigen::Matrix<local_scalar_t__, 1, Eigen::Dynamic> alr_p_M(N_Mage);
+                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> alr_p_M(N_Mage);
                 stan::math::initialize(alr_p_M, DUMMY_VAR__);
                 stan::math::fill(alr_p_M, DUMMY_VAR__);
                 current_statement_begin__ = 263;
@@ -3388,10 +3390,10 @@ public:
                 stan::math::initialize(q_M_orphan, DUMMY_VAR__);
                 stan::math::fill(q_M_orphan, DUMMY_VAR__);
                 current_statement_begin__ = 269;
-                validate_non_negative_index("gamma_MS_i", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
-                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> gamma_MS_i((N_Mage * (N_MSage - 1)));
-                stan::math::initialize(gamma_MS_i, DUMMY_VAR__);
-                stan::math::fill(gamma_MS_i, DUMMY_VAR__);
+                validate_non_negative_index("mu_alr_p_MS_i", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
+                Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> mu_alr_p_MS_i((N_Mage * (N_MSage - 1)));
+                stan::math::initialize(mu_alr_p_MS_i, DUMMY_VAR__);
+                stan::math::fill(mu_alr_p_MS_i, DUMMY_VAR__);
                 current_statement_begin__ = 270;
                 validate_non_negative_index("sigma_p_MS_i", "(N_Mage * (N_MSage - 1))", (N_Mage * (N_MSage - 1)));
                 Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sigma_p_MS_i((N_Mage * (N_MSage - 1)));
@@ -3423,26 +3425,26 @@ public:
                 stan::math::initialize(S_W_a, DUMMY_VAR__);
                 stan::math::fill(S_W_a, DUMMY_VAR__);
                 current_statement_begin__ = 281;
-                stan::math::assign(alr_p_M, rep_row_vector(0, N_Mage));
+                stan::math::assign(alr_p_M, rep_vector(0, N_Mage));
                 current_statement_begin__ = 282;
                 stan::model::assign(alr_p_M, 
                             stan::model::cons_list(stan::model::index_min_max(1, (N_Mage - 1)), stan::model::nil_index_list()), 
-                            add(stan::model::rvalue(gamma_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "gamma_M"), elt_multiply(stan::model::rvalue(sigma_p_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "sigma_p_M"), transpose(multiply(get_base1(L_p_M, get_base1(pop, i, "pop", 1), "L_p_M", 1), transpose(stan::model::rvalue(zeta_p_M, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_M")))))), 
+                            add(get_base1(mu_alr_p_M, get_base1(pop, i, "pop", 1), "mu_alr_p_M", 1), elt_multiply(transpose(stan::model::rvalue(sigma_p_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "sigma_p_M")), multiply(get_base1(L_p_M, get_base1(pop, i, "pop", 1), "L_p_M", 1), transpose(stan::model::rvalue(zeta_p_M, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_M"))))), 
                             "assigning variable alr_p_M");
                 current_statement_begin__ = 283;
                 stan::math::assign(alr_p_M, stan::math::exp(alr_p_M));
                 current_statement_begin__ = 284;
                 stan::model::assign(p_M, 
-                            stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
+                            stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             divide(alr_p_M, sum(alr_p_M)), 
                             "assigning variable p_M");
                 current_statement_begin__ = 288;
                 for (int a = 1; a <= N_Mage; ++a) {
                     current_statement_begin__ = 290;
-                    stan::model::assign(gamma_MS_i, 
+                    stan::model::assign(mu_alr_p_MS_i, 
                                 stan::model::cons_list(stan::model::index_min_max((((a - 1) * (N_MSage - 1)) + 1), (a * (N_MSage - 1))), stan::model::nil_index_list()), 
-                                get_base1(get_base1(gamma_MS, get_base1(pop, i, "pop", 1), "gamma_MS", 1), a, "gamma_MS", 2), 
-                                "assigning variable gamma_MS_i");
+                                get_base1(get_base1(mu_alr_p_MS, get_base1(pop, i, "pop", 1), "mu_alr_p_MS", 1), a, "mu_alr_p_MS", 2), 
+                                "assigning variable mu_alr_p_MS_i");
                     current_statement_begin__ = 291;
                     stan::model::assign(sigma_p_MS_i, 
                                 stan::model::cons_list(stan::model::index_min_max((((a - 1) * (N_MSage - 1)) + 1), (a * (N_MSage - 1))), stan::model::nil_index_list()), 
@@ -3450,7 +3452,7 @@ public:
                                 "assigning variable sigma_p_MS_i");
                 }
                 current_statement_begin__ = 293;
-                stan::math::assign(alr_p_MS, add(gamma_MS_i, elt_multiply(sigma_p_MS_i, multiply(get_base1(L_p_MS, get_base1(pop, i, "pop", 1), "L_p_MS", 1), transpose(stan::model::rvalue(zeta_p_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_MS"))))));
+                stan::math::assign(alr_p_MS, add(mu_alr_p_MS_i, elt_multiply(sigma_p_MS_i, multiply(get_base1(L_p_MS, get_base1(pop, i, "pop", 1), "L_p_MS", 1), transpose(stan::model::rvalue(zeta_p_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "zeta_p_MS"))))));
                 current_statement_begin__ = 295;
                 for (int a = 1; a <= N_Mage; ++a) {
                     current_statement_begin__ = 297;
@@ -3491,7 +3493,7 @@ public:
                 current_statement_begin__ = 314;
                 stan::model::assign(s_MS, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), 
-                            inv_logit(add(add(logit(stan::model::rvalue(mu_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_MS")), dot_product(stan::model::rvalue(X_MS, stan::model::cons_list(stan::model::index_uni(get_base1(year, i, "year", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "X_MS"), stan::model::rvalue(beta_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_MS"))), stan::model::rvalue(epsilon_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "epsilon_MS"))), 
+                            inv_logit(add(add(logit(stan::model::rvalue(mu_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "mu_MS")), dot_product(get_base1(X_MS, i, "X_MS", 1), stan::model::rvalue(beta_MS, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_MS"))), stan::model::rvalue(epsilon_MS, stan::model::cons_list(stan::model::index_uni(i), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "epsilon_MS"))), 
                             "assigning variable s_MS");
                 current_statement_begin__ = 318;
                 if (as_bool(logical_lte(get_base1(pop_year_indx, i, "pop_year_indx", 1), max_Mage))) {
@@ -3507,7 +3509,7 @@ public:
                         current_statement_begin__ = 329;
                         stan::model::assign(M_a, 
                                     stan::model::cons_list(stan::model::index_uni(a), stan::model::nil_index_list()), 
-                                    (get_base1(M0, (i - get_base1(Mages, a, "Mages", 1)), "M0", 1) * get_base1(p_M, (i - get_base1(Mages, a, "Mages", 1)), a, "p_M", 1)), 
+                                    (get_base1(M0, (i - get_base1(Mages, a, "Mages", 1)), "M0", 1) * get_base1(get_base1(p_M, (i - get_base1(Mages, a, "Mages", 1)), "p_M", 1), a, "p_M", 2)), 
                                     "assigning variable M_a");
                     } else {
                         current_statement_begin__ = 332;
@@ -3608,7 +3610,7 @@ public:
                 current_statement_begin__ = 376;
                 stan::model::assign(M0, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            (get_base1(M_hat, i, "M_hat", 1) * stan::math::exp((dot_product(stan::model::rvalue(X_M, stan::model::cons_list(stan::model::index_uni(get_base1(year, i, "year", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "X_M"), stan::model::rvalue(beta_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_M")) + get_base1(epsilon_M, i, "epsilon_M", 1)))), 
+                            (get_base1(M_hat, i, "M_hat", 1) * stan::math::exp((dot_product(get_base1(X_M, i, "X_M", 1), stan::model::rvalue(beta_M, stan::model::cons_list(stan::model::index_uni(get_base1(pop, i, "pop", 1)), stan::model::cons_list(stan::model::index_omni(), stan::model::nil_index_list())), "beta_M")) + get_base1(epsilon_M, i, "epsilon_M", 1)))), 
                             "assigning variable M0");
                 }
             }
@@ -3623,8 +3625,10 @@ public:
             current_statement_begin__ = 221;
             check_greater_or_equal(function__, "M", M, 0);
             current_statement_begin__ = 224;
-            check_greater_or_equal(function__, "p_M", p_M, 0);
-            check_less_or_equal(function__, "p_M", p_M, 1);
+            size_t p_M_i_0_max__ = N;
+            for (size_t i_0__ = 0; i_0__ < p_M_i_0_max__; ++i_0__) {
+                stan::math::check_simplex(function__, "p_M[i_0__]", p_M[i_0__]);
+            }
             current_statement_begin__ = 225;
             check_greater_or_equal(function__, "q_M", q_M, 0);
             check_less_or_equal(function__, "q_M", q_M, 1);
@@ -3670,18 +3674,18 @@ public:
                 for (size_t j_1__ = 0; j_1__ < M_j_1_max__; ++j_1__) {
                     vars__.push_back(M(j_1__));
                 }
-                size_t gamma_M_j_2_max__ = (N_Mage - 1);
-                size_t gamma_M_j_1_max__ = N_pop;
-                for (size_t j_2__ = 0; j_2__ < gamma_M_j_2_max__; ++j_2__) {
-                    for (size_t j_1__ = 0; j_1__ < gamma_M_j_1_max__; ++j_1__) {
-                        vars__.push_back(gamma_M(j_1__, j_2__));
+                size_t mu_alr_p_M_j_1_max__ = (N_Mage - 1);
+                size_t mu_alr_p_M_k_0_max__ = N_pop;
+                for (size_t j_1__ = 0; j_1__ < mu_alr_p_M_j_1_max__; ++j_1__) {
+                    for (size_t k_0__ = 0; k_0__ < mu_alr_p_M_k_0_max__; ++k_0__) {
+                        vars__.push_back(mu_alr_p_M[k_0__](j_1__));
                     }
                 }
-                size_t p_M_j_2_max__ = N_Mage;
-                size_t p_M_j_1_max__ = N;
-                for (size_t j_2__ = 0; j_2__ < p_M_j_2_max__; ++j_2__) {
-                    for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
-                        vars__.push_back(p_M(j_1__, j_2__));
+                size_t p_M_j_1_max__ = N_Mage;
+                size_t p_M_k_0_max__ = N;
+                for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
+                    for (size_t k_0__ = 0; k_0__ < p_M_k_0_max__; ++k_0__) {
+                        vars__.push_back(p_M[k_0__](j_1__));
                     }
                 }
                 size_t q_M_j_2_max__ = N_Mage;
@@ -3705,13 +3709,13 @@ public:
                         vars__.push_back(s_MS(j_1__, j_2__));
                     }
                 }
-                size_t gamma_MS_j_1_max__ = (N_MSage - 1);
-                size_t gamma_MS_k_0_max__ = N_pop;
-                size_t gamma_MS_k_1_max__ = N_Mage;
-                for (size_t j_1__ = 0; j_1__ < gamma_MS_j_1_max__; ++j_1__) {
-                    for (size_t k_1__ = 0; k_1__ < gamma_MS_k_1_max__; ++k_1__) {
-                        for (size_t k_0__ = 0; k_0__ < gamma_MS_k_0_max__; ++k_0__) {
-                            vars__.push_back(gamma_MS[k_0__][k_1__](j_1__));
+                size_t mu_alr_p_MS_j_1_max__ = (N_MSage - 1);
+                size_t mu_alr_p_MS_k_0_max__ = N_pop;
+                size_t mu_alr_p_MS_k_1_max__ = N_Mage;
+                for (size_t j_1__ = 0; j_1__ < mu_alr_p_MS_j_1_max__; ++j_1__) {
+                    for (size_t k_1__ = 0; k_1__ < mu_alr_p_MS_k_1_max__; ++k_1__) {
+                        for (size_t k_0__ = 0; k_0__ < mu_alr_p_MS_k_0_max__; ++k_0__) {
+                            vars__.push_back(mu_alr_p_MS[k_0__][k_1__](j_1__));
                         }
                     }
                 }
@@ -4251,21 +4255,21 @@ public:
                 param_name_stream__ << "M" << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
-            size_t gamma_M_j_2_max__ = (N_Mage - 1);
-            size_t gamma_M_j_1_max__ = N_pop;
-            for (size_t j_2__ = 0; j_2__ < gamma_M_j_2_max__; ++j_2__) {
-                for (size_t j_1__ = 0; j_1__ < gamma_M_j_1_max__; ++j_1__) {
+            size_t mu_alr_p_M_j_1_max__ = (N_Mage - 1);
+            size_t mu_alr_p_M_k_0_max__ = N_pop;
+            for (size_t j_1__ = 0; j_1__ < mu_alr_p_M_j_1_max__; ++j_1__) {
+                for (size_t k_0__ = 0; k_0__ < mu_alr_p_M_k_0_max__; ++k_0__) {
                     param_name_stream__.str(std::string());
-                    param_name_stream__ << "gamma_M" << '.' << j_1__ + 1 << '.' << j_2__ + 1;
+                    param_name_stream__ << "mu_alr_p_M" << '.' << k_0__ + 1 << '.' << j_1__ + 1;
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
-            size_t p_M_j_2_max__ = N_Mage;
-            size_t p_M_j_1_max__ = N;
-            for (size_t j_2__ = 0; j_2__ < p_M_j_2_max__; ++j_2__) {
-                for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
+            size_t p_M_j_1_max__ = N_Mage;
+            size_t p_M_k_0_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
+                for (size_t k_0__ = 0; k_0__ < p_M_k_0_max__; ++k_0__) {
                     param_name_stream__.str(std::string());
-                    param_name_stream__ << "p_M" << '.' << j_1__ + 1 << '.' << j_2__ + 1;
+                    param_name_stream__ << "p_M" << '.' << k_0__ + 1 << '.' << j_1__ + 1;
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
@@ -4296,14 +4300,14 @@ public:
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
-            size_t gamma_MS_j_1_max__ = (N_MSage - 1);
-            size_t gamma_MS_k_0_max__ = N_pop;
-            size_t gamma_MS_k_1_max__ = N_Mage;
-            for (size_t j_1__ = 0; j_1__ < gamma_MS_j_1_max__; ++j_1__) {
-                for (size_t k_1__ = 0; k_1__ < gamma_MS_k_1_max__; ++k_1__) {
-                    for (size_t k_0__ = 0; k_0__ < gamma_MS_k_0_max__; ++k_0__) {
+            size_t mu_alr_p_MS_j_1_max__ = (N_MSage - 1);
+            size_t mu_alr_p_MS_k_0_max__ = N_pop;
+            size_t mu_alr_p_MS_k_1_max__ = N_Mage;
+            for (size_t j_1__ = 0; j_1__ < mu_alr_p_MS_j_1_max__; ++j_1__) {
+                for (size_t k_1__ = 0; k_1__ < mu_alr_p_MS_k_1_max__; ++k_1__) {
+                    for (size_t k_0__ = 0; k_0__ < mu_alr_p_MS_k_0_max__; ++k_0__) {
                         param_name_stream__.str(std::string());
-                        param_name_stream__ << "gamma_MS" << '.' << k_0__ + 1 << '.' << k_1__ + 1 << '.' << j_1__ + 1;
+                        param_name_stream__ << "mu_alr_p_MS" << '.' << k_0__ + 1 << '.' << k_1__ + 1 << '.' << j_1__ + 1;
                         param_names__.push_back(param_name_stream__.str());
                     }
                 }
@@ -4704,21 +4708,21 @@ public:
                 param_name_stream__ << "M" << '.' << j_1__ + 1;
                 param_names__.push_back(param_name_stream__.str());
             }
-            size_t gamma_M_j_2_max__ = (N_Mage - 1);
-            size_t gamma_M_j_1_max__ = N_pop;
-            for (size_t j_2__ = 0; j_2__ < gamma_M_j_2_max__; ++j_2__) {
-                for (size_t j_1__ = 0; j_1__ < gamma_M_j_1_max__; ++j_1__) {
+            size_t mu_alr_p_M_j_1_max__ = (N_Mage - 1);
+            size_t mu_alr_p_M_k_0_max__ = N_pop;
+            for (size_t j_1__ = 0; j_1__ < mu_alr_p_M_j_1_max__; ++j_1__) {
+                for (size_t k_0__ = 0; k_0__ < mu_alr_p_M_k_0_max__; ++k_0__) {
                     param_name_stream__.str(std::string());
-                    param_name_stream__ << "gamma_M" << '.' << j_1__ + 1 << '.' << j_2__ + 1;
+                    param_name_stream__ << "mu_alr_p_M" << '.' << k_0__ + 1 << '.' << j_1__ + 1;
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
-            size_t p_M_j_2_max__ = N_Mage;
-            size_t p_M_j_1_max__ = N;
-            for (size_t j_2__ = 0; j_2__ < p_M_j_2_max__; ++j_2__) {
-                for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
+            size_t p_M_j_1_max__ = (N_Mage - 1);
+            size_t p_M_k_0_max__ = N;
+            for (size_t j_1__ = 0; j_1__ < p_M_j_1_max__; ++j_1__) {
+                for (size_t k_0__ = 0; k_0__ < p_M_k_0_max__; ++k_0__) {
                     param_name_stream__.str(std::string());
-                    param_name_stream__ << "p_M" << '.' << j_1__ + 1 << '.' << j_2__ + 1;
+                    param_name_stream__ << "p_M" << '.' << k_0__ + 1 << '.' << j_1__ + 1;
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
@@ -4749,14 +4753,14 @@ public:
                     param_names__.push_back(param_name_stream__.str());
                 }
             }
-            size_t gamma_MS_j_1_max__ = (N_MSage - 1);
-            size_t gamma_MS_k_0_max__ = N_pop;
-            size_t gamma_MS_k_1_max__ = N_Mage;
-            for (size_t j_1__ = 0; j_1__ < gamma_MS_j_1_max__; ++j_1__) {
-                for (size_t k_1__ = 0; k_1__ < gamma_MS_k_1_max__; ++k_1__) {
-                    for (size_t k_0__ = 0; k_0__ < gamma_MS_k_0_max__; ++k_0__) {
+            size_t mu_alr_p_MS_j_1_max__ = (N_MSage - 1);
+            size_t mu_alr_p_MS_k_0_max__ = N_pop;
+            size_t mu_alr_p_MS_k_1_max__ = N_Mage;
+            for (size_t j_1__ = 0; j_1__ < mu_alr_p_MS_j_1_max__; ++j_1__) {
+                for (size_t k_1__ = 0; k_1__ < mu_alr_p_MS_k_1_max__; ++k_1__) {
+                    for (size_t k_0__ = 0; k_0__ < mu_alr_p_MS_k_0_max__; ++k_0__) {
                         param_name_stream__.str(std::string());
-                        param_name_stream__ << "gamma_MS" << '.' << k_0__ + 1 << '.' << k_1__ + 1 << '.' << j_1__ + 1;
+                        param_name_stream__ << "mu_alr_p_MS" << '.' << k_0__ + 1 << '.' << k_1__ + 1 << '.' << j_1__ + 1;
                         param_names__.push_back(param_name_stream__.str());
                     }
                 }

@@ -2,45 +2,61 @@
 % Please edit documentation in R/salmonIPM_sim.R
 \name{salmonIPM_sim}
 \alias{salmonIPM_sim}
-\title{Simulate data under an integrated population model}
+\title{Simulate data from a salmonid integrated population model}
 \usage{
 salmonIPM_sim(
-  pars,
-  fish_data,
-  env_data = NULL,
   life_cycle = "SS",
+  SR_fun = "BH",
+  pars,
+  par_models = NULL,
+  scale = TRUE,
+  fish_data,
   N_age,
   max_age,
-  ages = NULL,
-  SR_fun = "BH"
+  ages = NULL
 )
 }
 \arguments{
+\item{life_cycle}{Character string indicating which life-cycle model to
+simulate. Currently available options are spawner-to-spawner (\code{"SS"},
+the default) or spawner-smolt-spawner (\code{"SMS"}).}
+
+\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"},
+indicating which spawner-recruit function to simulate.}
+
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
 \itemize{
 \item \code{mu_alpha}  Hyper-mean of log intrinsic productivity.
+\item \code{beta_alpha}  Vector of regression coefficients for log intrinsic productivity.
 \item \code{sigma_alpha}  Hyper-SD of log intrinsic productivity.
-\item \code{mu_Rmax}  Hyper-mean of log asymptotic recruitment.
-\item \code{sigma_Rmax}  Hyper-SD of log asymptotic recruitment.
-\item \code{rho_alphaRmax}  Correlation between log(alpha) and log(Rmax).
-\item \code{beta_R}  If \code{life_cycle=="SS"}, vector of regression
-coefficients for log productivity anomalies.
-\item \code{rho_R}  If \code{life_cycle=="SS"}, AR(1) coefficient for
+\item \code{mu_Rmax}  If \code{life_cycle=="SS"}, hyper-mean of log maximum recruitment.
+\item \code{beta_Rmax}  If \code{life_cycle=="SS"}, vector of regression coefficients for
+log maximum recruitment.
+\item \code{sigma_Rmax}  If \code{life_cycle=="SS"}, hyper-SD of log maximum recruitment.
+\item \code{rho_alphaRmax}  If \code{life_cycle=="SS"}, correlation between log(alpha) and log(Rmax).
+\item \code{beta_R}  If \code{life_cycle=="SS"}, vector of regression coefficients for
+log recruitment.
+\item \code{rho_R}  If \code{life_cycle=="SS"}, AR(1) coefficient of brood-year
 log productivity anomalies.
-\item \code{sigma_year_}  If \code{life_cycle=="SS"}, hyper-SD of brood year
+\item \code{sigma_year_R}  If \code{life_cycle=="SS"}, hyper-SD of brood-year
 log productivity anomalies.
 \item \code{sigma_R}  If \code{life_cycle=="SS"}, unique recruitment process error SD.
+\item \code{mu_Mmax}  If \code{life_cycle=="SMS"}, hyper-mean of log maximum smolt recruitment.
+\item \code{beta_Mmax}  If \code{life_cycle=="SMS"}, vector of regression coefficients for
+log maximum smolt recruitment.
+\item \code{sigma_Mmax}  If \code{life_cycle=="SMS"}, hyper-SD of log maximum smolt recruitment.
+\item \code{rho_alphaMmax}  If \code{life_cycle=="SMS"}, correlation between log(alpha) and log(Mmax).
 \item \code{beta_M}  If \code{life_cycle=="SMS"}, vector of regression coefficients for
-spawner-smolt log productivity anomalies.
-\item \code{rho_year_M}  If \code{life_cycle=="SMS"}, AR(1) coefficient of spawner-smolt log
+log smolt recruitment.
+\item \code{rho_M}  If \code{life_cycle=="SMS"}, AR(1) coefficient of spawner-smolt log
 productivity anomalies.
 \item \code{sigma_year_M}  If \code{life_cycle=="SMS"}, process error SD
 of spawner-smolt log productivity anomalies.
 \item \code{sigma_M}  If \code{life_cycle=="SMS"},
 SD of unique spawner-smolt productivity process errors.
 \item \code{mu_MS}  If \code{life_cycle=="SMS"}, mean SAR.
-\item \code{beta_MS}  If \code{life_cycle=="SMS"}, vector of regression
-coefficients for logit SAR anomalies.
+\item \code{beta_MS}  If \code{life_cycle=="SMS"}, vector of regression coefficients for
+logit SAR anomalies.
 \item \code{rho_MS}  If \code{life_cycle=="SMS"}, AR(1) coefficient for  logit SAR anomalies.
 \item \code{sigma_year_MS}  If \code{life_cycle=="SMS"}, process error SD of logit SAR anomalies.
 \item \code{sigma_MS}  If \code{life_cycle=="SMS"}, SD of unique SAR process errors.
@@ -56,6 +72,16 @@ coefficients for logit SAR anomalies.
 \item \code{S_init_K}  Mean of initial spawning population size as a fraction of carrying capacity.
 }}
 
+\item{par_models}{Optional list of two-sided formulas of the form
+\code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in \code{pars}
+with corresponding regression coefficients \code{beta_theta} and \verb{t1 ... tK}
+are terms involving variables in \code{fish_data}. Standard formula syntax
+such as \code{:} and \code{*} may be used; see \code{\link[stats:formula]{stats::formula()}}.}
+
+\item{scale}{Logical indicating whether the model matrices constructed from
+\code{fish_data} using the formulas in \code{par_models} should be scaled to have
+column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+
 \item{fish_data}{Data frame with columns:
 \itemize{
 \item \code{pop}  Population ID.
@@ -66,28 +92,15 @@ coefficients for logit SAR anomalies.
 \item \code{B_rate}  Hatchery broodstock removal rate.
 \item \code{n_age_obs}  Number of spawners sampled for age composition.
 \item \code{n_HW_obs}  Number of spawners sampled for hatchery/wild origin.
+\item \code{...}  Additional variables to be used as covariates.
 }}
 
-\item{env_data}{Optional data frame or named list of data frames whose
-variables are time-varying environmental covariates, sequentially ordered
-with each row corresponding to a unique year in fish_data. If a named list,
-element names correspond to stage- or transition-specific covariate
-matrices defined in the simulation model being used. (This is required if
-\code{life_cycle != "SS"}.)}
-
-\item{life_cycle}{Character string indicating which life-cycle model to
-simulate Currently available options are spawner-to-spawner (\code{"SS"},
-the default) or spawner-smolt-spawner (\code{"SMS"}).}
-
-\item{N_age}{The number of adult age classes.}
+\item{N_age}{Number of adult age classes.}
 
 \item{max_age}{Oldest adult age class.}
 
 \item{ages}{If \code{life_cycle != "SS"}, a named list giving the fixed ages
 in years of all subadult life stages.}
-
-\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or
-\code{"Ricker"}, indicating which spawner-recruit function to simulate.}
 }
 \value{
 A named list with elements

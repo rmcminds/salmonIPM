@@ -1,27 +1,37 @@
 #' Fits an integrated or run-reconstruction spawner-recruit model.
 #'
-#' @param fish_data See [stan_data()].
-#' @param fish_data_fwd See [stan_data()].
-#' @param env_data See [stan_data()].
-#' @param fecundity_data See [stan_data()].
-#' @param prior_data See [stan_data()].
-#' @param ages See [stan_data()].
-#' @param age_S_obs See [stan_data()].
-#' @param age_S_eff See [stan_data()].
-#' @param conditionGRonMS See [stan_data()].
 #' @param model Either `"IPM"` or `"RR"`, indicating whether the data
 #'   are intended for an integrated or run-reconstruction model.
 #' @param life_cycle Character string indicating which life-cycle model to fit.
-#'   Currently available options are spawner-to-spawner (`"SS"`, the
-#'   default), spawner-to-spawner "harvest model" (`"SS_F"`), or
-#'   spawner-smolt-spawner (`"SMS"`).
+#' One of the following options (must be `"SS"` if `model == "RR"`):
+#'   * `"SS"`  Spawner-to-spawner (the default)
+#'   * `"SSpa"`  Spawner-to-spawner with partially observed and partially
+#'   reproductively effective adult age classes 
+#'   * `"SMS"`  Spawner-smolt-spawner
+#'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
+#'   available for `pool_pops == FALSE`)
+#'   * `"LCRchum"`  Customized spawner-egg-smolt-spawner model for Lower Columbia chum
+#'   (`pool_pops == TRUE`)
+#'   * `"ICchinook"`  Customized spawner-smolt-spawner model with downstream, SAR,
+#'   and upstream survival (`"pool_pops == TRUE"`)
 #' @param pool_pops Logical scalar defaulting to `TRUE`, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent.
 #' @param stan_model Character string giving the name of the **salmonIPM** model being
-#'   fit (".stan" filetype extension is not included).
-#' @param SR_fun One of `"exp"`, `"BH"` (the default), or
-#'   `"Ricker"`, indicating which spawner-recruit function to fit.
+#'   fit (".stan" filetype extension is not included). A more concise alternative to
+#'   specifying `model`, `life_cycle`, and `pool_pops` (and will override those arguments).
+#' @param SR_fun One of `"exp"`, `"BH"` (the default), or `"Ricker"`, 
+#' indicating which spawner-recruit function to fit.
+#' @param ages See [stan_data()].
+#' @param par_models See [stan_data()].
+#' @param scale See [stan_data()].
+#' @param fish_data See [stan_data()].
+#' @param fish_data_fwd See [stan_data()].
+#' @param fecundity_data See [stan_data()].
+#' @param prior_data See [stan_data()].
+#' @param age_S_obs See [stan_data()].
+#' @param age_S_eff See [stan_data()].
+#' @param conditionGRonMS See [stan_data()].
 #' @param init A list of named lists of initial values to be passed to
 #'   [rstan::stan()]. If `NULL`, initial values will be automatically
 #'   generated from the supplied data using [stan_init()].
@@ -47,6 +57,7 @@
 #' @param cores Number of cores to use when executing the chains in parallel.
 #'   Defaults to one less than the number of cores available.
 #' @param ... Additional arguments to pass to [rstan::sampling()].
+#' 
 #' @return An object of class `stanfit` representing the fitted model. See
 #'   [rstan::stan()] for details.
 #'
@@ -54,12 +65,13 @@
 #'
 #' @export
 
-salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL, 
-                      fecundity_data = NULL, prior_data = NULL,
-                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      model, life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, SR_fun = "BH", 
+salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH", 
+                      stan_model = NULL, ages = NULL, par_models = NULL, scale = TRUE, 
+                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
+                      age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
-                      chains, iter, warmup, thin = 1, cores = parallel::detectCores() - 1, ...)
+                      chains, iter, warmup, thin = 1, cores = parallel::detectCores() - 1, 
+                      ...)
 {
   if(is.null(stan_model)) 
   {
@@ -70,10 +82,12 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
     life_cycle <- mlp[2]
     pool_pops <- mlp[3]
   }
-  dat <- stan_data(fish_data = fish_data, fish_data_fwd = fish_data_fwd, env_data = env_data, 
+  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, ages = ages, 
+                   par_models = par_models, scale = scale, 
+                   fish_data = fish_data, fish_data_fwd = fish_data_fwd, 
                    fecundity_data = fecundity_data, prior_data = prior_data, 
-                   ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                   conditionGRonMS = conditionGRonMS, stan_model = stan_model, SR_fun = SR_fun)
+                   age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   conditionGRonMS = conditionGRonMS)
   
   if(is.null(pars)) 
   {
@@ -84,9 +98,10 @@ salmonIPM <- function(fish_data, fish_data_fwd = NULL, env_data = NULL,
   if(log_lik) pars <- c(pars, "LL")
   
   fit <- rstan::sampling(stanmodels[[stan_model]],
-              data = dat, 
-              init = stan_init(dat, stan_model, chains), 
-              pars = pars,
-              chains = chains, iter = iter, warmup = warmup, thin = thin, 
-              cores = cores, ...)
+                         data = dat, 
+                         init = stan_init(dat, stan_model, chains), 
+                         pars = pars,
+                         chains = chains, cores = cores, 
+                         iter = iter, warmup = warmup, thin = thin, 
+                         ...)
 }
