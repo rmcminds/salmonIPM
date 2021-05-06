@@ -56,14 +56,14 @@ functions {
     return(which_cond);
   }
   
-  // // Left multiply vector by matrix
-  // // works even if size is zero
-  // vector mat_lmult(matrix X, vector v)
-  // {
-  //   vector[rows(X)] Xv;
-  //   Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
-  //   return(Xv); 
-  // }
+  // Left multiply vector by matrix
+  // works even if size is zero
+  vector mat_lmult(matrix X, vector v)
+  {
+    vector[rows(X)] Xv;
+    Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
+    return(Xv);
+  }
     
   // Quantiles of a vector
   real quantile(vector v, real p) {
@@ -95,11 +95,11 @@ data {
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> N_X_alpha;              // number of intrinsic productivity covariates
-  row_vector[N_X_alpha] X_alpha[N];    // intrinsic productivity covariates
+  matrix[N,N_X_alpha] X_alpha;         // intrinsic productivity covariates
   int<lower=0> N_X_Rmax;               // number of maximum recruitment covariates
-  row_vector[N_X_Rmax] X_Rmax[N];      // maximum recruitment covariates
+  matrix[N,N_X_Rmax] X_Rmax;           // maximum recruitment covariates
   int<lower=0> N_X_R;                  // number of recruitment covariates
-  row_vector[N_X_R] X_R[N];            // brood-year productivity covariates
+  matrix[N,N_X_R] X_R;                 // brood-year productivity covariates
   // fishery and hatchery removals
   vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -217,10 +217,13 @@ parameters {
 
 transformed parameters {
   // recruitment
-  vector<lower=0>[N_pop] alpha;          // intrinsic productivity 
+  vector<lower=0>[N_pop] alpha;          // intrinsic productivity
+  vector<lower=0>[N] alpha_Xbeta;        // intrinsic productivity including covariate effects
   vector<lower=0>[N_pop] Rmax;           // maximum recruitment 
+  vector<lower=0>[N] Rmax_Xbeta;         // maximum recruitment including covariate effects
   vector[N_year_all] eta_year_R;         // log brood year productivity anomalies
   vector<lower=0>[N] R_hat;              // expected recruit abundance (not density) by brood year
+  // vector<lower=0>[N] eta_Xbeta_epsilon_R; // recruitment process error including covariate effects
   vector<lower=0>[N] R;                  // true recruit abundance (not density) by brood year
   // H/W spawner abundance, removals
   vector[N] p_HOS_all;                   // true p_HOS in all years (can == 0)
@@ -250,7 +253,9 @@ transformed parameters {
     zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
     eta_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
     alpha = exp(mu_alpha + eta_alphaRmax[,1]);
+    alpha_Xbeta = alpha[pop] .* exp(mat_lmult(X_alpha, beta_alpha));
     Rmax = exp(mu_Rmax + eta_alphaRmax[,2]);
+    Rmax_Xbeta = Rmax[pop] .* exp(mat_lmult(X_Rmax, beta_Rmax));
   }
   
   // AR(1) model for eta_year_R
@@ -259,6 +264,9 @@ transformed parameters {
     eta_year_R[i] = rho_R*eta_year_R[i-1] + zeta_year_R[i]*sigma_year_R;
   // constrain "fitted" log anomalies to sum to 0
   eta_year_R = eta_year_R - mean(head(eta_year_R, N_year));
+
+  // Total recruitment process error
+  // eta_Xbeta_epsilon_R = exp(eta_year_R[year] + mat_lmult(X_R, beta_R) + sigma_R*zeta_R);
   
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -280,9 +288,6 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    // intrinsic productivity and maximum recruitment adjusted for covariate effects
-    real alpha_i = alpha[pop[i]] * exp(dot_product(X_alpha[i], beta_alpha));
-    real Rmax_i = Rmax[pop[i]] * exp(dot_product(X_Rmax[i], beta_Rmax));
     row_vector[N_age] S_W_a; // true wild spawners by age
     int ii; // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
@@ -315,8 +320,9 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
     
     // Recruitment
-    R_hat[i] = SR(SR_fun, alpha_i, Rmax_i, S[i], A[i]);
+    R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i], A[i]);
     R[i] = R_hat[i] * exp(eta_year_R[year[i]] + dot_product(X_R[i], beta_R) + sigma_R*zeta_R[i]);
+    // R[i] = R_hat[i] * eta_Xbeta_epsilon_R[i];
   }
 }
 

@@ -99,7 +99,7 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, SR_fun
   
   fit <- rstan::sampling(stanmodels[[stan_model]],
                          data = dat, 
-                         init = stan_init(dat, stan_model, chains), 
+                         init = stan_init(stan_model = stan_model, dat = dat, chains = chains), 
                          pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 
