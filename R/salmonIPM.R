@@ -162,9 +162,12 @@
 #' @details 
 #' The following parameters and states can be modeled as functions of covariates using
 #' the argument `par_models`. The response distribution families are automatically 
-#' implemented so there is no need to `log()`- or `logit()`-transform the left-hand side
+#' implemented so there is no need to `log()`- or `qlogis()`-transform the left-hand side
 #' of the formula, although such syntax will also work. (This is because the LHS is not
-#' found in `fish_data` and is only used to determine the parameter name.) 
+#' found in `fish_data` and is only used to determine the parameter name.) The design
+#' matrices passed to the Stan model cannot include an intercept, but it is not necessary 
+#' to manually remove it in the RHS; if present by default, [par_model_matrix()] will 
+#' automatically remove it.
 #' 
 #' As with any regression model, the user must ensure the effects specified are 
 #' estimable given the design matrix. For example, a spatially varying but 

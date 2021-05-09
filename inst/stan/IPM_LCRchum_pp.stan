@@ -252,9 +252,9 @@ transformed parameters {
   
   // Population-specific egg-smolt survival and capacity terms (independent)
   {
-    real logit_mu_psi = logit(mu_psi);
-    psi = inv_logit(logit_mu_psi + sigma_psi*zeta_psi);
-    psi_Xbeta = inv_logit(logit_mu_psi + mat_lmult(X_psi, beta_psi) + sigma_psi*zeta_psi[pop]);
+    vector[N_pop] logit_psi = logit(mu_psi) + sigma_psi*zeta_psi;
+    psi = inv_logit(logit_psi);
+    psi_Xbeta = inv_logit(logit_psi[pop] + mat_lmult(X_psi, beta_psi));
     Mmax = exp(mu_Mmax + sigma_Mmax*zeta_Mmax);
     Mmax_Xbeta = Mmax[pop] .* exp(mat_lmult(X_Mmax, beta_Mmax));
   }

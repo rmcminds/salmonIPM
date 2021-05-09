@@ -237,9 +237,12 @@ Fits an integrated or run-reconstruction spawner-recruit model.
 \details{
 The following parameters and states can be modeled as functions of covariates using
 the argument \code{par_models}. The response distribution families are automatically
-implemented so there is no need to \code{log()}- or \code{logit()}-transform the left-hand side
+implemented so there is no need to \code{log()}- or \code{qlogis()}-transform the left-hand side
 of the formula, although such syntax will also work. (This is because the LHS is not
-found in \code{fish_data} and is only used to determine the parameter name.)
+found in \code{fish_data} and is only used to determine the parameter name.) The design
+matrices passed to the Stan model cannot include an intercept, but it is not necessary
+to manually remove it in the RHS; if present by default, \code{\link[=par_model_matrix]{par_model_matrix()}} will
+automatically remove it.
 
 As with any regression model, the user must ensure the effects specified are
 estimable given the design matrix. For example, a spatially varying but
