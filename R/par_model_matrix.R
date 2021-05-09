@@ -3,7 +3,7 @@
 #' @param par_models A list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in a `salmonIPM` model
 #' that accepts covariates and `t1 ... tK` are terms involving variables in
-#' `fish_data`; see [salmonIPM()].
+#' `fish_data`; see [salmonIPM()] for details.
 #' @param scale  Logical indicating whether the main effects in model matrices 
 #' constructed from `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`).

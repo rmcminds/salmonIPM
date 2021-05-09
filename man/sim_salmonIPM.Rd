@@ -29,37 +29,37 @@ indicating which spawner-recruit function to simulate.}
 \item \code{mu_alpha}  Hyper-mean of log intrinsic productivity.
 \item \code{beta_alpha}  Vector of regression coefficients for log intrinsic productivity.
 \item \code{sigma_alpha}  Hyper-SD of log intrinsic productivity.
-\item \code{mu_Rmax}  If \code{life_cycle=="SS"}, hyper-mean of log maximum recruitment.
-\item \code{beta_Rmax}  If \code{life_cycle=="SS"}, vector of regression coefficients for
+\item \code{mu_Rmax}  If \code{life_cycle == "SS"}, hyper-mean of log maximum recruitment.
+\item \code{beta_Rmax}  If \code{life_cycle == "SS"}, vector of regression coefficients for
 log maximum recruitment.
-\item \code{sigma_Rmax}  If \code{life_cycle=="SS"}, hyper-SD of log maximum recruitment.
-\item \code{rho_alphaRmax}  If \code{life_cycle=="SS"}, correlation between log(alpha) and log(Rmax).
-\item \code{beta_R}  If \code{life_cycle=="SS"}, vector of regression coefficients for
+\item \code{sigma_Rmax}  If \code{life_cycle == "SS"}, hyper-SD of log maximum recruitment.
+\item \code{rho_alphaRmax}  If \code{life_cycle == "SS"}, correlation between log(alpha) and log(Rmax).
+\item \code{beta_R}  If \code{life_cycle == "SS"}, vector of regression coefficients for
 log recruitment.
-\item \code{rho_R}  If \code{life_cycle=="SS"}, AR(1) coefficient of brood-year
+\item \code{rho_R}  If \code{life_cycle == "SS"}, AR(1) coefficient of brood-year
 log productivity anomalies.
-\item \code{sigma_year_R}  If \code{life_cycle=="SS"}, hyper-SD of brood-year
+\item \code{sigma_year_R}  If \code{life_cycle == "SS"}, hyper-SD of brood-year
 log productivity anomalies.
-\item \code{sigma_R}  If \code{life_cycle=="SS"}, unique recruitment process error SD.
-\item \code{mu_Mmax}  If \code{life_cycle=="SMS"}, hyper-mean of log maximum smolt recruitment.
-\item \code{beta_Mmax}  If \code{life_cycle=="SMS"}, vector of regression coefficients for
+\item \code{sigma_R}  If \code{life_cycle == "SS"}, unique recruitment process error SD.
+\item \code{mu_Mmax}  If \code{life_cycle == "SMS"}, hyper-mean of log maximum smolt recruitment.
+\item \code{beta_Mmax}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
 log maximum smolt recruitment.
-\item \code{sigma_Mmax}  If \code{life_cycle=="SMS"}, hyper-SD of log maximum smolt recruitment.
-\item \code{rho_alphaMmax}  If \code{life_cycle=="SMS"}, correlation between log(alpha) and log(Mmax).
-\item \code{beta_M}  If \code{life_cycle=="SMS"}, vector of regression coefficients for
+\item \code{sigma_Mmax}  If \code{life_cycle == "SMS"}, hyper-SD of log maximum smolt recruitment.
+\item \code{rho_alphaMmax}  If \code{life_cycle == "SMS"}, correlation between log(alpha) and log(Mmax).
+\item \code{beta_M}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
 log smolt recruitment.
-\item \code{rho_M}  If \code{life_cycle=="SMS"}, AR(1) coefficient of spawner-smolt log
+\item \code{rho_M}  If \code{life_cycle == "SMS"}, AR(1) coefficient of spawner-smolt log
 productivity anomalies.
-\item \code{sigma_year_M}  If \code{life_cycle=="SMS"}, process error SD
+\item \code{sigma_year_M}  If \code{life_cycle == "SMS"}, process error SD
 of spawner-smolt log productivity anomalies.
-\item \code{sigma_M}  If \code{life_cycle=="SMS"},
+\item \code{sigma_M}  If \code{life_cycle == "SMS"},
 SD of unique spawner-smolt productivity process errors.
-\item \code{mu_MS}  If \code{life_cycle=="SMS"}, mean SAR.
-\item \code{beta_MS}  If \code{life_cycle=="SMS"}, vector of regression coefficients for
+\item \code{mu_MS}  If \code{life_cycle == "SMS"}, mean SAR.
+\item \code{beta_MS}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
 logit SAR anomalies.
-\item \code{rho_MS}  If \code{life_cycle=="SMS"}, AR(1) coefficient for  logit SAR anomalies.
-\item \code{sigma_year_MS}  If \code{life_cycle=="SMS"}, process error SD of logit SAR anomalies.
-\item \code{sigma_MS}  If \code{life_cycle=="SMS"}, SD of unique SAR process errors.
+\item \code{rho_MS}  If \code{life_cycle == "SMS"}, AR(1) coefficient for  logit SAR anomalies.
+\item \code{sigma_year_MS}  If \code{life_cycle == "SMS"}, process error SD of logit SAR anomalies.
+\item \code{sigma_MS}  If \code{life_cycle == "SMS"}, SD of unique SAR process errors.
 \item \code{mu_p}  Among-population mean simplex of age distributions.
 \item \code{sigma_pop_p}  Vector of among-population SDs of mean log-ratio age distributions.
 \item \code{R_pop_p}  Among-population correlation matrix of mean log-ratio age distributions.
@@ -67,7 +67,7 @@ logit SAR anomalies.
 \item \code{R_pop_p}  Correlation matrix of cohort log-ratio age distributions.
 \item \code{sigma_p}  Vector of SDs of log-ratio cohort age distributions.
 \item \code{R_p}  Correlation matrix of cohort log-ratio age distributions.
-\item \code{tau_M}  If \code{life_cycle=="SMS"}, smolt observation error SD.
+\item \code{tau_M}  If \code{life_cycle == "SMS"}, smolt observation error SD.
 \item \code{tau_S}  Spawner observation error SD.
 \item \code{S_init_K}  Mean of initial spawning population size as a fraction of carrying capacity.
 }}

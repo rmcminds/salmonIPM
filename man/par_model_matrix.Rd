@@ -10,7 +10,7 @@ par_model_matrix(par_models, scale = TRUE, fish_data)
 \item{par_models}{A list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in a \code{salmonIPM} model
 that accepts covariates and \verb{t1 ... tK} are terms involving variables in
-\code{fish_data}; see \code{\link[=salmonIPM]{salmonIPM()}}.}
+\code{fish_data}; see \code{\link[=salmonIPM]{salmonIPM()}} for details.}
 
 \item{scale}{Logical indicating whether the main effects in model matrices
 constructed from \code{fish_data} using the formulas in \code{par_models} should be scaled to have

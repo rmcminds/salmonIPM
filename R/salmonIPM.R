@@ -13,12 +13,12 @@
 #'   * `"LCRchum"`  Customized spawner-egg-smolt-spawner model for Lower Columbia chum
 #'   (`pool_pops == TRUE`)
 #'   * `"ICchinook"`  Customized spawner-smolt-spawner model with downstream, SAR,
-#'   and upstream survival (`"pool_pops == TRUE"`)
-#' @param pool_pops Logical scalar defaulting to `TRUE`, indicating whether or not
+#'   and upstream survival (`pool_pops == TRUE`)
+#' @param pool_pops Logical defaulting to `TRUE`, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent.
 #' @param stan_model Character string giving the name of the **salmonIPM** model being
-#'   fit (".stan" filetype extension is not included). A more concise alternative to
+#'   fit (`.stan` filetype extension is not included). A more concise alternative to
 #'   specifying `model`, `life_cycle`, and `pool_pops` (and will override those arguments).
 #' @param SR_fun One of `"exp"`, `"BH"` (the default), or `"Ricker"`, 
 #'   indicating which spawner-recruit function to fit.
@@ -33,21 +33,21 @@
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages.
-#' @param age_S_obs Only if `stan_model == "IPM_SSpa_pp"`, a logical or numeric
+#' @param age_S_obs If `stan_model == "IPM_SSpa_pp"`, a logical or numeric
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
 #'   all ages.
-#' @param age_S_eff Only if `stan_model == "IPM_SSpa_pp"`, a logical or numeric
+#' @param age_S_eff If `stan_model == "IPM_SSpa_pp"`, a logical or numeric
 #'   vector indicating, for each adult age, whether spawners of that age
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
 #'   of all ages.
-#' @param conditionGRonMS Only if `stan_model == "IPM_SMaS_np`, logical indicating
+#' @param conditionGRonMS If `stan_model == "IPM_SMaS_np`, logical indicating
 #' whether the Gilbert-Rich age frequencies `n_GRage_obs` in `fish_data` are conditioned
 #' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
 #' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
 #' age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
-#' in a `smolt age x ocean age` contingency table, the cell frequencies are conditioned
+#' in a smolt age [x] ocean age contingency table, the cell frequencies are conditioned
 #' on the column totals. 
 #' @param fish_data Data frame that includes the following `colnames`, in
 #'   no particular order except where noted: 
@@ -65,7 +65,7 @@
 #'   downstream trap (in addition to its own, if any) but a trap can have multiple 
 #'   upstream populations. If `downstream_trap[i] == j`, `M_downstream[j] <- M[j] + M[i]`; 
 #'   if `is.na(downstream_trap[i])` then `M[i]` is not double-counted.  
-#'   * `n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs`  If `life_cycle=="SMaS"`, 
+#'   * `n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs`  If `life_cycle == "SMaS"`, 
 #'   multiple columns of observed smolt age frequencies (i.e., counts), 
 #'   where `[min_Mage]` and `[max_Mage]` are the numeral age in years of the youngest 
 #'   and oldest smolts, respectively. Note that age is measured in calendar years from 
@@ -86,7 +86,7 @@
 #'   frequencies, sorted first by smolt age (`min_Mage:max_Mage`) and then
 #'   by total age `min_age:max_age`. For example, a life history with
 #'   subyearling or yearling smolts and ocean ages 2:3 would have column names
-#'   c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs") 
+#'   `c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")` 
 #'   * `n_M_obs`  If `stan_model == "IPM_LCRchum_pp"`, observed frequency of male spawners.
 #'   * `n_F_obs`  If `stan_model == "IPM_LCRchum_pp"`, observed frequency of female spawners.
 #'   * `p_G_obs`  If `stan_model == "IPM_LCRchum_pp"`, observed proportion (assumed known
@@ -97,7 +97,7 @@
 #'   model should estimate `p_HOS > 0`. This is only required if `model == "IPM"`.  
 #'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
 #'   * `B_take_obs`  Number of adults taken for hatchery broodstock.   
-#'   * `S_add_obs`  If `stan_model == "IPM_LCRchum_pp`, number of adults translocated into 
+#'   * `S_add_obs`  If `stan_model == "IPM_LCRchum_pp"`, number of adults translocated into 
 #'   population. 
 #'   * `...`  Additional variables to be used as covariates.  
 #' @param fish_data_fwd Only if `stan_model == "IPM_SS_pp"`, optional data frame
@@ -120,12 +120,12 @@
 #'   scenarios or "branches" with different inputs (e.g., harvest rate). In this
 #'   case, all branches are subjected to the same sequence of process errors in
 #'   recruitment and age structure. 
-#' @param fecundity_data Only if `stan_model == "IPM_LCRchum_pp"`, data frame with
+#' @param fecundity_data If `stan_model == "IPM_LCRchum_pp"`, data frame with
 #' the following columns, representing observations of fecundity with each
 #' row corresponding to a female:
 #' * `age_E`  Female age in years.   
 #' * `E_obs`  Observed fecundity.  
-#' @param prior_data Only if `stan_model == "IPM_ICchinook_pp"`, named list
+#' @param prior_data If `stan_model == "IPM_ICchinook_pp"`, named list
 #' with the following elements: 
 #' * `s`  Data frame with columns `year`, `mu_prior_D`, `sigma_prior_D`, 
 #' `mu_prior_SAR`, `sigma_prior_SAR`, `mu_prior_U`, `sigma_prior_U`, 

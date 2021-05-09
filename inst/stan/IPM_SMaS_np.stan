@@ -1,66 +1,11 @@
 functions {
-  // spawner-recruit functions
-  real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
-    real R;
-    
-    if(SR_fun == 1)      // discrete exponential
-      R = alpha*S;
-    else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(1 + alpha*S/(A*Rmax));
-    else if(SR_fun == 3) // Ricker
-      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
-    
-    return(R);
-  }
-  
-  // Generalized normal (aka power-exponential) unnormalized log-probability
-  real pexp_lpdf(vector y, real mu, real sigma, real shape) {
-    vector[num_elements(y)] LL;
-    
-    for(i in 1:num_elements(LL))
-      LL[i] = -pow(fabs(y[i] - mu)/sigma, shape);
-      
-    return(sum(LL));
-  }
-
-  // Column sums of matrix
-  row_vector col_sums(matrix X) {
-    row_vector[cols(X)] s;
-    s = rep_row_vector(1, rows(X)) * X;
-    return s;
-  }
-  
-  // Return the size m*n column vector consisting of m copies of x,
-  // where x is a column vector of size n
-  vector rep_vec(vector x, int m) {
-    vector[num_elements(x)*m] y;
-    y = to_vector(rep_matrix(x,m));
-    return(y);
-  }
-  
-  // Convert the matrix m to a row vector in row-major order
-  row_vector to_row_vector_row_major(matrix m) {
-    return(to_row_vector(m'));
-  }
-  
-  // Equivalent of R operator ":"
-  int[] seq(int from, int to) {
-    int x[to-from+1];
-    for(i in from:to) x[i-from+1] = i;
-    return(x);
-  }
-  
-  // Quantiles of a vector
-  real quantile(vector v, real p) {
-    int N = num_elements(v);
-    real Np = round(N*p);
-    real q;
-    
-    for(i in 1:N) {
-      if(i - Np == 0.0) q = v[i];
-    }
-    return(q);
-  }
+#include /include/SR.stan
+#include /include/pexp_lpdf_vec.stan
+#include /include/col_sums.stan
+#include /include/rep_vec.stan
+#include /include/to_row_vector_row_major.stan
+#include /include/seq.stan
+#include /include/quantile.stan
 }
 
 data {
@@ -398,9 +343,9 @@ model {
   alpha ~ lognormal(2.0,2.0);
   Mmax ~ lognormal(mu_Mmax, sigma_Mmax);
   to_vector(beta_M) ~ normal(0,5);
-  rho_M ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
+  rho_M ~ pexp(0.0,0.85,20.0); // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
-  zeta_M ~ std_normal();   // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
+  zeta_M ~ std_normal();       // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
   // smolt age structure
   to_vector(sigma_p_M) ~ normal(0,3);

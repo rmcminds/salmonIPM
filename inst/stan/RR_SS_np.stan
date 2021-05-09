@@ -1,34 +1,7 @@
 functions {
-  // spawner-recruit functions
-  real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
-    real R;
-    
-    if(SR_fun == 1)      // discrete exponential
-      R = alpha*S;
-    else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(1 + alpha*S/(A*Rmax));
-    else if(SR_fun == 3) // Ricker
-      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
-    
-    return(R);
-  }
-  
-  // Generalized normal (aka power-exponential) unnormalized log-probability
-  real pexp_lpdf(real y, real mu, real sigma_R, real shape) {
-    return(-(fabs(y - mu)/sigma_R)^shape);
-  }
-    
-  // Quantiles of a vector
-  real quantile(vector v, real p) {
-    int N = num_elements(v);
-    real Np = round(N*p);
-    real q;
-    
-    for(i in 1:N) {
-      if(i - Np == 0.0) q = v[i];
-    }
-    return(q);
-  }
+#include /include/SR.stan
+#include /include/pexp_lpdf.stan
+#include /include/quantile.stan
 }
 
 data {

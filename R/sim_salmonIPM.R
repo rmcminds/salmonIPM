@@ -14,37 +14,37 @@
 #'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
 #'   * `beta_alpha`  Vector of regression coefficients for log intrinsic productivity.
 #'   * `sigma_alpha`  Hyper-SD of log intrinsic productivity.
-#'   * `mu_Rmax`  If `life_cycle=="SS"`, hyper-mean of log maximum recruitment.
-#'   * `beta_Rmax`  If `life_cycle=="SS"`, vector of regression coefficients for 
+#'   * `mu_Rmax`  If `life_cycle == "SS"`, hyper-mean of log maximum recruitment.
+#'   * `beta_Rmax`  If `life_cycle == "SS"`, vector of regression coefficients for 
 #'   log maximum recruitment.
-#'   * `sigma_Rmax`  If `life_cycle=="SS"`, hyper-SD of log maximum recruitment.
-#'   * `rho_alphaRmax`  If `life_cycle=="SS"`, correlation between log(alpha) and log(Rmax).
-#'   * `beta_R`  If `life_cycle=="SS"`, vector of regression coefficients for 
+#'   * `sigma_Rmax`  If `life_cycle == "SS"`, hyper-SD of log maximum recruitment.
+#'   * `rho_alphaRmax`  If `life_cycle == "SS"`, correlation between log(alpha) and log(Rmax).
+#'   * `beta_R`  If `life_cycle == "SS"`, vector of regression coefficients for 
 #'   log recruitment.
-#'   * `rho_R`  If `life_cycle=="SS"`, AR(1) coefficient of brood-year 
+#'   * `rho_R`  If `life_cycle == "SS"`, AR(1) coefficient of brood-year 
 #'   log productivity anomalies.
-#'   * `sigma_year_R`  If `life_cycle=="SS"`, hyper-SD of brood-year 
+#'   * `sigma_year_R`  If `life_cycle == "SS"`, hyper-SD of brood-year 
 #'   log productivity anomalies.
-#'   * `sigma_R`  If `life_cycle=="SS"`, unique recruitment process error SD.
-#'   * `mu_Mmax`  If `life_cycle=="SMS"`, hyper-mean of log maximum smolt recruitment.
-#'   * `beta_Mmax`  If `life_cycle=="SMS"`, vector of regression coefficients for 
+#'   * `sigma_R`  If `life_cycle == "SS"`, unique recruitment process error SD.
+#'   * `mu_Mmax`  If `life_cycle == "SMS"`, hyper-mean of log maximum smolt recruitment.
+#'   * `beta_Mmax`  If `life_cycle == "SMS"`, vector of regression coefficients for 
 #'   log maximum smolt recruitment.
-#'   * `sigma_Mmax`  If `life_cycle=="SMS"`, hyper-SD of log maximum smolt recruitment.
-#'   * `rho_alphaMmax`  If `life_cycle=="SMS"`, correlation between log(alpha) and log(Mmax).
-#'   * `beta_M`  If `life_cycle=="SMS"`, vector of regression coefficients for
+#'   * `sigma_Mmax`  If `life_cycle == "SMS"`, hyper-SD of log maximum smolt recruitment.
+#'   * `rho_alphaMmax`  If `life_cycle == "SMS"`, correlation between log(alpha) and log(Mmax).
+#'   * `beta_M`  If `life_cycle == "SMS"`, vector of regression coefficients for
 #'   log smolt recruitment.
-#'   * `rho_M`  If `life_cycle=="SMS"`, AR(1) coefficient of spawner-smolt log
+#'   * `rho_M`  If `life_cycle == "SMS"`, AR(1) coefficient of spawner-smolt log
 #'   productivity anomalies.
-#'   * `sigma_year_M`  If `life_cycle=="SMS"`, process error SD 
+#'   * `sigma_year_M`  If `life_cycle == "SMS"`, process error SD 
 #'   of spawner-smolt log productivity anomalies.
-#'   * `sigma_M`  If `life_cycle=="SMS"`,
+#'   * `sigma_M`  If `life_cycle == "SMS"`,
 #'   SD of unique spawner-smolt productivity process errors.
-#'   * `mu_MS`  If `life_cycle=="SMS"`, mean SAR.
-#'   * `beta_MS`  If `life_cycle=="SMS"`, vector of regression coefficients for 
+#'   * `mu_MS`  If `life_cycle == "SMS"`, mean SAR.
+#'   * `beta_MS`  If `life_cycle == "SMS"`, vector of regression coefficients for 
 #'   logit SAR anomalies.
-#'   * `rho_MS`  If `life_cycle=="SMS"`, AR(1) coefficient for  logit SAR anomalies.
-#'   * `sigma_year_MS`  If `life_cycle=="SMS"`, process error SD of logit SAR anomalies.
-#'   * `sigma_MS`  If `life_cycle=="SMS"`, SD of unique SAR process errors.
+#'   * `rho_MS`  If `life_cycle == "SMS"`, AR(1) coefficient for  logit SAR anomalies.
+#'   * `sigma_year_MS`  If `life_cycle == "SMS"`, process error SD of logit SAR anomalies.
+#'   * `sigma_MS`  If `life_cycle == "SMS"`, SD of unique SAR process errors.
 #'   * `mu_p`  Among-population mean simplex of age distributions.
 #'   * `sigma_pop_p`  Vector of among-population SDs of mean log-ratio age distributions.
 #'   * `R_pop_p`  Among-population correlation matrix of mean log-ratio age distributions. 
@@ -52,7 +52,7 @@
 #'   * `R_pop_p`  Correlation matrix of cohort log-ratio age distributions. 
 #'   * `sigma_p`  Vector of SDs of log-ratio cohort age distributions.
 #'   * `R_p`  Correlation matrix of cohort log-ratio age distributions. 
-#'   * `tau_M`  If `life_cycle=="SMS"`, smolt observation error SD.
+#'   * `tau_M`  If `life_cycle == "SMS"`, smolt observation error SD.
 #'   * `tau_S`  Spawner observation error SD.
 #'   * `S_init_K`  Mean of initial spawning population size as a fraction of carrying capacity. 
 #' @param par_models  Optional list of two-sided formulas of the form 

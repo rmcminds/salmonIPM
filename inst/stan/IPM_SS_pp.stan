@@ -1,81 +1,12 @@
 functions {
-  // spawner-recruit functions
-  real SR(int SR_fun, real alpha, real Rmax, real S, real A) {
-    real R;
-    
-    if(SR_fun == 1)      // discrete exponential
-      R = alpha*S;
-    else if(SR_fun == 2) // Beverton-Holt
-      R = alpha*S/(1 + alpha*S/(A*Rmax));
-    else if(SR_fun == 3) // Ricker
-      R = alpha*S*exp(-alpha*S/(A*e()*Rmax));
-    
-    return(R);
-  }
-  
-  // Generalized normal (aka power-exponential) unnormalized log-probability
-  real pexp_lpdf(real y, real mu, real sigma_R, real shape) {
-    return(-(fabs(y - mu)/sigma_R)^shape);
-  }
-
-  // Vectorized logical equality
-  int[] veq(int[] x, int y) {
-    int xeqy[size(x)];
-    for(i in 1:size(x))
-      xeqy[i] = x[i] == y;
-    return(xeqy);
-  }
-  
-  // Vectorized logical &&
-    int[] vand(int[] cond1, int[] cond2) {
-      int cond1_and_cond2[size(cond1)];
-      for(i in 1:size(cond1))
-        cond1_and_cond2[i] = cond1[i] && cond2[i];
-      return(cond1_and_cond2);
-    }
-  
-  // R-style conditional subsetting
-  int[] rsub(int[] x, int[] cond) {
-    int xsub[sum(cond)];
-    int pos;
-    pos = 1;
-    for (i in 1:size(x))
-      if (cond[i])
-      {
-        xsub[pos] = x[i];
-        pos = pos + 1;
-      }
-    return(xsub);
-  }
-  
-  // Equivalent of R: which(cond), where sum(cond) == 1
-  int which(int[] cond) {
-    int which_cond;
-    for(i in 1:size(cond))
-    if(cond[i]) which_cond = i;
-    return(which_cond);
-  }
-  
-  // Left multiply vector by matrix
-  // works even if size is zero
-  vector mat_lmult(matrix X, vector v)
-  {
-    vector[rows(X)] Xv;
-    Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
-    return(Xv);
-  }
-    
-  // Quantiles of a vector
-  real quantile(vector v, real p) {
-    int N = num_elements(v);
-    real Np = round(N*p);
-    real q;
-    
-    for(i in 1:N) {
-      if(i - Np == 0.0) q = v[i];
-    }
-    return(q);
-  }
+#include /include/SR.stan
+#include /include/pexp_lpdf.stan
+#include /include/veq.stan
+#include /include/vand.stan
+#include /include/rsub.stan
+#include /include/which.stan
+#include /include/mat_lmult.stan
+#include /include/quantile.stan
 }
 
 data {

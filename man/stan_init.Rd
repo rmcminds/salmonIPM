@@ -8,7 +8,7 @@ stan_init(stan_model, data, chains = 1)
 }
 \arguments{
 \item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
-fit (".stan" filetype extension is not included). A more concise alternative to
+fit (\code{.stan} filetype extension is not included). A more concise alternative to
 specifying \code{model}, \code{life_cycle}, and \code{pool_pops} (and will override those arguments).}
 
 \item{data}{Named list of input data for fitting either an IPM or
