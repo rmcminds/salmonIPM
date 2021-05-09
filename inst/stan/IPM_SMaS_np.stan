@@ -71,8 +71,12 @@ data {
   // smolt production
   int<lower=1> SR_fun;                  // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector[N] A;                          // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_M;                  // number of smolt recruitment covariates
-  row_vector[N_X_M] X_M[N];            // smolt recruitment covariates
+  int<lower=0> K_alpha;                 // number of intrinsic productivity covariates
+  matrix[N,K_alpha] X_alpha;            // intrinsic productivity covariates
+  int<lower=0> K_Mmax;                  // number of maximum smolt recruitment covariates
+  matrix[N,K_Mmax] X_Mmax;              // maximum smolt recruitment covariates
+  int<lower=0> K_M;                     // number of smolt recruitment covariates
+  row_vector[K_M] X_M[N];               // smolt recruitment covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;         // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
@@ -82,8 +86,8 @@ data {
   int<lower=2> max_Mage;                // maximum smolt age
   matrix<lower=0>[N,N_Mage] n_Mage_obs; // observed smolt age frequencies (all zero row = NA)  
   // SAR (sMolt-Spawner survival)
-  int<lower=0> N_X_MS;                  // number of SAR covariates
-  row_vector[N_X_MS] X_MS[N];           // SAR covariates
+  int<lower=0> K_MS;                    // number of SAR covariates
+  row_vector[K_MS] X_MS[N];             // SAR covariates
   // fishery and hatchery removals
   vector[N] F_rate;                     // fishing mortality rate of wild adults (no fishing on jacks)
   int<lower=0,upper=N> N_B;             // number of years with B_take > 0
@@ -178,8 +182,10 @@ parameters {
   //?// indicates params that could be arrays instead of matrices
   // smolt recruitment
   vector<lower=0>[N_pop] alpha;               // intrinsic spawner-smolt productivity
+  matrix[N_pop,K_alpha] beta_alpha;           // regression coefs for log alpha
   vector<lower=0>[N_pop] Mmax;                // asymptotic smolt recruitment
-  matrix[N_pop,N_X_M] beta_M;                 //?// regression coefs for spawner-smolt productivity
+  matrix[N_pop,K_Mmax] beta_Mmax;             // regression coefs for log Mmax
+  matrix[N_pop,K_M] beta_M;                   //?// regression coefs for spawner-smolt productivity
   vector<lower=-1,upper=1>[N_pop] rho_M;      // AR(1) coefs for spawner-smolt productivity
   vector<lower=0>[N_pop] sigma_M;             // spawner-smolt process error SDs
   vector[N] zeta_M;                           // smolt recruitment process errors (z-scored)
@@ -190,7 +196,7 @@ parameters {
   matrix[N,N_Mage-1] zeta_p_M;                //?// log-ratio cohort smolt age distn errors (Z-scored)
   // SAR
   matrix<lower=0,upper=1>[N_pop,N_Mage] mu_MS; //?// mean SAR for each smolt age
-  matrix[N_pop,N_X_MS] beta_MS;               //?// regression coefs for SAR (independent of smolt age)  
+  matrix[N_pop,K_MS] beta_MS;                 //?// regression coefs for SAR (independent of smolt age)  
   matrix<lower=-1,upper=1>[N_pop,N_Mage] rho_MS; //?// AR(1) coefs of SAR for each smolt age
   matrix<lower=0>[N_pop,N_Mage] sigma_MS;     //?// SAR process error SDs for each smolt age
   cholesky_factor_corr[N_Mage] L_MS[N_pop];   // Cholesky-factored corr matrices of SAR across smolt ages
@@ -215,6 +221,8 @@ parameters {
 transformed parameters {
   //?// indicates transformed params that could be arrays instead of matrices
   // smolt recruitment
+  vector<lower=0>[N] alpha_Xbeta;        // intrinsic productivity including covariate effects
+  vector<lower=0>[N] Mmax_Xbeta;         // maximum recruitment including covariate effects
   vector<lower=0>[N] M_hat;              // expected smolt abundance (not density) by brood year
   vector[N] epsilon_M;                   // process error in smolt abundance by brood year
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
@@ -244,6 +252,10 @@ transformed parameters {
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
   
+  // S-R parameters including covariate effects
+  alpha_Xbeta = alpha[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
+  Mmax_Xbeta = Mmax[pop] .* exp(rows_dot_product(X_Mmax, beta_Mmax[pop,]));
+  
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
   {
@@ -259,13 +271,13 @@ transformed parameters {
   // and predict smolt recruitment from brood year i
   for(i in 1:N)
   {
-    vector[N_Mage] alr_p_M;                   // alr(p_M[i,])
-    row_vector[N_Mage] M_a;                   // true smolts by age
     int mm;                                   // index into M_init, q_M_init
     // number of orphan smolt age classes <lower=0,upper=N_Mage>
     int N_orphan_Mage = max(N_Mage - max(pop_year_indx[i] - min_Mage, 0), N_Mage); 
     // orphan smolt age distn (amalgamated simplex)
     vector[N_orphan_Mage] q_M_orphan;
+    vector[N_Mage] alr_p_M;                   // alr(p_M[i,])
+    row_vector[N_Mage] M_a;                   // true smolts by age
     vector[N_Mage*(N_MSage-1)] mu_alr_p_MS_i; // mu_alr_p_MS[i,,] 
     vector[N_Mage*(N_MSage-1)] sigma_p_MS_i;  // sigma_p_MS[i,,]
     vector[N_Mage*(N_MSage-1)] alr_p_MS;      // alr(p_MS[i,]) 
@@ -372,7 +384,7 @@ transformed parameters {
       q_GR[i,] = to_row_vector_row_major(S_W_a/S_W[i]);
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha[pop[i]], Mmax[pop[i]], S[i], A[i]);
+    M_hat[i] = SR(SR_fun, alpha_Xbeta[i], Mmax_Xbeta[i], S[i], A[i]);
     M0[i] = M_hat[i] * exp(dot_product(X_M[i], beta_M[pop[i],]) + epsilon_M[i]);
   }
 }

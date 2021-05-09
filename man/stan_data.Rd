@@ -8,27 +8,25 @@ models.}
 stan_data(
   stan_model,
   SR_fun = "BH",
-  ages = NULL,
   par_models = NULL,
   scale = TRUE,
+  ages = NULL,
+  age_S_obs = NULL,
+  age_S_eff = NULL,
+  conditionGRonMS = FALSE,
   fish_data,
   fish_data_fwd = NULL,
   fecundity_data = NULL,
-  prior_data = NULL,
-  age_S_obs = NULL,
-  age_S_eff = NULL,
-  conditionGRonMS = FALSE
+  prior_data = NULL
 )
 }
 \arguments{
 \item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
-fit (".stan" filetype extension is not included).}
+fit (".stan" filetype extension is not included). A more concise alternative to
+specifying \code{model}, \code{life_cycle}, and \code{pool_pops} (and will override those arguments).}
 
 \item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"},
 indicating which spawner-recruit function to fit.}
-
-\item{ages}{For multi-stage models, a named list giving the fixed ages in
-years of all subadult life stages.}
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
@@ -40,6 +38,28 @@ see \code{\link[stats:formula]{stats::formula()}}.}
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+
+\item{ages}{For multi-stage models, a named list giving the fixed ages in
+years of all subadult life stages.}
+
+\item{age_S_obs}{Only if \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
+vector indicating, for each adult age, whether observed total spawner data
+includes that age. The default is to treat \code{S_obs} as including spawners of
+all ages.}
+
+\item{age_S_eff}{Only if \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
+vector indicating, for each adult age, whether spawners of that age
+contribute toward reproduction. This could be used, e.g., to exclude jacks
+from the effective breeding population. The default is to include spawners
+of all ages.}
+
+\item{conditionGRonMS}{Only if \verb{stan_model == "IPM_SMaS_np}, logical indicating
+whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
+on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
+from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
+age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
+in a \verb{smolt age x ocean age} contingency table, the cell frequencies are conditioned
+on the column totals.}
 
 \item{fish_data}{Data frame that includes the following \code{colnames}, in
 no particular order except where noted:
@@ -134,25 +154,6 @@ with the following elements:
 giving the annual prior means and SDs of logit survival downstream, at sea,
 and upstream, respectively.
 }}
-
-\item{age_S_obs}{Only if \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
-vector indicating, for each adult age, whether observed total spawner data
-includes that age. The default is to treat \code{S_obs} as including spawners of
-all ages.}
-
-\item{age_S_eff}{Only if \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
-vector indicating, for each adult age, whether spawners of that age
-contribute toward reproduction. This could be used, e.g., to exclude jacks
-from the effective breeding population. The default is to include spawners
-of all ages.}
-
-\item{conditionGRonMS}{Only if \verb{stan_model == "IPM_SMaS_np}, logical indicating
-whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
-on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
-from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
-age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
-in a \verb{smolt age x ocean age} contingency table, the cell frequencies are conditioned
-on the column totals.}
 }
 \value{
 A named list that can be passed to \code{stan} as the \code{data}

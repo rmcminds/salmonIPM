@@ -83,27 +83,27 @@ data {
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> smolt_age;              // smolt age
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_alpha;              // number of intrinsic productivity covariates
-  row_vector[N_X_alpha] X_alpha[N];    // intrinsic productivity covariates
-  int<lower=0> N_X_Mmax;               // number of maximum smolt recruitment covariates
-  row_vector[N_X_Mmax] X_Mmax[N];      // maximum smolt recruitment covariates
-  int<lower=0> N_X_M;                  // number of smolt recruitment covariates
-  row_vector[N_X_M] X_M[N];            // smolt recruitment covariates
+  int<lower=0> K_alpha;                // number of intrinsic productivity covariates
+  matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
+  int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
+  matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
+  int<lower=0> K_M;                    // number of smolt recruitment covariates
+  row_vector[K_M] X_M[N];              // smolt recruitment covariates
   // downstream, SAR, upstream survival
-  int<lower=0> N_X_D;                  // number of juvenile downstream survival covariates
-  matrix[max(append_array(year,year_fwd)),N_X_D] X_D; // downstream survival covariates (if none, use vector of zeros)
+  int<lower=0> K_D;                    // number of juvenile downstream survival covariates
+  matrix[max(append_array(year,year_fwd)),K_D] X_D; // downstream survival covariates (if none, use vector of zeros)
   int<lower=1,upper=max(year)> N_prior_D; // number of years with prior downstream survival
   int<lower=1,upper=max(year)> which_prior_D[N_prior_D]; // which years with prior downstream survival
   vector[N_prior_D] mu_prior_D;        // annual prior means of logit downstream survival
   vector[N_prior_D] sigma_prior_D;     // annual prior SDs of logit downstream survival
-  int<lower=0> N_X_SAR;                  // number of smolt-to-adult survival (SAR) covariates
-  matrix[max(append_array(year,year_fwd)),N_X_SAR] X_SAR; // SAR covariates (if none, use vector of zeros)
+  int<lower=0> K_SAR;                  // number of smolt-to-adult survival (SAR) covariates
+  matrix[max(append_array(year,year_fwd)),K_SAR] X_SAR; // SAR covariates (if none, use vector of zeros)
   int<lower=1,upper=max(year)> N_prior_SAR; // number of years with prior SAR
   int<lower=1,upper=max(year)> which_prior_SAR[N_prior_SAR]; // which years with prior SAR
-  vector[N_prior_SAR] mu_prior_SAR;        // annual prior means of logit SAR
-  vector[N_prior_SAR] sigma_prior_SAR;     // annual prior SDs of logit SAR
-  int<lower=0> N_X_U;                  // number of adult upstream survival covariates
-  matrix[max(append_array(year,year_fwd)),N_X_U] X_U; // upstream survival covariates (if none, use vector of zeros)
+  vector[N_prior_SAR] mu_prior_SAR;    // annual prior means of logit SAR
+  vector[N_prior_SAR] sigma_prior_SAR; // annual prior SDs of logit SAR
+  int<lower=0> K_U;                    // number of adult upstream survival covariates
+  matrix[max(append_array(year,year_fwd)),K_U] X_U; // upstream survival covariates (if none, use vector of zeros)
   int<lower=1,upper=max(year)> N_prior_U; // number of years with prior upstream survival
   int<lower=1,upper=max(year)> which_prior_U[N_prior_U]; // which years with prior upstream survival
   vector[N_prior_U] mu_prior_U;        // annual prior means of logit upstream survival
@@ -194,32 +194,32 @@ transformed data {
 parameters {
   // smolt recruitment
   real mu_alpha;                         // hyper-mean log intrinsic productivity
-  vector[N_X_alpha] beta_alpha;          // regression coefs for log alpha
+  vector[K_alpha] beta_alpha;            // regression coefs for log alpha
   real<lower=0> sigma_alpha;             // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;              // log intrinsic prod (Z-scores)
   real mu_Mmax;                          // hyper-mean log asymptotic recruitment
-  vector[N_X_Mmax] beta_Mmax;            // regression coefs for log Mmax
+  vector[K_Mmax] beta_Mmax;              // regression coefs for log Mmax
   real<lower=0> sigma_Mmax;              // hyper-SD log asymptotic recruitment
   vector[N_pop] zeta_Mmax;               // log asymptotic recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaMmax;  // correlation between log(alpha) and log(Mmax)
-  vector[N_X_M] beta_M;                  // regression coefs for smolt recruitment
+  vector[K_M] beta_M;                    // regression coefs for smolt recruitment
   real<lower=-1,upper=1> rho_M;          // AR(1) coef for spawner-smolt productivity
   real<lower=0> sigma_M;                 // spawner-smolt process error SD
   vector[N] zeta_M;                      // smolt recruitment process errors (Z-scores)
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
   // downstream, SAR, upstream survival
   real mu_D;                             // mean logit downstream juvenile survival 
-  vector[N_X_D] beta_D;                  // regression coefs for logit downstream juvenile survival
+  vector[K_D] beta_D;                    // regression coefs for logit downstream juvenile survival
   real<lower=-1,upper=1> rho_D;          // AR(1) coef for logit downstream juvenile survival
   real<lower=0> sigma_D;                 // process error SD of logit downstream juvenile survival
   vector[N_year_all] zeta_D;             // logit downstream juvenile survival process errors (Z-scores)
   real mu_SAR;                           // mean logit smolt-to-adult survival 
-  vector[N_X_SAR] beta_SAR;              // regression coefs for logit smolt-to-adult survival
+  vector[K_SAR] beta_SAR;                // regression coefs for logit smolt-to-adult survival
   real<lower=-1,upper=1> rho_SAR;        // AR(1) coef for logit smolt-to-adult survival
   real<lower=0> sigma_SAR;               // process error SD of logit smolt-to-adult survival
   vector[N_year_all] zeta_SAR;           // logit smolt-to-adult survival process errors (Z-scores)
   real mu_U;                             // mean logit upstream adult survival 
-  vector[N_X_U] beta_U;                  // regression coefs for logit upstream adult survival
+  vector[K_U] beta_U;                    // regression coefs for logit upstream adult survival
   real<lower=-1,upper=1> rho_U;          // AR(1) coef for logit upstream adult survival
   real<lower=0> sigma_U;                 // process error SD of logit upstream adult survival
   vector[N_year_all] zeta_U;             // logit upstream adult survival process errors (Z-scores)
@@ -243,7 +243,9 @@ parameters {
 transformed parameters {
   // smolt recruitment
   vector<lower=0>[N_pop] alpha;          // intrinsic productivity 
+  vector<lower=0>[N] alpha_Xbeta;        // intrinsic productivity including covariate effects
   vector<lower=0>[N_pop] Mmax;           // asymptotic recruitment 
+  vector<lower=0>[N] Mmax_Xbeta;         // maximum recruitment including covariate effects
   vector<lower=0>[N] M_hat;              // expected smolt abundance (not density) by brood year
   vector[N] epsilon_M;                   // process error in smolt abundance by brood year 
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
@@ -283,7 +285,9 @@ transformed parameters {
     zeta_alphaMmax = append_col(zeta_alpha, zeta_Mmax);
     eta_alphaMmax = diag_pre_multiply(sigma_alphaMmax, L_alphaMmax * zeta_alphaMmax')';
     alpha = exp(mu_alpha + eta_alphaMmax[,1]);
+    alpha_Xbeta = alpha[pop] .* exp(mat_lmult(X_alpha, beta_alpha));
     Mmax = exp(mu_Mmax + eta_alphaMmax[,2]);
+    Mmax_Xbeta = Mmax[pop] .* exp(mat_lmult(X_Mmax, beta_Mmax));
   }
 
   // AR(1) models for downstream, SAR, upstream survival
@@ -321,15 +325,12 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    // intrinsic productivity and maximum recruitment adjusted for covariate effects
-    real alpha_i = alpha[pop[i]] * dot_product(X_alpha[i], beta_alpha);
-    real Mmax_i = Mmax[pop[i]] * dot_product(X_Mmax[i], beta_Mmax);
-    row_vector[N_age] exp_p; // exp(alr(p[i,]))
-    row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
+    row_vector[N_age] exp_p; // exp(alr(p[i,]))
+    row_vector[N_age] S_W_a; // true wild spawners by age
 
     // AR(1) smolt recruitment process errors  
     if(pop_year_indx[i] == 1) 
@@ -371,7 +372,7 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha_i, Mmax_i, S[i], A[i]);
+    M_hat[i] = SR(SR_fun, alpha_Xbeta[i], Mmax_Xbeta[i], S[i], A[i]);
     M0[i] = M_hat[i] * exp(dot_product(X_M[i], beta_M) + epsilon_M[i]); 
   }
 }

@@ -11,15 +11,17 @@ test_data <- data.frame(pop = rep(1:N_pop, each = N_year), year = rep(1:N_year, 
                         A = 1, p_HOS = 0, F_rate = runif(N, 0.3, 0.6), B_rate = 0,
                         n_age_obs = 50, n_HW_obs = 0, x = runif(N))
 
-sim_out <- salmonIPM_sim(pars = list(mu_alpha = 5, beta_alpha = , sigma_alpha = 1, 
-                                     mu_Rmax = 9, beta_Rmax = -1, sigma_Rmax = 1, rho_alphaRmax = 0,
+sim_out <- sim_salmonIPM(life_cycle = "SMS", 
+                         pars = list(mu_alpha = 5, beta_alpha = 0, sigma_alpha = 1, 
+                                     mu_Mmax = 9, beta_Mmax = -1, sigma_Mmax = 1, rho_alphaMmax = 0,
                                      beta_M = 0, rho_M = 0.4, sigma_year_M = 0.3, sigma_M = 0.2,
                                      mu_MS = 0.03, beta_MS = 0, rho_MS = 0.6, sigma_year_MS = 0.5, sigma_MS = 0.2,
                                      mu_p = c(0.1, 0.5, 0.4), sigma_p = c(0.1, 0.2), R_p = diag(2),
                                      sigma_pop_p = c(0.2, 0.4), R_pop_p = diag(2), 
                                      tau_M = 0.3, tau_S = 0.5, S_init_K = 0.2), 
-                         fish_data = test_data, life_cycle = "SMS", 
-                         N_age = 3, max_age = 5, ages = list(M = 2), SR_fun = "BH")
+                         par_models = list(Mmax ~ x),
+                         fish_data = test_data, 
+                         N_age = 3, max_age = 5, ages = list(M = 2))
 
 # Fit model with no pooling across populations
 fit_SMS_np <- salmonIPM(stan_model = "IPM_SMS_np", par_models = list(Mmax ~ x),

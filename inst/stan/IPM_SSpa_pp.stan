@@ -57,14 +57,14 @@ functions {
       return(which_cond);
   }
   
-  // // Left multiply vector by matrix
-  // // works even if size is zero
-  // vector mat_lmult(matrix X, vector v)
-  // {
-  //   vector[rows(X)] Xv;
-  //   Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
-  //   return(Xv); 
-  // }
+  // Left multiply vector by matrix
+  // works even if size is zero
+  vector mat_lmult(matrix X, vector v)
+  {
+    vector[rows(X)] Xv;
+    Xv = rows_dot_product(X, rep_matrix(to_row_vector(v), rows(X)));
+    return(Xv);
+  }
     
   // Quantiles of a vector
   real quantile(vector v, real p) {
@@ -95,12 +95,12 @@ data {
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_alpha;              // number of intrinsic productivity covariates
-  row_vector[N_X_alpha] X_alpha[N];    // intrinsic productivity covariates
-  int<lower=0> N_X_Rmax;               // number of maximum recruitment covariates
-  row_vector[N_X_Rmax] X_Rmax[N];      // maximum recruitment covariates
-  int<lower=0> N_X_R;                  // number of recruitment covariates
-  row_vector[N_X_R] X_R[N];            // brood-year productivity covariates
+  int<lower=0> K_alpha;                // number of intrinsic productivity covariates
+  matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
+  int<lower=0> K_Rmax;                 // number of maximum recruitment covariates
+  matrix[N,K_Rmax] X_Rmax;             // maximum recruitment covariates
+  int<lower=0> K_R;                    // number of recruitment covariates
+  row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // fishery and hatchery removals
   vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -187,15 +187,15 @@ transformed data {
 parameters {
   // recruitment
   real mu_alpha;                         // hyper-mean log intrinsic productivity
-  vector[N_X_alpha] beta_alpha;          // regression coefs for log alpha
+  vector[K_alpha] beta_alpha;            // regression coefs for log alpha
   real<lower=0> sigma_alpha;             // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;              // log intrinsic prod (Z-scores)
   real mu_Rmax;                          // hyper-mean log maximum recruitment
-  vector[N_X_Rmax] beta_Rmax;            // regression coefs for log Rmax
+  vector[K_Rmax] beta_Rmax;              // regression coefs for log Rmax
   real<lower=0> sigma_Rmax;              // hyper-SD log maximum recruitment
   vector[N_pop] zeta_Rmax;               // log maximum recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaRmax;  // correlation between log(alpha) and log(Rmax)
-  vector[N_X_R] beta_R;                  // regression coefs for log recruitment
+  vector[K_R] beta_R;                    // regression coefs for log recruitment
   real<lower=-1,upper=1> rho_R;          // AR(1) coef for log productivity anomalies
   real<lower=0> sigma_year_R;            // hyper-SD of brood year log productivity anomalies
   vector[N_year_all] zeta_year_R;        // log brood year productivity anomalies (Z-scores)
@@ -220,8 +220,10 @@ parameters {
 
 transformed parameters {
   // recruitment
-  vector<lower=0>[N_pop] alpha;          // intrinsic productivity 
+  vector<lower=0>[N_pop] alpha;          // intrinsic productivity
+  vector<lower=0>[N] alpha_Xbeta;        // intrinsic productivity including covariate effects
   vector<lower=0>[N_pop] Rmax;           // maximum recruitment 
+  vector<lower=0>[N] Rmax_Xbeta;         // maximum recruitment including covariate effects
   vector[N_year_all] eta_year_R;         // log brood year productivity anomalies
   vector<lower=0>[N] R_hat;              // expected recruit abundance (not density) by brood year
   vector<lower=0>[N] R;                  // true recruit abundance (not density) by brood year
@@ -253,7 +255,9 @@ transformed parameters {
     zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
     eta_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
     alpha = exp(mu_alpha + eta_alphaRmax[,1]);
+    alpha_Xbeta = alpha[pop] .* exp(mat_lmult(X_alpha, beta_alpha));
     Rmax = exp(mu_Rmax + eta_alphaRmax[,2]);
+    Rmax_Xbeta = Rmax[pop] .* exp(mat_lmult(X_Rmax, beta_Rmax));
   }
   
   // AR(1) model for eta_year_R
@@ -283,14 +287,11 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    // intrinsic productivity and maximum recruitment adjusted for covariate effects
-    real alpha_i = alpha[pop[i]] * exp(dot_product(X_alpha[i], beta_alpha));
-    real Rmax_i = Rmax[pop[i]] * exp(dot_product(X_Rmax[i], beta_Rmax));
-    row_vector[N_age] S_W_a; // true wild spawners by age
     int ii; // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
+    row_vector[N_age] S_W_a; // true wild spawners by age
 
     // Use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)
@@ -320,7 +321,7 @@ transformed parameters {
     // Recruitment
     // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
     // (assumes age structure is the same for W and H spawners)
-    R_hat[i] = SR(SR_fun, alpha_i, Rmax_i, S[i]*q[i,]*age_S_eff, A[i]);
+    R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i]*q[i,]*age_S_eff, A[i]);
     R[i] = R_hat[i] * exp(eta_year_R[year[i]] + dot_product(X_R[i], beta_R) + sigma_R*zeta_R[i]);
   }
 }

@@ -44,8 +44,12 @@ data {
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
-  int<lower=0> N_X_R;                  // number of recruitment covariates
-  row_vector[N_X_R] X_R[N];            // brood-year productivity covariates
+  int<lower=0> K_alpha;                // number of intrinsic productivity covariates
+  matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
+  int<lower=0> K_Rmax;                 // number of maximum recruitment covariates
+  matrix[N,K_Rmax] X_Rmax;             // maximum recruitment covariates
+  int<lower=0> K_R;                    // number of recruitment covariates
+  row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -115,8 +119,10 @@ transformed data {
 parameters {
   // recruitment
   vector<lower=0>[N_pop] alpha;           // intrinsic productivity
+  matrix[N_pop,K_alpha] beta_alpha;       // regression coefs for log alpha
   vector<lower=0>[N_pop] Rmax;            // maximum recruitment
-  matrix[N_pop,N_X_R] beta_R;             // regression coefs for log recruitment
+  matrix[N_pop,K_Rmax] beta_Rmax;         // regression coefs for log Rmax
+  matrix[N_pop,K_R] beta_R;               // regression coefs for log recruitment
   vector<lower=-1,upper=1>[N_pop] rho_R;  // AR(1) coefs for log productivity anomalies
   vector<lower=0>[N_pop] sigma_R;         // process error SDs
   vector[N] zeta_R;                       // recruitment process errors (z-scored)
@@ -136,6 +142,8 @@ parameters {
 
 transformed parameters {
   // recruitment
+  vector<lower=0>[N] alpha_Xbeta;      // intrinsic productivity including covariate effects
+  vector<lower=0>[N] Rmax_Xbeta;       // maximum recruitment including covariate effects
   vector<lower=0>[N] R_hat;            // expected recruit abundance (not density) by brood year
   vector[N] epsilon_R;                 // process error in recruit abundance by brood year
   vector<lower=0>[N] R;                // true recruit abundance (not density) by brood year
@@ -155,7 +163,11 @@ transformed parameters {
   p_HOS_all[which_H] = p_HOS;
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
-
+  
+  // S-R parameters including covariate effects
+  alpha_Xbeta = alpha[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
+  Rmax_Xbeta = Rmax[pop] .* exp(rows_dot_product(X_Rmax, beta_Rmax[pop,]));
+  
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
     mu_alr_p[j] = log(head(mu_p[j], N_age-1)) - log(mu_p[j,N_age]);
@@ -164,12 +176,12 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    vector[N_age] alr_p;     // alr(p[i,])
-    row_vector[N_age] S_W_a; // true wild spawners by age
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
+    vector[N_age] alr_p;     // alr(p[i,])
+    row_vector[N_age] S_W_a; // true wild spawners by age
 
     // Multivariate Matt trick for within-pop, time-varying age vectors
     alr_p = rep_vector(0,N_age);
@@ -203,7 +215,7 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
     
     // Recruitment
-    R_hat[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S[i], A[i]);
+    R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i], A[i]);
     if(pop_year_indx[i] == 1) // initial process error
       epsilon_R[i] = zeta_R[i]*sigma_R[pop[i]]/sqrt(1 - rho_R[pop[i]]^2);
     else
