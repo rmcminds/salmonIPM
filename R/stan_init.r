@@ -219,9 +219,9 @@ stan_init <- function(stan_model, data, chains = 1)
             sigma_E = rlnorm(N_age, log(tapply(E_obs, age_E, sd)), 0.5), 
             delta_NG = runif(1, 0.7, 1),
             # egg-smolt survival
-            mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.5)),
-            beta_psi = array(rnorm(K_psi, 0, 1), dim = K_psi),
-            sigma_psi = runif(1, 0.1, 1),
+            mu_psi = plogis(rnorm(1, mean(qlogis(s_EM)), 0.3)),
+            beta_psi = array(rnorm(K_psi, 0, 0.3), dim = K_psi),
+            sigma_psi = runif(1, 0.1, 0.5),
             zeta_psi = rnorm(N_pop, 0, 1),
             mu_Mmax = rnorm(1, mean(log(S_obs[which_S_obs])), 3),
             beta_Mmax = array(rnorm(K_Mmax, 0, 1), dim = K_Mmax),

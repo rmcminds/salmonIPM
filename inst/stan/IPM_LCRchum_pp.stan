@@ -216,7 +216,7 @@ transformed parameters {
   vector<lower=0>[N] E_hat;              // expected egg deposition
   // spawner-smolt productivity
   vector<lower=0,upper=1>[N_pop] psi;    // pop-specific density-independent egg-smolt survival 
-  vector<lower=0>[N] psi_Xbeta;          // egg-smolt survival including covariate effects
+  vector<lower=0,upper=1>[N] psi_Xbeta;  // egg-smolt survival including covariate effects
   vector<lower=0>[N_pop] Mmax;           // pop-specific maximum smolt recruitment (thousands)
   vector<lower=0>[N] Mmax_Xbeta;         // maximum recruitment including covariate effects (thousands)
   vector[N_year] eta_year_M;             // annual spawner-smolt productivity anomalies
@@ -254,7 +254,7 @@ transformed parameters {
   {
     real logit_mu_psi = logit(mu_psi);
     psi = inv_logit(logit_mu_psi + sigma_psi*zeta_psi);
-    psi_Xbeta = inv_logit(logit_mu_psi + mat_lmult(X_psi, beta_psi) + sigma_psi*zeta_psi);
+    psi_Xbeta = inv_logit(logit_mu_psi + mat_lmult(X_psi, beta_psi) + sigma_psi*zeta_psi[pop]);
     Mmax = exp(mu_Mmax + sigma_Mmax*zeta_Mmax);
     Mmax_Xbeta = Mmax[pop] .* exp(mat_lmult(X_Mmax, beta_Mmax));
   }
