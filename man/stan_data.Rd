@@ -6,119 +6,38 @@
 models.}
 \usage{
 stan_data(
-  fish_data,
-  fish_data_fwd = NULL,
-  env_data = NULL,
-  fecundity_data = NULL,
-  prior_data = NULL,
+  stan_model,
+  SR_fun = "BH",
+  par_models = NULL,
+  scale = TRUE,
   ages = NULL,
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
-  stan_model,
-  SR_fun = "BH"
+  fish_data,
+  fish_data_fwd = NULL,
+  fecundity_data = NULL,
+  prior_data = NULL
 )
 }
 \arguments{
-\item{fish_data}{Data frame that includes the following \code{colnames}, in
-no particular order except where noted:
-\itemize{
-\item \code{pop}  Numeric or character population ID.
-\item \code{year}  Numeric variable giving the year the fish spawned (i.e., the brood year).
-\item \code{A}  Spawning habitat size (either stream length or area).
-Will usually be time-invariant within a population, but need not be.
-\item \code{M_obs}  Total number of wild-origin smolts (only needed for models including smolt stage).
-\item \code{tau_M_obs}  If \code{stan_model=="IPM_LCRchum_pp"},  known observation error SDs
-for smolt abundance.
-\item \code{downstream_trap}  If \code{stan_model="IPM_LCRchum_pp"}, row indices
-corresponding to a downstream smolt trap in a different population whose
-catch additionally includes the smolts produced in one or more upstream populations,
-assuming zero mortality. Each upstream population can have at most one
-downstream trap (in addition to its own, if any) but a trap can have multiple
-upstream populations. If \code{downstream_trap[i]==j}, \code{M_downstream[j] <- M[j] + M[i]};
-if \code{is.na(downstream_trap[i])} then \code{M[i]} is not double-counted.
-\item \verb{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}  If \code{life_cycle=="SMaS"},
-multiple columns of observed smolt age frequencies (i.e., counts),
-where \verb{[min_Mage]} and \verb{[max_Mage]} are the numeral age in years of the youngest
-and oldest smolts, respectively. Note that age is measured in calendar years from
-the brood year (i.e., the Gilbert-Rich system).
-\item \code{S_obs}  Total number (not density) of wild and hatchery-origin spawners.
-\item \code{tau_S_obs}  If \code{stan_model=="IPM_LCRchum_pp"}, known observation error SDs
-for spawner abundance.
-\item \verb{n_age[min_age]_obs...n_age[max_age]_obs}  Multiple columns of
-observed spawner age frequencies (i.e., counts), where \verb{[min_age]} and
-\verb{[max_age]} are the numeral age in years (total, not ocean age) of the
-youngest and oldest spawners, respectively.
-\item \verb{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}  If \code{life_cycle=="SMaS"},
-multiple columns of observed ocean age frequencies (i.e., counts),
-where \verb{[min_MSage]} and \verb{[max_MSage]} are the youngest and oldest ocean age
-in years, respectively.
-\item \verb{n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs}  If
-\code{life_cycle=="SMaS"}, multiple columns of observed Gilbert-Rich age
-frequencies, sorted first by smolt age (\code{min_Mage:max_Mage}) and then
-by total age \code{min_age:max_age}. For example, a life history with
-subyearling or yearling smolts and ocean ages 2:3 would have column names
-c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")
-\item \code{n_M_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, observed frequency of male spawners.
-\item \code{n_F_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, observed frequency of female spawners.
-\item \code{p_G_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, observed proportion (assumed known
-without error) of female spawners that are "green", i.e. fully fecund.
-\item \code{n_W_obs}  Observed frequency of natural-origin spawners.
-\item \code{n_H_obs}  Observed frequency of hatchery-origin spawners.
-\item \code{fit_p_HOS}  Logical or 0/1 indicating for each row in fish_data whether the
-model should estimate \code{p_HOS > 0}. This is only required if \code{model == "IPM"}.
-\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
-\item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
-\item \code{S_add_obs}  If \verb{stan_model=="IPM_LCRchum_pp}, number of adults translocated into
-population.
-}}
+\item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
+fit (".stan" filetype extension is not included). A more concise alternative to
+specifying \code{model}, \code{life_cycle}, and \code{pool_pops} (and will override those arguments).}
 
-\item{fish_data_fwd}{Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future"
-simulations:
-\itemize{
-\item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
-\item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
-For each population in \code{fish_data_fwd$pop}, the first year appearing in
-\code{fish_data_fwd$year} must be one greater than the last year appearing in
-\code{fish_data$year}, i.e.,
-\code{min(fish_data_fwd$year[fish_data_fwd$pop==j]) == max(fish_data$year[fish_data$pop==j]) + 1}.
-\item \code{A}  Spawning habitat size (either stream length or area).
-Will usually be time-invariant within a population, but need not be.
-\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
-\item \code{B_rate}  Total broodstock removal rate (proportion) of natural-origin fish.
-\item \code{p_HOS}  Proportion of hatchery-origin spawners.
-}
+\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"},
+indicating which spawner-recruit function to fit.}
 
-Unlike \code{fish_data}, a given combination of population and
-year may occur multiple times, perhaps to facilitate comparisons across
-scenarios or "branches" with different inputs (e.g., harvest rate). In this
-case, all branches are subjected to the same sequence of process errors in
-recruitment and age structure.}
+\item{par_models}{Optional list of two-sided formulas of the form
+\code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
+specified by \code{stan_model} that accepts covariates (see Details for available
+model-response combinations) and \verb{t1 ... tK} are terms involving variables in
+\code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
+see \code{\link[stats:formula]{stats::formula()}}.}
 
-\item{env_data}{Optional data frame or named list of data frames whose
-variables are time-varying environmental covariates, sequentially ordered
-with each row corresponding to a unique year in \code{fish_data}. If a named list,
-element names correspond to stage- or transition-specific covariate
-matrices defined in the Stan model being used. (This is required for
-multi-stage models.)}
-
-\item{fecundity_data}{Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
-the following columns, representing observations of fecundity with each
-row corresponding to a female:
-\itemize{
-\item \code{age_E}  Female age in years.
-\item \code{E_obs}  Observed fecundity.
-}}
-
-\item{prior_data}{Only if \code{stan_model == "IPM_ICchinook_pp"}, named list
-with the following elements:
-\itemize{
-\item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
-\code{mu_prior_SAR}, \code{sigma_prior_SAR}, \code{mu_prior_U}, \code{sigma_prior_U},
-giving the annual prior means and SDs of logit survival downstream, at sea,
-and upstream, respectively.
-}}
+\item{scale}{Logical indicating whether the model matrices constructed from
+\code{fish_data} using the formulas in \code{par_models} should be scaled to have
+column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
 
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages.}
@@ -142,11 +61,99 @@ age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; 
 in a \verb{smolt age x ocean age} contingency table, the cell frequencies are conditioned
 on the column totals.}
 
-\item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
-fit (".stan" filetype extension is not included).}
+\item{fish_data}{Data frame that includes the following \code{colnames}, in
+no particular order except where noted:
+\itemize{
+\item \code{pop}  Numeric or character population ID.
+\item \code{year}  Numeric variable giving the year the fish spawned (i.e., the brood year).
+\item \code{A}  Spawning habitat size (either stream length or area).
+Will usually be time-invariant within a population, but need not be.
+\item \code{M_obs}  Total number of wild-origin smolts (only needed for models including smolt stage).
+\item \code{tau_M_obs}  If \code{stan_model == "IPM_LCRchum_pp"},  known observation error SDs
+for smolt abundance.
+\item \code{downstream_trap}  If \code{stan_model == "IPM_LCRchum_pp"}, row indices
+corresponding to a downstream smolt trap in a different population whose
+catch additionally includes the smolts produced in one or more upstream populations,
+assuming zero mortality. Each upstream population can have at most one
+downstream trap (in addition to its own, if any) but a trap can have multiple
+upstream populations. If \code{downstream_trap[i] == j}, \code{M_downstream[j] <- M[j] + M[i]};
+if \code{is.na(downstream_trap[i])} then \code{M[i]} is not double-counted.
+\item \verb{n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs}  If \code{life_cycle=="SMaS"},
+multiple columns of observed smolt age frequencies (i.e., counts),
+where \verb{[min_Mage]} and \verb{[max_Mage]} are the numeral age in years of the youngest
+and oldest smolts, respectively. Note that age is measured in calendar years from
+the brood year (i.e., the Gilbert-Rich system).
+\item \code{S_obs}  Total number (not density) of wild and hatchery-origin spawners.
+\item \code{tau_S_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, known observation error SDs
+for spawner abundance.
+\item \verb{n_age[min_age]_obs...n_age[max_age]_obs}  Multiple columns of
+observed spawner age frequencies (i.e., counts), where \verb{[min_age]} and
+\verb{[max_age]} are the numeral age in years (total, not ocean age) of the
+youngest and oldest spawners, respectively.
+\item \verb{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
+multiple columns of observed ocean age frequencies (i.e., counts),
+where \verb{[min_MSage]} and \verb{[max_MSage]} are the youngest and oldest ocean age
+in years, respectively.
+\item \verb{n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs}  If
+\code{life_cycle == "SMaS"}, multiple columns of observed Gilbert-Rich age
+frequencies, sorted first by smolt age (\code{min_Mage:max_Mage}) and then
+by total age \code{min_age:max_age}. For example, a life history with
+subyearling or yearling smolts and ocean ages 2:3 would have column names
+c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")
+\item \code{n_M_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, observed frequency of male spawners.
+\item \code{n_F_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, observed frequency of female spawners.
+\item \code{p_G_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, observed proportion (assumed known
+without error) of female spawners that are "green", i.e. fully fecund.
+\item \code{n_W_obs}  Observed frequency of natural-origin spawners.
+\item \code{n_H_obs}  Observed frequency of hatchery-origin spawners.
+\item \code{fit_p_HOS}  Logical or 0/1 indicating for each row in fish_data whether the
+model should estimate \code{p_HOS > 0}. This is only required if \code{model == "IPM"}.
+\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
+\item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
+\item \code{S_add_obs}  If \verb{stan_model == "IPM_LCRchum_pp}, number of adults translocated into
+population.
+\item \code{...}  Additional variables to be used as covariates.
+}}
 
-\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"},
-indicating which spawner-recruit function to fit.}
+\item{fish_data_fwd}{Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
+with the following columns, representing "forward" or "future"
+simulations:
+\itemize{
+\item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
+\item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
+For each population in \code{fish_data_fwd$pop}, the first year appearing in
+\code{fish_data_fwd$year} must be one greater than the last year appearing in
+\code{fish_data$year}, i.e.,
+\code{min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1}.
+\item \code{A}  Spawning habitat size (either stream length or area).
+Will usually be time-invariant within a population, but need not be.
+\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
+\item \code{B_rate}  Total broodstock removal rate (proportion) of natural-origin fish.
+\item \code{p_HOS}  Proportion of hatchery-origin spawners.
+}
+
+Unlike \code{fish_data}, a given combination of population and
+year may occur multiple times, perhaps to facilitate comparisons across
+scenarios or "branches" with different inputs (e.g., harvest rate). In this
+case, all branches are subjected to the same sequence of process errors in
+recruitment and age structure.}
+
+\item{fecundity_data}{Only if \code{stan_model == "IPM_LCRchum_pp"}, data frame with
+the following columns, representing observations of fecundity with each
+row corresponding to a female:
+\itemize{
+\item \code{age_E}  Female age in years.
+\item \code{E_obs}  Observed fecundity.
+}}
+
+\item{prior_data}{Only if \code{stan_model == "IPM_ICchinook_pp"}, named list
+with the following elements:
+\itemize{
+\item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
+\code{mu_prior_SAR}, \code{sigma_prior_SAR}, \code{mu_prior_U}, \code{sigma_prior_U},
+giving the annual prior means and SDs of logit survival downstream, at sea,
+and upstream, respectively.
+}}
 }
 \value{
 A named list that can be passed to \code{stan} as the \code{data}

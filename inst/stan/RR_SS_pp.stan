@@ -14,8 +14,8 @@ functions {
   }
   
   // Generalized normal (aka power-exponential) unnormalized log-probability
-  real pexp_lpdf(real y, real mu, real sigma, real shape) {
-    return(-(fabs(y - mu)/sigma)^shape);
+  real pexp_lpdf(real y, real mu, real sigma_R, real shape) {
+    return(-(fabs(y - mu)/sigma_R)^shape);
   }
     
   // Quantiles of a vector
@@ -65,28 +65,28 @@ parameters {
   real mu_alpha;                        // hyper-mean log intrinsic productivity of wild spawners
   real<lower=0> sigma_alpha;            // hyper-SD log intrinsic productivity
   vector[N_pop] zeta_alpha;             // log intrinsic prod of wild spawners (Z-scores)
-  real mu_Rmax;                         // hyper-mean log asymptotic recruitment
-  real<lower=0> sigma_Rmax;             // hyper-SD log asymptotic recruitment
-  vector[N_pop] zeta_Rmax;              // log asymptotic recruitment (Z-scores)
+  real mu_Rmax;                         // hyper-mean log maximum recruitment
+  real<lower=0> sigma_Rmax;             // hyper-SD log maximum recruitment
+  vector[N_pop] zeta_Rmax;              // log maximum recruitment (Z-scores)
   real<lower=-1,upper=1> rho_alphaRmax; // correlation between log(alpha) and log(Rmax)
-  real<lower=-1,upper=1> rho_phi;       // AR(1) coef for brood year log productivity anomalies
-  real<lower=0> sigma_phi;              // hyper-SD of brood year log productivity anomalies
-  vector[max(year)] zeta_phi;           // log brood year productivity anomalies (Z-scores)
-  real<lower=0> sigma;                  // residual error SD
+  real<lower=-1,upper=1> rho_R;         // AR(1) coef for brood year log productivity anomalies
+  real<lower=0> sigma_year_R;           // hyper-SD of brood year log productivity anomalies
+  vector[max(year)] zeta_year;          // log brood year productivity anomalies (Z-scores)
+  real<lower=0> sigma_R;                // residual error SD
 }
 
 transformed parameters {
-  vector<lower=0>[N_pop] alpha; // intrinsic productivity 
-  vector<lower=0>[N_pop] Rmax;  // asymptotic recruitment 
-  vector<lower=0>[N_year] phi;  // log brood year productivity anomalies
-  vector<lower=0>[N] R_hat;     // expected recruit abundance (not density) by brood year
+  vector<lower=0>[N_pop] alpha;       // intrinsic productivity 
+  vector<lower=0>[N_pop] Rmax;        // maximum recruitment 
+  vector<lower=0>[N_year] eta_year_R; // log brood year productivity anomalies
+  vector<lower=0>[N] R_hat;           // expected recruit abundance (not density) by brood year
   
   // Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
-    matrix[2,2] L_alphaRmax;           // Cholesky factor of corr matrix of log(alpha), log(Rmax)
-    matrix[N_pop,2] zeta_alphaRmax;    // [log(alpha), log(Rmax)] random effects (z-scored)
-    matrix[N_pop,2] epsilon_alphaRmax; // [log(alpha), log(Rmax)] random effects
-    vector[2] sigma_alphaRmax;         // SD vector of [log(alpha), log(Rmax)]
+    matrix[2,2] L_alphaRmax;         // Cholesky factor of corr matrix of log(alpha), log(Rmax)
+    matrix[N_pop,2] zeta_alphaRmax;  // [log(alpha), log(Rmax)] random effects (z-scored)
+    matrix[N_pop,2] eta_alphaRmax;   // [log(alpha), log(Rmax)] random effects
+    vector[2] sigma_alphaRmax;       // SD vector of [log(alpha), log(Rmax)]
     
     L_alphaRmax[1,1] = 1;
     L_alphaRmax[2,1] = rho_alphaRmax;
@@ -95,16 +95,16 @@ transformed parameters {
     sigma_alphaRmax[1] = sigma_alpha;
     sigma_alphaRmax[2] = sigma_Rmax;
     zeta_alphaRmax = append_col(zeta_alpha, zeta_Rmax);
-    epsilon_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
-    alpha = exp(mu_alpha + epsilon_alphaRmax[,1]);
-    Rmax = exp(mu_Rmax + epsilon_alphaRmax[,2]);
+    eta_alphaRmax = diag_pre_multiply(sigma_alphaRmax, L_alphaRmax * zeta_alphaRmax')';
+    alpha = exp(mu_alpha + eta_alphaRmax[,1]);
+    Rmax = exp(mu_Rmax + eta_alphaRmax[,2]);
   }
   
-  // AR(1) model for phi
-  phi[1] = zeta_phi[1]*sigma_phi/sqrt(1 - rho_phi^2); // initial anomaly
+  // AR(1) model for eta_year_R
+  eta_year_R[1] = zeta_year[1]*sigma_year_R/sqrt(1 - rho_R^2); // initial anomaly
   for(i in 2:N_year)
-    phi[i] = rho_phi*phi[i-1] + zeta_phi[i]*sigma_phi;
-  phi = phi - mean(phi);  // constrain log anomalies to sum to zero
+    eta_year_R[i] = rho_R*eta_year_R[i-1] + zeta_year[i]*sigma_year_R;
+  eta_year_R = eta_year_R - mean(eta_year_R);  // constrain log anomalies to sum to zero
 
   // Predict recruitment
   R_hat = rep_vector(0,N);
@@ -119,18 +119,18 @@ model {
   sigma_alpha ~ pexp(0,3,10);
   mu_Rmax ~ normal(mu_mu_Rmax, sigma_mu_Rmax);
   sigma_Rmax ~ normal(0,3);
-  rho_phi ~ pexp(0,0.85,50);  // mildly regularize to ensure stationarity
-  sigma_phi ~ normal(0,3);
-  sigma ~ normal(0,2);
+  rho_R ~ pexp(0,0.85,50);  // mildly regularize to ensure stationarity
+  sigma_year_R ~ normal(0,3);
+  sigma_R ~ normal(0,2);
   
   // Hierarchical priors
   // [log(alpha), log(Rmax)] ~ MVN(0, D*R_log_aRmax*D), where D = diag_matrix(sigma_alpha, sigma_Rmax)
   zeta_alpha ~ std_normal();
   zeta_Rmax ~ std_normal();
-  zeta_phi ~ std_normal();    // phi ~ N(0, sigma_phi)
+  zeta_year ~ std_normal(); // eta_year_R ~ N(0, sigma_year_R)
   
   // Likelihood
-  R[which_fit] ~ lognormal(log(R_hat[which_fit]) + phi[year[which_fit]], sigma);
+  R[which_fit] ~ lognormal(log(R_hat[which_fit]) + eta_year_R[year[which_fit]], sigma_R);
 }
 
 generated quantities {
@@ -153,6 +153,6 @@ generated quantities {
     }
 
     if(R_NA[i] == 1)
-      R_sim[i] = SR(SR_fun,alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i]) * lognormal_rng(phi[year[i]], sigma);
+      R_sim[i] = SR(SR_fun,alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i]) * lognormal_rng(eta_year_R[year[i]], sigma_R);
   }
 }

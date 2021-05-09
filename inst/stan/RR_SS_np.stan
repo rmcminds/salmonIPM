@@ -14,8 +14,8 @@ functions {
   }
   
   // Generalized normal (aka power-exponential) unnormalized log-probability
-  real pexp_lpdf(real y, real mu, real sigma, real shape) {
-    return(-(fabs(y - mu)/sigma)^shape);
+  real pexp_lpdf(real y, real mu, real sigma_R, real shape) {
+    return(-(fabs(y - mu)/sigma_R)^shape);
   }
     
   // Quantiles of a vector
@@ -60,10 +60,10 @@ transformed data {
 }
 
 parameters {
-  vector<lower=0>[N_pop] alpha;         // intrinsic productivity
-  vector<lower=0>[N_pop] Rmax;          // asymptotic recruitment
-  vector<lower=-1,upper=1>[N_pop] rho;  // AR(1) coefs of residuals
-  vector<lower=0>[N_pop] sigma;         // residual error SD
+  vector<lower=0>[N_pop] alpha;          // intrinsic productivity
+  vector<lower=0>[N_pop] Rmax;           // maximum recruitment
+  vector<lower=-1,upper=1>[N_pop] rho_R; // AR(1) coefs of recruitmentresiduals
+  vector<lower=0>[N_pop] sigma_R;        // recruitment residual error SD
 }
 
 transformed parameters {
@@ -83,22 +83,22 @@ transformed parameters {
     if(i==1 || pop[which_fit[i-1]] != pop[which_fit[i]])
     {
       R_ar1[which_fit[i]] = R_hat[which_fit[i]];
-      sigma_ar1[which_fit[i]] = sigma[pop[which_fit[i]]]/sqrt(1 - rho[pop[which_fit[i]]]^2);
+      sigma_ar1[which_fit[i]] = sigma_R[pop[which_fit[i]]]/sqrt(1 - rho_R[pop[which_fit[i]]]^2);
     }
     else
     {
       real err;    // temp variable: residual at the last non-missing observation
       int dt;      // temp variable: number of years since last non-missing observation
-      real rho2j;  // temp variable: sum of powers of rho
+      real rho2j;  // temp variable: sum of powers of rho_R
       
       err = log(R[which_fit[i-1]]) - log(R_hat[which_fit[i-1]]);
       dt = which_fit[i] - which_fit[i-1];
-      R_ar1[which_fit[i]] = R_hat[which_fit[i]]*exp(rho[pop[which_fit[i]]]^dt * err);
+      R_ar1[which_fit[i]] = R_hat[which_fit[i]]*exp(rho_R[pop[which_fit[i]]]^dt * err);
       
       rho2j = 0;
       for(j in 0:(dt-1))
-        rho2j = rho2j + rho[pop[which_fit[i]]] ^ (2*j);
-      sigma_ar1[which_fit[i]] = sigma[pop[which_fit[i]]] * sqrt(rho2j);
+        rho2j = rho2j + rho_R[pop[which_fit[i]]] ^ (2*j);
+      sigma_ar1[which_fit[i]] = sigma_R[pop[which_fit[i]]] * sqrt(rho2j);
     }
   }
 }
@@ -109,8 +109,8 @@ model {
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   for(i in 1:N_pop)
   {
-    rho[i] ~ pexp(0,0.85,20);   // mildly regularize rho to ensure stationarity
-    sigma[i] ~ normal(0,3);
+    rho_R[i] ~ pexp(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
+    sigma_R[i] ~ normal(0,3);
   }
 
   // Likelihood
@@ -139,9 +139,9 @@ generated quantities {
     }
     
     if(i == 1 || pop[i-1] != pop[i])
-      err_sim[i] = normal_rng(0, sigma[pop[i]]);
+      err_sim[i] = normal_rng(0, sigma_R[pop[i]]);
     else
-      err_sim[i] = normal_rng(rho[pop[i]]*err_sim[i-1], sigma[pop[i]]);
+      err_sim[i] = normal_rng(rho_R[pop[i]]*err_sim[i-1], sigma_R[pop[i]]);
     
     if(R_NA[i] == 1)
       R_sim[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
