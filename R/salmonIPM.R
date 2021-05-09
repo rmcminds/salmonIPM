@@ -5,8 +5,6 @@
 #' @param life_cycle Character string indicating which life-cycle model to fit.
 #' One of the following options (must be `"SS"` if `model == "RR"`):
 #'   * `"SS"`  Spawner-to-spawner (the default)
-#'   * `"SSpa"`  Spawner-to-spawner with partially observed and partially
-#'   reproductively effective adult age classes 
 #'   * `"SMS"`  Spawner-smolt-spawner
 #'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
 #'   available for `pool_pops == FALSE`)
@@ -33,11 +31,11 @@
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages.
-#' @param age_S_obs If `stan_model == "IPM_SSpa_pp"`, a logical or numeric
+#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
 #'   all ages.
-#' @param age_S_eff If `stan_model == "IPM_SSpa_pp"`, a logical or numeric
+#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
 #'   vector indicating, for each adult age, whether spawners of that age
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners

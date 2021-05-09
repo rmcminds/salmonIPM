@@ -30,7 +30,7 @@ data {
   int<lower=0> K_Rmax;                 // number of maximum recruitment covariates
   matrix[N,K_Rmax] X_Rmax;             // maximum recruitment covariates
   int<lower=0> K_R;                    // number of recruitment covariates
-  matrix[N,K_R] X_R;                   // brood-year productivity covariates
+  row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // fishery and hatchery removals
   vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
@@ -44,6 +44,8 @@ data {
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
+  vector<lower=0,upper=1>[N_age] age_S_obs; // does S_obs include age a (1) or not (0)?
+  vector<lower=0,upper=1>[N_age] age_S_eff; // do age-a spawners contribute to reproduction (1) or not (0)?
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -194,7 +196,7 @@ transformed parameters {
     eta_year_R[i] = rho_R*eta_year_R[i-1] + zeta_year_R[i]*sigma_year_R;
   // constrain "fitted" log anomalies to sum to 0
   eta_year_R = eta_year_R - mean(head(eta_year_R, N_year));
-
+  
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
   p_HOS_all[which_H] = p_HOS;
@@ -247,7 +249,13 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
     
     // Recruitment
-    R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i], A[i]);
+    if(min(age_S_eff) == 1)
+        R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i], A[i]);
+    else
+      // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
+      // (assumes age structure is the same for W and H spawners)
+      R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i]*q[i,]*age_S_eff, A[i]);
+
     R[i] = R_hat[i] * exp(eta_year_R[year[i]] + dot_product(X_R[i], beta_R) + sigma_R*zeta_R[i]);
   }
 }
@@ -306,9 +314,12 @@ model {
   tau ~ normal(0,1);
   
   // Observation model
-  
-  // total spawners (of observed ages)
-  S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau); 
+  if(min(age_S_obs) == 1)
+    // total spawners
+    S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau); 
+  else
+    // total spawners of observed ages
+    S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs] .* (q[which_S_obs, ] * age_S_obs)), tau); 
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }

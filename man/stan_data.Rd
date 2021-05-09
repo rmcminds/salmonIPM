@@ -42,12 +42,12 @@ column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\c
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages.}
 
-\item{age_S_obs}{If \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
+\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or binary numeric
 vector indicating, for each adult age, whether observed total spawner data
 includes that age. The default is to treat \code{S_obs} as including spawners of
 all ages.}
 
-\item{age_S_eff}{If \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
+\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or binary numeric
 vector indicating, for each adult age, whether spawners of that age
 contribute toward reproduction. This could be used, e.g., to exclude jacks
 from the effective breeding population. The default is to include spawners

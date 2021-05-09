@@ -41,8 +41,6 @@ are intended for an integrated or run-reconstruction model.}
 One of the following options (must be \code{"SS"} if \code{model == "RR"}):
 \itemize{
 \item \code{"SS"}  Spawner-to-spawner (the default)
-\item \code{"SSpa"}  Spawner-to-spawner with partially observed and partially
-reproductively effective adult age classes
 \item \code{"SMS"}  Spawner-smolt-spawner
 \item \code{"SMaS"}  Spawner-smolt-spawner with multiple smolt age classes (currently only
 available for \code{pool_pops == FALSE})
@@ -77,12 +75,12 @@ column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\c
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages.}
 
-\item{age_S_obs}{If \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
+\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or binary numeric
 vector indicating, for each adult age, whether observed total spawner data
 includes that age. The default is to treat \code{S_obs} as including spawners of
 all ages.}
 
-\item{age_S_eff}{If \code{stan_model == "IPM_SSpa_pp"}, a logical or numeric
+\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or binary numeric
 vector indicating, for each adult age, whether spawners of that age
 contribute toward reproduction. This could be used, e.g., to exclude jacks
 from the effective breeding population. The default is to include spawners

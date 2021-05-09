@@ -17,12 +17,12 @@ N <- N_pop*N_year
 
 sim_out <- sim_salmonIPM(pars = list(mu_alpha = 2, beta_alpha = 0, sigma_alpha = 0.5, 
                                      mu_Rmax = 5, beta_Rmax = 0, sigma_Rmax = 0.5, 
-                                     rho_alphaRmax = 0.3, beta_R = -1, rho_R = 0.7, 
+                                     rho_alphaRmax = 0.3, beta_R = 0, rho_R = 0.7, 
                                      sigma_year_R = 0.5, sigma_R = 0.3, tau = 0.5, 
                                      mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = c(0.1, 0.2), 
                                      R_pop_p = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2),
                                      S_init_K = 0.7),
-                         par_models = list(R ~ x),
+                         # par_models = list(R ~ x),
                          fish_data = data.frame(pop = rep(1:N_pop, each = N_year),
                                                 year = rep(1:N_year, N_pop),
                                                 A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
@@ -41,7 +41,7 @@ sim_out$sim_dat$S_obs[which_S_NA] <- NA
 
 # No pooling across populations
 fit_SS_np <- salmonIPM(stan_model = "IPM_SS_np", 
-                       fish_data = sim_out$sim_dat, par_models = list(R ~ x),
+                       fish_data = sim_out$sim_dat, #par_models = list(R ~ x),
                        chains = 3, iter = 1500, warmup = 500, cores = 3,
                        control = list(adapt_delta = 0.95, max_treedepth = 13),
                        seed = 123)
@@ -50,24 +50,14 @@ print(fit_SS_np, pars = c("mu_p","sigma_p","p","R_p","B_rate","S","R","q"),
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling
+set.seed(321)
 fit_SS_pp <- salmonIPM(stan_model = "IPM_SS_pp", 
-                       fish_data = sim_out$sim_dat, par_models = list(R ~ x),
+                       fish_data = sim_out$sim_dat, #par_models = list(R ~ x),
                        chains = 3, iter = 1500, warmup = 500, cores = 3,
                        control = list(adapt_delta = 0.95, max_treedepth = 13),
                        seed = 123)
 
 print(fit_SS_pp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p","B_rate","S","R","q"), 
-      include = FALSE, prob = c(c(0.05,0.5,0.95)))
-
-# Partial pooling with partially observed and partially effective spawner ages
-fit_SSpa_pp <- salmonIPM(stan_model = "IPM_SSpa_pp", 
-                         fish_data = sim_out$sim_dat, par_models = list(R ~ x),
-                         age_S_obs = rep(1,3), age_S_eff = rep(1,3),
-                         chains = 3, iter = 1500, warmup = 500, cores = 3,
-                         control = list(adapt_delta = 0.95, max_treedepth = 13),
-                         seed = 123)
-
-print(fit_SSpa_pp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p","B_rate","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 

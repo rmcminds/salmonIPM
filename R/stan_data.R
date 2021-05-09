@@ -93,11 +93,11 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     }
   }
   
-  if(stan_model == "IPM_SSpa_pp" & is.null(age_S_obs))
+  if(stan_model == "IPM_SS_pp" & is.null(age_S_obs))
     age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_obs <- as.numeric(age_S_obs)
   
-  if(stan_model == "IPM_SSpa_pp" & is.null(age_S_eff))
+  if(stan_model == "IPM_SS_pp" & is.null(age_S_eff))
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
   
@@ -132,12 +132,12 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     stop(paste("Conflicting NAs in age frequency data in rows", 
                which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))), "\n"))
   
-  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp",
+  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
                         "IPM_SMaS_np","IPM_LCRchum_pp","IPM_ICchinook_pp",
                         "RR_SS_np","RR_SS_pp"))
     stop(paste("Stan model", stan_model, "does not exist.\n"))
   
-  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp"))
+  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp"))
   {
     with(fish_data, {  
       dat <- list(

@@ -14,7 +14,7 @@
 #' @export
 stan_init <- function(stan_model, data, chains = 1) 
 {
-  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SSpa_pp","IPM_SMS_np","IPM_SMS_pp",
+  if(stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
                        "IPM_LCRchum_pp","IPM_ICchinook_pp"))
   {
     with(data, {
@@ -101,7 +101,7 @@ stan_init <- function(stan_model, data, chains = 1)
             tau = array(runif(N_pop, 0.5, 1), dim = N_pop)
           )
         ))
-      } else if(stan_model %in% c("IPM_SS_pp","IPM_SSpa_pp")) {
+      } else if(stan_model == "IPM_SS_pp") {
         return(lapply(1:chains, function(i)
           list(
             # recruitment
