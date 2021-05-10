@@ -27,43 +27,35 @@ stan_init <- function(stan_model, data, chains = 1)
     N_year <- max(year)
     S_obs_noNA <- S_obs
     S_obs[-which_S_obs] <- NA
-    p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.1), 0.9)
+    p_HOS_obs <- pmin(pmax(n_H_obs / (n_H_obs + n_W_obs), 0.1), 0.9)
     p_HOS_obs[n_H_obs + n_W_obs == 0] <- 0.5
     p_HOS_all <- rep(0,N)
     p_HOS_all[which_H] <- p_HOS_obs
+    n_W_obs_all <- replace(rep(0,N), which_H, n_W_obs)
+    n_H_obs_all <- replace(rep(0,N), which_H, n_H_obs)
     min_age <- max_age - N_age + 1
     adult_ages <- min_age:max_age
     q_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
     q_obs_NA <- apply(is.na(q_obs), 1, any)
     q_obs[q_obs_NA,] <- rep(colMeans(na.omit(q_obs)), each = sum(q_obs_NA))
     R_a <- matrix(NA, N, N_age)
-    S_W_obs <- S_obs*(1 - p_HOS_all)
-    B_rate_all <- rep(0,N)
-    B_rate <- pmin(pmax(B_take_obs/(S_W_obs[which_B]*(1 - q_obs[which_B,1]) + B_take_obs), 0.01), 0.99)
-    B_rate[is.na(B_rate)] <- 0.1
-    B_rate_all[which_B] <- B_rate
-    
-    # Maybe figure out a way to do this with a call to run_recon?
-    for(i in 1:N)
-      for(j in 1:N_age)
-      {
-        if(year[i] + adult_ages[j] <= max(year[pop==pop[i]]))
-        {
-          b <- ifelse(j==1, 0, B_rate_all[i+adult_ages[j]])
-          f <- ifelse(j==1, 0, F_rate[i + adult_ages[j]])
-          R_a[i,j] <- S_W_obs[i + adult_ages[j]]*q_obs[i + adult_ages[j],j]/((1 - b)*(1 - f))
-        }
-      }
-    
-    R_a <- pmax(R_a, min(1, R_a[R_a > 0], na.rm = T))
-    R <- rowSums(R_a)
-    R[is.na(R)] <- max(R, na.rm = T)
-    p <- sweep(R_a, 1, R, "/")
-    p_NA <- apply(is.na(p), 1, any)
-    p[p_NA, ] <- rep(colMeans(na.omit(p)), each = sum(p_NA))
-    alr_p <- sweep(log(p[, 1:(N_age-1), drop = FALSE]), 1, log(p[,N_age]), "-")
+    S_W_obs <- S_obs * (1 - p_HOS_all)
+    B_take_all <- replace(rep(0,N), which_B, B_take_obs)
+    B_rate <- pmin(pmax(B_take_obs / (S_W_obs[which_B] * (1 - q_obs[which_B,1]) + B_take_obs), 0.01), 0.99)
+    B_rate <- replace(B_rate, is.na(B_rate), mean(B_rate, na.rm = TRUE))
+    B_rate_all <- replace(rep(0,N), which_B, B_rate)
+    rr_dat <- run_recon(data.frame(pop = pop, A = A, year = year, S_obs = S_obs, 
+                                   n_age_obs, n_W_obs = n_W_obs_all, n_H_obs = n_H_obs_all,
+                                   F_rate = F_rate, B_take_obs = B_take_all))
+    R <- replace(rr_dat$R, is.na(rr_dat$R), mean(rr_dat$R, na.rm = TRUE))
+    R <- pmax(R, 1)
+    p_obs <- rr_dat[, grep("p_age", names(rr_dat))]
+    p_obs <- pmin(pmax(p_obs, 0.01), 0.99)
+    p_obs_NA <- apply(is.na(p_obs), 1, any)
+    p_obs[p_obs_NA, ] <- rep(colMeans(na.omit(p_obs)), each = sum(p_obs_NA))
+    alr_p <- sweep(log(p_obs[, 1:(N_age-1), drop = FALSE]), 1, log(p_obs[,N_age]), "-")
     zeta_p <- apply(alr_p, 2, scale)
-    mu_p <- aggregate(p, list(pop), mean)
+    mu_p <- aggregate(p_obs, list(pop), mean)
     zeta_pop_p <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
     zeta_pop_p <- apply(zeta_pop_p, 2, scale)
   }
@@ -146,7 +138,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_R = runif(1, 0.5, 1),
              zeta_R = as.vector(scale(log(R)))*0.1,
              # spawner age structure
-             mu_p = colMeans(p),
+             mu_p = colMeans(p_obs),
              sigma_pop_p = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
              zeta_pop_p = zeta_pop_p,
              sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age - 1),
@@ -216,7 +208,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_MS = runif(1, 0.5, 1),
              zeta_MS = as.vector(scale(qlogis(s_MS))),
              # spawner age structure
-             mu_p = colMeans(p),
+             mu_p = colMeans(p_obs),
              sigma_pop_p = array(runif(N_age - 1, 0.5, 1), dim = N_age - 1),
              zeta_pop_p = zeta_pop_p,
              sigma_p = array(runif(N_age-1, 0.5, 1), dim = N_age - 1),
@@ -261,7 +253,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_MS = runif(1, 0.5, 1),
              zeta_MS = as.vector(scale(qlogis(s_MS))),
              # spawner age structure and sex ratio
-             mu_p = colMeans(p),
+             mu_p = colMeans(p_obs),
              sigma_pop_p = runif(N_age - 1, 0.5, 1),
              zeta_pop_p = zeta_pop_p,
              sigma_p = runif(N_age-1, 0.5, 1),
@@ -317,7 +309,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_U = runif(1, 0.05, 2),
              zeta_U = rnorm(max(year,year_fwd), 0, 0.1),
              # spawner age structure
-             mu_p = colMeans(p),
+             mu_p = colMeans(p_obs),
              sigma_pop_p = runif(N_age - 1, 0.5, 1),
              zeta_pop_p = zeta_pop_p,
              sigma_p = runif(N_age-1, 0.5, 1),

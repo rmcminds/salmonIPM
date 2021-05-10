@@ -24,7 +24,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   N <- nrow(fish_data)
   pop <- as.numeric(factor(pop))
   year <- as.numeric(factor(year))
-  n_age_obs <- as.matrix(fish_data[,grep("n_age", names(fish_data))])
+  n_age_obs <- as.matrix(fish_data[, grep("n_age", names(fish_data))])
   n_age_obs <- replace(n_age_obs, is.na(n_age_obs), 0)
   fit_p_HOS <- as.logical(fit_p_HOS)
   n_W_obs = as.vector(replace(n_W_obs[fit_p_HOS], is.na(n_W_obs[fit_p_HOS]), 0))
@@ -58,7 +58,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
   
-  if(life_cycle != "SS" & any(is.na(ages)) | is.null(ages))
+  if(life_cycle != "SS" & (any(is.na(ages)) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.")
   
   age_NA_check <- is.na(fish_data[,grep("n_age", names(fish_data))])

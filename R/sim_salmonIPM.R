@@ -298,10 +298,10 @@ sim_salmonIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = N
   
   # Return results
   list(
-    sim_dat = data.frame(pop = pop, A = A, year = year, fit_p_HOS = p_HOS > 0,
+    sim_dat = data.frame(pop = pop, A = A, year = year, 
                          S_obs = S_obs, M_obs = switch(life_cycle, SS = NA, SMS = M_obs),
                          n_age_obs, n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
-                         B_take_obs = B_take, F_rate = F_rate,
+                         fit_p_HOS = p_HOS > 0, B_take_obs = B_take, F_rate = F_rate,
                          fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]),
     pars_out = c(pars, 
                  list(S_W_a = S_W_a, alpha = alpha, 
