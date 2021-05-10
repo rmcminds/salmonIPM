@@ -1,6 +1,6 @@
 Package: salmonIPM
 Title: Integrated Population Model for Salmon
-Version: 1.2.0.9000
+Version: 1.2.1.9000
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"

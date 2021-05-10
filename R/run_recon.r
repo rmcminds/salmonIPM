@@ -23,15 +23,15 @@
 #' * `pop`  See above.
 #' * `year`  See above.
 #' * `A`  See above.
-#' * `S`  Same as `S_obs` above.
+#' * `S_obs`  See above.
 #' * `q_age[minAge]_obs...q_age[maxAge]_obs`  Multiple columns of spawner age 
 #' proportions corresponding to the frequencies in `fish_data`.
 #' * `p_age_minAge...p_age_maxAge`  Multiple columns of recruit age 
 #' proportions by brood year.
-#' * `p_HOS`  Proportion of hatchery-origin spawners.
+#' * `p_HOS_obs`  Proportion of hatchery-origin spawners.
 #' * `F_rate`  See above.
 #' * `B_take_obs`  See above.
-#' * `R`  Total natural-origin recruits from the brood year in each row.
+#' * `R_obs`  Total natural-origin recruits from the brood year in each row.
 #' 
 #' @export
 run_recon <- function(fish_data)
@@ -48,7 +48,7 @@ run_recon <- function(fish_data)
       q_obs[pop == i & n_obs == 0,] <- rep(colMeans(q_obs[pop == i & n_obs > 0,]),
                                            each = sum(pop == i & n_obs==0))
   names(q_obs) <- gsub("n", "q", names(q_obs)) 
-  p_HOS <- ifelse(n_H_obs + n_W_obs > 0, n_H_obs / (n_H_obs + n_W_obs), 0)
+  p_HOS_obs <- ifelse(n_H_obs + n_W_obs > 0, n_H_obs / (n_H_obs + n_W_obs), 0)
 
   R_a <- matrix(NA, N, length(ages))
   for(i in 1:N)
@@ -58,17 +58,17 @@ run_recon <- function(fish_data)
       a <- ages[j]
       if(year[i] + a <= max(year[pop==pop[i]]))
       {
-        B_rate <- ifelse(j == 1, 0, B_take_obs[i+a] / (S_obs[i+a] * (1 - p_HOS[i+a]) * (1 - q_obs[i+a,1]) + B_take_obs[i+a]))
+        B_rate <- ifelse(j == 1, 0, B_take_obs[i+a] / (S_obs[i+a] * (1 - p_HOS_obs[i+a]) * (1 - q_obs[i+a,1]) + B_take_obs[i+a]))
         F_eff <- ifelse(j == 1, 0, F_rate[i+a])
-        R_a[i,j] <- S_obs[i+a] * (1 - p_HOS[i+a]) * q_obs[i+a,j] / ((1 - B_rate) * (1 - F_eff))
+        R_a[i,j] <- S_obs[i+a] * (1 - p_HOS_obs[i+a]) * q_obs[i+a,j] / ((1 - B_rate) * (1 - F_eff))
       }
     }
   }
   
-  R <- rowSums(R_a)
-  p_obs <- sweep(R_a, 1, R, "/")
+  R_obs <- rowSums(R_a)
+  p_obs <- sweep(R_a, 1, R_obs, "/")
   colnames(p_obs) <- gsub("q", "p", names(q_obs))
-  rr_dat <- cbind(pop = pop, A = A, year = year, S = S_obs, R = R, q_obs, p_obs, 
-                  p_HOS = p_HOS, F_rate = F_rate, B_take_obs = B_take_obs)
+  rr_dat <- cbind(pop = pop, A = A, year = year, S_obs = S_obs, R_obs = R_obs, q_obs, p_obs, 
+                  p_HOS_obs = p_HOS_obs, F_rate = F_rate, B_take_obs = B_take_obs)
   return(rr_dat)
 }

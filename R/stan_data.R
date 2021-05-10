@@ -138,9 +138,10 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   
   if(model_life_cycle == "RR_SS") {
     rr_dat <- run_recon(fish_data)
-    which_fit <- which(!is.na(rr_dat$R) & !is.na(rr_dat$S))
+    which_fit <- which(!is.na(rr_dat$R_obs) & !is.na(rr_dat$S_obs))
     N_fit <- length(which_fit)
-    rr_p <- aggregate(rr_dat[,grep("p_age", names(rr_dat))], list(pop = rr_dat$pop), mean, na.rm = TRUE)[,-1]
+    R_obs <- rr_dat$R_obs
+    p_pop_obs <- aggregate(rr_dat[,grep("p_age", names(rr_dat))], list(pop = rr_dat$pop), mean, na.rm = TRUE)[,-1]
   }
   
   out <- switch(model_life_cycle,
@@ -394,26 +395,22 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     n_H_obs = n_H_obs
                 ),
                 
-                RR_SS = with(rr_dat, {
-                  dat <- list(
+                RR_SS = list(
                     SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                    N = length(S),
+                    N = length(S_obs),
                     pop = pop, 
                     year = year,
                     N_fit = N_fit,
                     which_fit = as.vector(which_fit),
-                    S = replace(S, S == 0 | is.na(S), 1),
-                    R = replace(R, R == 0 | is.na(R), 1),
+                    S_obs = replace(S_obs, S_obs == 0 | is.na(S_obs), 1),
+                    R_obs = replace(R_obs, R_obs == 0 | is.na(R_obs), 1),
                     A = A,
-                    S_NA = as.vector(as.integer(is.na(S))),
-                    R_NA = as.vector(as.integer(is.na(R))),
+                    S_NA = as.vector(as.integer(is.na(S_obs))),
+                    R_NA = as.vector(as.integer(is.na(R_obs))),
                     N_age = sum(grepl("p_age", names(rr_dat))),
                     max_age = max(as.numeric(substring(names(rr_dat)[grep("p_age", names(rr_dat))], 6, 6))),
-                    p = as.matrix(rr_p)
+                    p_pop_obs = as.matrix(p_pop_obs)
                   )
-                  
-                  return(dat)
-                })
   )  # end switch()
   
   return(out)

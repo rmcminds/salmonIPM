@@ -39,7 +39,7 @@ sim_out$sim_dat$S_obs[which_S_NA] <- NA
 # CALL STAN TO FIT MODELS
 #===========================================================================
 
-# No pooling across populations
+# IPM with no pooling across populations
 fit_SS_np <- salmonIPM(stan_model = "IPM_SS_np", 
                        fish_data = sim_out$sim_dat, #par_models = list(R ~ x),
                        chains = 3, iter = 1500, warmup = 500, cores = 3,
@@ -49,7 +49,7 @@ fit_SS_np <- salmonIPM(stan_model = "IPM_SS_np",
 print(fit_SS_np, pars = c("mu_p","sigma_p","p","R_p","B_rate","S","R","q"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
-# Partial pooling
+# IPM with partial pooling
 fit_SS_pp <- salmonIPM(stan_model = "IPM_SS_pp", 
                        fish_data = sim_out$sim_dat, #par_models = list(R ~ x),
                        chains = 3, iter = 1500, warmup = 500, cores = 3,
@@ -57,6 +57,26 @@ fit_SS_pp <- salmonIPM(stan_model = "IPM_SS_pp",
                        seed = 123)
 
 print(fit_SS_pp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p","B_rate","S","R","q"), 
+      include = FALSE, prob = c(c(0.05,0.5,0.95)))
+
+# Run reconstruction regression with no pooling across populations
+fit_RR_np <- salmonIPM(stan_model = "RR_SS_np", 
+                       fish_data = sim_out$sim_dat,
+                       chains = 3, iter = 1500, warmup = 500, cores = 3,
+                       control = list(adapt_delta = 0.95, max_treedepth = 13),
+                       seed = 123)
+
+print(fit_RR_np, pars = c("R_hat","S_sim","R_sim"), include = FALSE, 
+      prob = c(c(0.05,0.5,0.95)))
+
+# Run reconstruction regression with partial pooling
+fit_RR_pp <- salmonIPM(stan_model = "RR_SS_pp", 
+                       fish_data = sim_out$sim_dat,
+                       chains = 3, iter = 1500, warmup = 500, cores = 3,
+                       control = list(adapt_delta = 0.95, max_treedepth = 13),
+                       seed = 123)
+
+print(fit_RR_pp, pars = c("alpha","Rmax","eta_year_R","R_hat","S_sim","R_sim"), 
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 

@@ -9,24 +9,24 @@ data {
   int<lower=1> N;               // total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];  // population identifier
   int<lower=1,upper=N> year[N]; // brood year identifier
-  int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S and R)
+  int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S_obs and R_obs)
   int<lower=1,upper=N> which_fit[N_fit]; // cases used in fitting
-  vector<lower=0>[N] S;         // observed annual total spawner abundance (not density)
-  vector<lower=0>[N] R;         // total natural recruit abundance (not density), including harvest and broodstock removals
+  vector<lower=0>[N] S_obs;     // observed annual total spawner abundance (not density)
+  vector<lower=0>[N] R_obs;     // total natural recruit abundance (not density), including harvest and broodstock removals
   vector[N] A;                  // habitat area associated with each spawner abundance obs
-  int<lower=0,upper=1> S_NA[N]; // logical indicating whether S is missing and should be simulated
-  int<lower=0,upper=1> R_NA[N]; // logical indicating whether R is missing and should be simulated
+  int<lower=0,upper=1> S_NA[N]; // logical indicating whether S_obs is missing and should be simulated
+  int<lower=0,upper=1> R_NA[N]; // logical indicating whether R_obs is missing and should be simulated
   int<lower=2> N_age;           // number of adult age classes
   int<lower=2> max_age;         // maximum adult age
-  matrix<lower=0,upper=1>[max(pop),N_age] p;  // average recruit age distributions for each pop 
+  matrix<lower=0,upper=1>[max(pop),N_age] p_pop_obs;  // average recruit age distributions for each pop 
 }
 
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not incl fwd simulations
   int<lower=2> ages[N_age];                // adult ages
-  real mu_Rmax = quantile(log(R[which_fit]), 0.9);  // prior log-mean of Rmax
-  real sigma_Rmax = sd(log(R[which_fit]));  // prior log-SD of Rmax
+  real mu_Rmax = quantile(log(R_obs[which_fit]), 0.9);  // prior log-mean of Rmax
+  real sigma_Rmax = sd(log(R_obs[which_fit]));  // prior log-SD of Rmax
   
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
@@ -52,7 +52,7 @@ transformed parameters {
   for(i in 1:N_fit)
   {
     R_hat[which_fit[i]] = SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
-                             S[which_fit[i]], A[which_fit[i]]);
+                             S_obs[which_fit[i]], A[which_fit[i]]);
     if(i==1 || pop[which_fit[i-1]] != pop[which_fit[i]])
     {
       R_ar1[which_fit[i]] = R_hat[which_fit[i]];
@@ -60,11 +60,11 @@ transformed parameters {
     }
     else
     {
-      real err;    // temp variable: residual at the last non-missing observation
-      int dt;      // temp variable: number of years since last non-missing observation
-      real rho2j;  // temp variable: sum of powers of rho_R
+      real err;    // residual at the last non-missing observation
+      int dt;      // number of years since last non-missing observation
+      real rho2j;  // sum of powers of rho_R
       
-      err = log(R[which_fit[i-1]]) - log(R_hat[which_fit[i-1]]);
+      err = log(R_obs[which_fit[i-1]]) - log(R_hat[which_fit[i-1]]);
       dt = which_fit[i] - which_fit[i-1];
       R_ar1[which_fit[i]] = R_hat[which_fit[i]]*exp(rho_R[pop[which_fit[i]]]^dt * err);
       
@@ -87,7 +87,7 @@ model {
   }
 
   // Likelihood
-  R[which_fit] ~ lognormal(log(R_ar1[which_fit]), sigma_ar1[which_fit]);
+  R_obs[which_fit] ~ lognormal(log(R_ar1[which_fit]), sigma_ar1[which_fit]);
 }
 
 generated quantities {
@@ -95,8 +95,8 @@ generated quantities {
   vector[N] R_sim;    // simulated recruits
   vector[N] err_sim;  // simulated AR(1) residual errors
   
-  S_sim = S;
-  R_sim = R;
+  S_sim = S_obs;
+  R_sim = R_obs;
   err_sim = rep_vector(0,N);
   
   for(i in 1:N)
@@ -107,7 +107,7 @@ generated quantities {
       {
         S_sim[i] = 0;
         for(a in 1:N_age)
-          S_sim[i] = S_sim[i] + R_sim[i-ages[a]]*p[pop[i],a];
+          S_sim[i] = S_sim[i] + R_sim[i-ages[a]]*p_pop_obs[pop[i],a];
       }
     }
     

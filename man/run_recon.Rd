@@ -32,15 +32,15 @@ replicated from \code{fish_data}:
 \item \code{pop}  See above.
 \item \code{year}  See above.
 \item \code{A}  See above.
-\item \code{S}  Same as \code{S_obs} above.
+\item \code{S_obs}  See above.
 \item \verb{q_age[minAge]_obs...q_age[maxAge]_obs}  Multiple columns of spawner age
 proportions corresponding to the frequencies in \code{fish_data}.
 \item \code{p_age_minAge...p_age_maxAge}  Multiple columns of recruit age
 proportions by brood year.
-\item \code{p_HOS}  Proportion of hatchery-origin spawners.
+\item \code{p_HOS_obs}  Proportion of hatchery-origin spawners.
 \item \code{F_rate}  See above.
 \item \code{B_take_obs}  See above.
-\item \code{R}  Total natural-origin recruits from the brood year in each row.
+\item \code{R_obs}  Total natural-origin recruits from the brood year in each row.
 }
 }
 \description{

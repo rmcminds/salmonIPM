@@ -9,24 +9,24 @@ data {
   int<lower=1> N;               // total number of cases in all pops and years
   int<lower=1,upper=N> pop[N];  // population identifier
   int<lower=1,upper=N> year[N]; // brood year identifier
-  int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S and R)
+  int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S_obs and R_obs)
   int<lower=1,upper=N> which_fit[N_fit]; // cases used in fitting
-  vector<lower=0>[N] S;         // observed annual total spawner abundance (not density)
-  vector<lower=0>[N] R;         // total natural recruit abundance (not density), including harvest and broodstock removals
+  vector<lower=0>[N] S_obs;     // observed annual total spawner abundance (not density)
+  vector<lower=0>[N] R_obs;     // total natural recruit abundance (not density), including harvest and broodstock removals
   vector[N] A;                  // habitat area associated with each spawner abundance obs
-  int<lower=0,upper=1> S_NA[N]; // logical indicating whether S is missing and should be simulated
-  int<lower=0,upper=1> R_NA[N]; // logical indicating whether R is missing and should be simulated
+  int<lower=0,upper=1> S_NA[N]; // logical indicating whether S_obs is missing and should be simulated
+  int<lower=0,upper=1> R_NA[N]; // logical indicating whether R_obs is missing and should be simulated
   int<lower=2> N_age;           // number of adult age classes
   int<lower=2> max_age;         // maximum adult age
-  matrix<lower=0,upper=1>[max(pop),N_age] p;  // average recruit age distributions for each pop 
+  matrix<lower=0,upper=1>[max(pop),N_age] p_pop_obs; // average recruit age distributions by pop 
 }
 
 transformed data {
   int<lower=1,upper=N> N_pop;   // number of populations
   int<lower=1,upper=N> N_year;  // number of years
   int<lower=2> ages[N_age];     // adult ages
-  real mu_mu_Rmax = quantile(log(R[which_fit]), 0.9);  // prior mean of mu_Rmax
-  real sigma_mu_Rmax = sd(log(R[which_fit]));  // prior SD of mu_Rmax
+  real mu_mu_Rmax = quantile(log(R_obs[which_fit]), 0.9);  // prior mean of mu_Rmax
+  real sigma_mu_Rmax = sd(log(R_obs[which_fit]));  // prior SD of mu_Rmax
   
   N_pop = max(pop);
   N_year = max(year);
@@ -51,7 +51,7 @@ parameters {
 transformed parameters {
   vector<lower=0>[N_pop] alpha;       // intrinsic productivity 
   vector<lower=0>[N_pop] Rmax;        // maximum recruitment 
-  vector<lower=0>[N_year] eta_year_R; // log brood year productivity anomalies
+  vector[N_year] eta_year_R;          // log brood year productivity anomalies
   vector<lower=0>[N] R_hat;           // expected recruit abundance (not density) by brood year
   
   // Multivariate Matt trick for [log(alpha), log(Rmax)]
@@ -83,7 +83,7 @@ transformed parameters {
   R_hat = rep_vector(0,N);
   for(i in 1:N_fit)
     R_hat[which_fit[i]] = SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
-                             S[which_fit[i]], A[which_fit[i]]);
+                             S_obs[which_fit[i]], A[which_fit[i]]);
 }
 
 model {
@@ -103,15 +103,15 @@ model {
   zeta_year ~ std_normal(); // eta_year_R ~ N(0, sigma_year_R)
   
   // Likelihood
-  R[which_fit] ~ lognormal(log(R_hat[which_fit]) + eta_year_R[year[which_fit]], sigma_R);
+  R_obs[which_fit] ~ lognormal(log(R_hat[which_fit]) + eta_year_R[year[which_fit]], sigma_R);
 }
 
 generated quantities {
   vector[N] S_sim;    // simulated spawners
   vector[N] R_sim;    // simulated recruits
 
-  S_sim = S;
-  R_sim = R;
+  S_sim = S_obs;
+  R_sim = R_obs;
 
   for(i in 1:N)
   {
@@ -121,7 +121,7 @@ generated quantities {
       {
         S_sim[i] = 0;
         for(a in 1:N_age)
-          S_sim[i] = S_sim[i] + R_sim[i-ages[a]]*p[pop[i],a];
+          S_sim[i] = S_sim[i] + R_sim[i-ages[a]]*p_pop_obs[pop[i],a];
       }
     }
 
