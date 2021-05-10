@@ -70,6 +70,11 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     if(any(is.na(n_M_obs) != is.na(n_F_obs)))
       stop("Conflicting NAs in n_M_obs and n_F_obs in rows ", 
            which(is.na(n_M_obs) != is.na(n_F_obs)))
+    if(is.null(fecundity_data)) {
+      stop("Fecundity data must be provided for Lower Columbia chum IPM") 
+    } else if(any(is.na(fecundity_data))) {
+      stop("Missing values are not allowed in fecundity data")
+    }
   }
   
   F_rate_check <- tapply(F_rate, pop, function(x) any(is.na(x[-c(1:max_age)])))
@@ -124,14 +129,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
       which_prior_U <- match(prior_U$year, sort(unique(fish_data$year)))
       mu_prior_U <- prior_U$mu_prior_U
       sigma_prior_U <- prior_U$sigma_prior_U
-    }
-  }
-  
-  if(stan_model == "IPM_LCRchum_pp") {
-    if(is.null(fecundity_data)) {
-      stop("Fecundity data must be provided for Lower Columbia chum IPM") 
-    } else if(any(is.na(fecundity_data))) {
-      stop("Missing values are not allowed in fecundity data")
     }
   }
   
