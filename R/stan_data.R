@@ -58,7 +58,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
   
-  if(life_cycle != "SS" & any(is.na(ages) | is.null(ages)))
+  if(life_cycle != "SS" & any(is.na(ages)) | is.null(ages))
     stop("Multi-stage models must specify age in years for all stages.")
   
   age_NA_check <- is.na(fish_data[,grep("n_age", names(fish_data))])
