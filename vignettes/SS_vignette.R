@@ -50,7 +50,6 @@ print(fit_SS_np, pars = c("mu_p","sigma_p","p","R_p","B_rate","S","R","q"),
       include = FALSE, prob = c(c(0.05,0.5,0.95)))
 
 # Partial pooling
-set.seed(321)
 fit_SS_pp <- salmonIPM(stan_model = "IPM_SS_pp", 
                        fish_data = sim_out$sim_dat, #par_models = list(R ~ x),
                        chains = 3, iter = 1500, warmup = 500, cores = 3,
