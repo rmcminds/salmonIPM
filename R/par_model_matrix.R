@@ -19,11 +19,10 @@ par_model_matrix <- function(par_models, scale = TRUE, fish_data)
 {
   X <- lapply(par_models, function(f) {
     stopifnot(attr(terms(f), "response") == 1) # formulas must be 2-sided
-    ff <- update(f, NULL ~ . + 1) # force placeholder intercept
+    ff <- update(f, NULL ~ . - 1) # remove intercept
     mf <- model.frame(ff, data = fish_data, na.action = na.fail) # no missing covariates
     mf <- as.data.frame(scale(mf, scale = scale))
     mm <- model.matrix(ff, data = mf) 
-    mm <- subset(mm, select = -`(Intercept)`, drop = FALSE)
     return(mm)
   })
   names(X) <- lapply(par_models, function(f) all.vars(f)[1]) # names are responses
