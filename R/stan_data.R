@@ -24,7 +24,11 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   N <- nrow(fish_data)
   pop <- as.numeric(factor(pop))
   year <- as.numeric(factor(year))
+  n_age_obs <- as.matrix(fish_data[,grep("n_age", names(fish_data))])
+  n_age_obs <- replace(n_age_obs, is.na(n_age_obs), 0)
   fit_p_HOS <- as.logical(fit_p_HOS)
+  n_W_obs = as.vector(replace(n_W_obs[fit_p_HOS], is.na(n_W_obs[fit_p_HOS]), 0))
+  n_H_obs = as.vector(replace(n_H_obs[fit_p_HOS], is.na(n_H_obs[fit_p_HOS]), 0))
   
   if(life_cycle == "SMaS") {
     if(!is.logical(conditionGRonMS))
@@ -140,8 +144,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   }
   
   out <- switch(model_life_cycle,
-                IPM_SS = with(fish_data, {  
-                  dat <- list(
+                IPM_SS = list(
                     # info for observed data
                     N = N,
                     pop = pop, 
@@ -175,25 +178,17 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # spawner age structure
                     N_age = sum(grepl("n_age", names(fish_data))), 
                     max_age = max_age,
-                    n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                    n_age_obs = n_age_obs,
                     age_S_obs = as.vector(age_S_obs),
                     age_S_eff = as.vector(age_S_eff),
                     # H/W composition
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
-                    n_H_obs = as.vector(n_H_obs[fit_p_HOS])
-                  )
-                  
-                  dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
-                  dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
-                  dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
-                  
-                  return(dat)
-                }),
+                    n_W_obs = n_W_obs,
+                    n_H_obs = n_H_obs
+                  ),
                 
-                IPM_SMS = with(fish_data, {  
-                  dat <- list(
+                IPM_SMS = list(
                     # info for observed data
                     N = N,
                     pop = pop, 
@@ -227,23 +222,15 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
                     # spawner age structure
                     max_age = max_age,
-                    n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                    n_age_obs = n_age_obs,
                     # H/W composition
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
-                    n_H_obs = as.vector(n_H_obs[fit_p_HOS])
-                  )
-                  
-                  dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
-                  dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
-                  dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
-                  
-                  return(dat)
-                }),
+                    n_W_obs = n_W_obs,
+                    n_H_obs = n_H_obs
+                ),
                 
-                IPM_SMaS = with(fish_data, {  
-                  dat <- list(
+                IPM_SMaS = list(
                     # info for observed data
                     N = N,
                     pop = pop, 
@@ -282,19 +269,11 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # H/W composition
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
-                    n_H_obs = as.vector(n_H_obs[fit_p_HOS])
-                  )
-                  
-                  dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
-                  dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
-                  dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
-                  
-                  return(dat)
-                }),
+                    n_W_obs = n_W_obs,
+                    n_H_obs = n_H_obs
+                ),
                 
-                IPM_LCRchum = with(fish_data, {  
-                  dat <- list(
+                IPM_LCRchum = list(
                     # info for observed data
                     N = N,
                     pop = pop, 
@@ -342,26 +321,18 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     tau_S_obs = replace(tau_S_obs, is.na(tau_S_obs), 0),
                     # spawner age structure and sex ratio
                     max_age = max_age,
-                    n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                    n_age_obs = n_age_obs,
                     n_M_obs = as.vector(n_M_obs),
                     n_F_obs = as.vector(n_F_obs),
                     p_G_obs = as.vector(p_G_obs),
                     # H/W composition
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
-                    n_H_obs = as.vector(n_H_obs[fit_p_HOS])
-                  )
-                  
-                  dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
-                  dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
-                  dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
-                  
-                  return(dat)
-                }),
+                    n_W_obs = n_W_obs,
+                    n_H_obs = n_H_obs
+                ),
                 
-                IPM_ICchinook = with(fish_data, {  
-                  dat <- list(
+                IPM_ICchinook = list(
                     # info for observed data
                     N = N,
                     pop = pop, 
@@ -415,20 +386,13 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # spawner age structure
                     N_age = sum(grepl("n_age", names(fish_data))), 
                     max_age = max_age,
-                    n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                    n_age_obs = n_age_obs,
                     # H/W composition
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = as.vector(n_W_obs[fit_p_HOS]),
-                    n_H_obs = as.vector(n_H_obs[fit_p_HOS])
-                  )
-                  
-                  dat$n_W_obs[is.na(dat$n_W_obs)] <- 0
-                  dat$n_H_obs[is.na(dat$n_H_obs)] <- 0
-                  dat$n_age_obs[is.na(dat$n_age_obs)] <- 0
-                  
-                  return(dat)
-                }),
+                    n_W_obs = n_W_obs,
+                    n_H_obs = n_H_obs
+                ),
                 
                 RR_SS = with(rr_dat, {
                   dat <- list(

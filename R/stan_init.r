@@ -23,6 +23,8 @@ stan_init <- function(stan_model, data, chains = 1)
   for(i in names(data)) assign(i, data[[i]])
   
   if(model == "IPM") {
+    N_pop <- max(pop)
+    N_year <- max(year)
     S_obs_noNA <- S_obs
     S_obs[-which_S_obs] <- NA
     p_HOS_obs <- pmin(pmax(n_H_obs/(n_H_obs + n_W_obs), 0.1), 0.9)
