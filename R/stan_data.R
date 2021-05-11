@@ -58,8 +58,9 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
   age_S_eff <- as.numeric(age_S_eff)
   
-  if(life_cycle != "SS" & (any(is.na(ages)) | is.null(ages)))
-    stop("Multi-stage models must specify age in years for all stages.")
+  if(!life_cycle %in% c("SS","SMaS") & (any(is.na(ages)) | is.null(ages)))
+    stop("Multi-stage models must specify age in years for all stages.
+         See ?salmonIPM(ages) for details.")
   
   age_NA_check <- is.na(fish_data[,grep("n_age", names(fish_data))])
   if(any(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))))
@@ -239,6 +240,10 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # smolt production
                     SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
                     A = A,
+                    K_alpha = ifelse(is.null(X[["alpha"]]), 0, ncol(X[["alpha"]])), 
+                    X_alpha = if(is.null(X[["alpha"]])) matrix(0,N,0) else X[["alpha"]],
+                    K_Mmax = ifelse(is.null(X[["Mmax"]]), 0, ncol(X[["Mmax"]])), 
+                    X_Mmax = if(is.null(X[["Mmax"]])) matrix(0,N,0) else X[["Mmax"]],
                     K_M = ifelse(is.null(X[["M"]]), 0, ncol(X[["M"]])), 
                     X_M = if(is.null(X[["M"]])) matrix(0,N,0) else X[["M"]],
                     # smolt abundance

@@ -2,12 +2,11 @@
 #'
 #' @param fish_data Data frame that includes the following columns, 
 #' in no particular order except where noted:
-#' 
 #' * `pop`  Numeric, factor or character population ID.
 #' * `year`  Numeric variable giving the year the fish spawned (i.e., the brood year).
 #' * `A` Spawning habitat size (either stream length or area).
-#' Will usually be time-invariant within a population, but need not be.
-#' * `S_obs`  Total number (not density) of wild and hatchery-origin spawners.
+#' Will often be time-invariant within a population, but need not be.
+#' * `S_obs`  Total number (not density) of all wild and hatchery-origin spawners.
 #' * `n_age[min_age]_obs...n_age[max_age]_obs`  Multiple columns of
 #'   observed spawner age frequencies (i.e., counts), where `[min_age]` and
 #'   `[max_age]` are the numeral age in years (total, not ocean age) of the
@@ -34,6 +33,7 @@
 #' * `R_obs`  Total natural-origin recruits from the brood year in each row.
 #' 
 #' @export
+
 run_recon <- function(fish_data)
 {
   fish_data <- as.data.frame(fish_data)
@@ -52,19 +52,15 @@ run_recon <- function(fish_data)
 
   R_a <- matrix(NA, N, length(ages))
   for(i in 1:N)
-  {
-    for(j in 1:length(ages))
-    {
+    for(j in 1:length(ages)) {
       a <- ages[j]
-      if(year[i] + a <= max(year[pop==pop[i]]))
-      {
+      if(year[i] + a <= max(year[pop==pop[i]])) {
         B_rate <- ifelse(j == 1, 0, B_take_obs[i+a] / (S_obs[i+a] * (1 - p_HOS_obs[i+a]) * (1 - q_obs[i+a,1]) + B_take_obs[i+a]))
         F_eff <- ifelse(j == 1, 0, F_rate[i+a])
         R_a[i,j] <- S_obs[i+a] * (1 - p_HOS_obs[i+a]) * q_obs[i+a,j] / ((1 - B_rate) * (1 - F_eff))
       }
     }
-  }
-  
+
   R_obs <- rowSums(R_a)
   p_obs <- sweep(R_a, 1, R_obs, "/")
   colnames(p_obs) <- gsub("q", "p", names(q_obs))

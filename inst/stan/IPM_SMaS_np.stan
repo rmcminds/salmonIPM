@@ -96,7 +96,7 @@ transformed data {
       int ii = (j - 1)*max_Mage + i; // index into M_init, q_M_init
 
       // M_init prior mean that scales observed log-mean by fraction of orphan age classes
-      mu_S_init[ii] = mean(log(M_obs[which_M_obs])) + log(N_orphan_Mage) - log(N_Mage);
+      mu_M_init[ii] = mean(log(M_obs[which_M_obs])) + log(N_orphan_Mage) - log(N_Mage);
 
       // prior on q_M_init that implies q_M_orphan ~ Dir(1)
       mu_q_M_init[,ii] = append_row(rep_vector(1.0/N_amalg_Mage, N_amalg_Mage), 

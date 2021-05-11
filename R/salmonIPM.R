@@ -30,7 +30,8 @@
 #' `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
 #' @param ages For multi-stage models, a named list giving the fixed ages in
-#'   years of all subadult life stages.
+#'   years of all subadult life stages. (This is not needed for `IPM_SMaS_np` because
+#'   in that case smolt age structure is provided in `fish_data`.)
 #' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
@@ -52,7 +53,7 @@
 #'   * `pop`  Numeric or character population ID.  
 #'   * `year`  Numeric variable giving the year the fish spawned (i.e., the brood year).
 #'   * `A`  Spawning habitat size (either stream length or area). 
-#'   Will usually be time-invariant within a population, but need not be.   
+#'   Will often be time-invariant within a population, but need not be.   
 #'   * `M_obs`  Total number of wild-origin smolts (only needed for models including smolt stage).  
 #'   * `tau_M_obs`  If `stan_model == "IPM_LCRchum_pp"`,  known observation error SDs 
 #'   for smolt abundance.  
@@ -68,7 +69,7 @@
 #'   where `[min_Mage]` and `[max_Mage]` are the numeral age in years of the youngest 
 #'   and oldest smolts, respectively. Note that age is measured in calendar years from 
 #'   the brood year (i.e., the Gilbert-Rich system).   
-#'   * `S_obs`  Total number (not density) of wild and hatchery-origin spawners.  
+#'   * `S_obs`  Total number (not density) of all wild and hatchery-origin spawners.  
 #'   * `tau_S_obs`  If `stan_model == "IPM_LCRchum_pp"`, known observation error SDs 
 #'   for spawner abundance.  
 #'   * `n_age[min_age]_obs...n_age[max_age]_obs`  Multiple columns of
