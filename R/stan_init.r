@@ -54,10 +54,11 @@ stan_init <- function(stan_model, data, chains = 1)
     p_obs <- pmin(pmax(p_obs, 0.01), 0.99)
     p_obs_NA <- apply(is.na(p_obs), 1, any)
     p_obs[p_obs_NA, ] <- rep(colMeans(na.omit(p_obs)), each = sum(p_obs_NA))
-    alr_p <- sweep(log(p_obs[, 1:(N_age-1), drop = FALSE]), 1, log(p_obs[,N_age]), "-")
+    p_obs <- sweep(p_obs, 1, rowSums(p_obs), "/")
+    alr_p <- sweep(log(p_obs[, 1:(N_age-1), drop = FALSE]), 1, log(p_obs[, N_age]), "-")
     zeta_p <- apply(alr_p, 2, scale)
     mu_p <- aggregate(p_obs, list(pop), mean)
-    zeta_pop_p <- aggregate(alr_p, list(pop), mean)[,-1, drop = FALSE]
+    zeta_pop_p <- aggregate(alr_p, list(pop), mean)[, -1, drop = FALSE]
     zeta_pop_p <- apply(zeta_pop_p, 2, scale)
   }
   
