@@ -15,19 +15,19 @@ N_pop <- 20
 N_year <- 30
 N <- N_pop*N_year
 
-sim_out <- sim_salmonIPM(pars = list(mu_alpha = 2, beta_alpha = 0, sigma_alpha = 0.5, 
-                                     mu_Rmax = 5, beta_Rmax = 0, sigma_Rmax = 0.5, 
-                                     rho_alphaRmax = 0.3, beta_R = -1, rho_R = 0.7, 
-                                     sigma_year_R = 0.5, sigma_R = 0.3, tau = 0.5, 
-                                     mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = c(0.1, 0.2), 
-                                     R_pop_p = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2),
-                                     S_init_K = 0.7),
-                         par_models = list(R ~ x),
-                         fish_data = data.frame(pop = rep(1:N_pop, each = N_year),
-                                                year = rep(1:N_year, N_pop),
-                                                A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
-                                                n_age_obs = 50, n_HW_obs = 0, x = runif(N)),
-                         N_age = 3, max_age = 5)
+sim_out <- simIPM(pars = list(mu_alpha = 2, beta_alpha = 0, sigma_alpha = 0.5, 
+                              mu_Rmax = 5, beta_Rmax = 0, sigma_Rmax = 0.5, 
+                              rho_alphaRmax = 0.3, beta_R = -1, rho_R = 0.7, 
+                              sigma_year_R = 0.5, sigma_R = 0.3, tau = 0.5, 
+                              mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = c(0.1, 0.2), 
+                              R_pop_p = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2),
+                              S_init_K = 0.7),
+                  par_models = list(R ~ x),
+                  fish_data = data.frame(pop = rep(1:N_pop, each = N_year),
+                                         year = rep(1:N_year, N_pop),
+                                         A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
+                                         n_age_obs = 50, n_HW_obs = 0, x = runif(N)),
+                  N_age = 3, max_age = 5)
 
 no_age_data <- 1:N_year
 sim_out$sim_dat[no_age_data,c("n_age3_obs","n_age4_obs","n_age5_obs")] <- 0

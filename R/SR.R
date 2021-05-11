@@ -48,7 +48,7 @@
 #'       xlab = "Spawners", ylab = "Recruits", main = "Ricker")
 #' abline(h = Rmax, lty = 2)
 #' 
-#' @seealso [salmonIPM()] for fitting models, [sim_salmonIPM()] for simulating data
+#' @seealso [salmonIPM()] for fitting models, [simIPM()] for simulating data
 #' 
 #' @export
 

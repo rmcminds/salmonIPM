@@ -64,5 +64,5 @@ abline(h = Rmax, lty = 2)
 
 }
 \seealso{
-\code{\link[=salmonIPM]{salmonIPM()}} for fitting models, \code{\link[=sim_salmonIPM]{sim_salmonIPM()}} for simulating data
+\code{\link[=salmonIPM]{salmonIPM()}} for fitting models, \code{\link[=simIPM]{simIPM()}} for simulating data
 }

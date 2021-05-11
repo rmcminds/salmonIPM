@@ -93,8 +93,8 @@
 #'
 #' @export
 
-sim_salmonIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL, 
-                          scale = TRUE, N_age, max_age, ages = NULL, fish_data)
+simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL, 
+                   scale = TRUE, N_age, max_age, ages = NULL, fish_data)
 {
   # Function to simulate correlated pop-specific intrinsic productivity and max recruitment
   alphaRmax_mvn <- function(N_pop, mu_alpha, sigma_alpha, mu_Rmax, sigma_Rmax, rho_alphaRmax) 
