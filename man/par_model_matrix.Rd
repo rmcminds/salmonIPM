@@ -26,3 +26,7 @@ A named list of model matrices corresponding to the elements of \code{par_models
 \description{
 Helper function to construct covariate model matrices from a list of two-sided formulas.
 }
+\seealso{
+\code{\link[=salmonIPM]{salmonIPM()}} for specifying covariate effects via \code{par_models},
+\code{\link[=stan_data]{stan_data()}} for assembling input data including covariate model matrices
+}

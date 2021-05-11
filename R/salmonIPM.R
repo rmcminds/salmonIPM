@@ -18,8 +18,9 @@
 #' @param stan_model Character string giving the name of the **salmonIPM** model being
 #'   fit (`.stan` filetype extension is not included). A more concise alternative to
 #'   specifying `model`, `life_cycle`, and `pool_pops` (and will override those arguments).
-#' @param SR_fun One of `"exp"`, `"BH"` (the default), or `"Ricker"`, 
-#'   indicating which spawner-recruit function to fit.
+#' @param SR_fun One of `"exp"` (density independent discrete exponential), 
+#'   `"BH"` (Beverton-Holt,the default), or `"Ricker"`, indicating which 
+#'   spawner-recruit function to fit.
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in the model
 #' specified by `stan_model` that accepts covariates (see Details for available

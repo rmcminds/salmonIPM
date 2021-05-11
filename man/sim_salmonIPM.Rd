@@ -21,7 +21,8 @@ sim_salmonIPM(
 simulate. Currently available options are spawner-to-spawner (\code{"SS"},
 the default) or spawner-smolt-spawner (\code{"SMS"}).}
 
-\item{SR_fun}{One of \code{"exp"}, \code{"BH"} (the default), or \code{"Ricker"},
+\item{SR_fun}{One of \code{"exp"} (density independent discrete exponential),
+\code{"BH"} (Beverton-Holt,the default), or \code{"Ricker"},
 indicating which spawner-recruit function to simulate.}
 
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
@@ -117,4 +118,7 @@ Generate pseudo-data, group-level parameters, and states from a specified
 \strong{salmonIPM} integrated population model given values for the hyperparameters.
 This may be useful, e.g., in simulation-based calibration and model sensitivity
 checking.
+}
+\seealso{
+\code{\link[=salmonIPM]{salmonIPM()}} for fitting models
 }

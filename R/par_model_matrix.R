@@ -13,6 +13,9 @@
 #' 
 #' @return A named list of model matrices corresponding to the elements of `par_models`.
 #' 
+#' @seealso [salmonIPM()] for specifying covariate effects via `par_models`, 
+#'   [stan_data()] for assembling input data including covariate model matrices
+#' 
 #' @export
 
 par_model_matrix <- function(par_models, scale = TRUE, fish_data)

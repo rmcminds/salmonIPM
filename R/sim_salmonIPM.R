@@ -8,8 +8,9 @@
 #' @param life_cycle Character string indicating which life-cycle model to
 #'   simulate. Currently available options are spawner-to-spawner (`"SS"`,
 #'   the default) or spawner-smolt-spawner (`"SMS"`).
-#' @param SR_fun One of `"exp"`, `"BH"` (the default), or `"Ricker"`, 
-#' indicating which spawner-recruit function to simulate.
+#' @param SR_fun One of `"exp"` (density independent discrete exponential), 
+#'   `"BH"` (Beverton-Holt,the default), or `"Ricker"`, 
+#'   indicating which spawner-recruit function to simulate.
 #' @param pars Named list of (hyper)parameters to be used for simulations:
 #'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
 #'   * `beta_alpha`  Vector of regression coefficients for log intrinsic productivity.
@@ -86,6 +87,7 @@
 #' * `pars_out`  A named list of hyperparameters, group-level parameters, and states
 #' used in generating the pseudo-data.
 #' 
+#' @seealso [salmonIPM()] for fitting models
 #'
 #' @importFrom stats rbinom rlnorm rmultinom rnorm runif
 #'
@@ -94,16 +96,6 @@
 sim_salmonIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL, 
                           scale = TRUE, N_age, max_age, ages = NULL, fish_data)
 {
-  # Spawner-recruit functions
-  SR <- function(SR_fun, alpha, Rmax, S, A) 
-  {
-    R <- switch(SR_fun,
-                exp = alpha*S,
-                BH = alpha*S/(1 + alpha*S/(A*Rmax)),
-                Ricker = alpha*S*exp(-alpha*S/(A*exp(1)*Rmax)))
-    return(R)
-  }
-  
   # Function to simulate correlated pop-specific intrinsic productivity and max recruitment
   alphaRmax_mvn <- function(N_pop, mu_alpha, sigma_alpha, mu_Rmax, sigma_Rmax, rho_alphaRmax) 
   {
