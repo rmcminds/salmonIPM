@@ -29,14 +29,18 @@ indicating which spawner-recruit function to simulate.}
 \itemize{
 \item \code{mu_alpha}  Hyper-mean of log intrinsic productivity.
 \item \code{beta_alpha}  Vector of regression coefficients for log intrinsic productivity.
+Must be specified if \code{par_models} includes \code{alpha ~ ...}; otherwise will be ignored
+and may be omitted.
 \item \code{sigma_alpha}  Hyper-SD of log intrinsic productivity.
 \item \code{mu_Rmax}  If \code{life_cycle == "SS"}, hyper-mean of log maximum recruitment.
 \item \code{beta_Rmax}  If \code{life_cycle == "SS"}, vector of regression coefficients for
-log maximum recruitment.
+log maximum recruitment. Must be specified if \code{par_models} includes \code{Rmax ~ ...};
+otherwise will be ignored and may be omitted.
 \item \code{sigma_Rmax}  If \code{life_cycle == "SS"}, hyper-SD of log maximum recruitment.
 \item \code{rho_alphaRmax}  If \code{life_cycle == "SS"}, correlation between log(alpha) and log(Rmax).
 \item \code{beta_R}  If \code{life_cycle == "SS"}, vector of regression coefficients for
-log recruitment.
+log recruitment. Must be specified if \code{par_models} includes \code{R ~ ...};
+otherwise will be ignored and may be omitted.
 \item \code{rho_R}  If \code{life_cycle == "SS"}, AR(1) coefficient of brood-year
 log productivity anomalies.
 \item \code{sigma_year_R}  If \code{life_cycle == "SS"}, hyper-SD of brood-year
@@ -48,7 +52,8 @@ log maximum smolt recruitment.
 \item \code{sigma_Mmax}  If \code{life_cycle == "SMS"}, hyper-SD of log maximum smolt recruitment.
 \item \code{rho_alphaMmax}  If \code{life_cycle == "SMS"}, correlation between log(alpha) and log(Mmax).
 \item \code{beta_M}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
-log smolt recruitment.
+log smolt recruitment. Must be specified if \code{par_models} includes \code{M ~ ...};
+otherwise will be ignored and may be omitted.
 \item \code{rho_M}  If \code{life_cycle == "SMS"}, AR(1) coefficient of spawner-smolt log
 productivity anomalies.
 \item \code{sigma_year_M}  If \code{life_cycle == "SMS"}, process error SD
@@ -57,7 +62,8 @@ of spawner-smolt log productivity anomalies.
 SD of unique spawner-smolt productivity process errors.
 \item \code{mu_MS}  If \code{life_cycle == "SMS"}, mean SAR.
 \item \code{beta_MS}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
-logit SAR anomalies.
+logit SAR anomalies. Must be specified if \code{par_models} includes \code{s_MS ~ ...};
+otherwise will be ignored and may be omitted.
 \item \code{rho_MS}  If \code{life_cycle == "SMS"}, AR(1) coefficient for  logit SAR anomalies.
 \item \code{sigma_year_MS}  If \code{life_cycle == "SMS"}, process error SD of logit SAR anomalies.
 \item \code{sigma_MS}  If \code{life_cycle == "SMS"}, SD of unique SAR process errors.
@@ -75,9 +81,9 @@ logit SAR anomalies.
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in \code{pars}
-with corresponding regression coefficients \code{beta_theta} and \verb{t1 ... tK}
-are terms involving variables in \code{fish_data}. Standard formula syntax
-such as \code{:} and \code{*} may be used; see \code{\link[stats:formula]{stats::formula()}}.}
+with corresponding regression coefficients \code{beta_theta} (which must be specified in
+\code{pars}) and \verb{t1 ... tK} are terms involving variables in \code{fish_data}.
+Standard formula syntax such as \code{:} and \code{*} may be used; see \code{\link[stats:formula]{stats::formula()}}.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have

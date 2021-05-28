@@ -14,14 +14,18 @@
 #' @param pars Named list of (hyper)parameters to be used for simulations:
 #'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
 #'   * `beta_alpha`  Vector of regression coefficients for log intrinsic productivity.
+#'   Must be specified if `par_models` includes `alpha ~ ...`; otherwise will be ignored
+#'   and may be omitted.
 #'   * `sigma_alpha`  Hyper-SD of log intrinsic productivity.
 #'   * `mu_Rmax`  If `life_cycle == "SS"`, hyper-mean of log maximum recruitment.
 #'   * `beta_Rmax`  If `life_cycle == "SS"`, vector of regression coefficients for 
-#'   log maximum recruitment.
+#'   log maximum recruitment. Must be specified if `par_models` includes `Rmax ~ ...`; 
+#'   otherwise will be ignored and may be omitted.
 #'   * `sigma_Rmax`  If `life_cycle == "SS"`, hyper-SD of log maximum recruitment.
 #'   * `rho_alphaRmax`  If `life_cycle == "SS"`, correlation between log(alpha) and log(Rmax).
 #'   * `beta_R`  If `life_cycle == "SS"`, vector of regression coefficients for 
-#'   log recruitment.
+#'   log recruitment. Must be specified if `par_models` includes `R ~ ...`; 
+#'   otherwise will be ignored and may be omitted.
 #'   * `rho_R`  If `life_cycle == "SS"`, AR(1) coefficient of brood-year 
 #'   log productivity anomalies.
 #'   * `sigma_year_R`  If `life_cycle == "SS"`, hyper-SD of brood-year 
@@ -33,7 +37,8 @@
 #'   * `sigma_Mmax`  If `life_cycle == "SMS"`, hyper-SD of log maximum smolt recruitment.
 #'   * `rho_alphaMmax`  If `life_cycle == "SMS"`, correlation between log(alpha) and log(Mmax).
 #'   * `beta_M`  If `life_cycle == "SMS"`, vector of regression coefficients for
-#'   log smolt recruitment.
+#'   log smolt recruitment. Must be specified if `par_models` includes `M ~ ...`; 
+#'   otherwise will be ignored and may be omitted.
 #'   * `rho_M`  If `life_cycle == "SMS"`, AR(1) coefficient of spawner-smolt log
 #'   productivity anomalies.
 #'   * `sigma_year_M`  If `life_cycle == "SMS"`, process error SD 
@@ -42,7 +47,8 @@
 #'   SD of unique spawner-smolt productivity process errors.
 #'   * `mu_MS`  If `life_cycle == "SMS"`, mean SAR.
 #'   * `beta_MS`  If `life_cycle == "SMS"`, vector of regression coefficients for 
-#'   logit SAR anomalies.
+#'   logit SAR anomalies. Must be specified if `par_models` includes `s_MS ~ ...`; 
+#'   otherwise will be ignored and may be omitted.
 #'   * `rho_MS`  If `life_cycle == "SMS"`, AR(1) coefficient for  logit SAR anomalies.
 #'   * `sigma_year_MS`  If `life_cycle == "SMS"`, process error SD of logit SAR anomalies.
 #'   * `sigma_MS`  If `life_cycle == "SMS"`, SD of unique SAR process errors.
@@ -58,9 +64,9 @@
 #'   * `S_init_K`  Mean of initial spawning population size as a fraction of carrying capacity. 
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in `pars` 
-#'  with corresponding regression coefficients `beta_theta` and `t1 ... tK` 
-#'  are terms involving variables in `fish_data`. Standard formula syntax 
-#'  such as `:` and `*` may be used; see [stats::formula()].
+#'  with corresponding regression coefficients `beta_theta` (which must be specified in
+#'  `pars`) and `t1 ... tK` are terms involving variables in `fish_data`. 
+#'  Standard formula syntax such as `:` and `*` may be used; see [stats::formula()].
 #' @param scale  Logical indicating whether the model matrices constructed from
 #' `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
@@ -136,25 +142,39 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   
   # Covariate model matrices
   X <- par_model_matrix(par_models = par_models, scale = scale, fish_data = fish_data)
-  for(i in c("alpha","Rmax","R","Mmax","M","s_MS"))
-    assign(paste("X", tail(unlist(strsplit(i, "_")), 1), sep = "_"), 
-           if(is.null(X[[i]])) matrix(0,N,1) else X[[i]])
-
+  for(i in c("alpha","Rmax","R","Mmax","M","s_MS")) 
+  {
+    X_i <- paste("X", tail(unlist(strsplit(i, "_")), 1), sep = "_")
+    beta_i <- paste("beta", tail(unlist(strsplit(i, "_")), 1), sep = "_")
+    if(is.null(X[[i]])) 
+    {
+      assign(X_i, matrix(0,N,1))
+      if(exists(beta_i)) message("Value of ", beta_i, " is being ignored.")
+      assign(beta_i, 0)
+    } else {
+      if(!exists(beta_i)) 
+        stop("par_models specifies covariates of ", i, " but pars$", beta_i, " is missing.")
+      if(length(get(beta_i)) != ncol(X[[i]]))
+        stop("length(", beta_i, ") (", length(get(beta_i)), ") does not equal ncol(", X_i, ") (", ncol(get(X_i)), ").")
+      assign(X_i, X[[i]])
+    }
+  }
+  
   # Annual recruitment and SAR anomalies
-  if(life_cycle == "SS")
+  if(life_cycle == "SS") 
   {
     eta_year_R <- rep(NA, max(year))
     eta_year_R[1] <- rnorm(1, 0, sigma_year_R/sqrt(1 - rho_R^2))
     for(i in 2:length(eta_year_R))
       eta_year_R[i] <- rnorm(1, rho_R*eta_year_R[i-1], sigma_year_R)
   }
-  if(life_cycle == "SMS")
+  if(life_cycle == "SMS") 
   {
     eta_year_M <- rep(NA, max(year))
     eta_year_M[1] <- rnorm(1, 0, sigma_year_M/sqrt(1 - rho_M^2))
     eta_year_MS <- rep(NA, max(year))
     eta_year_MS[1] <- rnorm(1, 0, sigma_year_MS/sqrt(1 - rho_MS^2))
-    for(i in 2:max(year))
+    for(i in 2:max(year)) 
     {
       eta_year_M[i] <- rnorm(1, rho_M*eta_year_M[i-1], sigma_year_M)
       eta_year_MS[i] <- rnorm(1, rho_MS*eta_year_MS[i-1], sigma_year_MS) 
@@ -195,7 +215,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   S_W <- vector("numeric",N)     # true total wild spawners
   S_H <- vector("numeric",N)     # true total hatchery spawners
   S <- vector("numeric",N)       # true total spawners
-  if(life_cycle=="SMS")
+  if(life_cycle=="SMS") 
   {
     M_hat <- vector("numeric",N) # expected smolts
     M0 <- vector("numeric",N)    # true smolts by brood year
