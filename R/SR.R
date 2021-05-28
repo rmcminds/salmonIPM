@@ -7,7 +7,7 @@
 #'   Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
 #' @param alpha A numeric vector, matrix or data frame of intrinsic productivity 
 #'   (i.e., recruits per spawner at zero spawner density; slope of the spawner-recruit 
-#'   function at the origin.).
+#'   function at the origin).
 #' @param Rmax A numeric vector, matrix or data frame of maximum recruitment per unit 
 #'   of habitat (length or area). This corresponds to the asymptote of the Beverton-Holt 
 #'   or the mode of the Ricker.
@@ -18,7 +18,10 @@
 #' @param R_per_S Logical indicating whether to return recruits per spawner rather than
 #'   recruits (the default). 
 #'   
-#' @details The `salmonIPM` package uses a nonstandard parameterization of the Ricker
+#' @return A vector, matrix or data frame, depending on the argument types, containing
+#'   either recruits or recruits per spawner.
+#'   
+#' @details The **salmonIPM** package uses a nonstandard parameterization of the Ricker
 #'   model by the maximum recruitment `Rmax`. This is typically better identified by
 #'   data than the carrying capacity or per capita density dependence, and it 
 #'   facilitates a common interpretation and priors with the Beverton-Holt.

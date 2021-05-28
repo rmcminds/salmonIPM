@@ -13,7 +13,7 @@ Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also ac
 
 \item{alpha}{A numeric vector, matrix or data frame of intrinsic productivity
 (i.e., recruits per spawner at zero spawner density; slope of the spawner-recruit
-function at the origin.).}
+function at the origin).}
 
 \item{Rmax}{A numeric vector, matrix or data frame of maximum recruitment per unit
 of habitat (length or area). This corresponds to the asymptote of the Beverton-Holt
@@ -28,11 +28,15 @@ in which case \code{Rmax} is in units of abundance rather than density.}
 \item{R_per_S}{Logical indicating whether to return recruits per spawner rather than
 recruits (the default).}
 }
+\value{
+A vector, matrix or data frame, depending on the argument types, containing
+either recruits or recruits per spawner.
+}
 \description{
 Compute recruitment given spawner abundance, a spawner-recruit function and parameters.
 }
 \details{
-The \code{salmonIPM} package uses a nonstandard parameterization of the Ricker
+The \strong{salmonIPM} package uses a nonstandard parameterization of the Ricker
 model by the maximum recruitment \code{Rmax}. This is typically better identified by
 data than the carrying capacity or per capita density dependence, and it
 facilitates a common interpretation and priors with the Beverton-Holt.\tabular{rl}{

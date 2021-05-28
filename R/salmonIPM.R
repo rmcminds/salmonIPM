@@ -15,12 +15,12 @@
 #' @param pool_pops Logical defaulting to `TRUE`, indicating whether or not
 #'   to treat the different populations as hierarchical rather than
 #'   fixed/independent.
-#' @param stan_model Character string giving the name of the **salmonIPM** model being
-#'   fit (`.stan` filetype extension is not included). A more concise alternative to
-#'   specifying `model`, `life_cycle`, and `pool_pops` (and will override those arguments).
-#' @param SR_fun One of `"exp"` (density independent discrete exponential), 
-#'   `"BH"` (Beverton-Holt,the default), or `"Ricker"`, indicating which 
-#'   spawner-recruit function to fit.
+#' @param stan_model Character string specifying the **salmonIPM** model to be
+#'   fit. A more concise alternative to specifying `model`, `life_cycle`, and `pool_pops` 
+#'   (and will override those arguments).
+#' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
+#'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which spawner-recruit
+#'   function to fit. Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in the model
 #' specified by `stan_model` that accepts covariates (see Details for available
@@ -201,14 +201,10 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                       ...)
 {
   if(is.null(stan_model)) 
-  {
     stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
-  } else {
-    mlp <- strsplit(stan_model, "_")[[1]]
-    model <- mlp[1]
-    life_cycle <- mlp[2]
-    pool_pops <- mlp[3]
-  }
+  if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
+  if(SR_fun == "ricker") SR_fun <- "Ricker"
+  
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, 
                    par_models = par_models, scale = scale, 
                    ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 

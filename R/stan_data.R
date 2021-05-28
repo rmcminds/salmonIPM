@@ -5,7 +5,11 @@
 #' problems (e.g., checking the numeric coding of populations and years or the 
 #' replacement values for `NA`s) or for plotting.
 #' 
+#' @param stan_model Character string specifying the **salmonIPM** model to be fit.
 #' @inheritParams salmonIPM
+#'
+#' @return A named list that is passed to `[rstan::sampling()]` as the `data`
+#'   argument used when fitting **salmonIPM** models.
 #'
 #' @examples
 #' # Simulate data for a multi-population spawner-to-spawner model
@@ -27,9 +31,6 @@
 #' 
 #' # Prepare simulated data for Stan
 #' dat <- stan_data("IPM_SS_pp", fish_data = sim_out$sim_dat)
-#'
-#' @return A named list that is passed to `[rstan::sampling()]` as the `data`
-#'   argument used when fitting `salmonIPM` models.
 #'
 #' @export
 

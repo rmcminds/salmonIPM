@@ -1,15 +1,43 @@
 #' Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.
+#' 
+#' This function is mostly used internally, but may occasionally be called directly 
+#' to help diagnose sampling problems or for simulation testing.
 #'
-#' @inheritParams salmonIPM
+#' @param stan_model Character string specifying the **salmonIPM** model to be fit.
 #' @param data Named list of input data for fitting either an IPM or
 #'   run-reconstruction spawner-recruit model in [Stan](http://mc-stan.org), 
 #'   as returned by [stan_data()].
 #' @param chains A positive integer specifying the number of Markov chains.
 #'
-#' @importFrom stats aggregate na.omit
+#' @return A named list with starting values for the parameters and states in
+#'   the model that is passed to `[rstan::sampling()]` as the `init` argument to be
+#'   used when fitting **salmonIPM** models.
 #'
-#' @return A list with initial starting values for the parameters and states in
-#'   the model.
+#' @examples
+#' # Simulate data for a multi-population spawner-to-spawner model
+#' set.seed(1234)
+#' N_pop <- 10
+#' N_year <- 20
+#' N <- N_pop*N_year
+#' 
+#' pars <- list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5, 
+#'              rho_alphaRmax = 0.3, rho_R = 0.7, sigma_year_R = 0.5, sigma_R = 0.3, 
+#'              tau = 0.5, mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = c(0.1, 0.2), 
+#'              R_pop_p = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2), S_init_K = 0.7)
+#' 
+#' fd <- data.frame(pop = rep(1:N_pop, each = N_year), year = rep(1:N_year, N_pop),
+#'                  A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
+#'                  n_age_obs = 50, n_HW_obs = 0)
+#' 
+#' sim_out <- simIPM(pars = pars, fish_data = fd, N_age = 3, max_age = 5)
+#' 
+#' # Prepare simulated data for Stan
+#' dat <- stan_data("IPM_SS_pp", fish_data = sim_out$sim_dat)
+#' 
+#' # Generate inits for 3 chains
+#' inits <- stan_init("IPM_SS_pp", data = dat, chains = 3)
+#'
+#' @importFrom stats aggregate na.omit
 #'
 #' @export
 stan_init <- function(stan_model, data, chains = 1) 

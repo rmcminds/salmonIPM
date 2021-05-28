@@ -21,13 +21,11 @@ stan_data(
 )
 }
 \arguments{
-\item{stan_model}{Character string giving the name of the \strong{salmonIPM} model being
-fit (\code{.stan} filetype extension is not included). A more concise alternative to
-specifying \code{model}, \code{life_cycle}, and \code{pool_pops} (and will override those arguments).}
+\item{stan_model}{Character string specifying the \strong{salmonIPM} model to be fit.}
 
-\item{SR_fun}{One of \code{"exp"} (density independent discrete exponential),
-\code{"BH"} (Beverton-Holt,the default), or \code{"Ricker"}, indicating which
-spawner-recruit function to fit.}
+\item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
+\code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
+function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
@@ -159,7 +157,7 @@ and upstream, respectively.
 }
 \value{
 A named list that is passed to \verb{[rstan::sampling()]} as the \code{data}
-argument used when fitting \code{salmonIPM} models.
+argument used when fitting \strong{salmonIPM} models.
 }
 \description{
 This function is mostly used internally, but may occasionally be useful for diagnosing
