@@ -1,10 +1,35 @@
-#' Assemble input data for integrated or run-reconstruction spawner-recruit
+#' Prepare input data for integrated or run-reconstruction spawner-recruit
 #' models.
+#' 
+#' This function is mostly used internally, but may occasionally be useful for diagnosing
+#' problems (e.g., checking the numeric coding of populations and years or the 
+#' replacement values for `NA`s) or for plotting.
+#' 
+#' @examples
+#' # Simulate data for a multi-population spawner-to-spawner model
+#' set.seed(1234)
+#' N_pop <- 10
+#' N_year <- 20
+#' N <- N_pop*N_year
+#' 
+#' pars <- list(mu_alpha = 2, sigma_alpha = 0.5, mu_Rmax = 5, sigma_Rmax = 0.5, 
+#'             rho_alphaRmax = 0.3, rho_R = 0.7, sigma_year_R = 0.5, sigma_R = 0.3, 
+#'             tau = 0.5, mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = c(0.1, 0.2), 
+#'             R_pop_p = diag(2), sigma_p = c(0.5, 0.5), R_p = diag(2), S_init_K = 0.7)
+#' 
+#' fd <- data.frame(pop = rep(1:N_pop, each = N_year), year = rep(1:N_year, N_pop),
+#'                  A = 1, p_HOS = 0, F_rate = rbeta(N,7,3), B_rate = 0,
+#'                  n_age_obs = 50, n_HW_obs = 0)
+#' 
+#' sim_out <- simIPM(pars = pars, fish_data = fd, N_age = 3, max_age = 5)
+#' 
+#' # Prepare simulated data for Stan
+#' dat <- stan_data("IPM_SS_pp", fish_data = sim_out$sim_dat)
 #'
 #' @inheritParams salmonIPM
 #'
-#' @return A named list that can be passed to `stan` as the `data`
-#'   argument.
+#' @return A named list that is passed to `[rstan::sampling()]` as the `data`
+#'   argument used when fitting `salmonIPM` models.
 #'
 #' @export
 
@@ -24,6 +49,8 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   N <- nrow(fish_data)
   pop <- as.numeric(factor(pop))
   year <- as.numeric(factor(year))
+  if(any(unlist(tapply(year, pop, diff)) != 1))
+    stop("Non-consecutive years not allowed in fish_data")
   n_age_obs <- as.matrix(fish_data[, grep("n_age", names(fish_data))])
   n_age_obs <- replace(n_age_obs, is.na(n_age_obs), 0)
   fit_p_HOS <- as.logical(fit_p_HOS)
@@ -39,9 +66,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   } else {
     max_age <- max(as.numeric(substring(names(fish_data)[grep("n_age", names(fish_data))], 6, 6)))
   }
-  
-  if(any(unlist(tapply(year, pop, diff)) != 1))
-    stop("Non-consecutive years not allowed in fish_data")
   
   for(i in c("pop","year","A","fit_p_HOS","B_take_obs"))
     if(any(is.na(fish_data[,i])))
