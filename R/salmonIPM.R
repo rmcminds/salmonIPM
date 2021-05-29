@@ -47,7 +47,7 @@
 #' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
 #' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
 #' age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
-#' in a smolt age [x] ocean age contingency table, the cell frequencies are conditioned
+#' in a `smolt age x ocean age` contingency table, the cell frequencies are conditioned
 #' on the column totals. 
 #' @param fish_data Data frame that includes the following `colnames`, in
 #'   no particular order except where noted: 
@@ -222,7 +222,7 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   
   fit <- rstan::sampling(stanmodels[[stan_model]],
                          data = dat, 
-                         init = stan_init(stan_model = stan_model, dat = dat, chains = chains), 
+                         init = stan_init(stan_model = stan_model, data = dat, chains = chains), 
                          pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 

@@ -40,13 +40,19 @@
 #' Rmax <- 1000
 #' S <- 500
 #' 
-#' SR(alpha = alpha, Rmax = Rmax, S = S) # default is Beverton-Holt
-#' SR(alpha = alpha, Rmax = Rmax, S = 1e6) # approximately Rmax
-#' SR(alpha = alpha, Rmax = Rmax, S = S, A = 0.1) # scale Rmax by habitat area
-#' SR(SR_fun = "exp", alpha = alpha, Rmax = Rmax, S = S) # discrete exponential ignores Rmax
-#' SR(alpha = rep(alpha, 10), Rmax = rep(Rmax, 10), S = matrix(S, 10, 4)) # vectorization with recycling
-#' SR(alpha = alpha, Rmax = Rmax, S = S, R_per_S = TRUE) # return recruits per spawner
-#' 
+#' # default is Beverton-Holt
+#' SR(alpha = alpha, Rmax = Rmax, S = S) 
+#' # approximately Rmax
+#' SR(alpha = alpha, Rmax = Rmax, S = 1e6) 
+#' # scale Rmax by habitat area
+#' SR(alpha = alpha, Rmax = Rmax, S = S, A = 0.1) 
+#' # discrete exponential ignores Rmax
+#' SR(SR_fun = "exp", alpha = alpha, Rmax = Rmax, S = S) 
+#' # vectorization with recycling
+#' SR(alpha = rep(alpha, 10), Rmax = rep(Rmax, 10), S = matrix(S, 10, 4)) 
+#' # return recruits per spawner
+#' SR(alpha = alpha, Rmax = Rmax, S = S, R_per_S = TRUE) 
+#' # plot Ricker and show Rmax
 #' curve(SR(SR_fun = "Ricker", alpha = alpha, Rmax = Rmax, S = x), from = 0, to = 2000,
 #'       xlab = "Spawners", ylab = "Recruits", main = "Ricker")
 #' abline(h = Rmax, lty = 2)

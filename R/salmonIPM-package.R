@@ -5,8 +5,11 @@
 #' @aliases salmonIPM-package
 #' @useDynLib salmonIPM, .registration = TRUE
 #' @import methods
+#' @import stats
 #' @import Rcpp
+#' @importFrom utils capture.output head tail
 #' @importFrom rstan sampling
+#' @importFrom MASS mvrnorm
 #' @keywords internal
 #'
 #' @references

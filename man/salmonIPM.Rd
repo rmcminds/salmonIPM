@@ -93,7 +93,7 @@ whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} 
 on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
 from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
 age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
-in a smolt age \link{x} ocean age contingency table, the cell frequencies are conditioned
+in a \verb{smolt age x ocean age} contingency table, the cell frequencies are conditioned
 on the column totals.}
 
 \item{fish_data}{Data frame that includes the following \code{colnames}, in

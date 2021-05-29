@@ -3,3 +3,4 @@
 ^.*script.R$
 ^docs.*$
 ^Read-and-delete-me
+^.travis.yml

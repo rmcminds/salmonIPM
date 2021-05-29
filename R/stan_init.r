@@ -37,8 +37,6 @@
 #' # Generate inits for 3 chains
 #' inits <- stan_init("IPM_SS_pp", data = dat, chains = 3)
 #'
-#' @importFrom stats aggregate na.omit
-#'
 #' @export
 stan_init <- function(stan_model, data, chains = 1) 
 {

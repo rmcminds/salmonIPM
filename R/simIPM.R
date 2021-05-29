@@ -95,8 +95,6 @@
 #' 
 #' @seealso [salmonIPM()] for fitting models
 #'
-#' @importFrom stats rbinom rlnorm rmultinom rnorm runif
-#'
 #' @export
 
 simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL, 
