@@ -132,7 +132,7 @@
 #' giving the annual prior means and SDs of logit survival downstream, at sea, 
 #' and upstream, respectively.
 #' @param init A list of named lists of initial values to be passed to
-#'   [rstan::stan()]. If `NULL`, initial values will be automatically
+#'   [rstan::sampling()]. If `NULL`, initial values will be automatically
 #'   generated from the supplied data using [stan_init()].
 #' @param pars Vector of character strings specifying parameters to monitor.
 #'   If NULL, default values are used. If a non-default value is supplied, the
@@ -212,6 +212,9 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                    fecundity_data = fecundity_data, prior_data = prior_data, 
                    conditionGRonMS = conditionGRonMS)
   
+  if(is.null(init))
+     init <- stan_init(stan_model = stan_model, data = dat, chains = chains)
+
   if(is.null(pars)) 
   {
     pars <- stan_pars(stan_model)
@@ -220,10 +223,8 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   }
   if(log_lik) pars <- c(pars, "LL")
   
-  fit <- rstan::sampling(stanmodels[[stan_model]],
-                         data = dat, 
-                         init = stan_init(stan_model = stan_model, data = dat, chains = chains), 
-                         pars = pars,
+  fit <- rstan::sampling(stanmodels[[stan_model]], 
+                         data = dat, init = init, pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 
                          ...)

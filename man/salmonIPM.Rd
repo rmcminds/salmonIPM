@@ -191,7 +191,7 @@ and upstream, respectively.
 }}
 
 \item{init}{A list of named lists of initial values to be passed to
-\code{\link[rstan:stan]{rstan::stan()}}. If \code{NULL}, initial values will be automatically
+\code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. If \code{NULL}, initial values will be automatically
 generated from the supplied data using \code{\link[=stan_init]{stan_init()}}.}
 
 \item{pars}{Vector of character strings specifying parameters to monitor.
