@@ -12,10 +12,9 @@ par_model_matrix(par_models, scale = TRUE, fish_data)
 that accepts covariates and \verb{t1 ... tK} are terms involving variables in
 \code{fish_data}; see \code{\link[=salmonIPM]{salmonIPM()}} for details.}
 
-\item{scale}{Logical indicating whether the main effects in model matrices
+\item{scale}{Logical indicating whether the terms in model matrices
 constructed from \code{fish_data} using the formulas in \code{par_models} should be scaled to have
-column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).
-Interactions are computed from centered and (possibly) scaled predictors.}
+column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
 
 \item{fish_data}{See \code{\link[=salmonIPM]{salmonIPM()}}. In particular, the columns \code{...} may be used on
 the right-hand side of formulas in \code{par_models}.}

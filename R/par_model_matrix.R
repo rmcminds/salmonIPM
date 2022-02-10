@@ -4,10 +4,9 @@
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in a `salmonIPM` model
 #' that accepts covariates and `t1 ... tK` are terms involving variables in
 #' `fish_data`; see [salmonIPM()] for details.
-#' @param scale  Logical indicating whether the main effects in model matrices 
+#' @param scale  Logical indicating whether the terms in model matrices 
 #' constructed from `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`).
-#' Interactions are computed from centered and (possibly) scaled predictors.
 #' @param fish_data See [salmonIPM()]. In particular, the columns `...` may be used on
 #' the right-hand side of formulas in `par_models`.
 #' 
@@ -24,8 +23,8 @@ par_model_matrix <- function(par_models, scale = TRUE, fish_data)
     stopifnot(attr(terms(f), "response") == 1) # formulas must be 2-sided
     ff <- update(f, NULL ~ . - 1) # remove intercept
     mf <- model.frame(ff, data = fish_data, na.action = na.fail) # no missing covariates
-    mf <- as.data.frame(scale(mf, scale = scale))
     mm <- model.matrix(ff, data = mf) 
+    mm <- scale(mm, scale = scale)
     return(mm)
   })
   names(X) <- lapply(par_models, function(f) all.vars(f)[1]) # names are responses
