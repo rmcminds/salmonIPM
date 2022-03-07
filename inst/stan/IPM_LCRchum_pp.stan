@@ -293,7 +293,7 @@ transformed parameters {
         q_F_a[a] = q_F_init[ii];
       }
     }
-    
+
     // catch and broodstock removal and translocations
     S_W_a = S_W_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
     S_W[i] = sum(S_W_a);
@@ -305,8 +305,8 @@ transformed parameters {
     // Density-independent egg production from brood year i
     // weighted by age structure and sex ratio 
     // discounted for proportion of non-green (not fully fecund) females
-    if(is_nan(q[i,]*mu_E*q_F[i]*S[i]))
-      print("i = ", i, "  q[i,] = ", q[i,], "  q_F[i] = ", q_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
+    // if(is_nan(q[i,]*mu_E*q_F[i]*S[i]))
+    //   print("i = ", i, " S_W_a = ", S_W_a, "  q[i,] = ", q[i,], "  q_F[i] = ", q_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
     E_hat[i] = q[i,] * mu_E * q_F[i] * (p_G_obs[i] + delta_NG * p_NG_obs[i]) * S[i];
 
     // Smolt production from brood year i
