@@ -1,7 +1,7 @@
 # Test spawner-spawner IPM with simulated data
 
 library(salmonIPM)
-options(device=windows)
+options(mc.cores = parallel::detectCores(logical = FALSE))
 
 
 #===========================================================================
@@ -25,11 +25,6 @@ fd <- data.frame(pop = rep(1:N_pop, each = N_year), year = rep(1:N_year, N_pop),
                  n_age_obs = 50, n_HW_obs = 0, x = runif(N))
 
 sim_out <- simIPM(pars = pars, par_models = list(R ~ x), fish_data = fd, N_age = 3, max_age = 5)
-
-no_age_data <- 1:N_year
-sim_out$sim_dat[no_age_data,c("n_age3_obs","n_age4_obs","n_age5_obs")] <- 0
-which_S_NA <- sample(N, round(N/5))
-sim_out$sim_dat$S_obs[which_S_NA] <- NA
 
 
 #===========================================================================
