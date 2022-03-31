@@ -5,21 +5,22 @@
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`. 
 #'   Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
-#' @param alpha A numeric vector, matrix or data frame of intrinsic productivity 
-#'   (i.e., recruits per spawner at zero spawner density; slope of the spawner-recruit 
-#'   function at the origin).
-#' @param Rmax A numeric vector, matrix or data frame of maximum recruitment per unit 
-#'   of habitat (length or area). This corresponds to the asymptote of the Beverton-Holt 
-#'   or the mode of the Ricker.
-#' @param S A numeric vector, matrix or data frame of spawner abundance.
-#' @param A A numeric vector, matrix or data frame of spawning habitat size 
-#'   (either stream length or area), used to standardize `Rmax`. The default is 1, 
-#'   in which case `Rmax` is in units of abundance rather than density.
+#' @param alpha A numeric vector, matrix, data frame or `[posterior::rvar()]` of 
+#'   intrinsic productivity (i.e., recruits per spawner at zero spawner density; 
+#'   slope of the spawner-recruit function at the origin).
+#' @param Rmax A numeric vector, matrix, data frame or `[posterior::rvar()]` of 
+#'   maximum recruitment per unit of habitat (length or area). This corresponds to 
+#'   the asymptote of the Beverton-Holt or the mode of the Ricker.
+#' @param S A numeric vector, matrix, data frame or `[posterior::rvar()]` of 
+#'   spawner abundance.
+#' @param A A numeric vector, matrix, data frame or `[posterior::rvar()]` of 
+#'   spawning habitat size (either stream length or area), used to standardize `Rmax`. 
+#'   The default is 1, in which case `Rmax` is in units of abundance rather than density.
 #' @param R_per_S Logical indicating whether to return recruits per spawner rather than
 #'   recruits (the default). 
 #'   
-#' @return A vector, matrix or data frame, depending on the argument types, containing
-#'   either recruits or recruits per spawner.
+#' @return A vector, matrix, data frame or `[posterior::rvar()]`, depending on the 
+#'   argument types, containing either recruits or recruits per spawner.
 #'   
 #' @details The **salmonIPM** package uses a nonstandard parameterization of the Ricker
 #'   model by the maximum recruitment `Rmax`. This is typically better identified by
@@ -59,15 +60,16 @@
 #' 
 #' @seealso [salmonIPM()] for fitting models, [simIPM()] for simulating data
 #' 
+#' @importFrom posterior is_rvar
 #' @export
 
 SR <- function(SR_fun = "BH", alpha, Rmax, S, A = 1, R_per_S = FALSE) 
 {
   stopifnot(is.character(SR_fun))
-  stopifnot(is.numeric(alpha) | is.data.frame(alpha))
-  stopifnot(is.numeric(Rmax) | is.data.frame(Rmax))
-  stopifnot(is.numeric(S) | is.data.frame(S))
-  stopifnot(is.numeric(A) | is.data.frame(A))
+  stopifnot(is.numeric(alpha) | is.data.frame(alpha) | is_rvar(alpha))
+  stopifnot(is.numeric(Rmax) | is.data.frame(Rmax) | is_rvar(Rmax))
+  stopifnot(is.numeric(S) | is.data.frame(S) | is_rvar(S))
+  stopifnot(is.numeric(A) | is.data.frame(A) | is_rvar(S))
   
   if(is.data.frame(alpha)) alpha <- as.matrix(alpha)
   if(is.data.frame(Rmax)) alpha <- as.matrix(Rmax)

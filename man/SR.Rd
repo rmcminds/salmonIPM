@@ -11,26 +11,27 @@ SR(SR_fun = "BH", alpha, Rmax, S, A = 1, R_per_S = FALSE)
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}.
 Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
 
-\item{alpha}{A numeric vector, matrix or data frame of intrinsic productivity
-(i.e., recruits per spawner at zero spawner density; slope of the spawner-recruit
-function at the origin).}
+\item{alpha}{A numeric vector, matrix, data frame or \verb{[posterior::rvar()]} of
+intrinsic productivity (i.e., recruits per spawner at zero spawner density;
+slope of the spawner-recruit function at the origin).}
 
-\item{Rmax}{A numeric vector, matrix or data frame of maximum recruitment per unit
-of habitat (length or area). This corresponds to the asymptote of the Beverton-Holt
-or the mode of the Ricker.}
+\item{Rmax}{A numeric vector, matrix, data frame or \verb{[posterior::rvar()]} of
+maximum recruitment per unit of habitat (length or area). This corresponds to
+the asymptote of the Beverton-Holt or the mode of the Ricker.}
 
-\item{S}{A numeric vector, matrix or data frame of spawner abundance.}
+\item{S}{A numeric vector, matrix, data frame or \verb{[posterior::rvar()]} of
+spawner abundance.}
 
-\item{A}{A numeric vector, matrix or data frame of spawning habitat size
-(either stream length or area), used to standardize \code{Rmax}. The default is 1,
-in which case \code{Rmax} is in units of abundance rather than density.}
+\item{A}{A numeric vector, matrix, data frame or \verb{[posterior::rvar()]} of
+spawning habitat size (either stream length or area), used to standardize \code{Rmax}.
+The default is 1, in which case \code{Rmax} is in units of abundance rather than density.}
 
 \item{R_per_S}{Logical indicating whether to return recruits per spawner rather than
 recruits (the default).}
 }
 \value{
-A vector, matrix or data frame, depending on the argument types, containing
-either recruits or recruits per spawner.
+A vector, matrix, data frame or \verb{[posterior::rvar()]}, depending on the
+argument types, containing either recruits or recruits per spawner.
 }
 \description{
 Compute recruitment given spawner abundance, a spawner-recruit function and parameters.

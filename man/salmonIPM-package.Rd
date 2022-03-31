@@ -6,10 +6,7 @@
 \alias{_PACKAGE}
 \title{The 'salmonIPM' package.}
 \description{
-A hierarchical Bayesian model of salmon population dynamics. It
-    estimates historical run reconstructions based on adult abdundance, harvest,
-    age structure, and possible external drivers. It also computes forecasts of
-    future run sizes, by year and age.
+A hierarchical Bayesian model of salmon population dynamics. It estimates historical run reconstructions based on adult abdundance, harvest, age structure, and possible external drivers. It also computes forecasts of future run sizes, by year and age.
 }
 \references{
 Stan Development Team (2020). RStan: the R interface to Stan. R package version 2.19.3. https://mc-stan.org
