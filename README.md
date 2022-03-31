@@ -24,4 +24,4 @@ CXX14FLAGS += -mtune=native -O3 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse
 PKG_CPPFLAGS += -DUSE_STANC3 
 ```
 
-For more information on how to  `MAKEVARS`, see the "Configuring C++ Toolchain" section of the [RStan Getting Started](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) vignette for your operating system.
+For more information on how to create, locate, and edit `MAKEVARS`, see the "Configuring C++ Toolchain" section of the [RStan Getting Started](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) vignette for your operating system.
