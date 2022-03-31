@@ -4,7 +4,7 @@ This is the development repo for **salmonIPM**, an R package for fitting integra
 
 ## Installation
 
-You can install the current version from GitHub using `devtools`. Because the repo is private for the time being, it is necessary to generate a personal access token (PAT) and pass it to `install_github()` as described [here](https://stackoverflow.com/questions/21171142/how-to-install-r-package-from-private-repo-using-devtools-install-github).
+You can install the current version from GitHub using **devtools**. Because the repo is private for the time being, it is necessary to generate a personal access token (PAT) and pass it to `install_github()` as described [here](https://stackoverflow.com/questions/21171142/how-to-install-r-package-from-private-repo-using-devtools-install-github).
 
 ```{r }
 if(!require("devtools")) {
