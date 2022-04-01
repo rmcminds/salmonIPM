@@ -8,7 +8,7 @@
 #' @param stan_model Character string specifying the **salmonIPM** model to be fit.
 #' @inheritParams salmonIPM
 #'
-#' @return A named list that is passed to `[rstan::sampling()]` as the `data`
+#' @return A named list that is passed to [rstan::sampling()] as the `data`
 #'   argument used when fitting **salmonIPM** models.
 #'
 #' @examples

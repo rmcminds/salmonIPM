@@ -10,7 +10,7 @@
 #' @param chains A positive integer specifying the number of Markov chains.
 #'
 #' @return A named list with starting values for the parameters and states in
-#'   the model that is passed to `[rstan::sampling()]` as the `init` argument to be
+#'   the model that is passed to [rstan::sampling()] as the `init` argument to be
 #'   used when fitting **salmonIPM** models.
 #'
 #' @examples
