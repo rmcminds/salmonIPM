@@ -156,7 +156,7 @@ and upstream, respectively.
 }}
 }
 \value{
-A named list that is passed to \verb{[rstan::sampling()]} as the \code{data}
+A named list that is passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} as the \code{data}
 argument used when fitting \strong{salmonIPM} models.
 }
 \description{

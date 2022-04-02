@@ -17,7 +17,7 @@ as returned by \code{\link[=stan_data]{stan_data()}}.}
 }
 \value{
 A named list with starting values for the parameters and states in
-the model that is passed to \verb{[rstan::sampling()]} as the \code{init} argument to be
+the model that is passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} as the \code{init} argument to be
 used when fitting \strong{salmonIPM} models.
 }
 \description{

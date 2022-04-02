@@ -8,6 +8,7 @@
 #' @import stats
 #' @import Rcpp
 #' @importFrom utils capture.output head tail
+#' @importFrom RcppParallel RcppParallelLibs CxxFlags
 #' @importFrom rstan sampling
 #' @importFrom MASS mvrnorm
 #' @keywords internal
