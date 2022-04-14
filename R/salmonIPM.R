@@ -42,17 +42,17 @@
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
 #'   of all ages.
-#' @param conditionGRonMS If `stan_model == "IPM_SMaS_np`, logical indicating
+#' @param conditionGRonMS If `stan_model == "IPM_SMaS_np"`, logical indicating
 #' whether the Gilbert-Rich age frequencies `n_GRage_obs` in `fish_data` are conditioned
 #' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
 #' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
 #' age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; i.e.,
 #' in a `smolt age x ocean age` contingency table, the cell frequencies are conditioned
 #' on the column totals. 
-#' @param fish_data Data frame that includes the following `colnames`, in
-#'   no particular order except where noted: 
-#'   * `pop`  Numeric or character population ID.  
-#'   * `year`  Numeric variable giving the year the fish spawned (i.e., the brood year).
+#' @param fish_data Data frame with each row corresponding to a unique population `x` year,
+#'   that includes the following `colnames` in no particular order except where noted: 
+#'   * `pop`  Numeric, character or factor population ID.  
+#'   * `year`  Numeric or integer giving the year the fish spawned (i.e., the brood year).
 #'   * `A`  Spawning habitat size (either stream length or area). 
 #'   Will often be time-invariant within a population, but need not be.   
 #'   * `M_obs`  Total number of wild-origin smolts (only needed for models including smolt stage).  

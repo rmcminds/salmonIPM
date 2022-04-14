@@ -69,10 +69,10 @@ transformed data {
   real mu_Mmax = quantile(log(M_obs[which_M_obs]), 0.9); // prior log-mean of Mmax
   real sigma_Mmax = sd(log(M_obs[which_M_obs])); // prior log-SD of mu_Mmax
   vector[max_Mage*N_pop] mu_M_init;        // prior mean of total smolt abundance in years 1:max_Mage
-  real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:max_Mage
+  real sigma_M_init = sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:max_Mage
   matrix[N_Mage,max_Mage*N_pop] mu_q_M_init; // prior counts of smolt age distns in years 1:max_Mage
   vector[max_MSage*N_pop] mu_S_init;       // prior mean of total spawner abundance in years 1:max_MSage
-  real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_MSage
+  real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_MSage
   matrix[N_GRage,max_MSage*N_pop] mu_q_GR_init; // prior counts of wild spawner age distns in years 1:max_MSage
   
   pop_year_indx[1] = 1;

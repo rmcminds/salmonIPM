@@ -53,7 +53,7 @@ contribute toward reproduction. This could be used, e.g., to exclude jacks
 from the effective breeding population. The default is to include spawners
 of all ages.}
 
-\item{conditionGRonMS}{If \verb{stan_model == "IPM_SMaS_np}, logical indicating
+\item{conditionGRonMS}{If \code{stan_model == "IPM_SMaS_np"}, logical indicating
 whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
 on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
 from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
@@ -61,11 +61,11 @@ age is arbitrary, but smolt (FW) age is randomly sampled within each ocean age; 
 in a \verb{smolt age x ocean age} contingency table, the cell frequencies are conditioned
 on the column totals.}
 
-\item{fish_data}{Data frame that includes the following \code{colnames}, in
-no particular order except where noted:
+\item{fish_data}{Data frame with each row corresponding to a unique population \code{x} year,
+that includes the following \code{colnames} in no particular order except where noted:
 \itemize{
-\item \code{pop}  Numeric or character population ID.
-\item \code{year}  Numeric variable giving the year the fish spawned (i.e., the brood year).
+\item \code{pop}  Numeric, character or factor population ID.
+\item \code{year}  Numeric or integer giving the year the fish spawned (i.e., the brood year).
 \item \code{A}  Spawning habitat size (either stream length or area).
 Will often be time-invariant within a population, but need not be.
 \item \code{M_obs}  Total number of wild-origin smolts (only needed for models including smolt stage).

@@ -8,9 +8,6 @@
 #' @param life_cycle Character string indicating which life-cycle model to
 #'   simulate. Currently available options are spawner-to-spawner (`"SS"`,
 #'   the default) or spawner-smolt-spawner (`"SMS"`).
-#' @param SR_fun One of `"exp"` (density independent discrete exponential), 
-#'   `"BH"` (Beverton-Holt,the default), or `"Ricker"`, 
-#'   indicating which spawner-recruit function to simulate.
 #' @param pars Named list of (hyper)parameters to be used for simulations:
 #'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
 #'   * `beta_alpha`  Vector of regression coefficients for log intrinsic productivity.
@@ -62,33 +59,27 @@
 #'   * `tau_M`  If `life_cycle == "SMS"`, smolt observation error SD.
 #'   * `tau_S`  Spawner observation error SD.
 #'   * `S_init_K`  Mean of initial spawning population size as a fraction of carrying capacity. 
-#' @param par_models  Optional list of two-sided formulas of the form 
-#' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in `pars` 
-#'  with corresponding regression coefficients `beta_theta` (which must be specified in
-#'  `pars`) and `t1 ... tK` are terms involving variables in `fish_data`. 
-#'  Standard formula syntax such as `:` and `*` may be used; see [stats::formula()].
-#' @param scale  Logical indicating whether the model matrices constructed from
-#' `fish_data` using the formulas in `par_models` should be scaled to have 
-#' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
 #' @param N_age Number of adult age classes.
 #' @param max_age Oldest adult age class.
-#' @param ages If `life_cycle != "SS"`, a named list giving the fixed ages
+#' @param ages For multi-stage models, a named list giving the fixed ages
 #'   in years of all subadult life stages.
 #' @param fish_data Data frame with columns:
-#'   * `pop`  Population ID.
-#'   * `year`  Calendar year.
-#'   * `A`  Spawning habitat area.
+#'   * `pop`  Numeric, character or factor population ID.  
+#'   * `year`  Numeric or integer giving the year the fish spawned (i.e., the brood year).
+#'   * `A`  Spawning habitat size (either stream length or area). Will often be 
+#'   time-invariant within a population, but need not be.   
 #'   * `p_HOS`  True fraction of hatchery-origin spawners.
-#'   * `F_rate`  Fishing mortality rate.
-#'   * `B_rate`  Hatchery broodstock removal rate.
+#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
+#'   * `B_rate`  Adult hatchery broodstock removal rate.
 #'   * `n_age_obs`  Number of spawners sampled for age composition.
-#'   * `n_HW_obs`  Number of spawners sampled for hatchery/wild origin.
+#'   * `n_HW_obs`  Number of spawners sampled for hatchery / wild origin.
 #'   * `...`  Additional variables to be used as covariates.  
+#' @inheritParams salmonIPM
 #'
 #' @return A named list with elements
 #' 
-#' * `sim_dat`  A data frame containing simulated data in the structure of `fish_data` 
-#' (see [stan_data()]) appropriate for the specified `life_cycle`, ready to be passed 
+#' * `sim_dat`  A data frame containing simulated data in the structure of 
+#' (see [salmonIPM()]) appropriate for the specified `life_cycle`, ready to be passed 
 #' to [salmonIPM()].
 #' * `pars_out`  A named list of hyperparameters, group-level parameters, and states
 #' used in generating the pseudo-data.
@@ -111,10 +102,12 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   }
   
   # Assign objects
+  if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
+  if(SR_fun == "ricker") SR_fun <- "Ricker"
   for(i in 1:length(pars)) assign(names(pars)[i], pars[[i]])
   for(i in 1:ncol(fish_data)) assign(colnames(fish_data)[i], fish_data[,i])
   N <- nrow(fish_data)                  
-  N_pop <- max(fish_data$pop)             
+  N_pop <- length(unique(fish_data$pop))             
   A_pop <- tapply(A, pop, mean)
   pop <- as.numeric(factor(pop))
   year <- as.numeric(factor(year))
@@ -185,7 +178,8 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   Sigma_pop_p <-  tcrossprod(sigma_pop_p) * R_pop_p
   mu_pop_alr_p <- matrix(mvrnorm(N_pop, mu_alr_p, Sigma_pop_p), ncol = N_age - 1)
   Sigma_alr_p <- tcrossprod(sigma_p) * R_p
-  alr_p <- t(apply(mu_pop_alr_p[pop,], 1, function(x) mvrnorm(1, x, Sigma_alr_p)))
+  alr_p <- t(matrix(apply(mu_pop_alr_p[pop,,drop = FALSE], 1, 
+                          function(x) mvrnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
   exp_alr_p <- cbind(exp(alr_p), 1)
   p <- sweep(exp_alr_p, 1, rowSums(exp_alr_p), "/")
   
@@ -196,7 +190,8 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     dat_init$year[dat_init$pop==i] <- min(year[pop==i]) - (max_age:1)
   dat_init$S <- rlnorm(nrow(dat_init), log(S_init_K*K[dat_init$pop]), 
                        ifelse(life_cycle == "SS", tau, tau_S))
-  alr_p_init <- t(apply(mu_pop_alr_p[dat_init$pop,], 1, function(x) mvrnorm(1, x, Sigma_alr_p)))
+  alr_p_init <- t(matrix(apply(mu_pop_alr_p[dat_init$pop,,drop = FALSE], 1, 
+                               function(x) mvrnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
   exp_alr_p_init <- cbind(exp(alr_p_init), 1)
   p_init <- sweep(exp_alr_p_init, 1, rowSums(exp_alr_p_init), "/")
   dat_init$M0 <- switch(life_cycle, 
@@ -308,13 +303,14 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   
   # Return results
   list(
-    sim_dat = data.frame(pop = pop, A = A, year = year, 
+    sim_dat = data.frame(pop = fish_data$pop, A = A, year = fish_data$year, 
                          S_obs = S_obs, M_obs = switch(life_cycle, SS = NA, SMS = M_obs),
                          n_age_obs, n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
                          fit_p_HOS = p_HOS > 0, B_take_obs = B_take, F_rate = F_rate,
                          fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]),
     pars_out = c(pars, 
-                 list(S_W_a = S_W_a, alpha = alpha, 
+                 list(M = switch(life_cycle, SS = NULL, SMS = M), 
+                      S = S, S_W_a = S_W_a, alpha = alpha, 
                       Rmax = switch(life_cycle, SS = Rmax, SMS = NULL), 
                       eta_year_R = switch(life_cycle, SS = eta_year_R, SMS = NULL),
                       R_hat = switch(life_cycle, SS = R_hat, SMS = NULL), 

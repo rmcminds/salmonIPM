@@ -21,9 +21,9 @@ simIPM(
 simulate. Currently available options are spawner-to-spawner (\code{"SS"},
 the default) or spawner-smolt-spawner (\code{"SMS"}).}
 
-\item{SR_fun}{One of \code{"exp"} (density independent discrete exponential),
-\code{"BH"} (Beverton-Holt,the default), or \code{"Ricker"},
-indicating which spawner-recruit function to simulate.}
+\item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
+\code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
+function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
 
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
 \itemize{
@@ -80,10 +80,11 @@ otherwise will be ignored and may be omitted.
 }}
 
 \item{par_models}{Optional list of two-sided formulas of the form
-\code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in \code{pars}
-with corresponding regression coefficients \code{beta_theta} (which must be specified in
-\code{pars}) and \verb{t1 ... tK} are terms involving variables in \code{fish_data}.
-Standard formula syntax such as \code{:} and \code{*} may be used; see \code{\link[stats:formula]{stats::formula()}}.}
+\code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
+specified by \code{stan_model} that accepts covariates (see Details for available
+model-response combinations) and \verb{t1 ... tK} are terms involving variables in
+\code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
+see \code{\link[stats:formula]{stats::formula()}}.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
@@ -93,27 +94,28 @@ column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\c
 
 \item{max_age}{Oldest adult age class.}
 
-\item{ages}{If \code{life_cycle != "SS"}, a named list giving the fixed ages
+\item{ages}{For multi-stage models, a named list giving the fixed ages
 in years of all subadult life stages.}
 
 \item{fish_data}{Data frame with columns:
 \itemize{
-\item \code{pop}  Population ID.
-\item \code{year}  Calendar year.
-\item \code{A}  Spawning habitat area.
+\item \code{pop}  Numeric, character or factor population ID.
+\item \code{year}  Numeric or integer giving the year the fish spawned (i.e., the brood year).
+\item \code{A}  Spawning habitat size (either stream length or area). Will often be
+time-invariant within a population, but need not be.
 \item \code{p_HOS}  True fraction of hatchery-origin spawners.
-\item \code{F_rate}  Fishing mortality rate.
-\item \code{B_rate}  Hatchery broodstock removal rate.
+\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
+\item \code{B_rate}  Adult hatchery broodstock removal rate.
 \item \code{n_age_obs}  Number of spawners sampled for age composition.
-\item \code{n_HW_obs}  Number of spawners sampled for hatchery/wild origin.
+\item \code{n_HW_obs}  Number of spawners sampled for hatchery / wild origin.
 \item \code{...}  Additional variables to be used as covariates.
 }}
 }
 \value{
 A named list with elements
 \itemize{
-\item \code{sim_dat}  A data frame containing simulated data in the structure of \code{fish_data}
-(see \code{\link[=stan_data]{stan_data()}}) appropriate for the specified \code{life_cycle}, ready to be passed
+\item \code{sim_dat}  A data frame containing simulated data in the structure of
+(see \code{\link[=salmonIPM]{salmonIPM()}}) appropriate for the specified \code{life_cycle}, ready to be passed
 to \code{\link[=salmonIPM]{salmonIPM()}}.
 \item \code{pars_out}  A named list of hyperparameters, group-level parameters, and states
 used in generating the pseudo-data.
