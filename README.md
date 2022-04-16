@@ -28,3 +28,5 @@ cat("\nCXX14FLAGS += -Wno-unused -Wno-ignored-attributes -Wno-sign-compare -Wno-
 ```
 
 These additional compiler flags will suppress a [large number of unnecessary warnings](https://github.com/kaskr/adcomp/issues/321) that would otherwise be printed to the console, and that in some cases may actually cause compilation to be slow or even to [fail](https://discourse.mc-stan.org/t/pkgbuild-compile-dll-on-previously-working-rstantools-based-package-fails-with-file-too-big-error/21938). The last line forces the compiler to use the most recent version of the Stan language, which is not yet implemented in the current CRAN version of **rstan** as of 2022-04-15 and without which some **salmonIPM** models will not work.
+
+We also recommend using multiple cores if available when installing **salmonIPM** to reduce compilation time. You can do this by setting the R environment variable `MAKEFLAGS = -jX`, where `X` is the number of cores. This can be done interactively using `Sys.setenv()` or it can be specified in `.Renviron`.
