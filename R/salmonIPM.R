@@ -197,8 +197,8 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                       ages = NULL, age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
-                      chains, iter, warmup, thin = 1, cores = parallel::detectCores() - 1, 
-                      ...)
+                      chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
+                      cores = parallel::detectCores() - 1, ...)
 {
   if(is.null(stan_model)) 
     stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
