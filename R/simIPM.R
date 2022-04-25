@@ -97,7 +97,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     Sigma_alphaRmax <- diag(c(sigma_alpha, sigma_Rmax)^2)
     Sigma_alphaRmax[1,2] <- rho_alphaRmax*sigma_alpha*sigma_Rmax
     Sigma_alphaRmax[2,1] <- Sigma_alphaRmax[1,2]
-    alphaRmax <- matrix(exp(mvrnorm(N_pop, c(mu_alpha, mu_Rmax), Sigma_alphaRmax)), ncol = 2)
+    alphaRmax <- matrix(exp(mvrnorm(N_pop, c(mu_alpha, mu_Rmax), Sigma_alphaRmax)), N_pop, 2)
     return(list(alpha = alphaRmax[,1], Rmax = alphaRmax[,2]))
   }
   
@@ -303,11 +303,13 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   
   # Return results
   list(
-    sim_dat = data.frame(pop = fish_data$pop, A = A, year = fish_data$year, 
-                         S_obs = S_obs, M_obs = switch(life_cycle, SS = NA, SMS = M_obs),
-                         n_age_obs, n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
-                         fit_p_HOS = p_HOS > 0, B_take_obs = B_take, F_rate = F_rate,
-                         fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]),
+    sim_dat = data.frame(
+      pop = fish_data$pop, A = A, year = fish_data$year, 
+      cbind(S_obs = S_obs, M_obs = switch(life_cycle, SS = NULL, SMS = M_obs)),
+      n_age_obs, n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
+      fit_p_HOS = p_HOS > 0, B_take_obs = B_take, F_rate = F_rate,
+      fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]
+    ),
     pars_out = c(pars, 
                  list(M = switch(life_cycle, SS = NULL, SMS = M), 
                       S = S, S_W_a = S_W_a, alpha = alpha, 
@@ -321,6 +323,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
                       M = switch(life_cycle, SS = NULL, SMS = M),
                       eta_year_MS = switch(life_cycle, SS = NULL, SMS = eta_year_MS),
                       s_MS = switch(life_cycle, SS = NULL, SMS = s_MS),
-                      mu_pop_alr_p = mu_pop_alr_p, alr_p = alr_p, p = p, p_HOS = p_HOS))
+                      mu_pop_alr_p = mu_pop_alr_p, alr_p = alr_p, p = p, 
+                      B_rate = B_rate, p_HOS = p_HOS))
   )
 }
