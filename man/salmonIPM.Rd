@@ -25,9 +25,9 @@ salmonIPM(
   pars = NULL,
   include = TRUE,
   log_lik = FALSE,
-  chains,
-  iter,
-  warmup,
+  chains = 4,
+  iter = 2000,
+  warmup = floor(iter/2),
   thin = 1,
   cores = parallel::detectCores() - 1,
   ...

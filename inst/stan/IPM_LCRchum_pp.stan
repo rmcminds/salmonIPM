@@ -1,8 +1,9 @@
 functions {
-#include /include/SR.stan
-#include /include/pexp_lpdf.stan
-#include /include/mat_lmult.stan
-#include /include/quantile.stan
+  #include /include/SR.stan
+  #include /include/pexp_lpdf.stan
+  #include /include/mat_lmult.stan
+  #include /include/quantile.stan
+  #include /include/posdiff.stan
 }
 
 data {
@@ -78,6 +79,8 @@ transformed data {
   int<lower=0> n_MF_obs[N];                // total sample sizes for sex frequencies
   vector<lower=0,upper=1>[N] p_NG_obs = 1 - p_G_obs; // proportion non-green females
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
+  vector<lower=0>[N] B_take_all;           // broodstock take of wild adults in all cases
+  int<lower=0,upper=1> use_B[N];           // binary indicator of B_take_obs > 0
   real mu_mu_Mmax = quantile(log(M_obs[which_M_obs]/1000), 0.9); // prior mean of mu_Mmax (thousands of smolts)
   real sigma_mu_Mmax = sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
   real mu_M_init = mean(log(M_obs[which_M_obs]));  // prior log-mean of smolt abundance in years 1:smolt_age
@@ -90,6 +93,10 @@ transformed data {
   for(i in 1:N) n_MF_obs[i] = n_M_obs[i] + n_F_obs[i];
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
   for(i in 1:N_E) a_E[i] = age_E[i] - min_age + 1;
+  
+  B_take_all = rep_vector(0,N);
+  B_take_all[which_B] = B_take_obs;
+  for(i in 1:N) use_B[i] = B_take_all[i] > 0;
   
   pop_year_indx[1] = 1;
   for(i in 1:N)
@@ -161,9 +168,8 @@ parameters {
   vector[N_pop] zeta_pop_F;              // population mean logit proportion female (Z-scores)
   real<lower=0> sigma_F;                 // annual SD of logit proportion female
   vector[N] zeta_F;                      // logit proportion females by outmigration year (Z-scores)
-  // H/W composition and removals
+  // H/W composition
   vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
-  vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
   // initial states and observation error
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
   vector<lower=0>[max_ocean_age*N_pop] S_init; // true total spawner abundance in years 1:max_ocean_age
@@ -197,7 +203,7 @@ transformed parameters {
   vector<lower=0>[N] S_W;                // true total wild spawner abundance
   vector[N] S_H;                         // true total hatchery spawner abundance (can == 0)
   vector<lower=0>[N] S;                  // true total spawner abundance
-  vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
+  vector<lower=0>[N] B_take_adj;         // adjusted broodstock take
   // spawner age structure
   row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort age distributions
   matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio age distributions
@@ -210,11 +216,10 @@ transformed parameters {
   vector<lower=0>[N] tau_M;              // smolt observation error SDs
   vector<lower=0>[N] tau_S;              // spawner observation error SDs
 
-  // Pad p_HOS and B_rate
+  // Pad p_HOS and B_take
   p_HOS_all = rep_vector(0,N);
   p_HOS_all[which_H] = p_HOS;
-  B_rate_all = rep_vector(0,N);
-  B_rate_all[which_B] = B_rate;
+  B_take_adj = rep_vector(0,N);
   
   // Population-specific egg-smolt survival and capacity terms (independent)
   {
@@ -295,7 +300,13 @@ transformed parameters {
     }
 
     // catch and broodstock removal and translocations
-    S_W_a = S_W_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_W_a[1:N_age] = S_W_a[1:N_age]*(1 - F_rate[i]);
+    if(use_B[i])
+    {
+      real S_B = sum(S_W_a[1:N_age]);
+      B_take_adj[i] = posdiff(S_B, B_take_all[i], 0.01);
+      S_W_a[1:N_age] = S_W_a[1:N_age]*(1 - B_take_adj[i]/S_B);
+    }
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i] + S_add_obs[i];
@@ -324,7 +335,6 @@ transformed parameters {
 }
 
 model {
-  vector[N_B] log_B_take; // log of true broodstock take when B_take_obs > 0
   vector[N] M_downstream; // total smolts including upstream populations 
   
   // Priors
@@ -376,8 +386,8 @@ model {
   q_F_init ~ beta(3,3);        // mildly regularize initial states toward 0.5
 
   // removals
-  log_B_take = log(S_W[which_B]) + logit(B_rate); // B_take = S_W*B_rate/(1 - B_rate)
-  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
+  // penalty to force obs and adj broodstock take to match
+  B_take_obs ~ lognormal(log(B_take_adj[which_B]), 0.01); 
 
   // initial states
   // (accounting for amalgamation of q_init to q_orphan)
