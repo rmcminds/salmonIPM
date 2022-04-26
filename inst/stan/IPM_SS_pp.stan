@@ -67,8 +67,8 @@ transformed data {
   vector<lower=0>[N] B_take_all;           // broodstock take of wild adults in all cases
   int<lower=0,upper=1> use_B[N];           // binary indicator of B_take_obs > 0
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
-  real mu_mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior mean of mu_Rmax
-  real sigma_mu_Rmax = sd(log(S_obs[which_S_obs])); // prior SD of mu_Rmax
+  real mu_mu_Rmax = quantile(log(S_obs[which_S_obs] ./ A[which_S_obs]), 0.9); // prior log-mean of Rmax
+  real sigma_mu_Rmax = sd(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-SD of Rmax
   vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of wild spawner age distns in years 1:max_age

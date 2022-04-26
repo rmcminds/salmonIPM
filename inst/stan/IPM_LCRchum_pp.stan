@@ -81,7 +81,7 @@ transformed data {
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   vector<lower=0>[N] B_take_all;           // broodstock take of wild adults in all cases
   int<lower=0,upper=1> use_B[N];           // binary indicator of B_take_obs > 0
-  real mu_mu_Mmax = quantile(log(M_obs[which_M_obs]/1000), 0.9); // prior mean of mu_Mmax (thousands of smolts)
+  real mu_mu_Mmax = quantile(log(1e-3*M_obs[which_M_obs] ./ A[which_M_obs]), 0.9); // prior mean of mu_Mmax (thousands of smolts)
   real sigma_mu_Mmax = sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
   real mu_M_init = mean(log(M_obs[which_M_obs]));  // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age

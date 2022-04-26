@@ -48,8 +48,8 @@ transformed data {
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   vector<lower=0>[N] B_take_all;           // broodstock take of wild adults in all cases
   int<lower=0,upper=1> use_B[N];           // binary indicator of B_take_obs > 0
-  real mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior log-mean of Rmax
-  real sigma_Rmax = sd(log(S_obs[which_S_obs])); // prior log-SD of Rmax
+  real mu_Rmax = quantile(log(S_obs[which_S_obs] ./ A[which_S_obs]), 0.9); // prior log-mean of Rmax
+  real sigma_Rmax = sd(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-SD of Rmax
   vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of wild spawner age distns in years 1:max_age
