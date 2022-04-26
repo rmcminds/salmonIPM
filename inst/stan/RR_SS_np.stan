@@ -25,8 +25,8 @@ transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not incl fwd simulations
   int<lower=2> ages[N_age];                // adult ages
-  real mu_Rmax = quantile(log(R_obs[which_fit]), 0.9);  // prior log-mean of Rmax
-  real sigma_Rmax = sd(log(R_obs[which_fit]));  // prior log-SD of Rmax
+  real mu_Rmax = quantile(log(R_obs[which_fit] ./ A[which_fit]), 0.9);  // prior log-mean of Rmax
+  real sigma_Rmax = sd(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-SD of Rmax
   
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
