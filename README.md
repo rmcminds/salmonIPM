@@ -17,8 +17,7 @@ devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT")
 If you have not already installed **rstan**, you should make sure your build tools are optimally configured before installing **salmonIPM** by following the instructions in the "Configuring C++ Toolchain" section of the [RStan Getting Started](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) vignette for your operating system. *After* creating or editing `Makevars` or `Makevars.win` as described there, we strongly recommend running the following code snippet before installing **salmonIPM**:
 
 ```r
-M <- file.path(Sys.getenv("HOME"), ".R", 
-               ifelse(.Platform$OS.type == "windows", "Makevars.win", "Makevars"))
+M <- file.path(Sys.getenv("HOME"), ".R", ifelse(.Platform$OS.type == "windows", "Makevars.win", "Makevars"))
 rstan_makevars <- readLines(M)
 cat("\nCXX14FLAGS += -Wno-unused -Wno-ignored-attributes -Wno-sign-compare -Wno-deprecated-declarations",
     "CXX14FLAGS += -Wno-attributes -Wno-parentheses -Wno-unknown-pragmas -Wno-infinite-recursion",
