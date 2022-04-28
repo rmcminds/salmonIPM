@@ -19,11 +19,12 @@ If you have not already installed **rstan**, you should make sure your build too
 ```r
 M <- file.path(Sys.getenv("HOME"), ".R", 
                ifelse(.Platform$OS.type == "windows", "Makevars.win", "Makevars"))
+rstan_makevars <- readLines(M)
 cat("\nCXX14FLAGS += -Wno-unused -Wno-ignored-attributes -Wno-sign-compare -Wno-deprecated-declarations",
     "CXX14FLAGS += -Wno-attributes -Wno-parentheses -Wno-unknown-pragmas -Wno-infinite-recursion",
     "CXX14FLAGS += -mfpmath=sse -mstackrealign",
     "PKG_CPPFLAGS += -DUSE_STANC3",
-    readLines(M),
+    rstan_makevars,
     file = M, sep = "\n", append = FALSE)
 ```
 
