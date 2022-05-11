@@ -11,18 +11,18 @@ SR(SR_fun = "BH", alpha, Rmax, S, A = 1, R_per_S = FALSE)
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}.
 Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
 
-\item{alpha}{A numeric vector, matrix, data frame or \code{\link[posterior:rvar]{posterior::rvar()}} of
-intrinsic productivity (i.e., recruits per spawner at zero spawner density;
-slope of the spawner-recruit function at the origin).}
+\item{alpha}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+or \code{draws} of #'   intrinsic productivity (i.e., recruits per spawner at zero spawner
+density; slope of the spawner-recruit function at the origin).}
 
-\item{Rmax}{A numeric vector, matrix, data frame or \code{\link[posterior:rvar]{posterior::rvar()}} of
+\item{Rmax}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
 maximum recruitment per unit of habitat (length or area). This corresponds to
 the asymptote of the Beverton-Holt or the mode of the Ricker.}
 
-\item{S}{A numeric vector, matrix, data frame or \code{\link[posterior:rvar]{posterior::rvar()}} of
+\item{S}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
 spawner abundance.}
 
-\item{A}{A numeric vector, matrix, data frame or \code{\link[posterior:rvar]{posterior::rvar()}} of
+\item{A}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
 spawning habitat size (either stream length or area), used to standardize \code{Rmax}.
 The default is 1, in which case \code{Rmax} is in units of abundance rather than density.}
 
@@ -30,7 +30,7 @@ The default is 1, in which case \code{Rmax} is in units of abundance rather than
 recruits (the default).}
 }
 \value{
-A vector, matrix, data frame or \code{\link[posterior:rvar]{posterior::rvar()}}, depending on the
+A vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}} or \code{draws}, depending on the
 argument types, containing either recruits or recruits per spawner.
 }
 \description{
