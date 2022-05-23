@@ -317,9 +317,9 @@ stan_init <- function(stan_model, data, chains = 1)
              beta_M = array(rnorm(K_M, 0, 0.5/apply(abs(X_M), 2, max))),
              rho_M = runif(1, 0.1, 0.7),
              sigma_year_M = runif(1, 0.1, 0.5),
-             zeta_year_M = rnorm(max(year), 0, 0.1),
+             zeta_year_M = rnorm(N_year, 0, 0.1),
              sigma_M = runif(1, 0.1, 0.5),
-             zeta_M = as.vector(scale(log(M_obs)))*0.1,
+             zeta_M = rep(0,N), #as.vector(scale(log(M_obs)))*0.1,
              # SAR
              mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
              beta_MS = array(rnorm(K_MS, 0, 0.5/apply(abs(X_MS), 2, max))),
@@ -327,7 +327,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_year_MS = runif(1, 0.05, 2), 
              zeta_year_MS = as.vector(tapply(scale(qlogis(s_MS)), year, mean)),
              sigma_MS = runif(1, 0.5, 1),
-             zeta_MS = as.vector(scale(qlogis(s_MS))),
+             zeta_MS = rep(0,N), #as.vector(scale(qlogis(s_MS))),
              # spawner age structure and sex ratio
              mu_p = colMeans(p_obs),
              sigma_pop_p = runif(N_age - 1, 0.5, 1),
@@ -344,7 +344,8 @@ stan_init <- function(stan_model, data, chains = 1)
              B_rate = B_rate,
              # initial states, observation error
              M_init = rep(median(M_obs), smolt_age*N_pop),
-             S_init = rep(median(S_obs_noNA), (max_age - smolt_age)*N_pop),
+             S_init = rep(tapply(S_obs_noNA, pop, max), each = max_age - smolt_age),
+             # S_init = rep(tapply(S_obs_noNA, pop, median), each = max_age - smolt_age),
              q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = TRUE),
              mu_tau_M = runif(1, 0, 0.5),
              sigma_tau_M = runif(1, 0, 0.5),

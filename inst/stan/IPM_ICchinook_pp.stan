@@ -6,7 +6,6 @@ functions {
   #include /include/rsub.stan
   #include /include/which.stan
   #include /include/mat_lmult.stan
-  #include /include/posdiff.stan
 }
 
 data {
@@ -83,8 +82,6 @@ transformed data {
   vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
   vector[N] ones_N = rep_vector(1,N);     // for elementwise inverse of rowsums 
   int<lower=0> n_HW_obs[N_H];             // total sample sizes for H/W frequencies
-  vector<lower=0>[N] B_take_all;           // broodstock take of wild adults in all cases
-  int<lower=0,upper=1> use_B[N];           // binary indicator of B_take_obs > 0
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
   vector[max_age*N_pop] mu_S_init;        // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
@@ -97,10 +94,6 @@ transformed data {
     ages[a] = smolt_age + a;
   }
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
-  
-  B_take_all = rep_vector(0,N);
-  B_take_all[which_B] = B_take_obs;
-  for(i in 1:N) use_B[i] = B_take_all[i] > 0;
   
   pop_year_indx[1] = 1;
   for(i in 1:N)
@@ -180,8 +173,9 @@ parameters {
   vector<lower=0>[N_age-1] sigma_p;      // SD of log-ratio cohort age distributions
   cholesky_factor_corr[N_age-1] L_p;     // Cholesky factor of correlation matrix of cohort log-ratio age distributions
   matrix[N,N_age-1] zeta_p;              // log-ratio cohort age distributions (Z-scores)
-  // H/W composition
-  vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
+  // H/W composition, removals
+  vector<lower=0,upper=1>[N_H] p_HOS;     // true p_HOS in years which_H
+  vector<lower=0,upper=1>[N_B] B_rate;    // true broodstock take rate when B_take > 0
   // initial spawners, observation error
   vector<lower=0>[max_ocean_age*N_pop] S_init; // true total spawner abundance in years 1:max_ocean_age
   simplex[N_age] q_init[max_ocean_age*N_pop];  // true wild spawner age distributions in years 1:max_ocean_age
@@ -215,7 +209,7 @@ transformed parameters {
   vector[N] S_H;                         // true total hatchery spawner abundance (can == 0)
   vector<lower=0>[N] S;                  // true total spawner abundance
   vector[N] p_HOS_all;                   // true p_HOS in all years (can == 0)
-  vector<lower=0>[N] B_take_adj;         // adjusted broodstock take
+  vector<lower=0,upper=1>[N] B_rate_all; // true broodstock take rate in all years
   
   // Multivariate Matt trick for [log(alpha), log(Mmax)]
   {
@@ -253,10 +247,11 @@ transformed parameters {
   SAR = inv_logit(mu_SAR + mat_lmult(X_SAR,beta_SAR) + epsilon_SAR - mean(epsilon_SAR[1:N_year]));
   s_U = inv_logit(mu_U + mat_lmult(X_U,beta_U) + epsilon_U - mean(epsilon_U[1:N_year]));
 
-  // Pad p_HOS and B_take
+  // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
   p_HOS_all[which_H] = p_HOS;
-  B_take_adj = rep_vector(0,N);
+  B_rate_all = rep_vector(0,N);
+  B_rate_all[which_B] = B_rate;
   
   // Multivariate Matt trick for age vectors
   mu_alr_p = to_row_vector(log(head(mu_p, N_age-1)) - log(mu_p[N_age]));
@@ -312,13 +307,7 @@ transformed parameters {
     }
     
     // catch and broodstock removal (assumes no take of age 1)
-    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i]);
-    if(use_B[i])
-    {
-      real S_B = sum(S_W_a[2:N_age]);
-      B_take_adj[i] = posdiff(S_B, B_take_all[i], 0.01);
-      S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - B_take_adj[i]/S_B);
-    }
+    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
@@ -331,6 +320,8 @@ transformed parameters {
 }
 
 model {
+  vector[N_B] log_B_take; // log of true broodstock take when B_take_obs > 0
+  
   // Priors
   
   // smolt production
@@ -387,8 +378,8 @@ model {
   to_vector(zeta_p) ~ std_normal();
   
   // removals
-  // penalty to force obs and adj broodstock take to match
-  B_take_obs ~ lognormal(log(B_take_adj[which_B]), 0.01); 
+  log_B_take = log(S_W[which_B]) + log1m(q[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q[,1])*B_rate/(1 - B_rate)
+  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
   
   // initial spawners and wild spawner age distribution
   // (accounting for amalgamation of q_init to q_orphan)
