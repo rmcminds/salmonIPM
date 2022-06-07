@@ -78,7 +78,7 @@ transformed data {
   int<lower=0> n_MF_obs[N];                // total sample sizes for sex frequencies
   vector<lower=0,upper=1>[N] p_NG_obs = 1 - p_G_obs; // proportion non-green females
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  real mu_mu_Mmax = max(log(1e-3*M_obs[which_M_obs] ./ A[which_M_obs])); // prior mean of mu_Mmax (thousands of smolts)
+  real mu_mu_Mmax = max(log(M_obs[which_M_obs] ./ A[which_M_obs])); // prior mean of mu_Mmax
   real sigma_mu_Mmax = sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
   real mu_M_init = mean(log(M_obs[which_M_obs]));  // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = 2*sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
@@ -129,7 +129,7 @@ parameters {
   vector[K_psi] beta_psi;                // regression coefs for logit psi
   real<lower=0> sigma_psi;               // hyper-SD logit density-independent egg-smolt survival
   vector[N_pop] zeta_psi;                // logit density-independent egg-smolt survival (Z-scores)
-  real mu_Mmax;                          // hyper-mean log maximum smolt recruitment (thousands)
+  real mu_Mmax;                          // hyper-mean log maximum smolt recruitment
   vector[K_Mmax] beta_Mmax;              // regression coefs for log Mmax
   real<lower=0> sigma_Mmax;              // among-pop hyper-SD of log maximum smolt recruitment
   vector[N_pop] zeta_Mmax;               // log maximum smolt recruitment (Z-scores)
@@ -183,8 +183,8 @@ transformed parameters {
   // spawner-smolt productivity
   vector<lower=0,upper=1>[N_pop] psi;    // pop-specific density-independent egg-smolt survival 
   vector<lower=0,upper=1>[N] psi_Xbeta;  // egg-smolt survival including covariate effects
-  vector<lower=0>[N_pop] Mmax;           // pop-specific maximum smolt recruitment (thousands)
-  vector<lower=0>[N] Mmax_Xbeta;         // maximum recruitment including covariate effects (thousands)
+  vector<lower=0>[N_pop] Mmax;           // pop-specific maximum smolt recruitment
+  vector<lower=0>[N] Mmax_Xbeta;         // maximum recruitment including covariate effects
   vector[N_year] eta_year_M;             // annual spawner-smolt productivity anomalies
   vector<lower=0>[N] M_hat;              // expected smolt abundance by brood year
   vector<lower=0>[N] M0;                 // true smolt abundance by brood year
@@ -311,7 +311,7 @@ transformed parameters {
 
     // Smolt production from brood year i
     // Density-dependent egg-to-smolt survival
-    M_hat[i] = SR(SR_fun, psi_Xbeta[i], Mmax_Xbeta[i]*1e3, E_hat[i], A[i]);
+    M_hat[i] = SR(SR_fun, psi_Xbeta[i], Mmax_Xbeta[i], E_hat[i], A[i]);
     M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + dot_product(X_M[i], beta_M) + sigma_M*zeta_M[i]);
   }
   
@@ -336,7 +336,7 @@ model {
   // spawner-smolt productivity
   beta_psi ~ normal(0,5);
   sigma_psi ~ normal(0,1);        // mildly regularize long right tail
-  mu_Mmax ~ normal(mu_mu_Mmax, sigma_mu_Mmax); // units of Mmax: thousands of smolts
+  mu_Mmax ~ normal(mu_mu_Mmax, sigma_mu_Mmax);
   beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   zeta_psi ~ std_normal();        // logit(psi) ~ N(logit(mu_psi), sigma_psi)
