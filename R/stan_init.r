@@ -89,6 +89,7 @@ stan_init <- function(stan_model, data, chains = 1)
   }
   
   if(life_cycle %in% c("SMS","LCRchum")) {
+    mu_mu_Mmax <- max(log(M_obs/A), na.rm = TRUE)
     if(N_M_obs < N)
       M_obs[-which_M_obs] <- median(M_obs[which_M_obs])
     s_MS <- pmin(S_obs_noNA/M_obs, 0.9)
@@ -310,7 +311,7 @@ stan_init <- function(stan_model, data, chains = 1)
              beta_psi = array(rnorm(K_psi, 0, 0.5/apply(abs(X_psi), 2, max))),
              sigma_psi = runif(1, 0.1, 0.5),
              zeta_psi = rnorm(N_pop, 0, 1),
-             mu_Mmax = rnorm(1, mean(log(S_obs[which_S_obs])), 3),
+             mu_Mmax = rnorm(1, mu_mu_Mmax, 3),
              beta_Mmax = array(rnorm(K_Mmax, 0, 0.5/apply(abs(X_Mmax), 2, max))),
              sigma_Mmax = runif(1, 0.5, 2),
              zeta_Mmax = rnorm(N_pop, 0, 1),
@@ -343,9 +344,8 @@ stan_init <- function(stan_model, data, chains = 1)
              p_HOS = p_HOS_obs,
              B_rate = B_rate,
              # initial states, observation error
-             M_init = rep(median(M_obs), smolt_age*N_pop),
-             S_init = rep(tapply(S_obs_noNA, pop, max), each = max_age - smolt_age),
-             # S_init = rep(tapply(S_obs_noNA, pop, median), each = max_age - smolt_age),
+             M_init = rep(tapply(M_obs, pop, median), each = smolt_age),
+             S_init = rep(tapply(S_obs_noNA, pop, median), each = max_age - smolt_age),
              q_init = matrix(colMeans(q_obs), (max_age - smolt_age)*N_pop, N_age, byrow = TRUE),
              mu_tau_M = runif(1, 0, 0.5),
              sigma_tau_M = runif(1, 0, 0.5),

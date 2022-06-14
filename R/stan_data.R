@@ -58,6 +58,9 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   n_W_obs = as.vector(replace(n_W_obs[fit_p_HOS], is.na(n_W_obs[fit_p_HOS]), 0))
   n_H_obs = as.vector(replace(n_H_obs[fit_p_HOS], is.na(n_H_obs[fit_p_HOS]), 0))
   
+  if(life_cycle != "SMaS" & any(colSums(n_age_obs) == 0))
+    stop("n_age_obs contains at least one age class that was never observed")
+  
   if(life_cycle == "SMaS") {
     if(!is.logical(conditionGRonMS))
       stop("conditionGRonMS must be TRUE or FALSE for model 'IPM_SMaS_np'")
