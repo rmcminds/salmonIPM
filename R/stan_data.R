@@ -54,9 +54,17 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     stop("Non-consecutive years not allowed in fish_data")
   n_age_obs <- as.matrix(fish_data[, grep("n_age", names(fish_data))])
   n_age_obs <- replace(n_age_obs, is.na(n_age_obs), 0)
-  fit_p_HOS <- as.logical(fit_p_HOS)
-  n_W_obs = as.vector(replace(n_W_obs[fit_p_HOS], is.na(n_W_obs[fit_p_HOS]), 0))
-  n_H_obs = as.vector(replace(n_H_obs[fit_p_HOS], is.na(n_H_obs[fit_p_HOS]), 0))
+  
+  if(life_cycle != "LCRchum") {
+    fit_p_HOS <- as.logical(fit_p_HOS)
+    n_W_obs = as.vector(replace(n_W_obs[fit_p_HOS], is.na(n_W_obs[fit_p_HOS]), 0))
+    n_H_obs = as.vector(replace(n_H_obs[fit_p_HOS], is.na(n_H_obs[fit_p_HOS]), 0))
+  }
+  
+  if(life_cycle == "LCRchum") {
+    n_origin_obs <- as.matrix(fish_data[, grep("n_origin", names(fish_data))])
+    n_origin_obs <- replace(n_origin_obs, is.na(n_origin_obs), 0)
+  }
   
   if(life_cycle != "SMaS" & any(colSums(n_age_obs) == 0))
     stop("n_age_obs contains at least one age class that was never observed")
@@ -72,7 +80,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   }
   
   for(i in c("pop","year","A","fit_p_HOS","B_take_obs"))
-    if(any(is.na(fish_data[,i])))
+    if(!is.null(fish_data[,i]) & any(is.na(fish_data[,i])))
       stop("Missing values not allowed in fish_data$", i)
   
   if(any(is.na(fish_data_fwd)))
@@ -95,11 +103,13 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     stop("Conflicting NAs in age frequency data in rows ", 
          which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))))
   
-  if(any(is.na(n_W_obs) != is.na(n_H_obs)))
+  if(life_cycle != "LCRchum") {
+    if(any(is.na(n_W_obs) != is.na(n_H_obs)))
     stop("Conflicting NAs in n_W_obs and n_H_obs in rows ", 
          which(is.na(n_W_obs) != is.na(n_H_obs)))
+  }
   
-  if(stan_model == "IPM_LCRchum_pp") {
+  if(life_cycle == "LCRchum") {
     if(any(is.na(n_M_obs) != is.na(n_F_obs)))
       stop("Conflicting NAs in n_M_obs and n_F_obs in rows ", 
            which(is.na(n_M_obs) != is.na(n_F_obs)))
@@ -139,7 +149,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                                             levels = levels(factor(c(fish_data$year, fish_data_fwd$year)))))
   }
   
-  if(stan_model == "IPM_ICchinook_pp") {
+  if(life_cycle == "ICchinook") {
     if(is.null(prior_data)) {
       stop("Priors for survival must be specified for model IPM_ICchinook_pp")
     } else {
@@ -359,11 +369,11 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     n_M_obs = as.vector(n_M_obs),
                     n_F_obs = as.vector(n_F_obs),
                     p_G_obs = as.vector(p_G_obs),
-                    # H/W composition
-                    N_H = sum(fit_p_HOS),
-                    which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = n_W_obs,
-                    n_H_obs = n_H_obs
+                    # origin composition
+                    N_H_pop = length(unique(grep("Hatchery", fish_data$pop, value = TRUE))),
+                    which_H_pop = sapply(strsplit(colnames(n_origin_obs), "_"), 
+                                         function(x) as.numeric(substring(x[2], 7)))[-1],
+                    n_origin_obs = n_origin_obs
                 ),
                 
                 IPM_ICchinook = list(

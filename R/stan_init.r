@@ -51,6 +51,13 @@ stan_init <- function(stan_model, data, chains = 1)
   N_pop <- max(pop)
   N_year <- max(year)
   
+  if(life_cycle == "LCRchum") {
+    n_H_obs <- rowSums(n_origin_obs[,-1])
+    which_H <- which(n_H_obs > 0)
+    n_H_obs <- n_H_obs[which_H]
+    n_W_obs <- n_origin_obs[which_H,1]
+  }
+  
   if(model == "IPM" & life_cycle != "SMaS") {
     S_obs_noNA <- S_obs
     S_obs[-which_S_obs] <- NA
@@ -119,7 +126,7 @@ stan_init <- function(stan_model, data, chains = 1)
     B_rate[is.na(B_rate)] <- 0.1
   }
   
-  if(stan_model == "IPM_LCRchum_pp") {
+  if(life_cycle == "LCRchum") {
     E <- S_obs_noNA*0.5*mean(fecundity_data$E_obs)
     s_EM <- pmin(M_obs/E, 0.9)
   }
@@ -341,7 +348,6 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_F = runif(1, 0.1, 0.5),
              zeta_F = rnorm(N, 0, 0.3),
              # H/W composition, removals
-             p_HOS = p_HOS_obs,
              B_rate = B_rate,
              # initial states, observation error
              M_init = rep(tapply(M_obs, pop, median), each = smolt_age),
