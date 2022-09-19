@@ -74,6 +74,7 @@ stan_init <- function(stan_model, data, chains = 1)
     # ignore repeat spawner age structure in run reconstruction 
     n_age_obs <- n_MRage_obs[, grep("_M_", colnames(n_MRage_obs))]
     colnames(n_age_obs) <- gsub("_R", "", gsub("_M", "", gsub("MR", "", colnames(n_age_obs))))
+    n_MRage_obs[, colSums(n_MRage_obs) == 0] <- 0.1
     n_MRage_M_obs <- pmax(rowSums(n_age_obs), 0.1)
     n_MRage_R_obs <- pmax(rowSums(n_MRage_obs[, grep("_R_", colnames(n_MRage_obs))]), 0.1)
     s_SS <- pmin(n_MRage_R_obs/n_MRage_M_obs, 0.9)
