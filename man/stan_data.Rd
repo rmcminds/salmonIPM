@@ -90,6 +90,14 @@ for spawner abundance.
 observed spawner age frequencies (i.e., counts), where \verb{[min_age]} and
 \verb{[max_age]} are the numeral age in years (total, not ocean age) of the
 youngest and oldest spawners, respectively.
+\item \verb{n_MRage[min_age]_M_obs...n_MRage[max_age + 1]_R_obs}  If
+\code{life_cycle == "SSsthd"}, multiple columns of observed spawner age frequencies
+(i.e., counts), where \verb{[min_age]} and \verb{[max_age]} are the numeral age in years
+(total, not ocean age) of the youngest and oldest \emph{maiden} spawners, respectively.
+Contiguous maiden age columns (denoted by \verb{_M_}) are followed by an equal number of
+contiguous repeat age columns (denoted by \verb{_R_}) where each repeat age is 1 year
+greater than the corresponding maiden age. Standard \code{n_age_obs} columns are not
+required.
 \item \verb{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
 multiple columns of observed ocean age frequencies (i.e., counts),
 where \verb{[min_MSage]} and \verb{[max_MSage]} are the youngest and oldest ocean age

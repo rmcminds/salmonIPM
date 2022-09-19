@@ -5,6 +5,8 @@
 #' @param life_cycle Character string indicating which life-cycle model to fit.
 #' One of the following options (must be `"SS"` if `model == "RR"`):
 #'   * `"SS"`  Spawner-to-spawner (the default)
+#'   * `"SSsthd"` Spawner-to-spawner with iteroparity (currently only available for 
+#'   `pool_pops == FALSE`)
 #'   * `"SMS"`  Spawner-smolt-spawner
 #'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
 #'   available for `pool_pops == FALSE`)
@@ -77,6 +79,14 @@
 #'   observed spawner age frequencies (i.e., counts), where `[min_age]` and
 #'   `[max_age]` are the numeral age in years (total, not ocean age) of the
 #'   youngest and oldest spawners, respectively.  
+#'   * `n_MRage[min_age]_M_obs...n_MRage[max_age + 1]_R_obs`  If
+#'    `life_cycle == "SSsthd"`, multiple columns of observed spawner age frequencies
+#'    (i.e., counts), where `[min_age]` and `[max_age]` are the numeral age in years 
+#'    (total, not ocean age) of the youngest and oldest *maiden* spawners, respectively.
+#'    Contiguous maiden age columns (denoted by `_M_`) are followed by an equal number of 
+#'    contiguous repeat age columns (denoted by `_R_`) where each repeat age is 1 year
+#'    greater than the corresponding maiden age. Standard `n_age_obs` columns are not
+#'    required.
 #'   * `n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`, 
 #'   multiple columns of observed ocean age frequencies (i.e., counts), 
 #'   where `[min_MSage]` and `[max_MSage]` are the youngest and oldest ocean age 

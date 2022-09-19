@@ -39,7 +39,8 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL)
 {
   if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
-                        "IPM_SMaS_np","IPM_LCRchum_pp","IPM_ICchinook_pp",
+                        "IPM_SSsthd_np", "IPM_SMaS_np",
+                        "IPM_LCRchum_pp","IPM_ICchinook_pp",
                         "RR_SS_np","RR_SS_pp"))
     stop("Stan model ", stan_model, " does not exist")
   
@@ -53,6 +54,10 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   if(any(unlist(tapply(year, pop, diff)) != 1))
     stop("Non-consecutive years not allowed in fish_data")
   n_age_obs <- as.matrix(fish_data[, grep("n_age", names(fish_data))])
+  age_NA_check <- is.na(n_age_obs)
+  if(any(!rowSums(age_NA_check) %in% c(0, ncol(age_NA_check))))
+    stop("Conflicting NAs in age frequency data in rows ", 
+         which(!rowSums(age_NA_check) %in% c(0, ncol(age_NA_check))))
   n_age_obs <- replace(n_age_obs, is.na(n_age_obs), 0)
   
   if(life_cycle != "LCRchum") {
@@ -66,17 +71,19 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
     n_origin_obs <- replace(n_origin_obs, is.na(n_origin_obs), 0)
   }
   
-  if(life_cycle != "SMaS" & any(colSums(n_age_obs) == 0))
+  if(!life_cycle %in% c("SSsthd","SMaS") & any(colSums(n_age_obs) == 0))
     stop("n_age_obs contains at least one age class that was never observed")
-  
-  if(life_cycle == "SMaS") {
+
+  if(life_cycle == "SSsthd") {
+    max_age <- max(as.numeric(substring(grep("_M_", names(fish_data), value = TRUE), 8, 8)))
+  } else if(life_cycle == "SMaS") {
     if(!is.logical(conditionGRonMS))
       stop("conditionGRonMS must be TRUE or FALSE for model 'IPM_SMaS_np'")
-    max_Mage <- max(as.numeric(substring(names(fish_data)[grep("n_Mage", names(fish_data))], 7, 7)))
-    max_MSage <- max(as.numeric(substring(names(fish_data)[grep("n_MSage", names(fish_data))], 8, 8))) 
+    max_Mage <- max(as.numeric(substring(grep("n_Mage", names(fish_data), value = TRUE), 7, 7)))
+    max_MSage <- max(as.numeric(substring(grep("n_MSage", names(fish_data), value = TRUE), 8, 8))) 
     max_age <- max_Mage + max_MSage
   } else {
-    max_age <- max(as.numeric(substring(names(fish_data)[grep("n_age", names(fish_data))], 6, 6)))
+    max_age <- max(as.numeric(substring(grep("n_age", names(fish_data), value = TRUE), 6, 6)))
   }
   
   for(i in c("pop","year","A","fit_p_HOS","B_take_obs"))
@@ -86,22 +93,19 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   if(any(is.na(fish_data_fwd)))
     stop("Missing values not allowed in fish_data_fwd")
   
-  if(stan_model == "IPM_SS_pp" & is.null(age_S_obs))
-    age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
-  age_S_obs <- as.numeric(age_S_obs)
+  if(stan_model == "IPM_SS_pp") {
+    if(is.null(age_S_obs))
+      age_S_obs <- rep(1, sum(grepl("n_age", names(fish_data))))
+    age_S_obs <- as.numeric(age_S_obs)
+    
+    if(is.null(age_S_eff))
+      age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
+    age_S_eff <- as.numeric(age_S_eff)
+  }
   
-  if(stan_model == "IPM_SS_pp" & is.null(age_S_eff))
-    age_S_eff <- rep(1, sum(grepl("n_age", names(fish_data))))
-  age_S_eff <- as.numeric(age_S_eff)
-  
-  if(!life_cycle %in% c("SS","SMaS") & (any(is.na(ages)) | is.null(ages)))
+  if(!life_cycle %in% c("SS","SSsthd","SMaS") & (any(is.na(ages)) | is.null(ages)))
     stop("Multi-stage models must specify age in years for all stages.
          See ?salmonIPM(ages) for details.")
-  
-  age_NA_check <- is.na(fish_data[,grep("n_age", names(fish_data))])
-  if(any(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))))
-    stop("Conflicting NAs in age frequency data in rows ", 
-         which(!rowSums(age_NA_check) %in% c(0, nrow(age_NA_check))))
   
   if(life_cycle != "LCRchum") {
     if(any(is.na(n_W_obs) != is.na(n_H_obs)))
@@ -227,6 +231,40 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     n_W_obs = n_W_obs,
                     n_H_obs = n_H_obs
                   ),
+                
+                IPM_SSsthd = list(
+                  # info for observed data
+                  N = N,
+                  pop = pop, 
+                  year = year,
+                  # recruitment
+                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  A = A,
+                  K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
+                  X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
+                  K_Rmax = ifelse(is.null(X$Rmax), 0, ncol(X$Rmax)), 
+                  X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
+                  K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
+                  X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
+                  # fishery and hatchery removals
+                  F_rate = replace(F_rate, is.na(F_rate), 0),
+                  N_B = sum(B_take_obs > 0),
+                  which_B = as.vector(which(B_take_obs > 0)),
+                  B_take_obs = B_take_obs[B_take_obs > 0],
+                  # spawner abundance
+                  N_S_obs = sum(!is.na(S_obs)),
+                  which_S_obs = as.vector(which(!is.na(S_obs))),
+                  S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
+                  # spawner age structure [maiden | repeat]
+                  N_age = sum(grepl("n_MRage", names(fish_data)))/2,
+                  max_age = max_age,
+                  n_MRage_obs = as.matrix(fish_data[,grep("n_MRage", names(fish_data))]),
+                  # H/W composition
+                  N_H = sum(fit_p_HOS),
+                  which_H = as.vector(which(fit_p_HOS)),
+                  n_W_obs = n_W_obs,
+                  n_H_obs = n_H_obs
+                ),
                 
                 IPM_SMS = list(
                     # info for observed data
@@ -451,7 +489,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     S_NA = as.vector(as.integer(is.na(S_obs))),
                     R_NA = as.vector(as.integer(is.na(R_obs))),
                     N_age = sum(grepl("p_age", names(rr_dat))),
-                    max_age = max(as.numeric(substring(names(rr_dat)[grep("p_age", names(rr_dat))], 6, 6))),
+                    max_age = max(as.numeric(substring(grep("p_age", names(rr_dat), value = TRUE), 6, 6))),
                     p_pop_obs = as.matrix(p_pop_obs)
                   )
   )  # end switch()

@@ -41,7 +41,8 @@
 stan_init <- function(stan_model, data, chains = 1) 
 {
   if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
-                        "IPM_SMaS_np","IPM_LCRchum_pp","IPM_ICchinook_pp",
+                        "IPM_SSsthd_np", "IPM_SMaS_np",
+                        "IPM_LCRchum_pp","IPM_ICchinook_pp",
                         "RR_SS_np","RR_SS_pp"))
     stop("Stan model ", stan_model, " does not exist")
   
@@ -67,6 +68,18 @@ stan_init <- function(stan_model, data, chains = 1)
                          0.0091743119266055,0.0091743119266055,0.0091743119266055,0.0091743119266055,
                          0.0091743119266055,0.202442783082541,0.397475438447644,0.317512971130366), 
                        nrow = 3, byrow = TRUE)
+  }
+  
+  if(life_cycle == "SSsthd") {
+    # ignore repeat spawner age structure in run reconstruction 
+    n_age_obs <- n_MRage_obs[, grep("_M_", colnames(n_MRage_obs))]
+    colnames(n_age_obs) <- gsub("_R", "", gsub("_M", "", gsub("MR", "", colnames(n_age_obs))))
+    n_MRage_M_obs <- pmax(rowSums(n_age_obs), 0.1)
+    n_MRage_R_obs <- pmax(rowSums(n_MRage_obs[, grep("_R_", colnames(n_MRage_obs))]), 0.1)
+    s_SS <- pmin(n_MRage_R_obs/n_MRage_M_obs, 0.9)
+    q_MR_obs <- sweep(n_MRage_obs, 1, rowSums(n_MRage_obs), "/")
+    q_MR_obs_NA <- apply(is.na(q_MR_obs), 1, any)
+    q_MR_obs[q_MR_obs_NA,] <- rep(colMeans(na.omit(q_MR_obs)), each = sum(q_MR_obs_NA))
   }
   
   if(model == "IPM" & life_cycle != "SMaS") {
@@ -101,7 +114,7 @@ stan_init <- function(stan_model, data, chains = 1)
     p_obs <- sweep(p_obs, 1, rowSums(p_obs), "/")
     alr_p <- sweep(log(p_obs[, 1:(N_age-1), drop = FALSE]), 1, log(p_obs[, N_age]), "-")
     zeta_p <- apply(alr_p, 2, scale)
-    mu_p <- aggregate(p_obs, list(pop), mean)
+    mu_p <- aggregate(p_obs, list(pop), mean)[, -1, drop = FALSE]
     zeta_pop_p <- aggregate(alr_p, list(pop), mean)[, -1, drop = FALSE]
     zeta_pop_p <- apply(zeta_pop_p, 2, scale)
   }
@@ -200,6 +213,37 @@ stan_init <- function(stan_model, data, chains = 1)
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
              q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              tau = runif(1, 0.5, 1)
+           ),
+           
+           IPM_SSsthd_np = list(
+             # recruitment
+             alpha = array(exp(runif(N_pop, 1, 3))),
+             beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
+                                 N_pop, K_alpha, byrow = TRUE),
+             Rmax = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+             beta_Rmax = matrix(rnorm(K_Rmax*N_pop, 0, 0.5/apply(abs(X_Rmax), 2, max)), 
+                                N_pop, K_Rmax, byrow = TRUE),
+             beta_R = matrix(rnorm(K_R*N_pop, 0, 0.5/apply(abs(X_R), 2, max)), 
+                             N_pop, K_R, byrow = TRUE),
+             rho_R = array(runif(N_pop, 0.1, 0.7)),
+             sigma_R = array(runif(N_pop, 0.05, 2)), 
+             zeta_R = as.vector(scale(log(R_obs)))*0.1,
+             # kelt survival
+             mu_SS = array(plogis(rnorm(N_pop, mean(qlogis(s_SS)), 0.5))),
+             rho_SS = array(runif(N_pop, 0.1, 0.7)),
+             sigma_SS = array(runif(N_pop, 0.05, 2)),
+             zeta_SS = as.vector(scale(qlogis(s_SS))),
+             # maiden spawner age structure
+             mu_p = mu_p,
+             sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age-1),
+             zeta_p = zeta_p,
+             # H/W composition, removals
+             p_HOS = p_HOS_obs,
+             B_rate = B_rate,
+             # initial spawners, observation error
+             S_init = rep(median(S_obs_noNA), max_age*N_pop),
+             q_MR_init = matrix(colMeans(q_MR_obs), max_age*N_pop, N_age*2, byrow = TRUE),
+             tau = array(runif(N_pop, 0.5, 1))
            ),
            
            IPM_SMS_np = list(
