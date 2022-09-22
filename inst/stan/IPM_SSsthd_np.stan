@@ -159,7 +159,6 @@ transformed parameters {
     vector[N_age] alr_p; // alr(p[i,])
     row_vector[N_age] S_M_a; // true wild maiden spawners by age
     row_vector[N_age] S_R_a; // true wild repeat spawners by age
-    row_vector[N_age] S_W_a; // true wild total spawners by age
 
     // Multivariate Matt trick for within-pop, time-varying maiden age vectors
     alr_p = rep_vector(0,N_age);
@@ -183,19 +182,23 @@ transformed parameters {
 
     // Spawners and age structure
     // use initial values for orphan age classes, otherwise use process model
-    // (in year 1 all maiden and repeat classes are orphans, so use full initial age dist;
-    //  otherwise amalgamate to give maiden-only dist q_init before further amalgamation)
-    if(pop_year_indx[i] > 1 && pop_year_indx[i] <= max_age)
+    if(pop_year_indx[i] <= max_age)
     {
       ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      q_init = q_MR_init[ii][1:N_age] + q_MR_init[ii][(N_age+1):N_MRage];
-      q_orphan = append_row(sum(head(q_init, N_age - N_orphan_age + 1)), tail(q_init, N_orphan_age - 1));
+      
+      // in year 1 all maiden and repeat classes are orphans, so use full initial age dist
+      // otherwise amalgamate to give maiden-only dist q_init before further amalgamation
+      if(pop_year_indx[i] > 1)
+      {
+        q_init = q_MR_init[ii][1:N_age] + q_MR_init[ii][(N_age+1):N_MRage];
+        q_orphan = append_row(sum(head(q_init, N_age - N_orphan_age + 1)), tail(q_init, N_orphan_age - 1));
+      }
     }
 
     for(a in 1:N_age)
     {
       // Maiden spawners
-      if(pop_year_indx[i] < ages[a]) // use initial values
+      if(pop_year_indx[i] <= ages[a]) // use initial values
       {
         if(pop_year_indx[i] == 1) // use full initial age dist
           S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[ii][a];
@@ -214,9 +217,9 @@ transformed parameters {
 
     // Total spawners
     // Catch and broodstock removal (assumes no take of age 1)
-    S_W_a = S_M_a + S_R_a;
-    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-    S_W[i] = sum(S_W_a);
+    S_M_a[2:N_age] = S_M_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_R_a[2:N_age] = S_R_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_W[i] = sum(S_M_a + S_R_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
     q_MR[i,] = append_col(S_M_a, S_R_a)/S_W[i];
