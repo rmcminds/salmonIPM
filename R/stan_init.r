@@ -243,7 +243,8 @@ stan_init <- function(stan_model, data, chains = 1)
              B_rate = B_rate,
              # initial spawners, observation error
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
-             q_MR_init = matrix(colMeans(q_MR_obs), max_age*N_pop, N_age*2, byrow = TRUE),
+             q_MR_init = matrix(colMeans(q_MR_obs), N_pop, N_age*2, byrow = TRUE),
+             q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              tau = array(runif(N_pop, 0.5, 1))
            ),
            

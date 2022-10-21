@@ -50,7 +50,8 @@ transformed data {
   real sigma_Rmax = sd(log(S_obs[which_S_obs])); // prior log-SD of Rmax
   vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
-  matrix[N_MRage,max_age*N_pop] mu_q_init; // prior counts of age distributions in years 1:max_age
+  // matrix[N_MRage,max_age*N_pop] mu_q_init; // prior counts of age distributions in years 1:max_age
+  matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of maiden age distributions in years 1:max_age
   
   for(a in 1:N_age)
     ages[a] = max_age - N_age + a;
@@ -65,6 +66,24 @@ transformed data {
       pop_year_indx[i] = pop_year_indx[i-1] + 1;
   }
   
+  // for(i in 1:max_age)
+  // {
+  //   int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan maiden age classes
+  //   int N_amalg_age = N_age - N_orphan_age + 1;     // number of amalgamated maiden age classes
+  //   real aa = (i == 1 ? 1 : 0.5);                   // multiplier for prior counts
+  //   for(j in 1:N_pop)
+  //   {
+  //     int ii = (j - 1)*max_age + i; // index into S_init, q_MR_init
+  //     // S_init prior mean scales observed log-mean by fraction of orphan maiden age classes
+  //     mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
+  //     // prior on q_MR_init that implies q_orphan ~ Dir(1)
+  //     // (second stacked copy is for orphan repeat age classes in year 1,
+  //     //  otherwise the paired maiden and repeat classes are amalgamated)
+  //     mu_q_init[1:N_age,ii] = aa*append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), 
+  //                                           rep_vector(1, N_orphan_age - 1));
+  //     mu_q_init[(N_age+1):N_MRage,ii] = mu_q_init[1:N_age,ii];
+  //   }
+  // }
   for(i in 1:max_age)
   {
     int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan maiden age classes
@@ -75,10 +94,7 @@ transformed data {
       // S_init prior mean scales observed log-mean by fraction of orphan maiden age classes
       mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
       // prior on q_MR_init that implies q_orphan ~ Dir(1)
-      // (second stacked copy is for orphan repeat age classes in year 1,
-      //  otherwise the paired maiden and repeat classes are amalgamated)
-      mu_q_init[1:N_age,ii] = append_row(rep_vector(0.5/N_amalg_age, N_amalg_age), rep_vector(0.5, N_orphan_age - 1));
-      mu_q_init[(N_age+1):N_MRage,ii] = mu_q_init[1:N_age,ii];
+      mu_q_init[,ii] = append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), rep_vector(1, N_orphan_age - 1));
     }
   }
 }
@@ -108,7 +124,9 @@ parameters {
   vector<lower=0,upper=1>[N_B] B_rate;    // true broodstock take rate when B_take > 0
   // initial spawners, observation error
   vector<lower=0>[max_age*N_pop] S_init;  // initial total spawner abundance in years 1:max_age
-  simplex[N_MRage] q_MR_init[max_age*N_pop]; // initial age distribution in years 1:max_age [maiden | repeat]
+  // simplex[N_MRage] q_MR_init[max_age*N_pop]; // initial age distribution in years 1:max_age [maiden | repeat]
+  simplex[N_MRage] q_MR_init[N_pop];      // initial age distribution in year 1 [maiden | repeat]
+  simplex[N_age] q_init[max_age*N_pop];   // initial maiden age distribution in years 1:max_age
   vector<lower=0>[N_pop] tau;             // observation error SDs of total spawners
 }
 
@@ -153,7 +171,7 @@ transformed parameters {
   {
     int ii; // index into S_init and q_MR_init
     // number of orphan maiden age classes <lower=0,upper=N_age>
-    vector[N_age] q_init; // initial age dist after year 1 (maiden and repeat cells amalgamated)
+    // vector[N_age] q_init; // initial age dist after year 1 (maiden and repeat cells amalgamated)
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age);
     vector[N_orphan_age] q_orphan; // orphan maiden age distribution (amalgamated simplex)
     vector[N_age] alr_p; // alr(p[i,])
@@ -190,8 +208,10 @@ transformed parameters {
       // otherwise amalgamate to give maiden-only dist q_init before further amalgamation
       if(pop_year_indx[i] > 1)
       {
-        q_init = q_MR_init[ii][1:N_age] + q_MR_init[ii][(N_age+1):N_MRage];
-        q_orphan = append_row(sum(head(q_init, N_age - N_orphan_age + 1)), tail(q_init, N_orphan_age - 1));
+        // q_init = q_MR_init[ii][1:N_age] + q_MR_init[ii][(N_age+1):N_MRage];
+        // q_orphan = append_row(sum(head(q_init, N_age - N_orphan_age + 1)), tail(q_init, N_orphan_age - 1));
+        q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
+                              tail(q_init[ii], N_orphan_age - 1));
       }
     }
 
@@ -201,7 +221,7 @@ transformed parameters {
       if(pop_year_indx[i] <= ages[a]) // use initial values
       {
         if(pop_year_indx[i] == 1) // use full initial age dist
-          S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[ii][a];
+          S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[pop[i]][a];
         else // use amalgamated maiden-only age dist
           S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
       }
@@ -210,7 +230,7 @@ transformed parameters {
 
       // Repeat spawners
       if(pop_year_indx[i] == 1) // use initial values
-        S_R_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[ii][N_age + a];
+        S_R_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[pop[i]][N_age + a];
       else // use recruitment process model
         S_R_a[a] = S_W[i-1]*q_MR[i-1,a]*s_SS[i-1];
     }
@@ -218,7 +238,7 @@ transformed parameters {
     // Total spawners
     // Catch and broodstock removal (assumes no take of age 1)
     S_M_a[2:N_age] = S_M_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-    S_R_a[2:N_age] = S_R_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_R_a = S_R_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
     S_W[i] = sum(S_M_a + S_R_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
@@ -236,7 +256,7 @@ model {
   // Priors
 
   // recruitment
-  alpha ~ lognormal(1.5,0.5);
+  alpha ~ lognormal(2.0,2.0);
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   to_vector(beta_R) ~ normal(0,5);
   rho_R ~ pexp(0,0.85,20); // mildly regularize rho_R to ensure stationarity
@@ -263,8 +283,8 @@ model {
   // (accounting for amalgamation of q_MR_init to q_orphan)
   S_init ~ lognormal(mu_S_init, sigma_S_init);
   {
-    matrix[N_MRage,max_age*N_pop] q_init_mat;
-    for(j in 1:size(q_MR_init)) q_init_mat[,j] = q_MR_init[j];
+    matrix[N_age,max_age*N_pop] q_init_mat;
+    for(j in 1:size(q_init)) q_init_mat[,j] = q_init[j];
     target += sum((mu_q_init - 1) .* log(q_init_mat)); // q_MR_init[i] ~ Dir(mu_q_init[,i])
   }
 
