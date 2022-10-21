@@ -119,17 +119,17 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   
   # Simulate correlated pop-specific intrinsic productivity and max recruitment
   alphaRmax <- alphaRmax_mvn(N_pop, mu_alpha, sigma_alpha, 
-                             switch(life_cycle, SS = mu_Rmax, SMS = mu_Mmax),
-                             switch(life_cycle, SS = sigma_Rmax, SMS = sigma_Mmax),
-                             switch(life_cycle, SS = rho_alphaRmax, SMS = rho_alphaMmax))
+                             switch(life_cycle, SMS = mu_Mmax, mu_Rmax),
+                             switch(life_cycle, SMS = sigma_Mmax, sigma_Rmax),
+                             switch(life_cycle, SMS = rho_alphaMmax, rho_alphaRmax))
   alpha <- alphaRmax$alpha
-  if(life_cycle == "SS") Rmax <- alphaRmax$Rmax else Mmax <- alphaRmax$Rmax
-
+  if(life_cycle == "SMS") Mmax <- alphaRmax$Rmax else Rmax <- alphaRmax$Rmax
+  
   # Carrying capacity (for scaling S_init)
   # assumes BH
-  K <- switch(life_cycle, 
-              SS = (alpha - 1)*A_pop*Rmax/alpha,
-              SMS = mu_MS*(alpha - 1)*A_pop*Mmax/alpha) 
+  K <- switch(life_cycle,
+              SMS = mu_MS*(alpha - 1)*A_pop*Mmax/alpha, 
+              (alpha - 1)*A_pop*Rmax/alpha)
   
   # Covariate model matrices
   X <- par_model_matrix(par_models = par_models, scale = scale, fish_data = fish_data)
@@ -152,13 +152,22 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   }
   
   # Annual recruitment and SAR anomalies
-  if(life_cycle == "SS") 
+  if(life_cycle %in% c("SS","SSsthd")) 
   {
     eta_year_R <- rep(NA, max(year))
     eta_year_R[1] <- rnorm(1, 0, sigma_year_R/sqrt(1 - rho_R^2))
-    for(i in 2:length(eta_year_R))
+    for(i in 2:max(year))
       eta_year_R[i] <- rnorm(1, rho_R*eta_year_R[i-1], sigma_year_R)
   }
+  
+  if(life_cycle == "SSsthd") {
+    eta_year_SS <- rep(NA, max(year))
+    eta_year_SS[1] <- rnorm(1, 0, sigma_year_SS/sqrt(1 - rho_SS^2))
+    for(i in 2:max(year))
+      eta_year_SS[i] <- rnorm(1, rho_SS*eta_year_SS[i-1], sigma_year_SS)
+    s_SS <- plogis(rnorm(N, qlogis(mu_SS) + eta_year_SS[year], sigma_SS))
+  }
+  
   if(life_cycle == "SMS") 
   {
     eta_year_M <- rep(NA, max(year))
@@ -189,27 +198,32 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   for(i in 1:N_pop)
     dat_init$year[dat_init$pop==i] <- min(year[pop==i]) - (max_age:1)
   dat_init$S <- rlnorm(nrow(dat_init), log(S_init_K*K[dat_init$pop]), 
-                       ifelse(life_cycle == "SS", tau, tau_S))
+                       ifelse(life_cycle == "SMS", tau_S, tau))
+  if(life_cycle == "SMS")
+    dat_init$M0 <- SR(SR_fun, alpha[dat_init$pop], Mmax[dat_init$pop], 
+                      dat_init$S, A[dat_init$pop])*rlnorm(N_init, 0, sigma_M)
+  dat_init$R <- switch(life_cycle,
+                       SMS = dat_init$M0 * plogis(qlogis(mu_MS) + rnorm(N_init, 0, sigma_MS)),
+                       SR(SR_fun, alpha[dat_init$pop], Rmax[dat_init$pop], 
+                          dat_init$S, A[dat_init$pop])*rlnorm(N_init, 0, sigma_R))
   alr_p_init <- t(matrix(apply(mu_pop_alr_p[dat_init$pop,,drop = FALSE], 1, 
                                function(x) mvrnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
   exp_alr_p_init <- cbind(exp(alr_p_init), 1)
   p_init <- sweep(exp_alr_p_init, 1, rowSums(exp_alr_p_init), "/")
-  dat_init$M0 <- switch(life_cycle, 
-                        SS = NULL,
-                        SMS = SR(SR_fun, alpha[dat_init$pop], Mmax[dat_init$pop], 
-                                 dat_init$S, A[dat_init$pop])*rlnorm(N_init, 0, sigma_M))
-  dat_init$R <- switch(life_cycle,
-                       SS = SR(SR_fun, alpha[dat_init$pop], Rmax[dat_init$pop], 
-                               dat_init$S, A[dat_init$pop])*rlnorm(N_init, 0, sigma_R),
-                       SMS = dat_init$M0 * plogis(qlogis(mu_MS) + rnorm(N_init, 0, sigma_MS)))
+  if(life_cycle == "SSsthd")
+    dat_init$s_SS <- plogis(qlogis(mu_SS) + rnorm(N_init, 0, sigma_SS))
   
   ## Simulate recruits and calculate total spawners and spawner age distributions
-  S_W_a <- matrix(NA, N, N_age)  # true wild spawners by age  
+  if(life_cycle == "SSsthd") {
+    S_M_a <- matrix(NA, N, N_age)  # true wild maiden spawners by age  
+    S_R_a <- matrix(NA, N, N_age)  # true wild repeat spawners by age  
+  } else {
+    S_W_a <- matrix(NA, N, N_age)  # true wild spawners by age  
+  }
   S_W <- vector("numeric",N)     # true total wild spawners
   S_H <- vector("numeric",N)     # true total hatchery spawners
   S <- vector("numeric",N)       # true total spawners
-  if(life_cycle=="SMS") 
-  {
+  if(life_cycle=="SMS") {
     M_hat <- vector("numeric",N) # expected smolts
     M0 <- vector("numeric",N)    # true smolts by brood year
     M <- vector("numeric",N)     # true smolts by calendar year
@@ -223,11 +237,11 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   for(i in 1:N)
   {
     # pre-removal spawners by age
-    if(life_cycle=="SS")
+    if(life_cycle == "SS")
     {
       for(a in 1:N_age)
       {
-        if(year[i] - adult_ages[a] < min(year[pop==pop[i]])) # initialize spawners in yrs 1:max_age
+        if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # initialize spawners in yrs 1:max_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
           S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
@@ -237,19 +251,42 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
       }
     }
     
-    # smolts and pre-removal spawners by age
-    if(life_cycle=="SMS")
+    # pre-removal maiden and repeat spawners by age
+    if(life_cycle == "SSsthd")
     {
-      if(year[i] - smolt_age < min(year[pop==pop[i]])) # initialize smolts in yrs 1:smolt_age
+      for(a in 1:N_age)
       {
-        M[i] <- dat_init$M0[dat_init$pop==pop[i] & dat_init$year==year[i] - smolt_age]
+        if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # initialize maiden spawners in yrs 1:max_age
+        {
+          ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
+          S_M_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
+        } else {
+          S_M_a[i,a] <- R[i - adult_ages[a]]*p[i - adult_ages[a],a]
+        }
+      }
+      
+      if(year[i] == min(year[pop == pop[i]])) # initialize repeat spawners in year 1
+      { 
+        ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - 1
+        S_R_a[i,] <- dat_init$S[ii]*p_init[ii,]*dat_init$s_SS[ii]  # kludge age structure
+      } else {
+        S_R_a[i,] <- S_M_a[i-1,]*s_SS[i-1]
+      }
+    }
+    
+    # smolts and pre-removal spawners by age
+    if(life_cycle == "SMS")
+    {
+      if(year[i] - smolt_age < min(year[pop == pop[i]])) # initialize smolts in yrs 1:smolt_age
+      {
+        M[i] <- dat_init$M0[dat_init$pop == pop[i] & dat_init$year == year[i] - smolt_age]
       } else {
         M[i] <- M0[i - smolt_age]
       }
       
       for(a in 1:N_age)
       {
-        if(year[i] - ocean_ages[a] < min(year[pop==pop[i]])) # initialize spawners in yrs 1:max_ocean_age
+        if(year[i] - ocean_ages[a] < min(year[pop == pop[i]])) # initialize spawners in yrs 1:max_ocean_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - ocean_ages[a]
           S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
@@ -260,15 +297,25 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     }
     
     # catch and broodstock removal (assumes no take of age 1)
-    S_W_a[i,-1] <- S_W_a[i,-1]*(1 - F_rate[i]) 
-    B_take[i] <- B_rate[i]*sum(S_W_a[i,-1])
-    S_W_a[i,-1] <- S_W_a[i,-1]*(1 - B_rate[i]) 
-    S_W[i] <- sum(S_W_a[i,])
+    if(life_cycle == "SSsthd")
+    {      
+      S_M_a[i,-1] <- S_M_a[i,-1]*(1 - F_rate[i]) 
+      S_R_a[i,] <- S_R_a[i,]*(1 - F_rate[i]) 
+      B_take[i] <- B_rate[i]*(sum(S_M_a[i,-1]) + sum(S_R_a[i,]))
+      S_M_a[i,-1] <- S_M_a[i,-1]*(1 - B_rate[i]) 
+      S_R_a[i,] <- S_R_a[i,]*(1 - B_rate[i])
+      S_W[i] <- sum(S_M_a[i,] + S_R_a[i,])
+    } else {
+      S_W_a[i,-1] <- S_W_a[i,-1]*(1 - F_rate[i]) 
+      B_take[i] <- B_rate[i]*sum(S_W_a[i,-1])
+      S_W_a[i,-1] <- S_W_a[i,-1]*(1 - B_rate[i]) 
+      S_W[i] <- sum(S_W_a[i,])
+    }
     S_H[i] <- S_W[i]*p_HOS[i]/(1 - p_HOS[i])
     S[i] <- S_W[i] + S_H[i]
     
     # recruitment
-    if(life_cycle=="SS")
+    if(life_cycle %in% c("SS","SSsthd"))
     {
       R_hat[i] <- SR(SR_fun, 
                      alpha[pop[i]] * exp(sum(X_alpha[i,]*beta_alpha)), 
@@ -276,7 +323,8 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
                      S[i], A[i])
       R[i] <- R_hat[i] * rlnorm(1, sum(X_R[i,]*beta_R) + eta_year_R[year[i]], sigma_R)
     }
-    if(life_cycle=="SMS")
+    
+    if(life_cycle == "SMS")
     {
       M_hat[i] <- SR(SR_fun, 
                      alpha[pop[i]] * exp(sum(X_alpha[i,]*beta_alpha)), 
@@ -287,43 +335,59 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   }  # end loop over rows of fish_data
   
   # Observation model
-  if(life_cycle == "SS") S_obs <- rlnorm(N, log(S), tau)  # obs total spawners
+  if(life_cycle %in% c("SS","SSsthd")) 
+    S_obs <- rlnorm(N, log(S), tau)    # obs total spawners
   if(life_cycle == "SMS")
   {
-    M_obs <- rlnorm(N, log(M), tau_M)              # obs smolts
-    S_obs <- rlnorm(N, log(S), tau_S)              # obs total spawners
+    M_obs <- rlnorm(N, log(M), tau_M)  # obs smolts
+    S_obs <- rlnorm(N, log(S), tau_S)  # obs total spawners
   }
-  q <- sweep(S_W_a, 1, S_W, "/")                   # true spawner age distn 
-  n_age_obs <- pmax(round(pmin(n_age_obs, S)), 0)  # cap age samples at pop size
-  n_HW_obs <- pmax(round(pmin(n_HW_obs, S)), 0)    # cap H/W samples at pop size
-  n_age_obs <- t(sapply(1:N, function(i) rmultinom(1, n_age_obs[i], q[i,]))) # obs wild age frequencies
-  dimnames(n_age_obs)[[2]] <- paste0("n_age", adult_ages, "_obs")
-  n_H_obs <- rbinom(N, n_HW_obs, p_HOS)            # obs count of hatchery spawners
-  n_W_obs <- n_HW_obs - n_H_obs                    # obs count of wild spawners
+  n_age_obs <- pmax(round(pmin(n_age_obs, S)), 0)   # cap age samples at pop size
+  if(life_cycle == "SSsthd")
+  {
+    q_MR <- sweep(cbind(S_M_a, S_R_a), 1, S_W, "/") # true spawner age distn [maiden | repeat]
+    n_MRage_obs <- t(sapply(1:N, function(i) rmultinom(1, n_age_obs[i], q_MR[i,]))) # obs wild age frequencies
+    colnames(n_MRage_obs) <- c(paste0("n_MRage", adult_ages, "_M_obs"),
+                               paste0("n_MRage", adult_ages + 1, "_R_obs"))
+  } else {
+    q <- sweep(S_W_a, 1, S_W, "/")                  # true spawner age distn 
+    n_age_obs <- t(sapply(1:N, function(i) rmultinom(1, n_age_obs[i], q[i,]))) # obs wild age frequencies
+    colnames(n_age_obs) <- paste0("n_age", adult_ages, "_obs")
+  }
+  n_HW_obs <- pmax(round(pmin(n_HW_obs, S)), 0)     # cap H/W samples at pop size
+  n_H_obs <- rbinom(N, n_HW_obs, p_HOS)             # obs count of hatchery spawners
+  n_W_obs <- n_HW_obs - n_H_obs                     # obs count of wild spawners
   
   # Return results
   list(
     sim_dat = data.frame(
       pop = fish_data$pop, A = A, year = fish_data$year, 
-      cbind(S_obs = S_obs, M_obs = switch(life_cycle, SS = NULL, SMS = M_obs)),
-      n_age_obs, n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
+      cbind(S_obs = S_obs, M_obs = switch(life_cycle, SMS = M_obs, NULL),
+            n_age_obs = switch(life_cycle, SSsthd = NULL, n_age_obs),
+            n_MRage_obs = switch(life_cycle, SSsthd = n_MRage_obs, NULL)),
+      n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
       fit_p_HOS = p_HOS > 0, B_take_obs = B_take, F_rate = F_rate,
       fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]
     ),
     pars_out = c(pars, 
-                 list(M = switch(life_cycle, SS = NULL, SMS = M), 
-                      S = S, S_W_a = S_W_a, alpha = alpha, 
-                      Rmax = switch(life_cycle, SS = Rmax, SMS = NULL), 
-                      eta_year_R = switch(life_cycle, SS = eta_year_R, SMS = NULL),
-                      R_hat = switch(life_cycle, SS = R_hat, SMS = NULL), 
-                      R = switch(life_cycle, SS = R, SMS = NULL),
-                      Mmax = switch(life_cycle, SS = NULL, SMS = Mmax), 
-                      eta_year_M = switch(life_cycle, SS = NULL, SMS = eta_year_M), 
-                      M_hat = switch(life_cycle, SS = NULL, SMS = M_hat),
-                      M = switch(life_cycle, SS = NULL, SMS = M),
-                      eta_year_MS = switch(life_cycle, SS = NULL, SMS = eta_year_MS),
-                      s_MS = switch(life_cycle, SS = NULL, SMS = s_MS),
+                 list(M = switch(life_cycle, SMS = M, NULL), 
+                      S = S, S_W_a = switch(life_cycle, SSsthd = NULL, S_W_a), 
+                      q = switch(life_cycle, SSsthd = NULL, q),
+                      q_MR = switch(life_cycle, SSsthd = q_MR, NULL),
+                      alpha = alpha, 
+                      Rmax = switch(life_cycle, SMS = NULL, Rmax), 
+                      eta_year_R = switch(life_cycle, SMS = NULL, eta_year_R),
+                      R_hat = switch(life_cycle, SMS = NULL, R_hat), 
+                      R = switch(life_cycle, SMS = NULL, R),
+                      Mmax = switch(life_cycle, SMS = Mmax, NULL), 
+                      eta_year_M = switch(life_cycle, SMS = eta_year_M, NULL), 
+                      M_hat = switch(life_cycle, SMS = M_hat, NULL),
+                      M = switch(life_cycle, SMS = M, NULL),
+                      eta_year_MS = switch(life_cycle, SMS = eta_year_MS, NULL),
+                      s_MS = switch(life_cycle, SMS = s_MS, NULL),
                       mu_pop_alr_p = mu_pop_alr_p, alr_p = alr_p, p = p, 
+                      eta_year_SS = switch(life_cycle, SSsthd = eta_year_SS, NULL),
+                      s_SS = switch(life_cycle, SSsthd = s_SS, NULL),
                       B_rate = B_rate, p_HOS = p_HOS))
   )
 }
