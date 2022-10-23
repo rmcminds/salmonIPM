@@ -81,7 +81,7 @@ df1pop <- data.frame(pop = 1, year = 1:N + 2020 - N,
 #------------------------------
 
 ## @knitr singlepop_data
-sim1pop <- simIPM(life_cycle = "SSsthd", SR_fun = "BH", pars = pars1pop, 
+sim1pop <- simIPM(life_cycle = "SSiter", SR_fun = "BH", pars = pars1pop, 
                   fish_data = df1pop, N_age = N_age, max_age = max_age)
 names(sim1pop$pars_out)
 sim1pop$pars_out[c("alpha","Rmax")]
@@ -93,13 +93,13 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 #-----------------------------------------------------
 
 ## @knitr singlepop_fit
-fit1pop <- salmonIPM(life_cycle = "SSsthd", pool_pops = FALSE, SR_fun = "BH", 
+fit1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
                      fish_data = sim1pop$sim_dat, 
                      chains = 4, iter = 2000, warmup = 1000, 
                      control = list(adapt_delta = 0.95),
                      seed = 123)
 
-print(fit1pop, pars = c("p","R_p","s_SS","p_HOS","S","R","q_MR","LL"), 
+print(fit1pop, pars = c("p","R_p","s_SS","p_HOS","S","R","q_MK","LL"), 
       include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 

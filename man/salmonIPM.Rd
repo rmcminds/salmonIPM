@@ -41,7 +41,7 @@ are intended for an integrated or run-reconstruction model.}
 One of the following options (must be \code{"SS"} if \code{model == "RR"}):
 \itemize{
 \item \code{"SS"}  Spawner-to-spawner (the default)
-\item \code{"SSsthd"} Spawner-to-spawner with iteroparity (currently only available for
+\item \code{"SSiter"} Spawner-to-spawner with iteroparity (currently only available for
 \code{pool_pops == FALSE})
 \item \code{"SMS"}  Spawner-smolt-spawner
 \item \code{"SMaS"}  Spawner-smolt-spawner with multiple smolt age classes (currently only
@@ -123,23 +123,24 @@ the brood year (i.e., the Gilbert-Rich system).
 \item \code{S_obs}  Total number (not density) of all wild and hatchery-origin spawners.
 \item \code{tau_S_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, known observation error SDs
 for spawner abundance.
-\item \verb{n_age[min_age]_obs...n_age[max_age]_obs}  Multiple columns of
+\item \verb{n_age[min_age]_obs ... n_age[max_age]_obs}  Multiple columns of
 observed spawner age frequencies (i.e., counts), where \verb{[min_age]} and
 \verb{[max_age]} are the numeral age in years (total, not ocean age) of the
 youngest and oldest spawners, respectively.
-\item \verb{n_MRage[min_age]_M_obs...n_MRage[max_age + 1]_R_obs}  If
-\code{life_cycle == "SSsthd"}, multiple columns of observed spawner age frequencies
-(i.e., counts), where \verb{[min_age]} and \verb{[max_age]} are the numeral age in years
-(total, not ocean age) of the youngest and oldest \emph{maiden} spawners, respectively.
-Contiguous maiden age columns (denoted by \verb{_M_}) are followed by an equal number of
-contiguous repeat age columns (denoted by \verb{_R_}) where each repeat age is 1 year
-greater than the corresponding maiden age. Standard \code{n_age_obs} columns are not
-required.
-\item \verb{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
+\item If \code{life_cycle == "SSiter"}, multiple columns of observed first-time (maiden) and
+repeat (kelt) spawner age frequencies
+\verb{n_age[min_age]M_obs ... n_age[max_age]M_obs ... n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs},
+where \verb{[min_age]} and \verb{[max_age]} are the integer total age in years of the youngest
+and oldest \emph{maiden} spawners, respectively. Contiguous maiden age columns
+(denoted by \code{M}) are followed by an equal number of contiguous kelt age columns
+(denoted by \code{K}) where each kelt age is 1 year greater than the corresponding maiden age.
+The maximum kelt age class is a plus-group, i.e. it should include all repeat spawners
+age \code{max_age + 1} or older.
+\item \verb{n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
 multiple columns of observed ocean age frequencies (i.e., counts),
 where \verb{[min_MSage]} and \verb{[max_MSage]} are the youngest and oldest ocean age
 in years, respectively.
-\item \verb{n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs}  If
+\item \verb{n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs}  If
 \code{life_cycle == "SMaS"}, multiple columns of observed Gilbert-Rich age
 frequencies, sorted first by smolt age (\code{min_Mage:max_Mage}) and then
 by total age \code{min_age:max_age}. For example, a life history with

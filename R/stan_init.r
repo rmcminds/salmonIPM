@@ -41,17 +41,19 @@
 stan_init <- function(stan_model, data, chains = 1) 
 {
   if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
-                        "IPM_SSsthd_np", "IPM_SMaS_np",
+                        "IPM_SSiter_np", "IPM_SMaS_np",
                         "IPM_LCRchum_pp","IPM_ICchinook_pp",
                         "RR_SS_np","RR_SS_pp"))
     stop("Stan model ", stan_model, " does not exist")
   
+  # Basic objects and data dimensions
   model <- strsplit(stan_model, "_")[[1]][1]
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
   for(i in names(data)) assign(i, data[[i]])
   N_pop <- max(pop)
   N_year <- max(year)
   
+  # Data to estimate initial origin-composition parameters
   if(life_cycle == "LCRchum") {
     n_H_obs <- rowSums(n_origin_obs[,-1])
     which_H <- which(n_H_obs > 0)
@@ -70,18 +72,7 @@ stan_init <- function(stan_model, data, chains = 1)
                        nrow = 3, byrow = TRUE)
   }
   
-  if(life_cycle == "SSsthd") {
-    # ignore repeat spawner age structure in run reconstruction 
-    n_age_obs <- n_MRage_obs[, grep("_M_", colnames(n_MRage_obs))]
-    colnames(n_age_obs) <- gsub("_R", "", gsub("_M", "", gsub("MR", "", colnames(n_age_obs))))
-    n_MRage_obs[, colSums(n_MRage_obs) == 0] <- 0.1
-    n_MRage_M_obs <- pmax(rowSums(n_age_obs), 0.1)
-    n_MRage_R_obs <- pmax(rowSums(n_MRage_obs[, grep("_R_", colnames(n_MRage_obs))]), 0.1)
-    s_SS <- pmin(n_MRage_R_obs/n_MRage_M_obs, 0.9)
-    q_MR_obs <- sweep(n_MRage_obs, 1, rowSums(n_MRage_obs), "/")
-    q_MR_obs_NA <- apply(is.na(q_MR_obs), 1, any)
-    q_MR_obs[q_MR_obs_NA,] <- rep(colMeans(na.omit(q_MR_obs)), each = sum(q_MR_obs_NA))
-  }
+  ## Crude estimates of states 
   
   if(model == "IPM" & life_cycle != "SMaS") {
     S_obs_noNA <- S_obs
@@ -94,6 +85,22 @@ stan_init <- function(stan_model, data, chains = 1)
     n_H_obs_all <- replace(rep(0,N), which_H, n_H_obs)
     min_age <- max_age - N_age + 1
     adult_ages <- min_age:max_age
+    
+    # iteroparous models: ignore repeat spawner age structure in run reconstruction
+    if(life_cycle == "SSiter") {
+      n_MKage_obs <- pmax(n_MKage_obs, 0.1)
+      n_age_obs <- n_MKage_obs[, grep("M", colnames(n_MKage_obs))]
+      colnames(n_age_obs) <- gsub("M", "", colnames(n_age_obs))
+      q_MK_obs <- sweep(n_MKage_obs, 1, rowSums(n_MKage_obs), "/")
+      q_MK_obs_NA <- apply(is.na(q_MK_obs), 1, any)
+      q_MK_obs[q_MK_obs_NA,] <- rep(colMeans(na.omit(q_MK_obs)), each = sum(q_MK_obs_NA))
+      S_MK_obs <- S_obs*q_MK_obs
+      S_M_obs <- rowSums(S_MK_obs[, grep("M", colnames(S_MK_obs))])
+      S_K_obs <- rowSums(S_MK_obs[, grep("K", colnames(S_MK_obs))])
+      s_SS <- pmin(pmax(c(NA, tail(S_K_obs, N - 1) / head(S_M_obs, N - 1)), 0.1), 0.9)
+      s_SS[is.na(s_SS)] <- mean(s_SS, na.rm = TRUE)
+    }
+    
     q_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
     q_obs_NA <- apply(is.na(q_obs), 1, any)
     q_obs[q_obs_NA,] <- rep(colMeans(na.omit(q_obs)), each = sum(q_obs_NA))
@@ -156,6 +163,8 @@ stan_init <- function(stan_model, data, chains = 1)
     s_EM <- pmin(M_obs/E, 0.9)
   }
   
+  ## Initial parameter values to return
+  
   out <- lapply(1:chains, function(i) {
     switch(stan_model,
            IPM_SS_np = list(
@@ -216,7 +225,7 @@ stan_init <- function(stan_model, data, chains = 1)
              tau = runif(1, 0.5, 1)
            ),
            
-           IPM_SSsthd_np = list(
+           IPM_SSiter_np = list(
              # recruitment
              alpha = array(exp(runif(N_pop, 1, 3))),
              beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
@@ -229,21 +238,21 @@ stan_init <- function(stan_model, data, chains = 1)
              rho_R = array(runif(N_pop, 0.1, 0.7)),
              sigma_R = array(runif(N_pop, 0.05, 2)), 
              zeta_R = as.vector(scale(log(R_obs)))*0.1,
+             # maiden spawner age structure
+             mu_p = mu_p,
+             sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age - 1),
+             zeta_p = zeta_p,
              # kelt survival
              mu_SS = array(plogis(rnorm(N_pop, mean(qlogis(s_SS)), 0.5))),
              rho_SS = array(runif(N_pop, 0.1, 0.7)),
              sigma_SS = array(runif(N_pop, 0.05, 2)),
              zeta_SS = as.vector(scale(qlogis(s_SS))),
-             # maiden spawner age structure
-             mu_p = mu_p,
-             sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age-1),
-             zeta_p = zeta_p,
              # H/W composition, removals
              p_HOS = p_HOS_obs,
              B_rate = B_rate,
              # initial spawners, observation error
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
-             q_MR_init = matrix(colMeans(q_MR_obs), N_pop, N_age*2, byrow = TRUE),
+             q_MK_init = matrix(colMeans(q_MK_obs), N_pop, N_age*2, byrow = TRUE),
              q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              tau = array(runif(N_pop, 0.5, 1))
            ),

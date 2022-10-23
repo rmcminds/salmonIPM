@@ -25,7 +25,7 @@ data {
   // spawner age structure
   int<lower=2> N_age;                  // number of maiden adult age classes
   int<lower=2> max_age;                // maximum maiden adult age
-  matrix<lower=0>[N,N_age*2] n_MRage_obs; // observed wild spawner age frequencies [maiden | repeat]
+  matrix<lower=0>[N,N_age*2] n_MKage_obs; // observed wild [maiden | kelt] spawner age frequencies
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -43,14 +43,13 @@ transformed data {
   int<lower=1,upper=N> N_year = max(year); // number of years
   int<lower=2> ages[N_age];                // adult ages
   int<lower=1> min_age;                    // minimum maiden adult age
-  int<lower=4> N_MRage = N_age*2;          // number of maiden + repeat adult age classes
+  int<lower=4> N_MKage = N_age*2;          // number of maiden + kelt adult age classes
   int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   real mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior log-mean of Rmax
   real sigma_Rmax = sd(log(S_obs[which_S_obs])); // prior log-SD of Rmax
   vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
-  // matrix[N_MRage,max_age*N_pop] mu_q_init; // prior counts of age distributions in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of maiden age distributions in years 1:max_age
   
   for(a in 1:N_age)
@@ -66,34 +65,16 @@ transformed data {
       pop_year_indx[i] = pop_year_indx[i-1] + 1;
   }
   
-  // for(i in 1:max_age)
-  // {
-  //   int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan maiden age classes
-  //   int N_amalg_age = N_age - N_orphan_age + 1;     // number of amalgamated maiden age classes
-  //   real aa = (i == 1 ? 1 : 0.5);                   // multiplier for prior counts
-  //   for(j in 1:N_pop)
-  //   {
-  //     int ii = (j - 1)*max_age + i; // index into S_init, q_MR_init
-  //     // S_init prior mean scales observed log-mean by fraction of orphan maiden age classes
-  //     mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
-  //     // prior on q_MR_init that implies q_orphan ~ Dir(1)
-  //     // (second stacked copy is for orphan repeat age classes in year 1,
-  //     //  otherwise the paired maiden and repeat classes are amalgamated)
-  //     mu_q_init[1:N_age,ii] = aa*append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), 
-  //                                           rep_vector(1, N_orphan_age - 1));
-  //     mu_q_init[(N_age+1):N_MRage,ii] = mu_q_init[1:N_age,ii];
-  //   }
-  // }
   for(i in 1:max_age)
   {
     int N_orphan_age = N_age - max(i - min_age, 0); // number of orphan maiden age classes
     int N_amalg_age = N_age - N_orphan_age + 1;     // number of amalgamated maiden age classes
     for(j in 1:N_pop)
     {
-      int ii = (j - 1)*max_age + i; // index into S_init, q_MR_init
+      int ii = (j - 1)*max_age + i; // index into S_init, q_MK_init
       // S_init prior mean scales observed log-mean by fraction of orphan maiden age classes
       mu_S_init[ii] = mean(log(S_obs[which_S_obs])) + log(N_orphan_age) - log(N_age);
-      // prior on q_MR_init that implies q_orphan ~ Dir(1)
+      // prior on q_MK_init that implies q_orphan ~ Dir(1)
       mu_q_init[,ii] = append_row(rep_vector(1.0/N_amalg_age, N_amalg_age), rep_vector(1, N_orphan_age - 1));
     }
   }
@@ -109,23 +90,22 @@ parameters {
   vector<lower=-1,upper=1>[N_pop] rho_R;  // AR(1) coefs for log productivity anomalies
   vector<lower=0>[N_pop] sigma_R;         // process error SDs
   vector[N] zeta_R;                       // recruitment process errors (Z-scored)
-  // kelt survival
-  vector<lower=0,upper=1>[N_pop] mu_SS;   // mean kelt (spawner-to-spawner) survival
-  vector<lower=-1,upper=1>[N_pop] rho_SS; // AR(1) coefs for kelt survival
-  vector<lower=0>[N_pop] sigma_SS;        // kelt survival process error SDs
-  vector[N] zeta_SS;                      // kelt survival process errors (Z-scored)
   // maiden spawner age structure
   simplex[N_age] mu_p[N_pop];             // population mean age distributions
   matrix<lower=0>[N_pop,N_age-1] sigma_p; // log-ratio cohort age distribution SDs
   cholesky_factor_corr[N_age-1] L_p[N_pop]; // Cholesky factors of correlation matrices of cohort log-ratio age distributions
   matrix[N,N_age-1] zeta_p;               // log-ratio cohort age distribution errors (Z-scores)
+  // kelt survival
+  vector<lower=0,upper=1>[N_pop] mu_SS;   // mean kelt (spawner-to-spawner) survival
+  vector<lower=-1,upper=1>[N_pop] rho_SS; // AR(1) coefs for kelt survival
+  vector<lower=0>[N_pop] sigma_SS;        // kelt survival process error SDs
+  vector[N] zeta_SS;                      // kelt survival process errors (Z-scored)
   // H/W composition, removals
   vector<lower=0,upper=1>[N_H] p_HOS;     // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;    // true broodstock take rate when B_take > 0
   // initial spawners, observation error
   vector<lower=0>[max_age*N_pop] S_init;  // initial total spawner abundance in years 1:max_age
-  // simplex[N_MRage] q_MR_init[max_age*N_pop]; // initial age distribution in years 1:max_age [maiden | repeat]
-  simplex[N_MRage] q_MR_init[N_pop];      // initial age distribution in year 1 [maiden | repeat]
+  simplex[N_MKage] q_MK_init[N_pop];      // initial [maiden | kelt] age distribution in year 1
   simplex[N_age] q_init[max_age*N_pop];   // initial maiden age distribution in years 1:max_age
   vector<lower=0>[N_pop] tau;             // observation error SDs of total spawners
 }
@@ -142,6 +122,7 @@ transformed parameters {
   vector<lower=0,upper=1>[N] s_SS;     // true kelt survival by outmigration year
   // H/W spawner abundance, removals
   vector[N] p_HOS_all;                 // true p_HOS in all years (can == 0)
+  row_vector<lower=0>[N_age+1] S_W_a[N]; // true wild spawner abundance by total age (max is plus-group)
   vector<lower=0>[N] S_W;              // true total wild spawner abundance
   vector[N] S_H;                       // true total hatchery spawner abundance (can == 0)
   vector<lower=0>[N] S;                // true total spawner abundance
@@ -149,7 +130,7 @@ transformed parameters {
   // spawner age structure
   vector[N_age-1] mu_alr_p[N_pop];     // population mean log ratio age distributions
   simplex[N_age] p[N];                 // true cohort maiden age distributions
-  matrix<lower=0,upper=1>[N,N_MRage] q_MR; // true spawner age distributions [maiden | repeat]
+  matrix<lower=0,upper=1>[N,N_MKage] q_MK; // true [maiden | kelt] spawner age distributions
 
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -169,14 +150,13 @@ transformed parameters {
   // and predict recruitment from brood year i
   for(i in 1:N)
   {
-    int ii; // index into S_init and q_MR_init
+    int ii; // index into S_init and q_init
     // number of orphan maiden age classes <lower=0,upper=N_age>
-    // vector[N_age] q_init; // initial age dist after year 1 (maiden and repeat cells amalgamated)
     int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age);
-    vector[N_orphan_age] q_orphan; // orphan maiden age distribution (amalgamated simplex)
+    vector[N_orphan_age] q_orphan; // orphan maiden age distribution
     vector[N_age] alr_p; // alr(p[i,])
     row_vector[N_age] S_M_a; // true wild maiden spawners by age
-    row_vector[N_age] S_R_a; // true wild repeat spawners by age
+    row_vector[N_age] S_K_a; // true wild kelt spawners by age
 
     // Multivariate Matt trick for within-pop, time-varying maiden age vectors
     alr_p = rep_vector(0,N_age);
@@ -195,54 +175,51 @@ transformed parameters {
       epsilon_R[i] = rho_R[pop[i]] * epsilon_R[i-1] + sigma_R[pop[i]] * zeta_R[i];
       epsilon_SS[i] = rho_SS[pop[i]] * epsilon_SS[i-1] + sigma_SS[pop[i]] * zeta_SS[i];
     }
-    // kelt survival
-    s_SS[i] = inv_logit(logit(mu_SS[pop[i]]) + epsilon_SS[i]);
+    s_SS[i] = inv_logit(logit(mu_SS[pop[i]]) + epsilon_SS[i]);  // kelt survival
 
     // Spawners and age structure
     // use initial values for orphan age classes, otherwise use process model
     if(pop_year_indx[i] <= max_age)
     {
       ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      
-      // in year 1 all maiden and repeat classes are orphans, so use full initial age dist
-      // otherwise amalgamate to give maiden-only dist q_init before further amalgamation
       if(pop_year_indx[i] > 1)
-      {
-        // q_init = q_MR_init[ii][1:N_age] + q_MR_init[ii][(N_age+1):N_MRage];
-        // q_orphan = append_row(sum(head(q_init, N_age - N_orphan_age + 1)), tail(q_init, N_orphan_age - 1));
         q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                               tail(q_init[ii], N_orphan_age - 1));
-      }
     }
 
+    // Maiden spawners
     for(a in 1:N_age)
     {
-      // Maiden spawners
       if(pop_year_indx[i] <= ages[a]) // use initial values
       {
-        if(pop_year_indx[i] == 1) // use full initial age dist
-          S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[pop[i]][a];
-        else // use amalgamated maiden-only age dist
+        if(pop_year_indx[i] == 1) // use [maiden | kelt] initial age dist
+          S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MK_init[pop[i]][a];
+        else // use maiden-only age dist
           S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
       }
       else // use recruitment process model
         S_M_a[a] = R[i-ages[a]]*p[i-ages[a],a];
-
-      // Repeat spawners
-      if(pop_year_indx[i] == 1) // use initial values
-        S_R_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MR_init[pop[i]][N_age + a];
-      else // use recruitment process model
-        S_R_a[a] = S_W[i-1]*q_MR[i-1,a]*s_SS[i-1];
     }
-
+    
+    // Kelts
+    if(pop_year_indx[i] == 1) // use initial values
+      S_K_a = S_init[ii]*(1 - p_HOS_all[i])*tail(q_MK_init[pop[i]], N_age)';
+    else // use recruitment process model (add plus group to max age)
+    {
+      row_vector[N_age] S_W_plus; // true W spawners, max maiden age and plus-group pooled
+      S_W_plus = append_col(head(S_W_a[i-1], N_age - 1), sum(tail(S_W_a[i-1], 2)));
+      S_K_a = S_W_plus*s_SS[i-1];
+    }
+    
     // Total spawners
     // Catch and broodstock removal (assumes no take of age 1)
     S_M_a[2:N_age] = S_M_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
-    S_R_a = S_R_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
-    S_W[i] = sum(S_M_a + S_R_a);
+    S_K_a = S_K_a*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    S_W_a[i] = append_col(S_M_a, 0) + append_col(0, S_K_a);    
+    S_W[i] = sum(S_W_a[i,]);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
-    q_MR[i,] = append_col(S_M_a, S_R_a)/S_W[i];
+    q_MK[i,] = append_col(S_M_a, S_K_a)/S_W[i];
 
     // Recruitment
     R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i], A[i]);
@@ -276,16 +253,16 @@ model {
   to_vector(zeta_p) ~ std_normal();
 
   // removals
-  log_B_take = log(S_W[which_B]) + log1m(q_MR[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q_MR[,1])*B_rate/(1 - B_rate)
+  log_B_take = log(S_W[which_B]) + log1m(q_MK[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q_MK[,1])*B_rate/(1 - B_rate)
   B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match
 
   // initial spawners and maiden spawner age distribution
-  // (accounting for amalgamation of q_MR_init to q_orphan)
+  // (accounting for amalgamation of q_init to q_orphan)
   S_init ~ lognormal(mu_S_init, sigma_S_init);
   {
     matrix[N_age,max_age*N_pop] q_init_mat;
     for(j in 1:size(q_init)) q_init_mat[,j] = q_init[j];
-    target += sum((mu_q_init - 1) .* log(q_init_mat)); // q_MR_init[i] ~ Dir(mu_q_init[,i])
+    target += sum((mu_q_init - 1) .* log(q_init_mat)); // q_init[i] ~ Dir(mu_q_init[,i])
   }
 
   // spawner observation error
@@ -294,14 +271,14 @@ model {
   // Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau[pop[which_S_obs]]);  // observed total spawners
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // obs counts of hatchery vs. wild spawners
-  target += sum(n_MRage_obs .* log(q_MR)); // obs wild spawner age freq: n_MRage_obs[i] ~ multinomial(q_MR[i])
+  target += sum(n_MKage_obs .* log(q_MK)); // obs wild spawner age freq: n_MKage_obs[i] ~ multinomial(q_MK[i])
 }
 
 generated quantities {
   corr_matrix[N_age-1] R_p[N_pop]; // correlation matrices of within-pop cohort log-ratio age distns
   vector[N] LL_S_obs;              // pointwise log-likelihood of total spawners
   vector[N_H] LL_n_H_obs;          // pointwise log-likelihood of hatchery vs. wild frequencies
-  vector[N] LL_n_MRage_obs;        // pointwise log-likelihood of wild spawner age age frequencies [maiden | repeat]
+  vector[N] LL_n_MKage_obs;        // pointwise log-likelihood of wild spawner age age frequencies [maiden | kelt]
   vector[N] LL;                    // total pointwise log-likelihood
 
   for(j in 1:N_pop)
@@ -310,10 +287,10 @@ generated quantities {
   LL_S_obs = rep_vector(0,N);
   for(i in 1:N_S_obs)
     LL_S_obs[which_S_obs[i]] = lognormal_lpdf(S_obs[which_S_obs[i]] | log(S[which_S_obs[i]]), tau[pop[which_S_obs]]);
-  LL_n_MRage_obs = (n_MRage_obs .* log(q_MR)) * rep_vector(1,N_MRage);
+  LL_n_MKage_obs = (n_MKage_obs .* log(q_MK)) * rep_vector(1,N_MKage);
   LL_n_H_obs = rep_vector(0,N_H);
   for(i in 1:N_H)
     LL_n_H_obs[i] = binomial_lpmf(n_H_obs[i] | n_HW_obs[i], p_HOS[i]);
-  LL = LL_S_obs + LL_n_MRage_obs;
+  LL = LL_S_obs + LL_n_MKage_obs;
   LL[which_H] = LL[which_H] + LL_n_H_obs;
 }
