@@ -11,12 +11,12 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                      // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];         // population identifier
-  int<lower=1,upper=N> year[N];        // brood year identifier
+  int<lower=1,upper=N> pop[N];         // population index
+  int<lower=1,upper=N> year[N];        // brood year index
   // info for forward simulations
   int<lower=0> N_fwd;                  // total number of cases in forward simulations
-  int<lower=1,upper=N> pop_fwd[N_fwd]; // population identifier for forward simulations
-  int<lower=1,upper=N+N_fwd> year_fwd[N_fwd]; // brood year identifier for forward simulations
+  int<lower=1,upper=N> pop_fwd[N_fwd]; // population index for forward simulations
+  int<lower=1,upper=N+N_fwd> year_fwd[N_fwd]; // brood year index for forward simulations
   vector<lower=0>[N_fwd] A_fwd; // habitat area for each forward simulation
   vector<lower=0,upper=1>[N_fwd] F_rate_fwd; // fishing mortality for forward simulations
   vector<lower=0,upper=1>[N_fwd] B_rate_fwd; // broodstock take rate for forward simulations
@@ -73,7 +73,7 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
-  int<lower=1> pop_year_indx[N];          // index of years within each pop, starting at 1
+  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=1,upper=N> N_year_all;         // total number of years, including forward simulations
   int<lower=1> ocean_ages[N_age];          // ocean ages
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
@@ -95,13 +95,13 @@ transformed data {
   }
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
   
-  pop_year_indx[1] = 1;
+  pop_year[1] = 1;
   for(i in 1:N)
   {
     if(i == 1 || pop[i-1] != pop[i])
-      pop_year_indx[i] = 1;
+      pop_year[i] = 1;
     else
-      pop_year_indx[i] = pop_year_indx[i-1] + 1;
+      pop_year[i] = pop_year[i-1] + 1;
   }
   
   fwd_init_indx = rep_array(0, N_fwd, N_age);
@@ -269,43 +269,41 @@ transformed parameters {
   {
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
+    int N_orphan_age = max(N_age - max(pop_year[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
     row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
 
     // AR(1) smolt recruitment process errors  
-    if(pop_year_indx[i] == 1) 
+    if(pop_year[i] == 1) 
       epsilon_M[i] = zeta_M[i]*sigma_M/sqrt(1 - rho_M^2);
     else
       epsilon_M[i] = rho_M*epsilon_M[i-1] + zeta_M[i]*sigma_M;
 
     // Smolt recruitment
-    if(pop_year_indx[i] <= smolt_age)
-      M[i] = M_init[(pop[i]-1)*smolt_age + pop_year_indx[i]];  // use initial values
+    if(pop_year[i] <= smolt_age)
+      M[i] = M_init[(pop[i]-1)*smolt_age + pop_year[i]];  // use initial values
     else
       M[i] = M0[i-smolt_age];  // smolts from appropriate brood year
     
     // Spawner recruitment and age structure
     // Use initial values for orphan age classes, otherwise use process model
-    if(pop_year_indx[i] <= max_ocean_age)
+    if(pop_year[i] <= max_ocean_age)
     {
-      ii = (pop[i] - 1)*max_ocean_age + pop_year_indx[i];
+      ii = (pop[i] - 1)*max_ocean_age + pop_year[i];
       q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                             tail(q_init[ii], N_orphan_age - 1));
     }
     
     for(a in 1:N_age)
     {
-      if(ocean_ages[a] < pop_year_indx[i])
-        // Use recruitment process model
+      if(pop_year[i] <= ocean_ages[a]) // use initial values
+        S_W_a[a] = S_init[ii] * (1 - p_HOS_all[i]) * q_orphan[a - (N_age - N_orphan_age)];
+      else // use recruitment process model
         S_W_a[a] = M[i-ocean_ages[a]] * s_D[year[i]-ocean_ages[a]] * 
                    SAR[year[i]-ocean_ages[a]] * p[i-ocean_ages[a],a] * s_U[year[i]];
-      else
-        // Use initial values
-        S_W_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
     }
-    
+
     // catch and broodstock removal (assumes no take of age 1)
     S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
     S_W[i] = sum(S_W_a);

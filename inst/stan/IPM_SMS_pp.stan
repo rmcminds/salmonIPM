@@ -8,8 +8,8 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                      // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];         // population identifier
-  int<lower=1,upper=N> year[N];        // calendar year identifier
+  int<lower=1,upper=N> pop[N];         // population index
+  int<lower=1,upper=N> year[N];        // calendar year index
   // smolt production
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> smolt_age;              // smolt age
@@ -50,7 +50,7 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
-  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
+  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=0> ocean_ages[N_age];          // ocean ages
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
@@ -68,13 +68,13 @@ transformed data {
   for(a in 1:N_age) ocean_ages[a] = min_ocean_age - 1 + a;
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
 
-  pop_year_indx[1] = 1;
+  pop_year[1] = 1;
   for(i in 1:N)
   {
     if(i == 1 || pop[i-1] != pop[i])
-      pop_year_indx[i] = 1;
+      pop_year[i] = 1;
     else
-      pop_year_indx[i] = pop_year_indx[i-1] + 1;
+      pop_year[i] = pop_year[i-1] + 1;
   }
   
   for(i in 1:max_ocean_age)
@@ -222,33 +222,31 @@ transformed parameters {
   {
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
+    int N_orphan_age = max(N_age - max(pop_year[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
     row_vector[N_age] S_W_a; // true wild spawners by age
 
     // Smolt recruitment
-    if(pop_year_indx[i] <= smolt_age)
-      M[i] = M_init[(pop[i]-1)*smolt_age + pop_year_indx[i]];  // use initial values
-    else
-      M[i] = M0[i-smolt_age];  // smolts from appropriate brood year
+    if(pop_year[i] <= smolt_age) // use initial values
+      M[i] = M_init[(pop[i]-1)*smolt_age + pop_year[i]];  
+    else  // smolts from appropriate brood year
+      M[i] = M0[i-smolt_age];  
     
     // Spawners and age structure
     // Use initial values for orphan age classes, otherwise use process model
-    if(pop_year_indx[i] <= max_ocean_age)
+    if(pop_year[i] <= max_ocean_age)
     {
-      ii = (pop[i] - 1)*max_ocean_age + pop_year_indx[i];
+      ii = (pop[i] - 1)*max_ocean_age + pop_year[i];
       q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                             tail(q_init[ii], N_orphan_age - 1));
     }
     
     for(a in 1:N_age)
     {
-      if(ocean_ages[a] < pop_year_indx[i])
-        // Use recruitment process model
-        S_W_a[a] = M[i-ocean_ages[a]]*s_MS[i-ocean_ages[a]]*p[i-ocean_ages[a],a];
-      else
-        // Use initial values
+      if(pop_year[i] <= ocean_ages[a]) // use initial values
         S_W_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
+      else // use recruitment process model
+        S_W_a[a] = M[i-ocean_ages[a]]*s_MS[i-ocean_ages[a]]*p[i-ocean_ages[a],a];
     }
     
     // catch and broodstock removal (assumes no take of age 1)

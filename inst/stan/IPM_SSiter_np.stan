@@ -7,8 +7,8 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                      // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];         // population identifier
-  int<lower=1,upper=N> year[N];        // brood year identifier
+  int<lower=1,upper=N> pop[N];         // population index
+  int<lower=1,upper=N> year[N];        // brood year index
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
@@ -44,7 +44,7 @@ transformed data {
   int<lower=2> ages[N_age];                // adult ages
   int<lower=1> min_age;                    // minimum maiden adult age
   int<lower=4> N_MKage = N_age*2;          // number of maiden + kelt adult age classes
-  int<lower=1> pop_year_indx[N];           // index of years within each pop, starting at 1
+  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   real mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior log-mean of Rmax
   real sigma_Rmax = sd(log(S_obs[which_S_obs])); // prior log-SD of Rmax
@@ -56,13 +56,13 @@ transformed data {
     ages[a] = max_age - N_age + a;
   min_age = min(ages);  
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
-  pop_year_indx[1] = 1;
+  pop_year[1] = 1;
   for(i in 1:N)
   {
     if(i == 1 || pop[i-1] != pop[i])
-      pop_year_indx[i] = 1;
+      pop_year[i] = 1;
     else
-      pop_year_indx[i] = pop_year_indx[i-1] + 1;
+      pop_year[i] = pop_year[i-1] + 1;
   }
   
   for(i in 1:max_age)
@@ -152,7 +152,7 @@ transformed parameters {
   {
     int ii; // index into S_init and q_init
     // number of orphan maiden age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_age, 0), N_age);
+    int N_orphan_age = max(N_age - max(pop_year[i] - min_age, 0), N_age);
     vector[N_orphan_age] q_orphan; // orphan maiden age distribution
     vector[N_age] alr_p; // alr(p[i,])
     row_vector[N_age] S_M_a; // true wild maiden spawners by age
@@ -165,7 +165,7 @@ transformed parameters {
     p[i] = alr_p / sum(alr_p);
 
     // AR(1) recruitment and kelt survival process errors
-    if(pop_year_indx[i] == 1) // initial process error
+    if(pop_year[i] == 1) // initial process error
     {
       epsilon_R[i] = zeta_R[i] * sigma_R[pop[i]] / sqrt(1 - rho_R[pop[i]]^2);
       epsilon_SS[i] = zeta_SS[i] * sigma_SS[pop[i]] / sqrt(1 - rho_SS[pop[i]]^2);
@@ -179,10 +179,10 @@ transformed parameters {
 
     // Spawners and age structure
     // use initial values for orphan age classes, otherwise use process model
-    if(pop_year_indx[i] <= max_age)
+    if(pop_year[i] <= max_age)
     {
-      ii = (pop[i] - 1)*max_age + pop_year_indx[i];
-      if(pop_year_indx[i] > 1)
+      ii = (pop[i] - 1)*max_age + pop_year[i];
+      if(pop_year[i] > 1)
         q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                               tail(q_init[ii], N_orphan_age - 1));
     }
@@ -190,9 +190,9 @@ transformed parameters {
     // Maiden spawners
     for(a in 1:N_age)
     {
-      if(pop_year_indx[i] <= ages[a]) // use initial values
+      if(pop_year[i] <= ages[a]) // use initial values
       {
-        if(pop_year_indx[i] == 1) // use [maiden | kelt] initial age dist
+        if(pop_year[i] == 1) // use [maiden | kelt] initial age dist
           S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_MK_init[pop[i]][a];
         else // use maiden-only age dist
           S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
@@ -202,7 +202,7 @@ transformed parameters {
     }
     
     // Kelts
-    if(pop_year_indx[i] == 1) // use initial values
+    if(pop_year[i] == 1) // use initial values
       S_K_a = S_init[ii]*(1 - p_HOS_all[i])*tail(q_MK_init[pop[i]], N_age)';
     else // use recruitment process model (add plus group to max age)
     {
