@@ -216,11 +216,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
                     K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
                     X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
-                    # fishery and hatchery removals
-                    F_rate = replace(F_rate, is.na(F_rate), 0),
-                    N_B = sum(B_take_obs > 0),
-                    which_B = as.vector(which(B_take_obs > 0)),
-                    B_take_obs = B_take_obs[B_take_obs > 0],
                     # spawner abundance
                     N_S_obs = sum(!is.na(S_obs)),
                     which_S_obs = as.vector(which(!is.na(S_obs))),
@@ -235,7 +230,12 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
                     n_W_obs = n_W_obs,
-                    n_H_obs = n_H_obs
+                    n_H_obs = n_H_obs,
+                    # fishery and hatchery removals
+                    F_rate = replace(F_rate, is.na(F_rate), 0),
+                    N_B = sum(B_take_obs > 0),
+                    which_B = as.vector(which(B_take_obs > 0)),
+                    B_take_obs = B_take_obs[B_take_obs > 0]
                   ),
                 
                 IPM_SSiter = list(
@@ -252,11 +252,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                   X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
                   K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
                   X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
-                  # fishery and hatchery removals
-                  F_rate = replace(F_rate, is.na(F_rate), 0),
-                  N_B = sum(B_take_obs > 0),
-                  which_B = as.vector(which(B_take_obs > 0)),
-                  B_take_obs = B_take_obs[B_take_obs > 0],
                   # spawner abundance
                   N_S_obs = sum(!is.na(S_obs)),
                   which_S_obs = as.vector(which(!is.na(S_obs))),
@@ -265,11 +260,19 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                   N_age = sum(grepl("n_age", names(fish_data)))/2,
                   max_age = max_age,
                   n_MKage_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                  # kelt survival
+                  K_SS = ifelse(is.null(X$s_SS), 0, ncol(X$s_SS)), 
+                  X_SS = if(is.null(X$s_SS)) matrix(0,N,0) else X$s_SS,
                   # H/W composition
                   N_H = sum(fit_p_HOS),
                   which_H = as.vector(which(fit_p_HOS)),
                   n_W_obs = n_W_obs,
-                  n_H_obs = n_H_obs
+                  n_H_obs = n_H_obs,
+                  # fishery and hatchery removals
+                  F_rate = replace(F_rate, is.na(F_rate), 0),
+                  N_B = sum(B_take_obs > 0),
+                  which_B = as.vector(which(B_take_obs > 0)),
+                  B_take_obs = B_take_obs[B_take_obs > 0]
                 ),
                 
                 IPM_SMS = list(
@@ -294,11 +297,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # SAR
                     K_MS = ifelse(is.null(X$s_MS), 0, ncol(X$s_MS)), 
                     X_MS = if(is.null(X$s_MS)) matrix(0,N,0) else X$s_MS,
-                    # fishery and hatchery removals
-                    F_rate = replace(F_rate, is.na(F_rate), 0),
-                    N_B = sum(B_take_obs > 0),
-                    which_B = as.vector(which(B_take_obs > 0)),
-                    B_take_obs = B_take_obs[B_take_obs > 0],
                     # spawner abundance
                     N_S_obs = sum(!is.na(S_obs)),
                     which_S_obs = as.vector(which(!is.na(S_obs))),
@@ -311,7 +309,12 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
                     n_W_obs = n_W_obs,
-                    n_H_obs = n_H_obs
+                    n_H_obs = n_H_obs,
+                    # fishery and hatchery removals
+                    F_rate = replace(F_rate, is.na(F_rate), 0),
+                    N_B = sum(B_take_obs > 0),
+                    which_B = as.vector(which(B_take_obs > 0)),
+                    B_take_obs = B_take_obs[B_take_obs > 0]
                 ),
                 
                 IPM_SMaS = list(
@@ -339,11 +342,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # SAR
                     K_MS = ifelse(is.null(X$s_MS), 0, ncol(X$s_MS)), 
                     X_MS = if(is.null(X$s_MS)) matrix(0,N,0) else X$s_MS,
-                    # fishery and hatchery removals
-                    F_rate = replace(F_rate, is.na(F_rate), 0),
-                    N_B = sum(B_take_obs > 0),
-                    which_B = as.vector(which(B_take_obs > 0)),
-                    B_take_obs = B_take_obs[B_take_obs > 0],
                     # spawner abundance
                     N_S_obs = sum(!is.na(S_obs)),
                     which_S_obs = as.vector(which(!is.na(S_obs))),
@@ -358,7 +356,12 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
                     n_W_obs = n_W_obs,
-                    n_H_obs = n_H_obs
+                    n_H_obs = n_H_obs,
+                    # fishery and hatchery removals
+                    F_rate = replace(F_rate, is.na(F_rate), 0),
+                    N_B = sum(B_take_obs > 0),
+                    which_B = as.vector(which(B_take_obs > 0)),
+                    B_take_obs = B_take_obs[B_take_obs > 0]
                 ),
                 
                 IPM_LCRchum = list(
@@ -393,12 +396,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     # SAR
                     K_MS = ifelse(is.null(X$s_MS), 0, ncol(X$s_MS)), 
                     X_MS = if(is.null(X$s_MS)) matrix(0,N,0) else X$s_MS,
-                    # fishery and hatchery removals and translocations
-                    F_rate = replace(F_rate, is.na(F_rate), 0),
-                    N_B = sum(B_take_obs > 0),
-                    which_B = as.vector(which(B_take_obs > 0)),
-                    B_take_obs = B_take_obs[B_take_obs > 0],
-                    S_add_obs = replace(S_add_obs, is.na(S_add_obs), 0),
                     # spawner abundance and observation error
                     N_S_obs = sum(!is.na(S_obs)),
                     which_S_obs = as.vector(which(!is.na(S_obs))),
@@ -417,7 +414,13 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     N_H_pop = length(unique(grep("Hatchery", fish_data$pop, value = TRUE))),
                     which_H_pop = sapply(strsplit(colnames(n_origin_obs), "_"), 
                                          function(x) as.numeric(substring(x[2], 7)))[-1],
-                    n_origin_obs = n_origin_obs
+                    n_origin_obs = n_origin_obs,
+                    # fishery and hatchery removals and translocations
+                    F_rate = replace(F_rate, is.na(F_rate), 0),
+                    N_B = sum(B_take_obs > 0),
+                    which_B = as.vector(which(B_take_obs > 0)),
+                    B_take_obs = B_take_obs[B_take_obs > 0],
+                    S_add_obs = replace(S_add_obs, is.na(S_add_obs), 0)
                 ),
                 
                 IPM_ICchinook = list(
@@ -462,11 +465,6 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     which_prior_U = as.vector(which_prior_U),
                     mu_prior_U = as.vector(mu_prior_U),
                     sigma_prior_U = as.vector(sigma_prior_U),
-                    # fishery and hatchery removals
-                    F_rate = replace(F_rate, is.na(F_rate), 0),
-                    N_B = sum(B_take_obs > 0),
-                    which_B = as.vector(which(B_take_obs > 0)),
-                    B_take_obs = B_take_obs[B_take_obs > 0],
                     # spawner abundance
                     N_S_obs = sum(!is.na(S_obs)),
                     which_S_obs = as.vector(which(!is.na(S_obs))),
@@ -479,7 +477,12 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                     N_H = sum(fit_p_HOS),
                     which_H = as.vector(which(fit_p_HOS)),
                     n_W_obs = n_W_obs,
-                    n_H_obs = n_H_obs
+                    n_H_obs = n_H_obs,
+                    # fishery and hatchery removals
+                    F_rate = replace(F_rate, is.na(F_rate), 0),
+                    N_B = sum(B_take_obs > 0),
+                    which_B = as.vector(which(B_take_obs > 0)),
+                    B_take_obs = B_take_obs[B_take_obs > 0]
                 ),
                 
                 RR_SS = list(

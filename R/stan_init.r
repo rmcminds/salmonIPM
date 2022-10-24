@@ -244,6 +244,8 @@ stan_init <- function(stan_model, data, chains = 1)
              zeta_p = zeta_p,
              # kelt survival
              mu_SS = array(plogis(rnorm(N_pop, mean(qlogis(s_SS)), 0.5))),
+             beta_SS = matrix(rnorm(K_SS*N_pop, 0, 0.5/apply(abs(X_SS), 2, max)), 
+                              N_pop, K_SS, byrow = TRUE),
              rho_SS = array(runif(N_pop, 0.1, 0.7)),
              sigma_SS = array(runif(N_pop, 0.05, 2)),
              zeta_SS = as.vector(scale(qlogis(s_SS))),

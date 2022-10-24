@@ -174,7 +174,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     eta_year_SS[1] <- rnorm(1, 0, sigma_year_SS/sqrt(1 - rho_SS^2))
     for(i in 2:max(year))
       eta_year_SS[i] <- rnorm(1, rho_SS*eta_year_SS[i-1], sigma_year_SS)
-    s_SS <- plogis(rnorm(N, qlogis(mu_SS) + eta_year_SS[year], sigma_SS))
+    s_SS <- plogis(rnorm(N, qlogis(mu_SS) + X_SS %*% beta_SS + eta_year_SS[year], sigma_SS))
   }
   
   if(life_cycle == "SMS") 
@@ -251,11 +251,11 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     {
       for(a in 1:N_age)
       {
-        if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # initialize spawners in yrs 1:max_age
+        if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # use initial states in yrs 1:max_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
           S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
-        } else {
+        } else {  # use process model
           S_W_a[i,a] <- R[i - adult_ages[a]]*p[i - adult_ages[a],a]
         }
       }
@@ -266,20 +266,22 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     {
       for(a in 1:N_age)
       {
-        if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # initialize maiden spawners in yrs 1:max_age
+        # maiden spawners
+        if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # use initial states in yrs 1:max_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
           S_M_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
-        } else {
+        } else {  # use process model
           S_M_a[i,a] <- R[i - adult_ages[a]]*p[i - adult_ages[a],a]
         }
       }
       
-      if(year[i] == min(year[pop == pop[i]])) # initialize repeat spawners in year 1
+      # repeat spawners
+      if(year[i] == min(year[pop == pop[i]])) # ise initial states in year 1
       { 
         ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - 1
         S_K_a[i,] <- dat_init$S[ii]*p_init[ii,]*dat_init$s_SS[ii]  # kludge age structure
-      } else {
+      } else {  # use process model
         S_W_plus <- c(head(S_W_a[i-1,], N_age - 1), sum(tail(S_W_a[i-1,], 2)))
         S_K_a[i,] <- S_W_plus*s_SS[i-1]
       }
@@ -288,20 +290,22 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     # smolts and pre-removal spawners by age
     if(life_cycle == "SMS")
     {
-      if(year[i] - smolt_age < min(year[pop == pop[i]])) # initialize smolts in yrs 1:smolt_age
+      # smolt recruitment
+      if(year[i] - smolt_age < min(year[pop == pop[i]])) # use initial states in yrs 1:smolt_age
       {
         M[i] <- dat_init$M0[dat_init$pop == pop[i] & dat_init$year == year[i] - smolt_age]
       } else {
         M[i] <- M0[i - smolt_age]
       }
       
+      # adult recruitment
       for(a in 1:N_age)
       {
-        if(year[i] - ocean_ages[a] < min(year[pop == pop[i]])) # initialize spawners in yrs 1:max_ocean_age
+        if(year[i] - ocean_ages[a] < min(year[pop == pop[i]])) # use initial states in yrs 1:max_ocean_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - ocean_ages[a]
           S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
-        } else {
+        } else {  # use process model
           S_W_a[i,a] <- M[i - ocean_ages[a]]*s_MS[i - ocean_ages[a]]*p[i - ocean_ages[a],a]
         }
       }

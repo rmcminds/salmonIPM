@@ -26,6 +26,9 @@ data {
   int<lower=2> N_age;                  // number of maiden adult age classes
   int<lower=2> max_age;                // maximum maiden adult age
   matrix<lower=0>[N,N_age*2] n_MKage_obs; // observed wild [maiden | kelt] spawner age frequencies
+  // kelt survival
+  int<lower=0> K_SS;                   // number of kelt survival covariates
+  row_vector[K_SS] X_SS[N];            // kelt survival covariates
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -97,6 +100,7 @@ parameters {
   matrix[N,N_age-1] zeta_p;               // log-ratio cohort age distribution errors (Z-scores)
   // kelt survival
   vector<lower=0,upper=1>[N_pop] mu_SS;   // mean kelt (spawner-to-spawner) survival
+  matrix[N_pop,K_SS] beta_SS;             // regression coefs for kelt survival
   vector<lower=-1,upper=1>[N_pop] rho_SS; // AR(1) coefs for kelt survival
   vector<lower=0>[N_pop] sigma_SS;        // kelt survival process error SDs
   vector[N] zeta_SS;                      // kelt survival process errors (Z-scored)
@@ -175,7 +179,8 @@ transformed parameters {
       epsilon_R[i] = rho_R[pop[i]] * epsilon_R[i-1] + sigma_R[pop[i]] * zeta_R[i];
       epsilon_SS[i] = rho_SS[pop[i]] * epsilon_SS[i-1] + sigma_SS[pop[i]] * zeta_SS[i];
     }
-    s_SS[i] = inv_logit(logit(mu_SS[pop[i]]) + epsilon_SS[i]);  // kelt survival
+    // kelt survival
+    s_SS[i] = inv_logit(logit(mu_SS[pop[i]]) + dot_product(X_SS[i], beta_SS[pop[i],]) + epsilon_SS[i]);  
 
     // Spawners and age structure
     // use initial values for orphan age classes, otherwise use process model
@@ -241,6 +246,7 @@ model {
   zeta_R ~ std_normal();   // total recruits: R ~ lognormal(log(R_hat), sigma_R)
 
   // kelt survival
+  to_vector(beta_SS) ~ normal(0,3);
   sigma_SS ~ normal(0,3);
   rho_SS ~ pexp(0,0.85,20); // mildly regularize rho_R to ensure stationarity
   zeta_SS ~ normal(0,1);

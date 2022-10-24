@@ -258,15 +258,16 @@ automatically remove it.
 As with any regression model, the user must ensure the effects specified are
 estimable given the design matrix. For example, a spatially varying but
 time-invariant predictor would not be identifiable in a \verb{_np} model because
-populations are modeled independently.\tabular{lccccccc}{
-    \tab  \tab  \tab  \tab \strong{Response (family)} \tab  \tab  \tab  \cr
-   \strong{Model} \tab \strong{\code{alpha} \cr (lognormal)} \tab \strong{\code{psi} \cr (logistic normal)} \tab \strong{\code{Rmax} \cr (lognormal)} \tab \strong{\code{Mmax} \cr (lognormal)} \tab \strong{\code{R} \cr (lognormal)} \tab \strong{\code{M} \cr (lognormal)} \tab \strong{\code{s_MS} \cr (logistic normal)} \cr
-   \code{IPM_SS_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \cr
-   \code{IPM_SS_pp} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \cr
-   \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \cr
-   \code{IPM_SMS_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \cr
-   \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \cr
-   \code{IPM_ICchinook_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \cr
-   \code{IPM_LCRchum_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \cr
+populations are modeled independently.\tabular{lcccccccc}{
+    \tab  \tab  \tab  \tab \strong{Response (family)} \tab  \tab  \tab  \tab  \cr
+   \strong{Model} \tab \strong{\code{alpha} \cr (lognormal)} \tab \strong{\code{psi} \cr (logistic normal)} \tab \strong{\code{Rmax} \cr (lognormal)} \tab \strong{\code{Mmax} \cr (lognormal)} \tab \strong{\code{R} \cr (lognormal)} \tab \strong{\code{M} \cr (lognormal)} \tab \strong{\code{s_MS} \cr (logistic normal)} \tab \strong{\code{s_SS} \cr (logistic normal)} \cr
+   \code{IPM_SS_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
+   \code{IPM_SS_pp} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
+   \code{IPM_SSiter_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
+   \code{IPM_SMS_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
+   \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
+   \code{IPM_ICchinook_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \cr
+   \code{IPM_LCRchum_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
 }
 }
