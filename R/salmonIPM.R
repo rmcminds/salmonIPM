@@ -35,12 +35,12 @@
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages. (This is not needed for `IPM_SMaS_np` because
 #'   in that case smolt age structure is provided in `fish_data`.)
-#' @param F_ages Either a logical or 0/1 integer vector of length `N_age` indicating 
-#' whether each adult age is fully (non)selected by the fishery, or an integer vector
-#' in `min_age:max_age` indicating which adult ages are selected. The default is all selected.
-#' @param B_ages Either a logical or 0/1 integer vector of length `N_age` indicating 
-#' whether each adult age is fully (non)selected in broodstock collection, or an integer vector
-#' in `min_age:max_age` indicating which adult ages are selected. The default is all selected.
+#' @param age_F Either a logical or 0/1 integer vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected by the fishery. 
+#' The default is all selected.
+#' @param age_B Either a logical or 0/1 integer vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected in broodstock collection. 
+#' The default is all selected.
 #' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or 0/1 integer
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
@@ -212,7 +212,7 @@
 
 salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, 
                       SR_fun = "BH", par_models = NULL, scale = TRUE, 
-                      ages = NULL, F_ages = NULL, B_ages = NULL,
+                      ages = NULL, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
@@ -226,7 +226,7 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, 
                    par_models = par_models, scale = scale, 
-                   ages = ages, F_ages = F_ages, B_ages = B_ages,
+                   ages = ages, age_F = age_F, age_B = age_B,
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    fish_data = fish_data, fish_data_fwd = fish_data_fwd, 
                    fecundity_data = fecundity_data, prior_data = prior_data, 

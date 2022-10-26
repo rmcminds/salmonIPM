@@ -14,8 +14,8 @@ salmonIPM(
   par_models = NULL,
   scale = TRUE,
   ages = NULL,
-  F_ages = NULL,
-  B_ages = NULL,
+  age_F = NULL,
+  age_B = NULL,
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
@@ -81,13 +81,13 @@ column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\c
 years of all subadult life stages. (This is not needed for \code{IPM_SMaS_np} because
 in that case smolt age structure is provided in \code{fish_data}.)}
 
-\item{F_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected by the fishery, or an integer vector
-in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected.}
 
-\item{B_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected in broodstock collection, or an integer vector
-in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected.}
 
 \item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or 0/1 integer
 vector indicating, for each adult age, whether observed total spawner data

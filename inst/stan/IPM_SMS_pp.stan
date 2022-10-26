@@ -3,7 +3,6 @@ functions {
   #include /include/pexp_lpdf.stan
   #include /include/mat_lmult.stan
   #include /include/quantile.stan
-  #include /include/row_sums.stan
 }
 
 data {
@@ -28,15 +27,6 @@ data {
   // SAR (sMolt-Spawner survival)
   int<lower=0> K_MS;                   // number of SAR covariates
   matrix[N,K_MS] X_MS;                 // SAR covariates
-  // fishery and hatchery removals
-  vector[N] F_rate;                    // fishing mortality rate of wild adults
-  int<lower=0> N_F_age;                // number of adult age classes fully selected by fishery
-  int<lower=1> which_F_age[N_F_age];   // indices of age classes fully selected by fishery
-  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
-  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
-  int<lower=0> N_B_age;                // number of adult age classes fully selected for broodstock
-  int<lower=1> which_B_age[N_B_age];   // indices of age classes fully selected for broodstock
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -50,6 +40,13 @@ data {
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
   int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples
   int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples
+  // fishery and hatchery removals
+  vector[N] F_rate;                    // fishing mortality rate of wild adults
+  vector<lower=0,upper=1>[N_age] age_F; // is age a (non)selected (0/1) by fishery?
+  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
+  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
+  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
+  vector<lower=0,upper=1>[N_age] age_B; // is age a (non)selected (0/1) in broodstock?
 }
 
 transformed data {
@@ -251,12 +248,11 @@ transformed parameters {
       if(pop_year[i] <= ocean_ages[a]) // use initial values
         S_W_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
       else // use recruitment process model
-        S_W_a[a] = M[i-ocean_ages[a]]*s_MS[i-ocean_ages[a]]*p[i-ocean_ages[a],a];
+        S_W_a[a] = M[i-ocean_ages[a]]*s_MS[i-ocean_ages[a]]*p[i-ocean_ages[a],a] * 
+                   (1 - age_F[a]*F_rate[i])*(1 - age_B[a]*B_rate_all[i]);
     }
     
-    // catch and broodstock removal
-    S_W_a[which_F_age] = S_W_a[which_F_age]*(1 - F_rate[i]);
-    S_W_a[which_B_age] = S_W_a[which_B_age]*(1 - B_rate_all[i]);
+    // Total spawners and age structure
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
@@ -310,8 +306,8 @@ model {
   to_vector(zeta_p) ~ std_normal();
 
   // removals
-  log_B_take = log(S_W[which_B]) + log(row_sums(q[which_B,][,which_B_age])) + logit(B_rate); 
-  // implies B_take[i] = S_W[i] * sum(q[i,which_B_age]) * B_rate[i] / (1 - B_rate[i])
+  log_B_take = log(S_W[which_B]) + log(q[which_B,]*age_B) + logit(B_rate); 
+  // implies B_take[i] = S_W[i] * (q[i,] * ageB) * B_rate[i] / (1 - B_rate[i])
   B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
 
   // initial states

@@ -36,7 +36,7 @@
 #' 
 #' @export
 
-run_recon <- function(fish_data, F_ages = NULL, B_ages = NULL)
+run_recon <- function(fish_data, age_F = NULL, age_B = NULL)
 {
   # Basic objects and data dimensions
   fish_data <- as.data.frame(fish_data)
@@ -55,20 +55,13 @@ run_recon <- function(fish_data, F_ages = NULL, B_ages = NULL)
   p_HOS_obs <- ifelse(n_H_obs + n_W_obs > 0, n_H_obs / (n_H_obs + n_W_obs), 0)
   
   # Fishery and broodstock age-selectivity
-  if(is.null(F_ages)) F_ages <- ages
-  if(length(F_ages) == N_age) {
-    if(is.logical(F_ages)) F_ages <- ages[F_ages]
-    if(is.integer(F_ages) & all(F_ages %in% 0:1)) F_ages <- ages[as.logical(F_ages)]
-  }
+  if(is.null(age_F)) age_F <- rep(1, N_age)
+  age_F <- as.numeric(age_F)
   
-  if(is.null(B_ages)) B_ages <- ages
-  if(length(B_ages) == N_age) {
-    if(is.logical(B_ages)) B_ages <- ages[B_ages]
-    if(is.integer(B_ages) & all(B_ages %in% 0:1)) B_ages <- ages[as.logical(B_ages)]
-  }
-  which_B_age <- B_ages - min(ages) + 1
+  if(is.null(age_B)) age_B <- rep(1, N_age)
+    age_B <- as.numeric(age_B)
   
-  B_rate <- B_take_obs / (S_obs * (1 - p_HOS_obs) * rowSums(q_obs[,which_B_age]) + B_take_obs)
+  B_rate <- B_take_obs / (S_obs * (1 - p_HOS_obs) * (as.matrix(q_obs) %*% age_B) + B_take_obs)
 
   # Reconstruct recruits and age structure by brood year and return results
   R_a <- matrix(NA, N, length(ages))
@@ -76,9 +69,9 @@ run_recon <- function(fish_data, F_ages = NULL, B_ages = NULL)
     for(j in 1:length(ages)) {
       a <- ages[j]
       if(year[i] + a <= max(year[pop==pop[i]])) {
-        F_eff <- ifelse(a %in% F_ages, F_rate[i+a], 0)
-        B_eff <- ifelse(a %in% B_ages, B_rate[i+a], 0)
-        R_a[i,j] <- S_obs[i+a] * (1 - p_HOS_obs[i+a]) * q_obs[i+a,j] / ((1 - B_eff) * (1 - F_eff))
+        F_eff <- age_F[j]*F_rate[i+a]
+        B_eff <- age_B[j]*B_rate[i+a]
+        R_a[i,j] <- S_obs[i+a] * (1 - p_HOS_obs[i+a]) * q_obs[i+a,j] / ((1 - F_eff) * (1 - B_eff))
       }
     }
 

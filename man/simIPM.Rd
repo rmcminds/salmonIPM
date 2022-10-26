@@ -13,8 +13,8 @@ simIPM(
   N_age,
   max_age,
   ages = NULL,
-  F_ages = NULL,
-  B_ages = NULL,
+  age_F = NULL,
+  age_B = NULL,
   fish_data
 )
 }
@@ -108,13 +108,13 @@ column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\c
 in years of all subadult life stages. For example, if \code{life_cycle == "SMS"},
 \code{list(M = a)} where \code{a} is integer smolt age.}
 
-\item{F_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected by the fishery, or an integer vector
-in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected.}
 
-\item{B_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected in broodstock collection, or an integer vector
-in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected.}
 
 \item{fish_data}{Data frame with columns:
 \itemize{

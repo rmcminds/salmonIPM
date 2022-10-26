@@ -4,7 +4,7 @@
 \alias{run_recon}
 \title{Perform run reconstruction on brood table data}
 \usage{
-run_recon(fish_data, F_ages = NULL, B_ages = NULL)
+run_recon(fish_data, age_F = NULL, age_B = NULL)
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following columns,
@@ -26,13 +26,13 @@ Gilbert-Rich or maiden-kelt are not supported.
 \item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
 }}
 
-\item{F_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected by the fishery, or an integer vector
-in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected.}
 
-\item{B_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected in broodstock collection, or an integer vector
-in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected.}
 }
 \value{
 A data frame with the following columns, some of which are simply
