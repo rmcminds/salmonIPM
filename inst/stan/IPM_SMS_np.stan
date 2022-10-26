@@ -254,7 +254,7 @@ model {
   // spawner age structure
   to_vector(sigma_p) ~ normal(0,5);
   for(j in 1:N_pop)
-    L_p[j] ~ lkj_corr_cholesky(3);
+    L_p[j] ~ lkj_corr_cholesky(1);
   // age probs logistic MVN: 
   // alr_p[i,] ~ MVN(mu_alr_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
