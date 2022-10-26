@@ -5,6 +5,8 @@
 #' @param life_cycle Character string indicating which life-cycle model to fit.
 #' One of the following options (must be `"SS"` if `model == "RR"`):
 #'   * `"SS"`  Spawner-to-spawner (the default)
+#'   * `"SSiter"` Spawner-to-spawner with iteroparity (currently only available for 
+#'   `pool_pops == FALSE`)
 #'   * `"SMS"`  Spawner-smolt-spawner
 #'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
 #'   available for `pool_pops == FALSE`)
@@ -33,11 +35,17 @@
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages. (This is not needed for `IPM_SMaS_np` because
 #'   in that case smolt age structure is provided in `fish_data`.)
-#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
+#' @param F_ages Either a logical or 0/1 integer vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected by the fishery, or an integer vector
+#' in `min_age:max_age` indicating which adult ages are selected. The default is all selected.
+#' @param B_ages Either a logical or 0/1 integer vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected in broodstock collection, or an integer vector
+#' in `min_age:max_age` indicating which adult ages are selected. The default is all selected.
+#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or 0/1 integer
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
 #'   all ages.
-#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
+#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, an optional logical or 0/1 integer
 #'   vector indicating, for each adult age, whether spawners of that age
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
@@ -73,15 +81,24 @@
 #'   * `S_obs`  Total number (not density) of all wild and hatchery-origin spawners.  
 #'   * `tau_S_obs`  If `stan_model == "IPM_LCRchum_pp"`, known observation error SDs 
 #'   for spawner abundance.  
-#'   * `n_age[min_age]_obs...n_age[max_age]_obs`  Multiple columns of
+#'   * `n_age[min_age]_obs ... n_age[max_age]_obs`  Multiple columns of
 #'   observed spawner age frequencies (i.e., counts), where `[min_age]` and
 #'   `[max_age]` are the numeral age in years (total, not ocean age) of the
-#'   youngest and oldest spawners, respectively.  
-#'   * `n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`, 
+#'   youngest and oldest spawners, respectively. 
+#'   * If `life_cycle == "SSiter"`, multiple columns of observed first-time (maiden) and
+#'   repeat (kelt) spawner age frequencies
+#'   `n_age[min_age]M_obs ... n_age[max_age]M_obs ... n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs`, 
+#'   where `[min_age]` and `[max_age]` are the integer total age in years of the youngest 
+#'   and oldest *maiden* spawners, respectively. Contiguous maiden age columns 
+#'   (denoted by `M`) are followed by an equal number of contiguous kelt age columns 
+#'   (denoted by `K`) where each kelt age is 1 year greater than the corresponding maiden age. 
+#'   The maximum kelt age class is a plus-group, i.e. it should include all repeat spawners 
+#'   age `max_age + 1` or older.
+#'   * `n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`, 
 #'   multiple columns of observed ocean age frequencies (i.e., counts), 
 #'   where `[min_MSage]` and `[max_MSage]` are the youngest and oldest ocean age 
-#'   in years, respectively.  
-#'   * `n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs`  If
+#'   in years, respectively.
+#'   * `n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs`  If
 #'    `life_cycle == "SMaS"`, multiple columns of observed Gilbert-Rich age
 #'   frequencies, sorted first by smolt age (`min_Mage:max_Mage`) and then
 #'   by total age `min_age:max_age`. For example, a life history with
@@ -174,16 +191,17 @@
 #' time-invariant predictor would not be identifiable in a `_np` model because
 #' populations are modeled independently.
 #' 
-#' |                    |                             |                                 |                            | **Response (family)**      |                        |                         |                                 |
-#' |:-------------------|:---------------------------:|:-------------------------------:|:--------------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------:|    
-#' | **Model**          | **`alpha` \cr (lognormal)** | **`psi` \cr (logistic normal)** | **`Rmax` \cr (lognormal)** | **`Mmax` \cr (lognormal)** | **`R` \cr (lognormal)**| **`M` \cr (lognormal)** | **`s_MS` \cr (logistic normal)**|
-#' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | 
-#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | 
-#' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
-#' | `IPM_SMS_pp`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
-#' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
-#' | `IPM_ICchinook_pp` | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                        | 
-#' | `IPM_LCRchum_pp`   | &#x2610;                    | &#x2611;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
+#' |                    |                             |                                 |                            | **Response (family)**      |                        |                         |                                 |                                 |
+#' |:-------------------|:---------------------------:|:-------------------------------:|:--------------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------:|:-------------------------------:|    
+#' | **Model**          | **`alpha` \cr (lognormal)** | **`psi` \cr (logistic normal)** | **`Rmax` \cr (lognormal)** | **`Mmax` \cr (lognormal)** | **`R` \cr (lognormal)**| **`M` \cr (lognormal)** | **`s_MS` \cr (logistic normal)**| **`s_SS` \cr (logistic normal)**|
+#' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_SSiter_np`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
+#' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' | `IPM_SMS_pp`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' | `IPM_ICchinook_pp` | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_LCRchum_pp`   | &#x2610;                    | &#x2611;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
 #' 
 #' @return An object of class `stanfit` representing the fitted model. See
 #'   [rstan::stan()] for details.
@@ -194,7 +212,8 @@
 
 salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, 
                       SR_fun = "BH", par_models = NULL, scale = TRUE, 
-                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
+                      ages = NULL, F_ages = NULL, B_ages = NULL,
+                      age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
@@ -207,7 +226,8 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, 
                    par_models = par_models, scale = scale, 
-                   ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   ages = ages, F_ages = F_ages, B_ages = B_ages,
+                   age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    fish_data = fish_data, fish_data_fwd = fish_data_fwd, 
                    fecundity_data = fecundity_data, prior_data = prior_data, 
                    conditionGRonMS = conditionGRonMS)

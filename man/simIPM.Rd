@@ -13,13 +13,15 @@ simIPM(
   N_age,
   max_age,
   ages = NULL,
+  F_ages = NULL,
+  B_ages = NULL,
   fish_data
 )
 }
 \arguments{
 \item{life_cycle}{Character string indicating which life-cycle model to
-simulate. Currently available options are spawner-to-spawner (\code{"SS"},
-the default) or spawner-smolt-spawner (\code{"SMS"}).}
+simulate. Currently available options are spawner-to-spawner (\code{"SS"}, the default),
+iteroparous spawner-to-spawner (\code{"SSiter"}), or spawner-smolt-spawner (\code{"SMS"}).}
 
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
@@ -64,9 +66,9 @@ SD of unique spawner-smolt productivity process errors.
 \item \code{beta_MS}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
 logit SAR anomalies. Must be specified if \code{par_models} includes \code{s_MS ~ ...};
 otherwise will be ignored and may be omitted.
-\item \code{rho_MS}  If \code{life_cycle == "SMS"}, AR(1) coefficient for  logit SAR anomalies.
+\item \code{rho_MS}  If \code{life_cycle == "SMS"}, AR(1) coefficient for logit SAR anomalies.
 \item \code{sigma_year_MS}  If \code{life_cycle == "SMS"}, process error SD of logit SAR anomalies.
-\item \code{sigma_MS}  If \code{life_cycle == "SMS"}, SD of unique SAR process errors.
+\item \code{sigma_MS}  If \code{life_cycle == "SMS"}, SD of unique logit SAR process errors.
 \item \code{mu_p}  Among-population mean simplex of age distributions.
 \item \code{sigma_pop_p}  Vector of among-population SDs of mean log-ratio age distributions.
 \item \code{R_pop_p}  Among-population correlation matrix of mean log-ratio age distributions.
@@ -74,8 +76,16 @@ otherwise will be ignored and may be omitted.
 \item \code{R_pop_p}  Correlation matrix of cohort log-ratio age distributions.
 \item \code{sigma_p}  Vector of SDs of log-ratio cohort age distributions.
 \item \code{R_p}  Correlation matrix of cohort log-ratio age distributions.
+\item \code{mu_SS}  If \code{life_cycle == "SSiter"}, mean kelt survival.
+\item \code{beta_SS}  If \code{life_cycle == "SSiter"}, vector of regression coefficients for
+logit kelt survival. Must be specified if \code{par_models} includes \code{s_SS ~ ...};
+otherwise will be ignored and may be omitted.
+\item \code{rho_SS}  If \code{life_cycle == "SSiter"}, AR(1) coefficient for annual logit kelt survival anomalies.
+\item \code{sigma_year_SS}  If \code{life_cycle == "SSiter"}, process error SD of annual logit kelt survival anomalies.
+\item \code{sigma_SS}  If \code{life_cycle == "SSiter"}, SD of unique logit kelt survival process errors.
+\item \code{tau}  If \code{life_cycle != "SMS"}, spawner observation error SD.
 \item \code{tau_M}  If \code{life_cycle == "SMS"}, smolt observation error SD.
-\item \code{tau_S}  Spawner observation error SD.
+\item \code{tau_S}  If \code{life_cycle == "SMS"}, pawner observation error SD.
 \item \code{S_init_K}  Mean of initial spawning population size as a fraction of carrying capacity.
 }}
 
@@ -90,12 +100,21 @@ see \code{\link[stats:formula]{stats::formula()}}.}
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
 
-\item{N_age}{Number of adult age classes.}
+\item{N_age}{Number of (maiden) adult age classes.}
 
-\item{max_age}{Oldest adult age class.}
+\item{max_age}{Oldest (maiden) adult age class.}
 
 \item{ages}{For multi-stage models, a named list giving the fixed ages
-in years of all subadult life stages.}
+in years of all subadult life stages. For example, if \code{life_cycle == "SMS"},
+\code{list(M = a)} where \code{a} is integer smolt age.}
+
+\item{F_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery, or an integer vector
+in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+
+\item{B_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection, or an integer vector
+in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
 
 \item{fish_data}{Data frame with columns:
 \itemize{
