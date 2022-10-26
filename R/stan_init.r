@@ -107,7 +107,8 @@ stan_init <- function(stan_model, data, chains = 1)
     R_a <- matrix(NA, N, N_age)
     S_W_obs <- S_obs * (1 - p_HOS_all)
     B_take_all <- replace(rep(0,N), which_B, B_take_obs)
-    B_rate <- pmin(pmax(B_take_obs / (S_W_obs[which_B] * (1 - q_obs[which_B,1]) + B_take_obs), 0.01), 0.99)
+    # assume all ages fully selected by fishery and broodstock collection
+    B_rate <- pmin(pmax(B_take_obs / (S_W_obs[which_B] + B_take_obs), 0.01), 0.99)
     B_rate <- replace(B_rate, is.na(B_rate), mean(B_rate, na.rm = TRUE))
     B_rate_all <- replace(rep(0,N), which_B, B_rate)
     rr_dat <- run_recon(data.frame(pop = pop, A = A, year = year, S_obs = S_obs, 

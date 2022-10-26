@@ -13,13 +13,15 @@ simIPM(
   N_age,
   max_age,
   ages = NULL,
+  F_ages = NULL,
+  B_ages = NULL,
   fish_data
 )
 }
 \arguments{
 \item{life_cycle}{Character string indicating which life-cycle model to
-simulate. Currently available options are spawner-to-spawner (\code{"SS"},
-the default), iteroparous spawner-to-spawner (\code{"SSiter"}), or spawner-smolt-spawner (\code{"SMS"}).}
+simulate. Currently available options are spawner-to-spawner (\code{"SS"}, the default),
+iteroparous spawner-to-spawner (\code{"SSiter"}), or spawner-smolt-spawner (\code{"SMS"}).}
 
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
@@ -105,6 +107,14 @@ column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\c
 \item{ages}{For multi-stage models, a named list giving the fixed ages
 in years of all subadult life stages. For example, if \code{life_cycle == "SMS"},
 \code{list(M = a)} where \code{a} is integer smolt age.}
+
+\item{F_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery, or an integer vector
+in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
+
+\item{B_ages}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection, or an integer vector
+in \code{min_age:max_age} indicating which adult ages are selected. The default is all selected.}
 
 \item{fish_data}{Data frame with columns:
 \itemize{

@@ -6,8 +6,8 @@
 #' checking.
 #'
 #' @param life_cycle Character string indicating which life-cycle model to
-#'   simulate. Currently available options are spawner-to-spawner (`"SS"`,
-#'   the default), iteroparous spawner-to-spawner (`"SSiter"`), or spawner-smolt-spawner (`"SMS"`).
+#'   simulate. Currently available options are spawner-to-spawner (`"SS"`, the default), 
+#'   iteroparous spawner-to-spawner (`"SSiter"`), or spawner-smolt-spawner (`"SMS"`).
 #' @param pars Named list of (hyper)parameters to be used for simulations:
 #'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
 #'   * `beta_alpha`  Vector of regression coefficients for log intrinsic productivity.
@@ -97,8 +97,10 @@
 #'
 #' @export
 
-simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL, 
-                   scale = TRUE, N_age, max_age, ages = NULL, fish_data)
+simIPM <- function(life_cycle = "SS", SR_fun = "BH", 
+                   pars, par_models = NULL, scale = TRUE, 
+                   N_age, max_age, ages = NULL, F_ages = NULL, B_ages = NULL, 
+                   fish_data)
 {
   # Function to simulate correlated pop-specific intrinsic productivity and max recruitment
   alphaRmax_mvn <- function(N_pop, mu_alpha, sigma_alpha, mu_Rmax, sigma_Rmax, rho_alphaRmax) 
@@ -120,10 +122,28 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   A_pop <- tapply(A, pop, mean)
   pop <- as.numeric(factor(pop))
   year <- as.numeric(factor(year))
-  adult_ages <- (max_age - N_age + 1):max_age
+  min_age <- max_age - N_age + 1
+  adult_ages <- min_age:max_age # maiden ages if life_cycle == "SSiter"
   if(life_cycle == "SMS") {
     smolt_age <- ages$M
     ocean_ages <- adult_ages - smolt_age
+  }
+  
+  # Fishery and broodstock age-selectivity
+  which_F_age <- 1:switch(life_cycle, SSiter = N_age + 1, N_age)
+  if(length(F_ages) == length(which_F_age)) {
+    if(is.logical(F_ages)) which_F_age <- which(F_ages)
+    if(is.integer(F_ages) & all(F_ages %in% 0:1)) which_F_age <- which(as.logical(F_ages))
+  } else if(is.integer(F_ages)) {
+    which_F_age <- F_ages - min_age + 1
+  }
+  
+  which_B_age <- 1:switch(life_cycle, SSiter = N_age + 1, N_age)
+  if(length(B_ages) == length(which_B_age)) {
+    if(is.logical(B_ages)) which_B_age <- which(B_ages)
+    if(is.integer(B_ages) & all(B_ages %in% 0:1)) which_B_age <- which(as.logical(B_ages))
+  } else if(is.integer(B_ages)) {
+    which_B_age <- B_ages - min_age + 1
   }
   
   # Simulate correlated pop-specific intrinsic productivity and max recruitment
@@ -160,7 +180,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     }
   }
   
-  # Annual recruitment and SAR anomalies
+  # Annual recruitment, SAR, and kelt survival anomalies
   if(life_cycle %in% c("SS","SSiter")) 
   {
     eta_year_R <- rep(NA, max(year))
@@ -223,12 +243,13 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
     dat_init$s_SS <- plogis(qlogis(mu_SS) + rnorm(N_init, 0, sigma_SS))
   
   ## Simulate recruits and calculate total spawners and spawner age distributions
+  
   if(life_cycle == "SSiter") {
-    S_M_a <- matrix(NA, N, N_age)     # true wild maiden spawners by age  
-    S_K_a <- matrix(NA, N, N_age)     # true wild repeat spawners by age  
-    S_W_a <- matrix(NA, N, N_age + 1) # true wild total spawners by age
+    S_M_a <- matrix(0, N, N_age + 1)  # true wild maiden spawners by age  
+    S_K_a <- matrix(0, N, N_age + 1)  # true wild repeat spawners by age  
+    S_W_a <- matrix(0, N, N_age + 1)  # true wild total spawners by age
   } else {
-    S_W_a <- matrix(NA, N, N_age)  # true wild spawners by age  
+    S_W_a <- matrix(0, N, N_age) # true wild spawners by age  
   }
   S_W <- vector("numeric",N)     # true total wild spawners
   S_H <- vector("numeric",N)     # true total hatchery spawners
@@ -246,23 +267,21 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   # and predict recruitment from brood year i
   for(i in 1:N)
   {
-    # pre-removal spawners by age
-    if(life_cycle == "SS")
+    if(life_cycle == "SS")  # pre-removal spawners by age
     {
       for(a in 1:N_age)
       {
         if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # use initial states in yrs 1:max_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
-          S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
+          S_W_a[i,a] <- dat_init$R[ii] * p_init[ii,a]
         } else {  # use process model
-          S_W_a[i,a] <- R[i - adult_ages[a]]*p[i - adult_ages[a],a]
+          S_W_a[i,a] <- R[i - adult_ages[a]] * p[i - adult_ages[a],a]
         }
       }
     }
     
-    # pre-removal maiden and repeat spawners by age
-    if(life_cycle == "SSiter")
+    if(life_cycle == "SSiter")  # pre-removal maiden and repeat spawners by age
     {
       for(a in 1:N_age)
       {
@@ -270,25 +289,23 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
         if(year[i] - adult_ages[a] < min(year[pop == pop[i]])) # use initial states in yrs 1:max_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - adult_ages[a]
-          S_M_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
+          S_M_a[i,a] <- dat_init$R[ii] * p_init[ii,a]
         } else {  # use process model
-          S_M_a[i,a] <- R[i - adult_ages[a]]*p[i - adult_ages[a],a]
+          S_M_a[i,a] <- R[i - adult_ages[a]] * p[i - adult_ages[a],a]
         }
       }
       
       # repeat spawners
-      if(year[i] == min(year[pop == pop[i]])) # ise initial states in year 1
+      if(year[i] == min(year[pop == pop[i]])) # use initial states in year 1
       { 
         ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - 1
-        S_K_a[i,] <- dat_init$S[ii]*p_init[ii,]*dat_init$s_SS[ii]  # kludge age structure
-      } else {  # use process model
-        S_W_plus <- c(head(S_W_a[i-1,], N_age - 1), sum(tail(S_W_a[i-1,], 2)))
-        S_K_a[i,] <- S_W_plus*s_SS[i-1]
+        S_K_a[i,-1] <- dat_init$S[ii] * p_init[ii,] * dat_init$s_SS[ii] # kludge age structure
+      } else {  # use process model (pool max maiden age and plus group)
+        S_K_a[i,-1] <- c(head(S_W_a[i-1,], N_age - 1), sum(tail(S_W_a[i-1,], 2))) * s_SS[i-1]
       }
     }
     
-    # smolts and pre-removal spawners by age
-    if(life_cycle == "SMS")
+    if(life_cycle == "SMS")  # smolts and pre-removal spawners by age
     {
       # smolt recruitment
       if(year[i] - smolt_age < min(year[pop == pop[i]])) # use initial states in yrs 1:smolt_age
@@ -304,27 +321,27 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
         if(year[i] - ocean_ages[a] < min(year[pop == pop[i]])) # use initial states in yrs 1:max_ocean_age
         {
           ii <- dat_init$pop == pop[i] & dat_init$year == year[i] - ocean_ages[a]
-          S_W_a[i,a] <- dat_init$R[ii]*p_init[ii,a]
+          S_W_a[i,a] <- dat_init$R[ii] * p_init[ii,a]
         } else {  # use process model
-          S_W_a[i,a] <- M[i - ocean_ages[a]]*s_MS[i - ocean_ages[a]]*p[i - ocean_ages[a],a]
+          S_W_a[i,a] <- M[i - ocean_ages[a]] * s_MS[i - ocean_ages[a]] * p[i - ocean_ages[a],a]
         }
       }
     }
     
-    # catch and broodstock removal (assumes no take of age 1)
+    # catch and broodstock removal
     if(life_cycle == "SSiter")
     {      
-      S_M_a[i,-1] <- S_M_a[i,-1]*(1 - F_rate[i]) 
-      S_K_a[i,] <- S_K_a[i,]*(1 - F_rate[i]) 
-      B_take[i] <- B_rate[i]*(sum(S_M_a[i,-1]) + sum(S_K_a[i,]))
-      S_M_a[i,-1] <- S_M_a[i,-1]*(1 - B_rate[i]) 
-      S_K_a[i,] <- S_K_a[i,]*(1 - B_rate[i])
-      S_W_a[i,] <- c(S_M_a[i,], 0) + c(0, S_K_a[i,])
+      S_M_a[i,which_F_age] <- S_M_a[i,which_F_age] * (1 - F_rate[i]) 
+      S_K_a[i,which_F_age] <- S_K_a[i,which_F_age] * (1 - F_rate[i]) 
+      B_take[i] <- B_rate[i] * (sum(S_M_a[i,which_B_age]) + sum(S_K_a[i,which_B_age]))
+      S_M_a[i,which_B_age] <- S_M_a[i,which_B_age] * (1 - B_rate[i]) 
+      S_K_a[i,which_B_age] <- S_K_a[i,which_B_age] * (1 - B_rate[i])
+      S_W_a[i,] <- S_M_a[i,] + S_K_a[i,]
       S_W[i] <- sum(S_W_a[i,])
     } else {
-      S_W_a[i,-1] <- S_W_a[i,-1]*(1 - F_rate[i]) 
-      B_take[i] <- B_rate[i]*sum(S_W_a[i,-1])
-      S_W_a[i,-1] <- S_W_a[i,-1]*(1 - B_rate[i]) 
+      S_W_a[i,which_F_age] <- S_W_a[i,which_F_age] * (1 - F_rate[i]) 
+      B_take[i] <- B_rate[i] * sum(S_W_a[i,which_B_age])
+      S_W_a[i,which_B_age] <- S_W_a[i,which_B_age] * (1 - B_rate[i]) 
       S_W[i] <- sum(S_W_a[i,])
     }
     S_H[i] <- S_W[i]*p_HOS[i]/(1 - p_HOS[i])
@@ -361,7 +378,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH", pars, par_models = NULL,
   n_age_obs <- pmax(round(pmin(n_age_obs, S)), 0)   # cap age samples at pop size
   if(life_cycle == "SSiter")
   {
-    q_MK <- sweep(cbind(S_M_a, S_K_a), 1, S_W, "/") # true [maiden | kelt] spawner age distn
+    q_MK <- sweep(cbind(S_M_a[,-(N_age+1)], S_K_a[,-1]), 1, S_W, "/") # true [maiden | kelt] age distn
     n_MKage_obs <- t(sapply(1:N, function(i) rmultinom(1, n_age_obs[i], q_MK[i,]))) # obs wild age frequencies
     colnames(n_MKage_obs) <- c(paste0("n_age", adult_ages, "M_obs"),
                                paste0("n_age", adult_ages + 1, "K_obs"))

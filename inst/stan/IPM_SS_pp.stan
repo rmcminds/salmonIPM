@@ -7,6 +7,7 @@ functions {
   #include /include/which.stan
   #include /include/mat_lmult.stan
   #include /include/quantile.stan
+  #include /include/row_sums.stan
 }
 
 data {
@@ -32,10 +33,14 @@ data {
   int<lower=0> K_R;                    // number of recruitment covariates
   row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // fishery and hatchery removals
-  vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
+  vector[N] F_rate;                    // fishing mortality rate of wild adults
+  int<lower=0> N_F_age;                // number of adult age classes fully selected by fishery
+  int<lower=1> which_F_age[N_F_age];   // indices of age classes fully selected by fishery
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
   int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
   vector[N_B] B_take_obs;              // observed broodstock take of wild adults
+  int<lower=0> N_B_age;                // number of adult age classes fully selected for broodstock
+  int<lower=1> which_B_age[N_B_age];   // indices of age classes fully selected for broodstock
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -239,8 +244,9 @@ transformed parameters {
         S_W_a[a] = R[i-ages[a]]*p[i-ages[a],a];
     }
     
-    // catch and broodstock removal (assumes no take of age 1)
-    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+    // catch and broodstock removal
+    S_W_a[which_F_age] = S_W_a[which_F_age] * (1 - F_rate[i]);
+    S_W_a[which_B_age] = S_W_a[which_B_age] * (1 - B_rate_all[i]);
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
@@ -295,8 +301,9 @@ model {
   to_vector(zeta_p) ~ std_normal();
   
   // removals
-  log_B_take = log(S_W[which_B]) + log1m(q[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q[,1])*B_rate/(1 - B_rate)
-  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match
+  log_B_take = log(S_W[which_B]) + log(row_sums(q[which_B,][,which_B_age])) + logit(B_rate); 
+  // implies B_take[i] = S_W[i] * sum(q[i,which_B_age]) * B_rate[i] / (1 - B_rate[i])
+  B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
   
   // initial spawners and wild spawner age distribution
   // (accounting for amalgamation of q_init to q_orphan)
