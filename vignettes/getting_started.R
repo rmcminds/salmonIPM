@@ -151,20 +151,20 @@ post1pop <- as_draws_rvars(fit1pop) %>%
   mutate_variables(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax),
                    mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p), 
                    rho_p = R_p[1,2,1]) %>% 
-  as_draws_matrix(.[par_names])
+  .[par_names] %>% as_draws_matrix()
 
 # plot
 par(mfrow = c(3,4), mar = c(5,1,1,1))
 for(j in names(true1pop)) {
   hist(post1pop[,j], 20, prob = TRUE, col = alpha("slategray4", 0.5), border = "white",
-       xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.5)
+       xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.4)
   curve(density(prior1pop[gsub("\\[.\\]", "", j)], at = x)[[1]], lwd = 0.5, add = TRUE)
   abline(v = true1pop[[j]], lwd = 2, lty = 3)
 }
-legend("right", c("true","prior","posterior"), cex = 1.5, text.col = "white", 
+legend("right", c("true","prior","posterior"), cex = 1.4, text.col = "white", 
        fill = c(NA, NA, alpha("slategray4", 0.5)), border = NA,
        inset = c(-1,0), xpd = NA, bty = "n")
-legend("right", c("true","prior","posterior"), cex = 1.5, 
+legend("right", c("true","prior","posterior"), cex = 1.4, 
        lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
        inset = c(-1,0), xpd = NA, bty = "n")
 ## @knitr
@@ -175,11 +175,11 @@ legend("right", c("true","prior","posterior"), cex = 1.5,
 
 ## @knitr singlepop_SR_base
 SR <- as_draws_rvars(as.matrix(fit1pop, c("S","R")))
-alphaRmax <- as.data.frame(fit1pop, c("alpha", "Rmax")) %>% 
-  rename(alpha = `alpha[1]`, Rmax = `Rmax[1]`)
 RR <- run_recon(sim1pop$sim_dat)
 SRdat <- cbind(RR, S_true = sim1pop$pars_out$S, R_true = sim1pop$pars_out$R,
                S = SR$S, R = SR$R)
+alphaRmax <- as.data.frame(fit1pop, c("alpha", "Rmax")) %>% 
+  rename(alpha = `alpha[1]`, Rmax = `Rmax[1]`)
 
 curve(SR(SR_fun = "BH", alpha = sim1pop$pars_out$alpha,
          Rmax = sim1pop$pars_out$Rmax, S = x),
@@ -187,9 +187,9 @@ curve(SR(SR_fun = "BH", alpha = sim1pop$pars_out$alpha,
       ylim = range(0, SRdat$R_true, SRdat$R_obs, quantile(SR$R, 0.975), na.rm=TRUE)*1.02,
       xaxs = "i", yaxs = "i", lty = 3, lwd = 3, xlab = "Spawners", ylab = "Recruits", 
       las = 1, cex.axis = 1.2, cex.lab = 1.5)
-for(i in sample(4000, 100))
+for(i in sample(4000, 200))
   curve(SR(SR_fun = "BH", alpha = alphaRmax$alpha[i], Rmax = alphaRmax$Rmax[i], S = x),
-        col = alpha("slategray4", 0.3), from = par("usr")[1], to = par("usr")[2], 
+        col = alpha("slategray4", 0.2), from = par("usr")[1], to = par("usr")[2], 
         add = TRUE)
 segments(x0 = SRdat$S_true, x1 = SRdat$S_obs, y0 = SRdat$R_true, y1 = SRdat$R_obs,
          col = alpha("black", 0.3))
@@ -205,7 +205,7 @@ segments(x0 = median(SRdat$S), y0 = quantile(SRdat$R, 0.025),
 legend("topleft", c("true","obs","states","fit"), cex = 1.2, bty = "n",
        pch = c(21,16,16,NA), pt.cex = 1.2, pt.bg = c("white",NA,NA,NA), 
        pt.lwd = 1, lty = c(3,NA,1,1), lwd = c(3,NA,1,1),
-       col = c("black", "black", "slategray4", alpha("slategray4", 0.3)))
+       col = c("black", "black", "slategray4", alpha("slategray4", 0.5)))
 
 
 ## @knitr singlepop_SR_ggplot
