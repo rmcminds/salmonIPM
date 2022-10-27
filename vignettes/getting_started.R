@@ -154,7 +154,7 @@ post1pop <- as_draws_rvars(fit1pop) %>%
   as_draws_matrix(.[par_names])
 
 # plot
-par(mfrow = c(3,4), mar = c(5,1,0,1))
+par(mfrow = c(3,4), mar = c(5,1,1,1))
 for(j in names(true1pop)) {
   hist(post1pop[,j], 20, prob = TRUE, col = alpha("slategray4", 0.5), border = "white",
        xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.5)

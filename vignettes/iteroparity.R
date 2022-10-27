@@ -123,7 +123,7 @@ prior1pop <- c(`log(alpha)` = dist_normal(2,2),
                sigma_R = dist_normal(0,5),
                mu_p = dist_beta(1,4),
                sigma_p = dist_normal(0,5),
-               rho_p = 2*dist_beta(4/2,4/2) - 1, # LKJ marginal  
+               rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
                mu_SS = dist_uniform(0,1),
                rho_SS = dist_uniform(-1,1),
                sigma_SS = dist_normal(0,3),
@@ -143,7 +143,7 @@ post1pop <- as_draws_rvars(fit1pop) %>%
   as_draws_matrix(.[par_names])
 
 # plot
-par(mfrow = c(5,4), mar = c(5,1,0,1))
+par(mfrow = c(5,4), mar = c(5,1,1,1))
 for(j in names(true1pop)) {
   hist(post1pop[,j], 20, prob = TRUE, col = alpha("slategray4", 0.5), border = "white",
        xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.5)
@@ -293,6 +293,53 @@ show(gg)
 ## @knitr
 
 
+#===========================================================================
+# ENVIRONMENTAL COVARIATES OF KELT SURVIVAL
+#===========================================================================
+
+#------------------------------
+# Data structure
+# - add covariates
+#------------------------------
+
+## @knitr singlepop_covariate_data_struct
+df1pop$X <- rnorm(N,0,1)
+## @knitr
+
+#------------------------------
+# True parameter values 
+# - add regression coefs
+#------------------------------
+
+## @knitr singlepop_covariate_pars
+pars1pop$beta_SS <- 0.5
+## @knitr
+
+#------------------------------
+# Simulate data 
+#------------------------------
+
+## @knitr singlepop_covariate_data
+simX1pop <- simIPM(life_cycle = "SSiter", SR_fun = "BH", pars = pars1pop, 
+                   par_models = list(s_SS ~ X),
+                   fish_data = df1pop, N_age = N_age, max_age = max_age)
+format(head(simX1pop$sim_dat, 10), digits = 2)
+## @knitr
+
+#-----------------------------------------------------
+# Fit IPM
+#-----------------------------------------------------
+
+## @knitr singlepop_covariate_fit
+fitX1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
+                      par_models = list(s_SS ~ X),
+                      fish_data = simX1pop$sim_dat, 
+                      chains = 4, iter = 2000, warmup = 1000, 
+                      control = list(adapt_delta = 0.95),
+                      seed = 123)
+
+print(fitX1pop, pars = "beta_SS", prob = c(c(0.025, 0.5, 0.975)))
+## @knitr
 
 
 
