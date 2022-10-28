@@ -48,13 +48,13 @@ transformed data {
   int<lower=1,upper=N> N_year = max(year); // number of years
   int<lower=2> ages[N_age];                // adult ages
   int<lower=1> min_age;                    // minimum maiden adult age
-  int<lower=4> N_MKage = N_age*2;          // number of maiden + kelt adult age classes
+  int<lower=4> N_MKage = N_age*2;          // number of [maiden | kelt] adult age classes
   int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  real mu_Rmax = quantile(log(S_obs[which_S_obs]), 0.9); // prior log-mean of Rmax
-  real sigma_Rmax = sd(log(S_obs[which_S_obs])); // prior log-SD of Rmax
+  real mu_Rmax = max(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-mean of Rmax
+  real sigma_Rmax = sd(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-SD of Rmax
   vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
-  real sigma_S_init = 2*sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
+  real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of maiden age distributions in years 1:max_age
   
   for(a in 1:N_age)
