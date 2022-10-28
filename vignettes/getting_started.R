@@ -136,9 +136,9 @@ prior1pop <- c(`log(alpha)` = dist_normal(2,2),
                `log(Rmax)` = dist_normal(max(log_S_obs), sd(log_S_obs)),
                rho_R = dist_wrap("pexp", 0, 0.85, 20),
                sigma_R = dist_normal(0,5),
-               mu_p = dist_beta(1,2),
+               mu_p = dist_beta(1, N_age - 1),
                sigma_p = dist_normal(0,5),
-               rho_p = dist_uniform(-1,1),
+               rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
                tau = dist_wrap("pexp", 1, 0.85, 30))
 
 # true parameter values
