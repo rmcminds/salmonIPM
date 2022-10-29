@@ -49,6 +49,8 @@ stan_init <- function(stan_model, data, chains = 1)
   # Basic objects and data dimensions
   model <- strsplit(stan_model, "_")[[1]][1]
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
+  iter <- grepl("iter", life_cycle)         # iteroparous life history?
+  stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   for(i in names(data)) assign(i, data[[i]])
   N_pop <- max(pop)
   N_year <- max(year)
@@ -86,33 +88,34 @@ stan_init <- function(stan_model, data, chains = 1)
     min_age <- max_age - N_age + 1
     adult_ages <- min_age:max_age
     
-    # iteroparous models: ignore repeat spawner age structure in run reconstruction
     if(life_cycle == "SSiter") {
-      n_MKage_obs <- pmax(n_MKage_obs, 0.1)
-      n_age_obs <- n_MKage_obs[, grep("M", colnames(n_MKage_obs))]
-      colnames(n_age_obs) <- gsub("M", "", colnames(n_age_obs))
-      q_MK_obs <- sweep(n_MKage_obs, 1, rowSums(n_MKage_obs), "/")
-      q_MK_obs_NA <- apply(is.na(q_MK_obs), 1, any)
-      q_MK_obs[q_MK_obs_NA,] <- rep(colMeans(na.omit(q_MK_obs)), each = sum(q_MK_obs_NA))
-      S_MK_obs <- S_obs*q_MK_obs
+      n_age_obs <- pmax(n_age_obs, 0.1)
+      q_iter_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
+      q_iter_obs_NA <- apply(is.na(q_iter_obs), 1, any)
+      q_iter_obs[q_iter_obs_NA,] <- rep(colMeans(na.omit(q_iter_obs)), each = sum(q_iter_obs_NA))
+      S_MK_obs <- S_obs*q_iter_obs
       S_M_obs <- rowSums(S_MK_obs[, grep("M", colnames(S_MK_obs))])
       S_K_obs <- rowSums(S_MK_obs[, grep("K", colnames(S_MK_obs))])
       s_SS <- pmin(pmax(c(NA, tail(S_K_obs, N - 1) / head(S_M_obs, N - 1)), 0.1), 0.9)
       s_SS[is.na(s_SS)] <- mean(s_SS, na.rm = TRUE)
+      q_obs <- sweep(n_age_obs[, grep("M", colnames(n_age_obs))], 1, 
+                     rowSums(n_age_obs[, grep("M", colnames(n_age_obs))]), "/")
+    } else {
+      q_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
+      q_obs_NA <- apply(is.na(q_obs), 1, any)
+      q_obs[q_obs_NA,] <- rep(colMeans(na.omit(q_obs)), each = sum(q_obs_NA))
     }
-    
-    q_obs <- sweep(n_age_obs, 1, rowSums(n_age_obs), "/")
-    q_obs_NA <- apply(is.na(q_obs), 1, any)
-    q_obs[q_obs_NA,] <- rep(colMeans(na.omit(q_obs)), each = sum(q_obs_NA))
     R_a <- matrix(NA, N, N_age)
-    S_W_obs <- S_obs * (1 - p_HOS_all)
+    S_W_obs <- S_obs*(1 - p_HOS_all)
     B_take_all <- replace(rep(0,N), which_B, B_take_obs)
     # run reconstruction assumes all ages fully selected by fishery and broodstock
     B_rate <- pmin(pmax(B_take_obs / (S_W_obs[which_B] + B_take_obs), 0.01), 0.99)
     B_rate <- replace(B_rate, is.na(B_rate), mean(B_rate, na.rm = TRUE))
     B_rate_all <- replace(rep(0,N), which_B, B_rate)
-    rr_dat <- run_recon(data.frame(pop = pop, A = A, year = year, S_obs = S_obs, 
-                                   n_age_obs, n_W_obs = n_W_obs_all, n_H_obs = n_H_obs_all,
+    # iteroparous models: ignore repeat spawner age structure in run reconstruction
+    rr_dat <- run_recon(data.frame(pop = pop, A = A, year = year, 
+                                   S_obs = S_obs, n_age_obs[,1:N_age], 
+                                   n_W_obs = n_W_obs_all, n_H_obs = n_H_obs_all,
                                    F_rate = F_rate, B_take_obs = B_take_all))
     R_obs <- replace(rr_dat$R_obs, is.na(rr_dat$R_obs), mean(rr_dat$R_obs, na.rm = TRUE))
     R_obs <- pmax(R_obs, 1)
@@ -167,7 +170,7 @@ stan_init <- function(stan_model, data, chains = 1)
   ## Initial parameter values to return
   
   out <- lapply(1:chains, function(i) {
-    switch(stan_model,
+    switch(stanmodel,
            IPM_SS_np = list(
              # recruitment
              alpha = array(exp(runif(N_pop, 1, 3))),
@@ -181,15 +184,25 @@ stan_init <- function(stan_model, data, chains = 1)
              rho_R = array(runif(N_pop, 0.1, 0.7)),
              sigma_R = array(runif(N_pop, 0.05, 2)), 
              zeta_R = as.vector(scale(log(R_obs)))*0.1,
-             # spawner age structure
+             # (maiden) spawner age structure
              mu_p = mu_p,
-             sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age-1),
+             sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age - 1),
              zeta_p = zeta_p,
+             # kelt survival
+             mu_SS = if(iter) array(plogis(rnorm(N_pop, mean(qlogis(s_SS)), 0.5))) else numeric(0),
+             beta_SS = matrix(rnorm(K_SS*N_pop, 0, 0.5/apply(abs(X_SS), 2, max)), 
+                              N_pop, K_SS, byrow = TRUE),
+             rho_SS = array(runif(iter*N_pop, 0.1, 0.7)),
+             sigma_SS = array(runif(iter*N_pop, 0.05, 2)),
+             zeta_SS = if(iter) as.vector(scale(qlogis(s_SS))) else array(numeric(0)),
              # H/W composition, removals
              p_HOS = p_HOS_obs,
              B_rate = B_rate,
              # initial spawners, observation error
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
+             q_iter_init = if(iter) {
+               matrix(colMeans(q_iter_obs), N_pop, N_age*2, byrow = TRUE)
+             } else matrix(0, 0, N_pop),
              q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              tau = array(runif(N_pop, 0.5, 1))
            ),
@@ -224,40 +237,6 @@ stan_init <- function(stan_model, data, chains = 1)
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
              q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              tau = runif(1, 0.5, 1)
-           ),
-           
-           IPM_SSiter_np = list(
-             # recruitment
-             alpha = array(exp(runif(N_pop, 1, 3))),
-             beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
-                                 N_pop, K_alpha, byrow = TRUE),
-             Rmax = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
-             beta_Rmax = matrix(rnorm(K_Rmax*N_pop, 0, 0.5/apply(abs(X_Rmax), 2, max)), 
-                                N_pop, K_Rmax, byrow = TRUE),
-             beta_R = matrix(rnorm(K_R*N_pop, 0, 0.5/apply(abs(X_R), 2, max)), 
-                             N_pop, K_R, byrow = TRUE),
-             rho_R = array(runif(N_pop, 0.1, 0.7)),
-             sigma_R = array(runif(N_pop, 0.05, 2)), 
-             zeta_R = as.vector(scale(log(R_obs)))*0.1,
-             # maiden spawner age structure
-             mu_p = mu_p,
-             sigma_p = matrix(runif(N_pop*(N_age-1), 0.5, 1), N_pop, N_age - 1),
-             zeta_p = zeta_p,
-             # kelt survival
-             mu_SS = array(plogis(rnorm(N_pop, mean(qlogis(s_SS)), 0.5))),
-             beta_SS = matrix(rnorm(K_SS*N_pop, 0, 0.5/apply(abs(X_SS), 2, max)), 
-                              N_pop, K_SS, byrow = TRUE),
-             rho_SS = array(runif(N_pop, 0.1, 0.7)),
-             sigma_SS = array(runif(N_pop, 0.05, 2)),
-             zeta_SS = as.vector(scale(qlogis(s_SS))),
-             # H/W composition, removals
-             p_HOS = p_HOS_obs,
-             B_rate = B_rate,
-             # initial spawners, observation error
-             S_init = rep(median(S_obs_noNA), max_age*N_pop),
-             q_MK_init = matrix(colMeans(q_MK_obs), N_pop, N_age*2, byrow = TRUE),
-             q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
-             tau = array(runif(N_pop, 0.5, 1))
            ),
            
            IPM_SMS_np = list(
@@ -476,6 +455,14 @@ stan_init <- function(stan_model, data, chains = 1)
              tau_S = runif(1, 0.5, 1)
            ),
            
+           RR_SS_np = list(
+             # This is currently not based on the input data
+             alpha = array(exp(runif(N_pop, 1, 3))),
+             Rmax = array(exp(runif(N_pop, -1, 0))),
+             rho_R = array(runif(N_pop, 0.1, 0.7)),
+             sigma_R = array(runif(N_pop, 0.5, 1))
+           ),
+           
            RR_SS_pp = list(
              # This is currently not based on the input data
              mu_alpha = runif(1, 3, 6), 
@@ -488,14 +475,6 @@ stan_init <- function(stan_model, data, chains = 1)
              rho_R = runif(1, 0.1, 0.7),
              sigma_year_R = runif(1, 0.1, 0.5), 
              sigma_R = runif(1, 0.1, 2)
-           ),
-           
-           RR_SS_np = list(
-             # This is currently not based on the input data
-             alpha = array(exp(runif(N_pop, 1, 3))),
-             Rmax = array(exp(runif(N_pop, -1, 0))),
-             rho_R = array(runif(N_pop, 0.1, 0.7)),
-             sigma_R = array(runif(N_pop, 0.5, 1))
            )
     )  # end switch()
   })  # end lappply()

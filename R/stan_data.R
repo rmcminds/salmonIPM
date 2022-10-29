@@ -58,7 +58,10 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   if(any(unlist(tapply(year, pop, diff)) != 1))
     stop("Non-consecutive years not allowed in fish_data")
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
-  model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], life_cycle, sep = "_")
+  iter <- grepl("iter", life_cycle)         # iteroparous life history?
+  model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
+                            gsub("iter", "", life_cycle), # same Stan code for iteroparity
+                            sep = "_")
   X <- par_model_matrix(par_models = par_models, scale = scale, fish_data = fish_data)
   
   # Age dimensions
@@ -203,56 +206,18 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   
   out <- switch(model_life_cycle,
                 IPM_SS = list(
-                    # info for observed data
-                    N = N,
-                    pop = pop, 
-                    year = year,
-                    # info for forward simulations
-                    N_fwd = N_fwd,
-                    pop_fwd = as.vector(fish_data_fwd$pop),
-                    year_fwd = as.vector(fish_data_fwd$year),
-                    A_fwd = as.vector(fish_data_fwd$A),
-                    B_rate_fwd = as.vector(fish_data_fwd$B_rate),
-                    F_rate_fwd = as.vector(fish_data_fwd$F_rate),
-                    p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
-                    # recruitment
-                    SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                    A = A,
-                    K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
-                    X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
-                    K_Rmax = ifelse(is.null(X$Rmax), 0, ncol(X$Rmax)), 
-                    X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
-                    K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
-                    X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
-                    # spawner abundance
-                    N_S_obs = sum(!is.na(S_obs)),
-                    which_S_obs = as.vector(which(!is.na(S_obs))),
-                    S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
-                    # spawner age structure
-                    N_age = N_age, 
-                    max_age = max_age,
-                    n_age_obs = n_age_obs,
-                    age_S_obs = age_S_obs,
-                    age_S_eff = age_S_eff,
-                    # H/W composition
-                    N_H = sum(fit_p_HOS),
-                    which_H = as.vector(which(fit_p_HOS)),
-                    n_W_obs = n_W_obs,
-                    n_H_obs = n_H_obs,
-                    # fishery and hatchery removals
-                    F_rate = replace(F_rate, is.na(F_rate), 0),
-                    age_F = age_F,
-                    N_B = sum(B_take_obs > 0),
-                    which_B = as.vector(which(B_take_obs > 0)),
-                    B_take_obs = B_take_obs[B_take_obs > 0],
-                    age_B = age_B
-                  ),
-                
-                IPM_SSiter = list(
                   # info for observed data
                   N = N,
                   pop = pop, 
                   year = year,
+                  # info for forward simulations
+                  N_fwd = N_fwd,
+                  pop_fwd = as.vector(fish_data_fwd$pop),
+                  year_fwd = as.vector(fish_data_fwd$year),
+                  A_fwd = as.vector(fish_data_fwd$A),
+                  B_rate_fwd = as.vector(fish_data_fwd$B_rate),
+                  F_rate_fwd = as.vector(fish_data_fwd$F_rate),
+                  p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
                   # recruitment
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
                   A = A,
@@ -263,16 +228,19 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                   K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
                   X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
                   # kelt survival
+                  iter = as.integer(iter),
                   K_SS = ifelse(is.null(X$s_SS), 0, ncol(X$s_SS)), 
                   X_SS = if(is.null(X$s_SS)) matrix(0,N,0) else X$s_SS,
                   # spawner abundance
                   N_S_obs = sum(!is.na(S_obs)),
                   which_S_obs = as.vector(which(!is.na(S_obs))),
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
-                  # spawner age structure [maiden | repeat]
-                  N_age = sum(grepl("n_age", names(fish_data)))/2,
+                  # spawner or [maiden | repeat] age structure
+                  N_age = N_age,
                   max_age = max_age,
-                  n_MKage_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                  n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
+                  age_S_obs = age_S_obs,
+                  age_S_eff = age_S_eff,
                   # H/W composition
                   N_H = sum(fit_p_HOS),
                   which_H = as.vector(which(fit_p_HOS)),

@@ -491,11 +491,11 @@ priorNpop <- c(mu_alpha = dist_normal(2,2),
                sigma_year_R = dist_normal(0,3),
                rho_R = dist_wrap("pexp", 0, 0.85, 20),
                sigma_R = dist_normal(0,3),
-               mu_p = dist_beta(1,2),
+               mu_p = dist_beta(1, N_age - 1),
                sigma_pop_p = dist_normal(0,2),
-               rho_pop_p = dist_uniform(-1,1),
+               rho_pop_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
                sigma_p = dist_normal(0,2),
-               rho_p = dist_uniform(-1,1),
+               rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
                tau = dist_normal(0,1))
 
 # true parameter values
