@@ -40,8 +40,8 @@
 #' @export
 stan_init <- function(stan_model, data, chains = 1) 
 {
-  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
-                        "IPM_SSiter_np", "IPM_SMaS_np",
+  if(!stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
+                        "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
                         "IPM_LCRchum_pp","IPM_ICchinook_pp",
                         "RR_SS_np","RR_SS_pp"))
     stop("Stan model ", stan_model, " does not exist")
@@ -200,10 +200,10 @@ stan_init <- function(stan_model, data, chains = 1)
              B_rate = B_rate,
              # initial spawners, observation error
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
+             q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              q_iter_init = if(iter) {
                matrix(colMeans(q_iter_obs), N_pop, N_age*2, byrow = TRUE)
              } else matrix(0, 0, N_pop),
-             q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
              tau = array(runif(N_pop, 0.5, 1))
            ),
            
@@ -224,18 +224,28 @@ stan_init <- function(stan_model, data, chains = 1)
              zeta_year_R = as.vector(rnorm(max(year, year_fwd), 0, 0.1)),
              sigma_R = runif(1, 0.5, 1),
              zeta_R = as.vector(scale(log(R_obs)))*0.1,
-             # spawner age structure
+             # (maiden) spawner age structure
              mu_p = colMeans(p_obs),
              sigma_pop_p = array(runif(N_age - 1, 0.5, 1)),
              zeta_pop_p = zeta_pop_p,
              sigma_p = array(runif(N_age-1, 0.5, 1)),
              zeta_p = zeta_p,
+             # kelt survival
+             mu_SS = if(iter) plogis(rnorm(1, mean(qlogis(s_SS)), 0.5)) else 0.5,
+             beta_SS = array(rnorm(K_SS, 0, 0.5/apply(abs(X_SS), 2, max))),
+             rho_SS = if(iter) runif(1, 0.1, 0.7) else 0,
+             sigma_year__SS = if(iter) runif(1, 0.05, 2) else 1, 
+             sigma_SS = if(iter) runif(1, 0.5, 1) else 1,
+             zeta_SS = if(iter) as.vector(scale(qlogis(s_SS))) else array(numeric(0)),
              # H/W composition, removals
              p_HOS = p_HOS_obs,
              B_rate = B_rate,
              # initial spawners, observation error
              S_init = rep(median(S_obs_noNA), max_age*N_pop),
              q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
+             q_iter_init = if(iter) {
+               matrix(colMeans(q_iter_obs), N_pop, N_age*2, byrow = TRUE)
+             } else matrix(0, 0, N_pop),
              tau = runif(1, 0.5, 1)
            ),
            

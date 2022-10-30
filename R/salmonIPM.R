@@ -5,8 +5,7 @@
 #' @param life_cycle Character string indicating which life-cycle model to fit.
 #' One of the following options (must be `"SS"` if `model == "RR"`):
 #'   * `"SS"`  Spawner-to-spawner (the default)
-#'   * `"SSiter"` Spawner-to-spawner with iteroparity (currently only available for 
-#'   `pool_pops == FALSE`)
+#'   * `"SSiter"` Spawner-to-spawner with iteroparity
 #'   * `"SMS"`  Spawner-smolt-spawner
 #'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
 #'   available for `pool_pops == FALSE`)
@@ -195,8 +194,9 @@
 #' |:-------------------|:---------------------------:|:-------------------------------:|:--------------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------:|:-------------------------------:|    
 #' | **Model**          | **`alpha` \cr (lognormal)** | **`psi` \cr (logistic normal)** | **`Rmax` \cr (lognormal)** | **`Mmax` \cr (lognormal)** | **`R` \cr (lognormal)**| **`M` \cr (lognormal)** | **`s_MS` \cr (logistic normal)**| **`s_SS` \cr (logistic normal)**|
 #' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
-#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
 #' | `IPM_SSiter_np`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
+#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_SSiter_pp`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
 #' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
 #' | `IPM_SMS_pp`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
 #' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
