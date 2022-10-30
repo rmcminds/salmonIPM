@@ -221,6 +221,7 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
 {
   if(is.null(stan_model)) 
     stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
+  stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
   
@@ -243,7 +244,7 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   }
   if(log_lik) pars <- c(pars, "LL")
   
-  fit <- rstan::sampling(stanmodels[[stan_model]], 
+  fit <- rstan::sampling(stanmodels[[stanmodel]], 
                          data = dat, init = init, pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 

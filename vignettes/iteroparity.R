@@ -44,7 +44,7 @@ options(mc.cores = parallel::detectCores(logical = FALSE))
 #------------------------------
 
 ## @knitr singlepop_data_setup
-set.seed(12321)
+set.seed(1234321)
 N <- 30
 N_age <- 5   # number of maiden ages
 max_age <- 7 # oldest maiden spawners
@@ -103,7 +103,7 @@ fit1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                      control = list(adapt_delta = 0.95),
                      seed = 123)
 
-print(fit1pop, pars = c("p","R_p","s_SS","p_HOS","S","R","q_MK","LL"), 
+print(fit1pop, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
       include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 
@@ -125,7 +125,7 @@ prior1pop <- c(`log(alpha)` = dist_normal(2,2),
                sigma_p = dist_normal(0,5),
                rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
                mu_SS = dist_uniform(0,1),
-               rho_SS = dist_uniform(-1,1),
+               rho_SS = dist_wrap("pexp", 0, 0.85, 20),
                sigma_SS = dist_normal(0,3),
                tau = dist_wrap("pexp", 1, 0.85, 30))
 
@@ -261,7 +261,7 @@ legend("topright", c("obs","states"), cex = 1.2, y.intersp = 1.2,
 #-----------------------------------------------------------
 
 ## @knitr singlepop_age_structure
-q_MK <- extract1(fit1pop, "q_MK")
+q <- extract1(fit1pop, "q")
 
 gg <- sim1pop$sim_dat %>% 
   select(year, starts_with("n_age")) %>% 
@@ -271,12 +271,12 @@ gg <- sim1pop$sim_dat %>%
   pivot_longer(cols = -c(year, total), names_to = c("age", "MK", ".value"),
                names_pattern = "n_age(.)(.)_obs.(.*)") %>% 
   mutate(MK = ifelse(MK == "M", "Maiden", "Repeat")) %>%
-  cbind(array(aperm(sapply(1:10, function(k) colQuantiles(q_MK[,,k], probs = c(0.05, 0.5, 0.95)), 
+  cbind(array(aperm(sapply(1:10, function(k) colQuantiles(q[,,k], probs = c(0.05, 0.5, 0.95)), 
                            simplify = "array"), c(3,1,2)), dim = c(nrow(.), 3), 
-              dimnames = list(NULL, paste0("q_MKage_", c("lo","med","up"))))) %>%
+              dimnames = list(NULL, paste0("q_age_", c("lo","med","up"))))) %>%
   ggplot(aes(x = year, group = age, color = age, fill = age)) +
-  geom_line(aes(y = q_MKage_med), lwd = 1, alpha = 0.8) +
-  geom_ribbon(aes(ymin = q_MKage_lo, ymax = q_MKage_up), color = NA, alpha = 0.3) +
+  geom_line(aes(y = q_age_med), lwd = 1, alpha = 0.8) +
+  geom_ribbon(aes(ymin = q_age_lo, ymax = q_age_up), color = NA, alpha = 0.3) +
   geom_point(aes(y = PointEst), pch = 16, size = 2.5, alpha = 0.8) +
   geom_errorbar(aes(ymin = Lower, ymax = Upper), width = 0, alpha = 0.8) +
   scale_color_manual(values = viridis(6, end = 0.8, direction = -1)) +
