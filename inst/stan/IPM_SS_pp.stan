@@ -143,12 +143,12 @@ parameters {
   cholesky_factor_corr[N_age-1] L_p;     // Cholesky factor of correlation matrix of cohort log-ratio age distributions
   matrix[N,N_age-1] zeta_p;              // log-ratio cohort age distributions (Z-scores)
   // kelt survival
-  real<lower=0,upper=1> mu_SS;           // mean kelt (spawner-to-spawner) survival
+  vector<lower=0,upper=1>[iter] mu_SS;   // mean kelt (spawner-to-spawner) survival
   vector[K_SS] beta_SS;                  // regression coefs for kelt survival
-  real<lower=-1,upper=1> rho_SS;         // AR(1) coef for kelt survival
-  real<lower=0> sigma_year_SS;           // process error SD of logit kelt survival anomalies
+  vector<lower=-1,upper=1>[iter] rho_SS; // AR(1) coef for kelt survival
+  vector<lower=0>[iter] sigma_year_SS;   // process error SD of logit kelt survival anomalies
   vector[iter*N_year] zeta_year_SS;      // logit kelt survival anomalies (Z-scores)
-  real<lower=0> sigma_SS;                // kelt survival process error SDs
+  vector<lower=0>[iter] sigma_SS;        // kelt survival process error SDs
   vector[iter*N] zeta_SS;                // kelt survival process errors (Z-scores)
   // H/W composition, removals
   vector<lower=0,upper=1>[N_H] p_HOS;    // true p_HOS in years which_H
@@ -216,13 +216,13 @@ transformed parameters {
   // AR(1) model for kelt survival anomalies
   if(iter)
   {
-    eta_year_SS[1] = zeta_year_SS[1] * sigma_year_SS / sqrt(1 - rho_SS^2);
+    eta_year_SS[1] = zeta_year_SS[1] * sigma_year_SS[1] / sqrt(1 - rho_SS[1]^2);
     for(i in 2:N_year)
-      eta_year_SS[i] = rho_SS*eta_year_SS[i-1] + zeta_year_SS[i]*sigma_year_SS;
+      eta_year_SS[i] = rho_SS[1]*eta_year_SS[i-1] + zeta_year_SS[i]*sigma_year_SS[1];
     // constrain annual anomalies to sum to 0
     eta_year_SS = eta_year_SS - mean(eta_year_SS);
     // annual population-specific kelt survival
-    s_SS = inv_logit(logit(mu_SS) + mat_lmult(X_SS, beta_SS) + eta_year_SS[year] + zeta_SS*sigma_SS);
+    s_SS = inv_logit(logit(mu_SS[1]) + mat_lmult(X_SS, beta_SS) + eta_year_SS[year] + zeta_SS*sigma_SS[1]);
   }
   
   // Multivariate Matt trick for age vectors (pop-specific mean and within-pop, time-varying)
@@ -342,12 +342,15 @@ model {
   zeta_R ~ std_normal();      // total recruits: R ~ lognormal(log(R_hat), sigma_R)
 
   // kelt survival
-  to_vector(beta_SS) ~ normal(0,3);
-  rho_SS ~ pexp(0,0.85,20);   // mildly regularize to ensure stationarity
-  sigma_year_SS ~ normal(0,3);
-  zeta_year_SS ~ std_normal();
-  sigma_SS ~ normal(0,3);
-  zeta_SS ~ std_normal();
+  if(iter)
+  {
+    to_vector(beta_SS) ~ normal(0,3);
+    rho_SS[1] ~ pexp(0,0.85,20);   // mildly regularize to ensure stationarity
+    sigma_year_SS[1] ~ normal(0,3);
+    zeta_year_SS ~ std_normal();
+    sigma_SS[1] ~ normal(0,3);
+    zeta_SS ~ std_normal();
+  }
   
   // (maiden) recruit age structure
   for(i in 1:(N_age-1))

@@ -231,11 +231,11 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_p = array(runif(N_age-1, 0.5, 1)),
              zeta_p = zeta_p,
              # kelt survival
-             mu_SS = if(iter) plogis(rnorm(1, mean(qlogis(s_SS)), 0.5)) else 0.5,
+             mu_SS = if(iter) plogis(rnorm(1, mean(qlogis(s_SS)), 0.5)) else array(numeric(0)),
              beta_SS = array(rnorm(K_SS, 0, 0.5/apply(abs(X_SS), 2, max))),
-             rho_SS = if(iter) runif(1, 0.1, 0.7) else 0,
-             sigma_year__SS = if(iter) runif(1, 0.05, 2) else 1, 
-             sigma_SS = if(iter) runif(1, 0.5, 1) else 1,
+             rho_SS = array(runif(iter, 0.1, 0.7)),
+             sigma_year__SS = array(runif(iter, 0.05, 2)), 
+             sigma_SS = array(runif(iter, 0.5, 1)),
              zeta_SS = if(iter) as.vector(scale(qlogis(s_SS))) else array(numeric(0)),
              # H/W composition, removals
              p_HOS = p_HOS_obs,
