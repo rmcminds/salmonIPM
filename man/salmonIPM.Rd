@@ -43,8 +43,7 @@ are intended for an integrated or run-reconstruction model.}
 One of the following options (must be \code{"SS"} if \code{model == "RR"}):
 \itemize{
 \item \code{"SS"}  Spawner-to-spawner (the default)
-\item \code{"SSiter"} Spawner-to-spawner with iteroparity (currently only available for
-\code{pool_pops == FALSE})
+\item \code{"SSiter"} Spawner-to-spawner with iteroparity
 \item \code{"SMS"}  Spawner-smolt-spawner
 \item \code{"SMaS"}  Spawner-smolt-spawner with multiple smolt age classes (currently only
 available for \code{pool_pops == FALSE})
@@ -272,8 +271,9 @@ populations are modeled independently.\tabular{lcccccccc}{
     \tab  \tab  \tab  \tab \strong{Response (family)} \tab  \tab  \tab  \tab  \cr
    \strong{Model} \tab \strong{\code{alpha} \cr (lognormal)} \tab \strong{\code{psi} \cr (logistic normal)} \tab \strong{\code{Rmax} \cr (lognormal)} \tab \strong{\code{Mmax} \cr (lognormal)} \tab \strong{\code{R} \cr (lognormal)} \tab \strong{\code{M} \cr (lognormal)} \tab \strong{\code{s_MS} \cr (logistic normal)} \tab \strong{\code{s_SS} \cr (logistic normal)} \cr
    \code{IPM_SS_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
-   \code{IPM_SS_pp} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
    \code{IPM_SSiter_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_SS_pp} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
+   \code{IPM_SSiter_pp} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
    \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SMS_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr

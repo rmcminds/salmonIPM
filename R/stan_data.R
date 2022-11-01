@@ -39,8 +39,8 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL)
 {
-  if(!stan_model %in% c("IPM_SS_np","IPM_SS_pp","IPM_SMS_np","IPM_SMS_pp",
-                        "IPM_SSiter_np", "IPM_SMaS_np",
+  if(!stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
+                        "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
                         "IPM_LCRchum_pp","IPM_ICchinook_pp",
                         "RR_SS_np","RR_SS_pp"))
     stop("Stan model ", stan_model, " does not exist")
@@ -58,7 +58,7 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   if(any(unlist(tapply(year, pop, diff)) != 1))
     stop("Non-consecutive years not allowed in fish_data")
   life_cycle <- strsplit(stan_model, "_")[[1]][2]
-  iter <- grepl("iter", life_cycle)         # iteroparous life history?
+  iter <- grepl("iter", life_cycle)   # iteroparous life history?
   model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
                             gsub("iter", "", life_cycle), # same Stan code for iteroparity
                             sep = "_")
@@ -132,11 +132,13 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   age_B <- as.numeric(age_B)
 
   # Partially observed and effective age information
-  if(stan_model == "IPM_SS_pp") {
-    if(is.null(age_S_obs)) age_S_obs <- rep(1, N_age)
+  if(model_life_cycle == "IPM_SS") {
+    if(is.null(age_S_obs)) 
+      age_S_obs <- rep(1, switch(life_cycle, SSiter = N_age + 1, N_age))
     age_S_obs <- as.numeric(age_S_obs)
     
-    if(is.null(age_S_eff)) age_S_eff <- rep(1, N_age)
+    if(is.null(age_S_eff)) 
+      age_S_eff <- rep(1, switch(life_cycle, SSiter = N_age + 1, N_age))
     age_S_eff <- as.numeric(age_S_eff)
   }
 

@@ -48,7 +48,7 @@ transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
   int<lower=2> ages[N_age];                // (maiden) adult ages
-  int<lower=1> min_age;                    // minimum (maiden) adult age
+  int<lower=1> min_age;                    // minimum adult age
   int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   real mu_Rmax = max(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-mean of Rmax
@@ -112,9 +112,9 @@ parameters {
   vector<lower=0,upper=1>[N_H] p_HOS;     // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;    // true broodstock take rate when B_take > 0
   // initial spawners, observation error
-  vector<lower=0>[max_age*N_pop] S_init;  // initial total spawner abundance in years 1:max_age
-  simplex[N_age*2] q_iter_init[iter*N_pop]; // initial [maiden | kelt] age distribution in year 1
-  simplex[N_age] q_init[max_age*N_pop];   // initial (maiden) age distribution in years 1:max_age
+  vector<lower=0>[max_age*N_pop] S_init;  // true total spawner abundance in years 1:max_age
+  simplex[N_age] q_init[max_age*N_pop];   // true wild (maiden) age distribution in years 1:max_age
+  simplex[N_age*2] q_iter_init[iter*N_pop]; // true wild [maiden | kelt] age distribution in year 1
   vector<lower=0>[N_pop] tau;             // observation error SDs of total spawners
 }
 
@@ -217,13 +217,13 @@ transformed parameters {
         S_K_a[2:] = S_init[ii]*(1 - p_HOS_all[i])*tail(q_iter_init[pop[i]], N_age)';
       else  // use recruitment process model (pool plus group and max maiden age)
       {
-        S_K_a[2:] = append_col(head(S_W_a[i-1], N_age - 1), sum(tail(S_W_a[i-1], 2))) * s_SS[i-1]; 
+        S_K_a[2:] = append_col(head(S_W_a[i-1,], N_age - 1), sum(tail(S_W_a[i-1,], 2))) * s_SS[i-1]; 
         S_K_a = S_K_a .* (1 - age_F' * F_rate[i]) .* (1 - age_B' * B_rate_all[i]);
       }
       
       S_W_a[i,] = S_M_a + S_K_a;    
       S_W[i] = sum(S_W_a[i,]);
-      q[i,] = append_col(S_M_a[1:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
+      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
     }
     else  // semelparous
     {
@@ -272,7 +272,8 @@ model {
   to_vector(sigma_p) ~ normal(0,5);
   for(j in 1:N_pop)
     L_p[j] ~ lkj_corr_cholesky(1);
-  // age probs logistic MVN: alr_p[i,] ~ MVN(mu_alr_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
+  // age probs logistic MVN: 
+  // alr_p[i,] ~ MVN(mu_alr_p[pop[i],], D*R_p*D), where D = diag_matrix(sigma_p)
   to_vector(zeta_p) ~ std_normal();
 
   // removals
