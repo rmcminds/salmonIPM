@@ -288,7 +288,7 @@ transformed parameters {
       
       S_W_a[i,] = S_M_a + S_K_a;    
       S_W[i] = sum(S_W_a[i,]);
-      q[i,] = append_col(S_M_a[1:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
+      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
     }
     else  // semelparous
     {
@@ -312,9 +312,15 @@ transformed parameters {
     if(min(age_S_eff) == 1)
       R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i], A[i]);
     else
+    {
       // age-a spawners contribute to reproduction iff age_S_eff[a] == 1
       // (assumes age structure is the same for W and H spawners)
-      R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S_W_a[i,]*age_S_eff, A[i]);
+      if(iter) 
+        R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], 
+                      S[i]*(q[i,:N_age] + q[i,2:])*age_S_eff, A[i]);
+      else
+        R_hat[i] = SR(SR_fun, alpha_Xbeta[i], Rmax_Xbeta[i], S[i]*q[i,]*age_S_eff, A[i]);
+    }
     
     R[i] = R_hat[i] * exp(eta_year_R[year[i]] + dot_product(X_R[i], beta_R) + sigma_R*zeta_R[i]);
   }
@@ -385,12 +391,15 @@ model {
   tau ~ normal(0,1);
   
   // Observation model
-  if(min(age_S_obs) == 1)
-    // total spawners
+  if(min(age_S_obs) == 1)  // total spawners
     S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau); 
-  else
-    // total spawners of observed ages
-    S_obs[which_S_obs] ~ lognormal(log(S_W_a[which_S_obs, ] * age_S_obs), tau); 
+  else  // total spawners of observed ages
+  {
+    if(iter) 
+      S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]) + log((q[which_S_obs,:N_age] + q[which_S_obs,2:]) * age_S_obs), tau); 
+    else 
+      S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]) + log(q[which_S_obs,] * age_S_obs), tau); 
+  }
   n_H_obs ~ binomial(n_HW_obs, p_HOS); // counts of hatchery vs. wild spawners
   target += sum(n_age_obs .* log(q));  // obs wild age freq: n_age_obs[i] ~ multinomial(q[i])
 }
