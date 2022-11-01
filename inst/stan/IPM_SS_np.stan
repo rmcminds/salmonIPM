@@ -223,7 +223,7 @@ transformed parameters {
       
       S_W_a[i,] = S_M_a + S_K_a;    
       S_W[i] = sum(S_W_a[i,]);
-      q[i,] = append_col(S_M_a[1:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
+      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
     }
     else  // semelparous
     {
