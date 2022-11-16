@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf_vec.stan
+  #include /include/gnormal_lpdf_vec.stan
   #include /include/col_sums.stan
   #include /include/rep_vec.stan
   #include /include/to_row_vector_row_major.stan
@@ -339,7 +339,7 @@ model {
   alpha ~ lognormal(2.0,2.0);
   Mmax ~ lognormal(mu_Mmax, sigma_Mmax);
   to_vector(beta_M) ~ normal(0,5);
-  rho_M ~ pexp(0.0,0.85,20.0); // mildly regularize rho to ensure stationarity
+  rho_M ~ gnormal(0.0,0.85,20.0); // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();       // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
@@ -354,7 +354,7 @@ model {
   // SAR
   to_vector(beta_MS) ~ normal(0,3);
   to_vector(sigma_MS) ~ normal(0,3);
-  to_vector(rho_MS) ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
+  to_vector(rho_MS) ~ gnormal(0,0.85,20); // mildly regularize rho to ensure stationarity
   for(j in 1:N_pop)
     L_MS[j] ~ lkj_corr_cholesky(1);
   to_vector(zeta_MS) ~ std_normal();   // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
@@ -394,8 +394,8 @@ model {
   }
 
   // observation error
-  tau_M ~ pexp(0.2, 0.16, 30);  // tuned for Auke Creek coho
-  tau_S ~ pexp(0.3, 0.26, 30);  // tuned for Auke Creek coho
+  tau_M ~ gnormal(0.2, 0.16, 30);  // tuned for Auke Creek coho
+  tau_S ~ gnormal(0.3, 0.26, 30);  // tuned for Auke Creek coho
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts

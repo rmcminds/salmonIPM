@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf_vec.stan
+  #include /include/gnormal_lpdf_vec.stan
   #include /include/mat_lmult.stan
   #include /include/quantile.stan
 }
@@ -241,13 +241,13 @@ model {
   alpha ~ lognormal(2.0,2.0);
   Mmax ~ lognormal(mu_Mmax, sigma_Mmax);
   to_vector(beta_M) ~ normal(0,5);
-  rho_M ~ pexp(0,0.85,20);  // mildly regularize rho to ensure stationarity
+  rho_M ~ gnormal(0,0.85,20);  // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();    // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
   // SAR
   to_vector(beta_MS) ~ normal(0,3);
-  rho_MS ~ pexp(0,0.85,20); // mildly regularize rho to ensure stationarity
+  rho_MS ~ gnormal(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_MS ~ normal(0,3);
   zeta_MS ~ std_normal();   // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
 
@@ -276,8 +276,8 @@ model {
   }
 
   // observation error
-  tau_M ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
-  tau_S ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
+  tau_M ~ gnormal(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
+  tau_S ~ gnormal(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts

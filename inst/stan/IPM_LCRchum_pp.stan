@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf.stan
+  #include /include/gnormal_lpdf.stan
   #include /include/mat_lmult.stan
   #include /include/quantile.stan
   #include /include/veq.stan
@@ -384,7 +384,7 @@ model {
   zeta_psi ~ std_normal();        // logit(psi) ~ N(logit(mu_psi), sigma_psi)
   zeta_Mmax ~ std_normal();       // log(Mmax) ~ N(mu_Mmax, sigma_Mmax)
   beta_M ~ normal(0,5);
-  rho_M ~ pexp(0,0.85,20);        // regularize away from 1 to ensure stationarity
+  rho_M ~ gnormal(0,0.85,20);        // regularize away from 1 to ensure stationarity
   sigma_year_M ~ normal(0,2);
   zeta_year_M ~ std_normal();     // eta_year_M[i] ~ N(rho_M*eta_year_M[i-1], sigma_year_M)
   sigma_M ~ normal(0,2);
@@ -392,7 +392,7 @@ model {
   
   // SAR
   beta_MS ~ normal(0,3);
-  rho_MS ~ pexp(0,0.85,20);       // regularize away from 1 to ensure stationarity
+  rho_MS ~ gnormal(0,0.85,20);       // regularize away from 1 to ensure stationarity
   sigma_year_MS ~ normal(0,2);
   zeta_year_MS ~ std_normal();    // eta_year_MS[i] ~ N(rho_MS*eta_year_MS[i-1], sigma_year_MS)
   sigma_MS ~ normal(0,2);

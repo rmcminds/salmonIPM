@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf.stan
+  #include /include/gnormal_lpdf.stan
   #include /include/mat_lmult.stan
   #include /include/quantile.stan
 }
@@ -279,7 +279,7 @@ model {
   zeta_alpha ~ std_normal();   // [log(alpha), log(Mmax)] ~ MVN([mu_alpha, mu_Mmax], D*R_aMmax*D),
   zeta_Mmax ~ std_normal();    // where D = diag_matrix(sigma_alpha, sigma_Mmax)
   beta_M ~ normal(0,5);
-  rho_M ~ pexp(0,0.85,20);     // mildly regularize to ensure stationarity
+  rho_M ~ gnormal(0,0.85,20);     // mildly regularize to ensure stationarity
   sigma_year_M ~ normal(0,3);
   zeta_year_M ~ std_normal();  // eta_year_M[i] ~ N(rho_M*eta_year_M[i-1], sigma_year_M)
   sigma_M ~ normal(0,3);
@@ -287,7 +287,7 @@ model {
 
   // SAR
   beta_MS ~ normal(0,3);
-  rho_MS ~ pexp(0,0.85,20);    // mildly regularize rho to ensure stationarity
+  rho_MS ~ gnormal(0,0.85,20);    // mildly regularize rho to ensure stationarity
   sigma_year_MS ~ normal(0,3);
   zeta_year_MS ~ std_normal(); // eta_year_MS[i] ~ N(rho_MS*eta_year_MS[i-1], sigma_year_MS)
   sigma_MS ~ normal(0,3);
@@ -322,8 +322,8 @@ model {
   }
 
   // observation error
-  tau_M ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
-  tau_S ~ pexp(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
+  tau_M ~ gnormal(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
+  tau_S ~ gnormal(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M);  // observed smolts

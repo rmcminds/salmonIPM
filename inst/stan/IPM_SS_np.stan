@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf_vec.stan
+  #include /include/gnormal_lpdf_vec.stan
   #include /include/quantile.stan
 }
 
@@ -258,14 +258,14 @@ model {
   alpha ~ lognormal(2.0,2.0);
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   to_vector(beta_R) ~ normal(0,5);
-  rho_R ~ pexp(0,0.85,20); // mildly regularize to ensure stationarity
+  rho_R ~ gnormal(0,0.85,20); // mildly regularize to ensure stationarity
   sigma_R ~ normal(0,5);
   zeta_R ~ std_normal();   // total recruits: R ~ lognormal(log(R_hat), sigma_R)
 
   // kelt survival
   to_vector(beta_SS) ~ normal(0,3);
   sigma_SS ~ normal(0,3);
-  rho_SS ~ pexp(0,0.85,20); // mildly regularize to ensure stationarity
+  rho_SS ~ gnormal(0,0.85,20); // mildly regularize to ensure stationarity
   zeta_SS ~ normal(0,1);
 
   // (maiden) recruit age structure
@@ -291,7 +291,7 @@ model {
   }
 
   // spawner observation error
-  tau ~ pexp(1,0.85,30);  // rule out tau < 0.1 to avoid divergences
+  tau ~ gnormal(1,0.85,30);  // rule out tau < 0.1 to avoid divergences
 
   // Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau[pop[which_S_obs]]); // obs total spawners

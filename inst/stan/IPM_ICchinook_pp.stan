@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf.stan
+  #include /include/gnormal_lpdf.stan
   #include /include/veq.stan
   #include /include/vand.stan
   #include /include/rsub.stan
@@ -335,7 +335,7 @@ model {
   zeta_alpha ~ std_normal();
   zeta_Mmax ~ std_normal();
   beta_M ~ normal(0,5);
-  rho_M ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
+  rho_M ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();     // epsilon_M ~ AR1(rho_M, sigma_M)
   M_init ~ lognormal(0.0,5.0);
@@ -345,20 +345,20 @@ model {
   // all covariates are at their sample means
   target += log_inv_logit(mu_D) + log1m_inv_logit(mu_D);
   beta_D ~ normal(0,5);
-  rho_D ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
-  sigma_D ~ pexp(0,2,10);
+  rho_D ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
+  sigma_D ~ gnormal(0,2,10);
   zeta_D ~ std_normal();      // epsilon_D ~ AR1(rho_D, sigma_D)
   logit(s_D[which_prior_D]) ~ normal(mu_prior_D, sigma_prior_D); // informative prior on s_D
   target += log_inv_logit(mu_SAR) + log1m_inv_logit(mu_SAR);
   beta_SAR ~ normal(0,5);
-  rho_SAR ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
-  sigma_SAR ~ pexp(0,2,10);
+  rho_SAR ~ gnormal(0,0.85,50); // mildly regularize to ensure stationarity
+  sigma_SAR ~ gnormal(0,2,10);
   zeta_SAR ~ std_normal();   // epsilon_SAR ~ AR1(rho_SAR, sigma_SAR)
   logit(SAR[which_prior_SAR]) ~ normal(mu_prior_SAR, sigma_prior_SAR); // informative prior on SAR
   target += log_inv_logit(mu_U) + log1m_inv_logit(mu_U);
   beta_U ~ normal(0,5);
-  rho_U ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
-  sigma_U ~ pexp(0,2,10);
+  rho_U ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
+  sigma_U ~ gnormal(0,2,10);
   zeta_U ~ std_normal();     // epsilon_U ~ AR1(rho_U, sigma_U)
   logit(s_U[which_prior_U]) ~ normal(mu_prior_U, sigma_prior_U); // informative prior on s_U
   
@@ -393,7 +393,7 @@ model {
   }
 
   // observation error
-  tau_S ~ pexp(0,1,10);
+  tau_S ~ gnormal(0,1,10);
 
   // Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S);  // observed spawners

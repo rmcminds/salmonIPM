@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf.stan
+  #include /include/gnormal_lpdf.stan
   #include /include/veq.stan
   #include /include/vand.stan
   #include /include/rsub.stan
@@ -341,7 +341,7 @@ model {
   zeta_alpha ~ std_normal();  // [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D),
   zeta_Rmax ~ std_normal();   // where D = diag_matrix(sigma_alpha, sigma_Rmax)
   beta_R ~ normal(0,5);
-  rho_R ~ pexp(0,0.85,50);    // mildly regularize to ensure stationarity
+  rho_R ~ gnormal(0,0.85,50);    // mildly regularize to ensure stationarity
   sigma_year_R ~ normal(0,3);
   zeta_year_R ~ std_normal(); // eta_year_R[i] ~ N(rho_R*eta_year_R[i-1], sigma_year_R)
   sigma_R ~ normal(0,3);
@@ -351,7 +351,7 @@ model {
   if(iter)
   {
     to_vector(beta_SS) ~ normal(0,3);
-    rho_SS[1] ~ pexp(0,0.85,20);   // mildly regularize to ensure stationarity
+    rho_SS[1] ~ gnormal(0,0.85,20);   // mildly regularize to ensure stationarity
     sigma_year_SS[1] ~ normal(0,3);
     zeta_year_SS ~ std_normal();
     sigma_SS[1] ~ normal(0,3);

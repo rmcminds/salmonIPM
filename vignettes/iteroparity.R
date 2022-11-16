@@ -119,15 +119,15 @@ par_names <- c("log(alpha)","log(Rmax)","rho_R","sigma_R",
 log_S_obs <- log(sim1pop$sim_dat$S_obs)
 prior1pop <- c(`log(alpha)` = dist_normal(2,2),
                `log(Rmax)` = dist_normal(max(log_S_obs), sd(log_S_obs)),
-               rho_R = dist_wrap("pexp", 0, 0.85, 20),
+               rho_R = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_R = dist_normal(0,5),
                mu_p = dist_beta(1,4),
                sigma_p = dist_normal(0,5),
                rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
                mu_SS = dist_uniform(0,1),
-               rho_SS = dist_wrap("pexp", 0, 0.85, 20),
+               rho_SS = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_SS = dist_normal(0,3),
-               tau = dist_wrap("pexp", 1, 0.85, 30))
+               tau = dist_wrap("gnorm", 1, 0.85, 30))
 
 # true parameter values
 true1pop <- sim1pop$pars_out %>% 
@@ -480,7 +480,7 @@ log_S_obs <- na.omit(log(simNpop$sim_dat$S_obs))
 priorNpop <- c(mu_alpha = dist_normal(2,2),
                mu_Rmax = dist_normal(max(log_S_obs), sd(log_S_obs)),
                sigma_year_R = dist_normal(0,3),
-               rho_R = dist_wrap("pexp", 0, 0.85, 20),
+               rho_R = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_R = dist_normal(0,3),
                mu_p = dist_beta(1, N_age - 1),
                sigma_pop_p = dist_normal(0,2),
@@ -488,7 +488,7 @@ priorNpop <- c(mu_alpha = dist_normal(2,2),
                sigma_p = dist_normal(0,2),
                rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
                mu_SS = dist_uniform(0,1),
-               rho_SS = dist_wrap("pexp", 0, 0.85, 20),
+               rho_SS = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_year_SS = dist_normal(0,3),
                sigma_SS = dist_normal(0,3),
                tau = dist_normal(0,1))
