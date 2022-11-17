@@ -91,7 +91,7 @@ otherwise will be ignored and may be omitted.
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
-specified by \code{stan_model} that accepts covariates (see Details for available
+specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
 model-response combinations) and \verb{t1 ... tK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}

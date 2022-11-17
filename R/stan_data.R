@@ -37,7 +37,8 @@
 stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE, 
                       ages = NULL, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL)
+                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, 
+                      prior = NULL, prior_data = NULL)
 {
   if(!stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
                         "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
@@ -168,7 +169,57 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                                             levels = levels(factor(c(fish_data$year, fish_data_fwd$year)))))
   }
   
+  # Priors
+  if(is.null(prior)) {
+    prior <- list()
+  } else {
+    stopifnot(all(sapply(prior, is.formula)))
+    stopifnot(all(sapply(prior, function(f) attr(terms(f), "response")))) # formulas must be 2-sided
+  }
+  
+  if(stan_model %in% c("IPM_SS_np","IPM_SSiter_np")) {
+    pars <- sapply(prior, all.vars)
+    stopifnot(all(pars %in% c("alpha","Rmax","mu_p","mu_SS","tau")))
+    pdfs <- lapply(prior, function(f) f[[3]])
+    names(pdfs) <- pars
+    stopifnot(all(sapply(pdfs, is.call)))
+    
+    if(is.null(pdfs$alpha)) {
+      prior_alpha <- array(c(2,2))
+    } else {
+      stopifnot(pdfs$alpha[[1]] == "lognormal")
+      prior_alpha <- array(unlist(eval(pdfs$alpha)[c("meanlog","sdlog")]))
+    }
+    if(is.null(pdfs$Rmax)) {
+      SA <- log(S_obs/A)
+      prior_Rmax <- array(c(max(SA), sd(SA)))  # default autoscales Rmax
+    } else {
+      stopifnot(pdfs$Rmax[[1]] == "lognormal")
+      prior_Rmax <- array(unlist(eval(pdfs$Rmax)[c("meanlog","sdlog")]))
+    }
+    if(is.null(pdfs$mu_p)) {
+      prior_mu_p <- rep(1, N_age)
+    } else {
+      stopifnot(pdfs$mu_p[[1]] == "dirichlet")
+      prior_mu_p <- array(eval(pdfs$mu_p)[["concentration"]])
+      stopifnot(length(prior_mu_p) == N_age)
+    }
+    if(is.null(pdfs$mu_SS)) {
+      prior_mu_SS <- c(1,1)
+    } else {
+      stopifnot(pdfs$mu_SS[[1]] == "beta")
+      prior_mu_SS <- array(unlist(eval(pdfs$mu_SS)[c("a","b")]))
+    }
+    if(is.null(pdfs$tau)) {
+      prior_tau <- array(c(1,0.85,30)) # rule out tau < 0.1 to avoid divergences
+    } else {
+      stopifnot(pdfs$tau[[1]] == "gnormal")
+      prior_tau <- array(unlist(eval(pdfs$tau)[c("mean","scale","shape")]))
+    }
+  }
+  
   # Prior data
+  ## Deprecated: move this into fish_data columns
   if(life_cycle == "ICchinook") {
     if(is.null(prior_data)) {
       stop("Priors for survival must be specified for model IPM_ICchinook_pp")
@@ -225,24 +276,29 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
+                  prior_alpha = prior_alpha,
                   K_Rmax = ifelse(is.null(X$Rmax), 0, ncol(X$Rmax)), 
                   X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
+                  prior_Rmax = prior_Rmax,
                   K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
                   X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
                   # kelt survival
                   iter = as.integer(iter),
                   K_SS = ifelse(is.null(X$s_SS), 0, ncol(X$s_SS)), 
                   X_SS = if(is.null(X$s_SS)) matrix(0,N,0) else X$s_SS,
+                  prior_mu_SS = prior_mu_SS,
                   # spawner abundance
                   N_S_obs = sum(!is.na(S_obs)),
                   which_S_obs = as.vector(which(!is.na(S_obs))),
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
+                  prior_tau = prior_tau,
                   # spawner or [maiden | repeat] age structure
                   N_age = N_age,
                   max_age = max_age,
                   n_age_obs = as.matrix(fish_data[,grep("n_age", names(fish_data))]),
                   age_S_obs = age_S_obs,
                   age_S_eff = age_S_eff,
+                  prior_mu_p = prior_mu_p,
                   # H/W composition
                   N_H = sum(fit_p_HOS),
                   which_H = as.vector(which(fit_p_HOS)),

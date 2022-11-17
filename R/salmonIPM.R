@@ -24,7 +24,7 @@
 #'   function to fit. Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in the model
-#' specified by `stan_model` that accepts covariates (see Details for available
+#' specified by `stan_model` that accepts covariates (see **Details** for available
 #' model-response combinations) and `t1 ... tK` are terms involving variables in
 #' `fish_data`. Standard formula syntax such as `:` and `*` may be used;
 #' see [stats::formula()].
@@ -141,7 +141,14 @@
 #' row corresponding to a female:
 #' * `age_E`  Female age in years.   
 #' * `E_obs`  Observed fecundity.  
-#' @param prior_data If `stan_model == "IPM_ICchinook_pp"`, named list
+#' @param prior Optional list of two-sided formulas of the form 
+#' `theta ~ distribution(params)`, where `theta` is a (hyper)parameter that can take
+#' a user-specified prior and `distribution()` is its canonical prior family. See 
+#' [salmonIPM::priors] for details on the available parameters in each model and their
+#' corresponding prior families. Any (hyper)parameters `theta` not given explicit priors 
+#' will use the default values of the prior `params`.
+#' @param prior_data (Deprecated; will be merged into `fish_data` in a future release.) 
+#' If `stan_model == "IPM_ICchinook_pp"`, named list
 #' with the following elements: 
 #' * `s`  Data frame with columns `year`, `mu_prior_D`, `sigma_prior_D`, 
 #' `mu_prior_SAR`, `sigma_prior_SAR`, `mu_prior_U`, `sigma_prior_U`, 
@@ -214,7 +221,8 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                       SR_fun = "BH", par_models = NULL, scale = TRUE, 
                       ages = NULL, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
+                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, 
+                      prior = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
                       cores = parallel::detectCores() - 1, ...)
@@ -230,7 +238,8 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                    ages = ages, age_F = age_F, age_B = age_B,
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    fish_data = fish_data, fish_data_fwd = fish_data_fwd, 
-                   fecundity_data = fecundity_data, prior_data = prior_data, 
+                   fecundity_data = fecundity_data, 
+                   prior = prior, prior_data = prior_data, 
                    conditionGRonMS = conditionGRonMS)
   
   if(is.null(init))

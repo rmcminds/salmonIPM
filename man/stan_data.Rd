@@ -19,6 +19,7 @@ stan_data(
   fish_data,
   fish_data_fwd = NULL,
   fecundity_data = NULL,
+  prior = NULL,
   prior_data = NULL
 )
 }
@@ -31,7 +32,7 @@ function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ric
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
-specified by \code{stan_model} that accepts covariates (see Details for available
+specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
 model-response combinations) and \verb{t1 ... tK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
@@ -165,7 +166,15 @@ row corresponding to a female:
 \item \code{E_obs}  Observed fecundity.
 }}
 
-\item{prior_data}{If \code{stan_model == "IPM_ICchinook_pp"}, named list
+\item{prior}{Optional list of two-sided formulas of the form
+\code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take
+a user-specified prior and \code{distribution()} is its canonical prior family. See
+\link{priors} for details on the available parameters in each model and their
+corresponding prior families. Any (hyper)parameters \code{theta} not given explicit priors
+will use the default values of the prior \code{params}.}
+
+\item{prior_data}{(Deprecated; will be merged into \code{fish_data} in a future release.)
+If \code{stan_model == "IPM_ICchinook_pp"}, named list
 with the following elements:
 \itemize{
 \item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},

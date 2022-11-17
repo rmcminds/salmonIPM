@@ -68,7 +68,7 @@ to regularize the posterior away from regions of parameter space that may cause
 computational or sampling problems. In the case of spawner and smolt observation error
 log-SDs, the default prior bounds them ≳ 0.1.
 
-For parameters that are modeled as functions of covariates (see \code{\link[=salmonIPM]{salmonIPM()}}),
+For parameters that are modeled as functions of covariates (see \link{salmonIPM}),
 the specified prior applies when all predictors are at their sample means.\tabular{lccccccccccccc}{
     \tab  \tab  \tab  \tab  \tab  \tab  \tab \strong{Parameter} \tab  \tab  \tab  \tab  \tab  \tab  \cr
    \strong{Model} \tab \strong{\code{alpha}} \tab \strong{\code{mu_alpha}} \tab \strong{\code{mu_psi}} \tab \strong{\code{Rmax}} \tab \strong{\code{mu_Rmax}} \tab \strong{\code{Mmax}} \tab \strong{\code{mu_Mmax}} \tab \strong{\code{mu_MS}} \tab \strong{mu_p} \tab \strong{\code{mu_SS}} \tab \strong{\code{tau}} \tab \strong{\code{tau_S}} \tab \strong{\code{tau_M}} \cr

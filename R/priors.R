@@ -39,7 +39,7 @@
 #' computational or sampling problems. In the case of spawner and smolt observation error
 #' log-SDs, the default prior bounds them &#8819; 0.1.
 #' 
-#' For parameters that are modeled as functions of covariates (see [salmonIPM::salmonIPM()]),
+#' For parameters that are modeled as functions of covariates (see [salmonIPM::salmonIPM]),
 #' the specified prior applies when all predictors are at their sample means.
 #' 
 #' |                    |             |                |              |            |              |            | **Parameter** |            |           |             |          |            |            |
