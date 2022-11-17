@@ -262,5 +262,5 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                          data = dat, init = init, pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 
-                         ...)
+                         control = control, ...)
 }
