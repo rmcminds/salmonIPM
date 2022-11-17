@@ -34,11 +34,12 @@
 #'
 #' @export
 
-stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE, 
+stan_data <- function(stan_model, SR_fun = "BH", 
+                      par_models = NULL, scale = TRUE, prior = NULL, 
                       ages = NULL, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, 
-                      prior = NULL, prior_data = NULL)
+                      prior_data = NULL)
 {
   if(!stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
                         "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",

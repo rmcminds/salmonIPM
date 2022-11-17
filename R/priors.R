@@ -2,11 +2,11 @@
 #' 
 #' @name priors
 #' 
-#' @description The functions described on this page are used to specify priors
+#' @description These functions are used to specify priors
 #' on selected (hyper)parameters in **salmonIPM** models. 
 #'   
 #'   The default priors used in the various models
-#'   are intended to be weakly informative in that they provide moderate
+#'   are intended to be weakly informative, in that they provide moderate
 #'   regularization and help stabilize computation. Priors on scaling parameters, e.g.
 #'   `Rmax` or `mu_Rmax`, are automatically adjusted to be weakly informative but
 #'   consistent with overall population density. For many applications these
@@ -17,16 +17,16 @@
 #' @param mean Prior mean for normal or generalized normal distribution.
 #' @param sd Prior standard deviation for normal distribution.
 #' @param scale Prior scale for generalized normal distribution. Equivalent to
-#' `alpha` in [gnorm::gnorm], but renamed to avoid confusion with the spawner-recruit
+#' `alpha` in [`gnorm::gnorm`], but renamed to avoid confusion with the spawner-recruit
 #' intrinsic productivity parameter. 
 #' @param shape Prior shape for generalized normal distribution. Equivalent to `beta`
-#' in [gnorm::gnorm].
+#' in [`gnorm::gnorm`].
 #' @param meanlog,sdlog Prior log-scale mean and standard deviation, respectively, for 
-#' lognormal distribution; see [stats::Lognormal].
+#' lognormal distribution; see [`stats::Lognormal`].
 #' @param a,b Prior shape parameters for the Beta distribution. Equivalent to
-#' `shape1` and `shape2`, respectively, in [stats::Beta].
+#' `shape1` and `shape2`, respectively, in [`stats::Beta`].
 #' @param concentration Vector of shape parameters for the Dirichlet distribution.
-#' Equivalent to `alpha` in [gtools::dirichlet], but renamed to avoid confusion with 
+#' Equivalent to `alpha` in [`gtools::dirichlet`], but renamed to avoid confusion with 
 #' the spawner-recruit intrinsic productivity parameter.
 #'
 #' @details The table below shows the parameters in each model that can be given
@@ -34,26 +34,29 @@
 #' users can modify the prior parameters but not the distribution families; attempting
 #' to do the latter will result in an error.
 #' 
+#' Priors for parameters that are bounded on the positive real line 
+#' (e.g. `tau`, `tau_S` and `tau_M`) are automatically left-truncated at zero.
+#' 
+#' For parameters that are modeled as functions of covariates (see [salmonIPM::salmonIPM()]),
+#' the specified prior applies when all predictors are at their sample means.
+#' 
 #' The generalized normal density with `shape >> 1` is useful as a "soft-uniform" prior
 #' to regularize the posterior away from regions of parameter space that may cause
 #' computational or sampling problems. In the case of spawner and smolt observation error
 #' log-SDs, the default prior bounds them &#8819; 0.1.
 #' 
-#' For parameters that are modeled as functions of covariates (see [salmonIPM::salmonIPM]),
-#' the specified prior applies when all predictors are at their sample means.
-#' 
-#' |                    |             |                |              |            |              |            | **Parameter** |            |           |             |          |            |            |
-#' |:-------------------|:-----------:|:--------------:|:------------:|:----------:|:------------:|:----------:|:-------------:|:----------:|:---------:|:-----------:|:--------:|:----------:|:----------:|
-#' | **Model**          | **`alpha`** | **`mu_alpha`** | **`mu_psi`** | **`Rmax`** | **`mu_Rmax`**| **`Mmax`** | **`mu_Mmax`** | **`mu_MS`**| **mu_p**  | **`mu_SS`** | **`tau`**| **`tau_S`**| **`tau_M`**|
-#' | `IPM_SS_np`        | lognormal   |                |              | lognormal  |              |            |               |            | dirichlet |             | gnormal  |            |            |
-#' | `IPM_SSiter_np`    | lognormal   |                |              | lognormal  |              |            |               |            | dirichlet | beta        | gnormal  |            |            |
-#' | `IPM_SS_pp`        |             | normal         |              |            | normal       |            |               |            | dirichlet |             | gnormal  |            |            |
-#' | `IPM_SSiter_pp`    |             | normal         |              |            | normal       |            |               |            | dirichlet | beta        | gnormal  |            |            |
-#' | `IPM_SMS_np`       | lognormal   |                |              |            |              | lognormal  |               | beta       | dirichlet |             |          | gnormal    | gnormal    |
-#' | `IPM_SMS_pp`       |             | normal         |              |            |              |            | normal        | beta       | dirichlet |             |          | gnormal    | gnormal    |
-#' | `IPM_SMaS_np`      | lognormal   |                |              |            |              | lognormal  |               |            |           |             |          | gnormal    | gnormal    |
-#' | `IPM_ICchinook_pp` |             |                |              |            |              |            | normal        |            | dirichlet |             |          | gnormal    | gnormal    |
-#' | `IPM_LCRchum_pp`   |             |                | beta         |            |              |            | normal        | beta       | dirichlet |             |          | gnormal    | gnormal    |
+#' |                    |                             |                             |                         |                            |                            |                            | **Parameter (PDF)**         |                        |                            |                        |                         |                                       |
+#' |:-------------------|:---------------------------:|:---------------------------:|:-----------------------:|:--------------------------:|:--------------------------:|:--------------------------:|:---------------------------:|:----------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------------:|
+#' | **Model**          | **`alpha` \cr `lognormal`** | **`mu_alpha` \cr `normal`** | **`mu_psi` \cr `beta`** | **`Rmax` \cr `lognormal`** | **`mu_Rmax` \cr `normal`** | **`Mmax` \cr `lognormal`** | **`mu_Mmax` \cr `normal`**  | **`mu_MS` \cr `beta`** | **`mu_p` \cr `dirichlet`** | **`mu_SS` \cr `beta`** | **`tau` \cr `gnormal`** | **`tau_S` \cr `tau_M` \cr `gnormal`** |
+#' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                    | &#x2610;                | &#x2611;                   | &#x2610;                   | &#x2610;                   | &#x2610;                    | &#x2610;               | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                              |
+#' | `IPM_SSiter_np`    | &#x2611;                    | &#x2610;                    | &#x2610;                | &#x2611;                   | &#x2610;                   | &#x2610;                   | &#x2610;                    | &#x2610;               | &#x2611;                   | &#x2611;               | &#x2611;                | &#x2610;                              |
+#' | `IPM_SS_pp`        | &#x2610;                    | &#x2611;                    | &#x2610;                | &#x2610;                   | &#x2611;                   | &#x2610;                   | &#x2610;                    | &#x2610;               | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                              |
+#' | `IPM_SSiter_pp`    | &#x2610;                    | &#x2611;                    | &#x2610;                | &#x2610;                   | &#x2611;                   | &#x2610;                   | &#x2610;                    | &#x2610;               | &#x2611;                   | &#x2611;               | &#x2611;                | &#x2610;                              |
+#' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                    | &#x2610;                | &#x2610;                   | &#x2610;                   | &#x2611;                   | &#x2610;                    | &#x2611;               | &#x2611;                   | &#x2610;               | &#x2610;                | &#x2611;                              |
+#' | `IPM_SMS_pp`       | &#x2610;                    | &#x2611;                    | &#x2610;                | &#x2610;                   | &#x2610;                   | &#x2610;                   | &#x2611;                    | &#x2611;               | &#x2611;                   | &#x2610;               | &#x2610;                | &#x2611;                              |
+#' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                    | &#x2610;                | &#x2610;                   | &#x2610;                   | &#x2611;                   | &#x2610;                    | &#x2610;               | &#x2610;                   | &#x2610;               | &#x2610;                | &#x2611;                              |
+#' | `IPM_ICchinook_pp` | &#x2610;                    | &#x2610;                    | &#x2610;                | &#x2610;                   | &#x2610;                   | &#x2610;                   | &#x2611;                    | &#x2610;               | &#x2611;                   | &#x2610;               | &#x2610;                | &#x2611;                              |
+#' | `IPM_LCRchum_pp`   | &#x2610;                    | &#x2610;                    | &#x2611;                | &#x2610;                   | &#x2610;                   | &#x2610;                   | &#x2611;                    | &#x2611;               | &#x2611;                   | &#x2610;               | &#x2610;                | &#x2610;                              |
 #' 
 #' @return A named list to be used internally by the **salmonIPM** model-fitting functions.
 #'   

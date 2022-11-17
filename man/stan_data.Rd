@@ -10,6 +10,7 @@ stan_data(
   SR_fun = "BH",
   par_models = NULL,
   scale = TRUE,
+  prior = NULL,
   ages = NULL,
   age_F = NULL,
   age_B = NULL,
@@ -19,7 +20,6 @@ stan_data(
   fish_data,
   fish_data_fwd = NULL,
   fecundity_data = NULL,
-  prior = NULL,
   prior_data = NULL
 )
 }
@@ -40,6 +40,13 @@ see \code{\link[stats:formula]{stats::formula()}}.}
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+
+\item{prior}{Optional list of two-sided formulas of the form
+\code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take
+a user-specified prior and \code{distribution()} is its canonical prior family. See
+\code{\link{priors}} for details on the available parameters in each model and their
+corresponding prior families. Any (hyper)parameters \code{theta} not given explicit priors
+will use the default values of the prior \code{params}.}
 
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages. (This is not needed for \code{IPM_SMaS_np} because
@@ -165,13 +172,6 @@ row corresponding to a female:
 \item \code{age_E}  Female age in years.
 \item \code{E_obs}  Observed fecundity.
 }}
-
-\item{prior}{Optional list of two-sided formulas of the form
-\code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take
-a user-specified prior and \code{distribution()} is its canonical prior family. See
-\link{priors} for details on the available parameters in each model and their
-corresponding prior families. Any (hyper)parameters \code{theta} not given explicit priors
-will use the default values of the prior \code{params}.}
 
 \item{prior_data}{(Deprecated; will be merged into \code{fish_data} in a future release.)
 If \code{stan_model == "IPM_ICchinook_pp"}, named list

@@ -25,31 +25,31 @@ dirichlet(concentration = 1)
 \item{sd}{Prior standard deviation for normal distribution.}
 
 \item{scale}{Prior scale for generalized normal distribution. Equivalent to
-\code{alpha} in \link[gnorm:gnorm]{gnorm::gnorm}, but renamed to avoid confusion with the spawner-recruit
+\code{alpha} in \code{\link[gnorm:gnorm]{gnorm::gnorm}}, but renamed to avoid confusion with the spawner-recruit
 intrinsic productivity parameter.}
 
 \item{shape}{Prior shape for generalized normal distribution. Equivalent to \code{beta}
-in \link[gnorm:gnorm]{gnorm::gnorm}.}
+in \code{\link[gnorm:gnorm]{gnorm::gnorm}}.}
 
 \item{meanlog, sdlog}{Prior log-scale mean and standard deviation, respectively, for
-lognormal distribution; see \link[stats:Lognormal]{stats::Lognormal}.}
+lognormal distribution; see \code{\link[stats:Lognormal]{stats::Lognormal}}.}
 
 \item{a, b}{Prior shape parameters for the Beta distribution. Equivalent to
-\code{shape1} and \code{shape2}, respectively, in \link[stats:Beta]{stats::Beta}.}
+\code{shape1} and \code{shape2}, respectively, in \code{\link[stats:Beta]{stats::Beta}}.}
 
 \item{concentration}{Vector of shape parameters for the Dirichlet distribution.
-Equivalent to \code{alpha} in \link[gtools:dirichlet]{gtools::dirichlet}, but renamed to avoid confusion with
+Equivalent to \code{alpha} in \code{\link[gtools:dirichlet]{gtools::dirichlet}}, but renamed to avoid confusion with
 the spawner-recruit intrinsic productivity parameter.}
 }
 \value{
 A named list to be used internally by the \strong{salmonIPM} model-fitting functions.
 }
 \description{
-The functions described on this page are used to specify priors
+These functions are used to specify priors
 on selected (hyper)parameters in \strong{salmonIPM} models.
 
 The default priors used in the various models
-are intended to be weakly informative in that they provide moderate
+are intended to be weakly informative, in that they provide moderate
 regularization and help stabilize computation. Priors on scaling parameters, e.g.
 \code{Rmax} or \code{mu_Rmax}, are automatically adjusted to be weakly informative but
 consistent with overall population density. For many applications these
@@ -63,23 +63,26 @@ user-specified priors and the corresponding distributions. Note that
 users can modify the prior parameters but not the distribution families; attempting
 to do the latter will result in an error.
 
+Priors for parameters that are bounded on the positive real line
+(e.g. \code{tau}, \code{tau_S} and \code{tau_M}) are automatically left-truncated at zero.
+
+For parameters that are modeled as functions of covariates (see \code{\link[=salmonIPM]{salmonIPM()}}),
+the specified prior applies when all predictors are at their sample means.
+
 The generalized normal density with \verb{shape >> 1} is useful as a "soft-uniform" prior
 to regularize the posterior away from regions of parameter space that may cause
 computational or sampling problems. In the case of spawner and smolt observation error
-log-SDs, the default prior bounds them ≳ 0.1.
-
-For parameters that are modeled as functions of covariates (see \link{salmonIPM}),
-the specified prior applies when all predictors are at their sample means.\tabular{lccccccccccccc}{
-    \tab  \tab  \tab  \tab  \tab  \tab  \tab \strong{Parameter} \tab  \tab  \tab  \tab  \tab  \tab  \cr
-   \strong{Model} \tab \strong{\code{alpha}} \tab \strong{\code{mu_alpha}} \tab \strong{\code{mu_psi}} \tab \strong{\code{Rmax}} \tab \strong{\code{mu_Rmax}} \tab \strong{\code{Mmax}} \tab \strong{\code{mu_Mmax}} \tab \strong{\code{mu_MS}} \tab \strong{mu_p} \tab \strong{\code{mu_SS}} \tab \strong{\code{tau}} \tab \strong{\code{tau_S}} \tab \strong{\code{tau_M}} \cr
-   \code{IPM_SS_np} \tab lognormal \tab  \tab  \tab lognormal \tab  \tab  \tab  \tab  \tab dirichlet \tab  \tab gnormal \tab  \tab  \cr
-   \code{IPM_SSiter_np} \tab lognormal \tab  \tab  \tab lognormal \tab  \tab  \tab  \tab  \tab dirichlet \tab beta \tab gnormal \tab  \tab  \cr
-   \code{IPM_SS_pp} \tab  \tab normal \tab  \tab  \tab normal \tab  \tab  \tab  \tab dirichlet \tab  \tab gnormal \tab  \tab  \cr
-   \code{IPM_SSiter_pp} \tab  \tab normal \tab  \tab  \tab normal \tab  \tab  \tab  \tab dirichlet \tab beta \tab gnormal \tab  \tab  \cr
-   \code{IPM_SMS_np} \tab lognormal \tab  \tab  \tab  \tab  \tab lognormal \tab  \tab beta \tab dirichlet \tab  \tab  \tab gnormal \tab gnormal \cr
-   \code{IPM_SMS_pp} \tab  \tab normal \tab  \tab  \tab  \tab  \tab normal \tab beta \tab dirichlet \tab  \tab  \tab gnormal \tab gnormal \cr
-   \code{IPM_SMaS_np} \tab lognormal \tab  \tab  \tab  \tab  \tab lognormal \tab  \tab  \tab  \tab  \tab  \tab gnormal \tab gnormal \cr
-   \code{IPM_ICchinook_pp} \tab  \tab  \tab  \tab  \tab  \tab  \tab normal \tab  \tab dirichlet \tab  \tab  \tab gnormal \tab gnormal \cr
-   \code{IPM_LCRchum_pp} \tab  \tab  \tab beta \tab  \tab  \tab  \tab normal \tab beta \tab dirichlet \tab  \tab  \tab gnormal \tab gnormal \cr
+log-SDs, the default prior bounds them ≳ 0.1.\tabular{lcccccccccccc}{
+    \tab  \tab  \tab  \tab  \tab  \tab  \tab \strong{Parameter (PDF)} \tab  \tab  \tab  \tab  \tab  \cr
+   \strong{Model} \tab \strong{\code{alpha} \cr \code{lognormal}} \tab \strong{\code{mu_alpha} \cr \code{normal}} \tab \strong{\code{mu_psi} \cr \code{beta}} \tab \strong{\code{Rmax} \cr \code{lognormal}} \tab \strong{\code{mu_Rmax} \cr \code{normal}} \tab \strong{\code{Mmax} \cr \code{lognormal}} \tab \strong{\code{mu_Mmax} \cr \code{normal}} \tab \strong{\code{mu_MS} \cr \code{beta}} \tab \strong{\code{mu_p} \cr \code{dirichlet}} \tab \strong{\code{mu_SS} \cr \code{beta}} \tab \strong{\code{tau} \cr \code{gnormal}} \tab \strong{\code{tau_S} \cr \code{tau_M} \cr \code{gnormal}} \cr
+   \code{IPM_SS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \cr
+   \code{IPM_SSiter_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \cr
+   \code{IPM_SS_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \cr
+   \code{IPM_SSiter_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \cr
+   \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_SMS_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_ICchinook_pp} \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_LCRchum_pp} \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
 }
 }
