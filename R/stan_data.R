@@ -173,12 +173,11 @@ stan_data <- function(stan_model, SR_fun = "BH", par_models = NULL, scale = TRUE
   if(is.null(prior)) {
     prior <- list()
   } else {
-    stopifnot(all(sapply(prior, is.formula)))
     stopifnot(all(sapply(prior, function(f) attr(terms(f), "response")))) # formulas must be 2-sided
   }
   
   if(stan_model %in% c("IPM_SS_np","IPM_SSiter_np")) {
-    pars <- sapply(prior, all.vars)
+    pars <- sapply(prior, function(f) as.character(f[[2]]))
     stopifnot(all(pars %in% c("alpha","Rmax","mu_p","mu_SS","tau")))
     pdfs <- lapply(prior, function(f) f[[3]])
     names(pdfs) <- pars
