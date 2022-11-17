@@ -116,7 +116,6 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 fit1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
                      fish_data = sim1pop$sim_dat, 
                      chains = 4, iter = 2000, warmup = 1000, 
-                     control = list(adapt_delta = 0.95),
                      seed = 123)
 
 print(fit1pop, pars = c("p","R_p","p_HOS","S","R","q","LL"), 
@@ -346,7 +345,6 @@ fitX1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                       par_models = list(Rmax ~ X1, R ~ X2),
                       fish_data = simX1pop$sim_dat, 
                       chains = 4, iter = 2000, warmup = 1000, 
-                      control = list(adapt_delta = 0.95),
                       seed = 123)
 
 print(fitX1pop, pars = c("beta_Rmax","beta_R"), prob = c(c(0.025, 0.5, 0.975)))
@@ -422,7 +420,6 @@ format(head(simNpop$sim_dat, 10), digits = 2)
 fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
                     fish_data = simNpop$sim_dat,
                     chains = 4, iter = 2000, warmup = 1000, 
-                    control = list(adapt_delta = 0.95),
                     seed = 321)
 
 print(fitNnp, pars = c("mu_p","sigma_p","p","R_p","p_HOS","S","R","q"), 
@@ -437,7 +434,6 @@ print(fitNnp, pars = c("mu_p","sigma_p","p","R_p","p_HOS","S","R","q"),
 fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH",
                     fish_data = simNpop$sim_dat,
                     chains = 4, iter = 2000, warmup = 1000, 
-                    control = list(adapt_delta = 0.95, max_treedepth = 12),
                     seed = 321)
 
 print(fitNpp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p",
