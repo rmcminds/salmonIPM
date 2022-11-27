@@ -191,8 +191,8 @@ stan_data <- function(stan_model, SR_fun = "BH",
       prior_alpha <- array(unlist(eval(pdfs$alpha)[c("meanlog","sdlog")]))
     }
     if(is.null(pdfs$Rmax)) {  # autoscale Rmax to data
-      SA <- log(S_obs/A)
-      prior_Rmax <- array(c(max(SA, na.rm = TRUE), sd(SA, na.rm = TRUE)))
+      RA <- log((S_obs + B_take_obs)/((1 - F_rate)*A))
+      prior_Rmax <- array(c(quantile(RA, 0.8, na.rm = TRUE), 2*sd(RA, na.rm = TRUE)))
     } else {
       stopifnot(pdfs$Rmax[[1]] == "lognormal")
       prior_Rmax <- array(unlist(eval(pdfs$Rmax)[c("meanlog","sdlog")]))
