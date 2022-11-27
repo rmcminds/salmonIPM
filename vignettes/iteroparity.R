@@ -120,7 +120,7 @@ prior1pop <- c(`log(alpha)` = dist_normal(2,2),
                `log(Rmax)` = dist_normal(max(log_S_obs), sd(log_S_obs)),
                rho_R = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_R = dist_normal(0,5),
-               mu_p = dist_beta(1,4),
+               mu_p = dist_beta(1, N_age - 1),
                sigma_p = dist_normal(0,5),
                rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
                mu_SS = dist_uniform(0,1),
@@ -138,7 +138,7 @@ true1pop <- sim1pop$pars_out %>%
 post1pop <- as_draws_rvars(fit1pop) %>%
   mutate_variables(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax),
                    mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p),
-                   rho_p = R_p[1,2,1]) %>%
+                   rho_p = as.vector(R_p[1,2,1])) %>%
   .[par_names] %>% as_draws_matrix()
 
 # plot
@@ -499,7 +499,7 @@ trueNpop <- simNpop$pars_out %>%
 postNpop <- as_draws_rvars(fitNpp) %>%
   mutate_variables(mu_p = as.vector(mu_p),
                    sigma_pop_p = as.vector(sigma_pop_p), rho_pop_p = R_pop_p[2,1],
-                   sigma_p = as.vector(sigma_p), rho_p = R_p[2,1]) %>%
+                   sigma_p = as.vector(sigma_p), rho_p = as.vector(R_p[2,1])) %>%
   as_draws_matrix(.[par_names])
 
 # plot

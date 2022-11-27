@@ -149,7 +149,7 @@ true1pop <- sim1pop$pars_out %>% replace("sigma_R", .$sigma_year_R) %>%
 post1pop <- as_draws_rvars(fit1pop) %>% 
   mutate_variables(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax),
                    mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p), 
-                   rho_p = R_p[1,2,1]) %>% 
+                   rho_p = as.vector(R_p[1,2,1])) %>% 
   .[par_names] %>% as_draws_matrix()
 
 # plot
@@ -167,6 +167,17 @@ legend("right", c("true","prior","posterior"), cex = 1.4,
        lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
        inset = c(-1,0), xpd = NA, bty = "n")
 ## @knitr
+
+# ggplot version
+## INCOMPLETE - need to solve vector param problem, then add post and true
+prior1a %>% data.frame(par = names(.), prior = .) %>% 
+  ggplot() + 
+  ggdist::stat_slab(aes(xdist = prior), normalize = "panels", 
+                    col = "black", size = 0.5, fill = "white") + 
+  facet_wrap(vars(par), scales = "free") + theme_classic() + 
+  theme(strip.background = element_blank(), axis.line.y = element_blank(), 
+        axis.ticks.y = element_blank(), axis.text.y = element_blank()) + 
+  labs(x = "", y = "")
 
 #-----------------------------------------------------
 # Plot true S-R curve, obs, states and fitted draws
