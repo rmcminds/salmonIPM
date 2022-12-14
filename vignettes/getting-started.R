@@ -24,7 +24,7 @@ if(!require("devtools")) {
   install.packages("devtools")
   library("devtools")
 }
-devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT")
+try(devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT"))
 
 #------------------------------
 # Load packages
