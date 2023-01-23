@@ -21,8 +21,10 @@ data {
   int<lower=1> smolt_age;              // smolt age
   int<lower=0> K_psi;                  // number of egg-to-smolt survival covariates
   matrix[N,K_psi] X_psi;               // egg-to-smolt survival covariates
+  real prior_mu_psi[2];                // prior a, b for hyper-mean egg-to-smolt survival
   int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
+  real prior_mu_Mmax[2];               // prior mean, sd for hyper-mean log maximum smolt recruitment
   int<lower=0> K_M;                    // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];              // smolt recruitment covariates
   // smolt abundance and observation error
@@ -38,6 +40,7 @@ data {
   // SAR (smolt-spawner survival)
   int<lower=0> K_MS;                   // number of SAR covariates
   matrix[N,K_MS] X_MS;                 // SAR covariates
+  real prior_mu_MS[2];                 // prior a, b for mean SAR
   // spawner abundance and observation error
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
@@ -49,6 +52,7 @@ data {
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
+  vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
   int<lower=0> n_M_obs[N];             // observed count of male spawners
   int<lower=0> n_F_obs[N];             // observed count of female spawners
   vector<lower=0,upper=1>[N] p_G_obs;  // proportion green (fully fecund) females
@@ -376,9 +380,10 @@ model {
   sigma_E ~ normal(500,1000);
 
   // spawner-smolt productivity
+  mu_psi ~ beta(prior_mu_psi[1], prior_mu_psi[2]);
   beta_psi ~ normal(0,5);
   sigma_psi ~ normal(0,1);        // mildly regularize long right tail
-  mu_Mmax ~ normal(mu_mu_Mmax, sigma_mu_Mmax);
+  mu_Mmax ~ normal(prior_mu_Mmax[1], prior_mu_Mmax[2]);
   beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   zeta_psi ~ std_normal();        // logit(psi) ~ N(logit(mu_psi), sigma_psi)
@@ -391,6 +396,7 @@ model {
   zeta_M ~ std_normal();          // M0 ~ lognormal(log(M_hat) + eta_year_M, sigma_M)
   
   // SAR
+  mu_MS ~ beta(prior_mu_MS[1], prior_mu_MS[2]);
   beta_MS ~ normal(0,3);
   rho_MS ~ gnormal(0,0.85,20);       // regularize away from 1 to ensure stationarity
   sigma_year_MS ~ normal(0,2);
@@ -399,8 +405,9 @@ model {
   zeta_MS ~ std_normal();         // SAR: logit(s_MS) ~ N(logit(s_MS_hat), sigma_MS)
 
   // spawner age structure
-  to_vector(sigma_pop_p) ~ normal(0,2);
-  to_vector(sigma_p) ~ normal(0,2);
+  mu_p ~ dirichlet(prior_mu_p);
+  to_vector(sigma_pop_p) ~ normal(0,3);
+  to_vector(sigma_p) ~ normal(0,3);
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 

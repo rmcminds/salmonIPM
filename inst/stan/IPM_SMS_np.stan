@@ -16,25 +16,31 @@ data {
   vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
+  real prior_alpha[2];                 // prior meanlog, sdlog for intrinsic productivity
   int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
+  real prior_Mmax[2];                  // prior meanlog, sdlog for maximum smolt recruitment
   int<lower=0> K_M;                    // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];              // smolt recruitment covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;            // observed annual smolt abundance (not density)
+  real prior_tau_M[3];                 // prior mean, scale, shape for smolt observation error SD
   // SAR (sMolt-Spawner survival)
   int<lower=0> K_MS;                   // number of SAR covariates
   row_vector[K_MS] X_MS[N];            // SAR covariates
+  real prior_mu_MS[2];                 // prior a, b for mean SAR
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
+  real prior_tau_S[3];                 // prior mean, scale, shape for spawner observation error SD
   // spawner age structure
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
+  vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -57,8 +63,6 @@ transformed data {
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  real mu_Mmax = max(log(M_obs[which_M_obs] ./ A[which_M_obs])); // prior log-mean of Mmax
-  real sigma_Mmax = sd(log(M_obs[which_M_obs] ./ A[which_M_obs])); // prior log-SD of Mmax
   real mu_M_init = mean(log(M_obs[which_M_obs])); // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
   real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_ocean_age
@@ -238,21 +242,23 @@ model {
   // Priors
   
   // smolt recruitment
-  alpha ~ lognormal(2.0,2.0);
-  Mmax ~ lognormal(mu_Mmax, sigma_Mmax);
+  alpha ~ lognormal(prior_alpha[1], prior_alpha[2]);
+  Mmax ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ gnormal(0,0.85,20);  // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();    // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
   // SAR
+  mu_MS ~ beta(prior_mu_MS[1], prior_mu_MS[2]);
   to_vector(beta_MS) ~ normal(0,3);
   rho_MS ~ gnormal(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_MS ~ normal(0,3);
   zeta_MS ~ std_normal();   // SAR: logit(s_MS) ~ normal(logit(s_MS_hat), sigma_MS)
 
   // spawner age structure
-  to_vector(sigma_p) ~ normal(0,5);
+  mu_p ~ dirichlet(prior_mu_p);
+  to_vector(sigma_p) ~ normal(0,3);
   for(j in 1:N_pop)
     L_p[j] ~ lkj_corr_cholesky(1);
   // age probs logistic MVN: 
@@ -276,8 +282,8 @@ model {
   }
 
   // observation error
-  tau_M ~ gnormal(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
-  tau_S ~ gnormal(1,0.85,30);   // rule out tau < 0.1 to avoid divergences 
+  tau_M ~ gnormal(prior_tau_M[1], prior_tau_M[2], prior_tau_M[3]);
+  tau_S ~ gnormal(prior_tau_S[1], prior_tau_S[2], prior_tau_S[3]);
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts

@@ -18,14 +18,17 @@ data {
   vector[N] A;                          // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                 // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;            // intrinsic productivity covariates
+  real prior_alpha[2];                  // prior meanlog, sdlog for intrinsic productivity
   int<lower=0> K_Mmax;                  // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;              // maximum smolt recruitment covariates
+  real prior_Mmax[2];                   // prior meanlog, sdlog for maximum smolt recruitment
   int<lower=0> K_M;                     // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];               // smolt recruitment covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;         // number of cases with non-missing smolt abundance obs 
   int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;             // observed annual smolt abundance (not density)
+  real prior_tau_M[3];                  // prior mean, scale, shape for smolt observation error SD
   // smolt age structure
   int<lower=2> N_Mage;                  // number of smolt age classes
   int<lower=2> max_Mage;                // maximum smolt age
@@ -37,6 +40,7 @@ data {
   int<lower=1,upper=N> N_S_obs;         // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;             // observed annual total spawner abundance (not density)
+  real prior_tau_S[3];                  // prior mean, scale, shape for spawner observation error SD
   // spawner ocean age and Gilbert-Rich age structure
   int<lower=2> N_MSage;                 // number of ocean age classes
   int<lower=1> max_MSage;               // maximum ocean age
@@ -68,8 +72,6 @@ transformed data {
   int<lower=2> N_GRage = N_Mage*N_MSage;   // number of Gilbert-Rich age classes
   int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
-  real mu_Mmax = max(log(M_obs[which_M_obs] ./ A[which_M_obs])); // prior log-mean of Mmax
-  real sigma_Mmax = sd(log(M_obs[which_M_obs] ./ A[which_M_obs])); // prior log-SD of mu_Mmax
   vector[max_Mage*N_pop] mu_M_init;        // prior mean of total smolt abundance in years 1:max_Mage
   real sigma_M_init = sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:max_Mage
   matrix[N_Mage,max_Mage*N_pop] mu_q_M_init; // prior counts of smolt age distns in years 1:max_Mage
@@ -336,10 +338,10 @@ model {
   // Priors
   
   // smolt recruitment
-  alpha ~ lognormal(2.0,2.0);
-  Mmax ~ lognormal(mu_Mmax, sigma_Mmax);
+  alpha ~ lognormal(prior_alpha[1], prior_alpha[2]);
+  Mmax ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
   to_vector(beta_M) ~ normal(0,5);
-  rho_M ~ gnormal(0.0,0.85,20.0); // mildly regularize rho to ensure stationarity
+  rho_M ~ gnormal(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();       // total smolts: log(M) ~ normal(log(M_hat), sigma_M)
 
@@ -394,8 +396,8 @@ model {
   }
 
   // observation error
-  tau_M ~ gnormal(0.2, 0.16, 30);  // tuned for Auke Creek coho
-  tau_S ~ gnormal(0.3, 0.26, 30);  // tuned for Auke Creek coho
+  tau_M ~ gnormal(prior_tau_M[1], prior_tau_M[2], prior_tau_M[3]);
+  tau_S ~ gnormal(prior_tau_S[1], prior_tau_S[2], prior_tau_S[3]);
 
   // Observation model
   M_obs[which_M_obs] ~ lognormal(log(M[which_M_obs]), tau_M[pop[which_M_obs]]);  // observed smolts

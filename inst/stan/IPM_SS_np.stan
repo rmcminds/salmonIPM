@@ -266,15 +266,18 @@ model {
   zeta_R ~ std_normal();   // total recruits: R ~ lognormal(log(R_hat), sigma_R)
 
   // kelt survival
-  mu_SS ~ beta(prior_mu_SS[1], prior_mu_SS[2]);
-  to_vector(beta_SS) ~ normal(0,3);
-  sigma_SS ~ normal(0,3);
-  rho_SS ~ gnormal(0,0.85,20); // mildly regularize to ensure stationarity
-  zeta_SS ~ normal(0,1);
-
+  if(iter)
+  {
+    mu_SS ~ beta(prior_mu_SS[1], prior_mu_SS[2]);
+    to_vector(beta_SS) ~ normal(0,3);
+    sigma_SS ~ normal(0,3);
+    rho_SS ~ gnormal(0,0.85,20); // mildly regularize to ensure stationarity
+    zeta_SS ~ normal(0,1);
+  }
+  
   // (maiden) recruit age structure
   mu_p ~ dirichlet(prior_mu_p);
-  to_vector(sigma_p) ~ normal(0,5);
+  to_vector(sigma_p) ~ normal(0,3);
   for(j in 1:N_pop)
     L_p[j] ~ lkj_corr_cholesky(1);
   // age probs logistic MVN: 

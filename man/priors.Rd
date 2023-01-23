@@ -82,7 +82,7 @@ log-SDs, the default prior bounds them ≳ 0.1.\tabular{lcccccccccccc}{
    \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
    \code{IPM_SMS_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
    \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \cr
-   \code{IPM_ICchinook_pp} \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
+   \code{IPM_ICchinook_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
    \code{IPM_LCRchum_pp} \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
 }
 }
