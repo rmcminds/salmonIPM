@@ -100,7 +100,6 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 fit1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
                      fish_data = sim1pop$sim_dat, 
                      chains = 4, iter = 2000, warmup = 1000, 
-                     control = list(adapt_delta = 0.95),
                      seed = 123)
 
 print(fit1pop, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
@@ -119,15 +118,15 @@ par_names <- c("log(alpha)","log(Rmax)","rho_R","sigma_R",
 log_S_obs <- log(sim1pop$sim_dat$S_obs)
 prior1pop <- c(`log(alpha)` = dist_normal(2,2),
                `log(Rmax)` = dist_normal(max(log_S_obs), sd(log_S_obs)),
-               rho_R = dist_wrap("pexp", 0, 0.85, 20),
+               rho_R = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_R = dist_normal(0,5),
-               mu_p = dist_beta(1,4),
+               mu_p = dist_beta(1, N_age - 1),
                sigma_p = dist_normal(0,5),
                rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
                mu_SS = dist_uniform(0,1),
-               rho_SS = dist_wrap("pexp", 0, 0.85, 20),
+               rho_SS = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_SS = dist_normal(0,3),
-               tau = dist_wrap("pexp", 1, 0.85, 30))
+               tau = dist_wrap("gnorm", 1, 0.85, 30))
 
 # true parameter values
 true1pop <- sim1pop$pars_out %>% 
@@ -139,7 +138,7 @@ true1pop <- sim1pop$pars_out %>%
 post1pop <- as_draws_rvars(fit1pop) %>%
   mutate_variables(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax),
                    mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p),
-                   rho_p = R_p[1,2,1]) %>%
+                   rho_p = as.vector(R_p[1,2,1])) %>%
   .[par_names] %>% as_draws_matrix()
 
 # plot
@@ -335,7 +334,6 @@ fitX1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                       par_models = list(s_SS ~ X),
                       fish_data = simX1pop$sim_dat, 
                       chains = 4, iter = 2000, warmup = 1000, 
-                      control = list(adapt_delta = 0.95),
                       seed = 123)
 
 print(fitX1pop, pars = "beta_SS", prob = c(c(0.025, 0.5, 0.975)))
@@ -412,7 +410,6 @@ format(head(simNpop$sim_dat, 10), digits = 2)
 fitNnp <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
                     fish_data = simNpop$sim_dat,
                     chains = 4, iter = 2000, warmup = 1000, 
-                    control = list(adapt_delta = 0.95),
                     seed = 321)
 
 print(fitNnp, pars = c("mu_p","sigma_p","R_p","p","s_SS","p_HOS","S","R","q"), 
@@ -480,7 +477,7 @@ log_S_obs <- na.omit(log(simNpop$sim_dat$S_obs))
 priorNpop <- c(mu_alpha = dist_normal(2,2),
                mu_Rmax = dist_normal(max(log_S_obs), sd(log_S_obs)),
                sigma_year_R = dist_normal(0,3),
-               rho_R = dist_wrap("pexp", 0, 0.85, 20),
+               rho_R = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_R = dist_normal(0,3),
                mu_p = dist_beta(1, N_age - 1),
                sigma_pop_p = dist_normal(0,2),
@@ -488,7 +485,7 @@ priorNpop <- c(mu_alpha = dist_normal(2,2),
                sigma_p = dist_normal(0,2),
                rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
                mu_SS = dist_uniform(0,1),
-               rho_SS = dist_wrap("pexp", 0, 0.85, 20),
+               rho_SS = dist_wrap("gnorm", 0, 0.85, 20),
                sigma_year_SS = dist_normal(0,3),
                sigma_SS = dist_normal(0,3),
                tau = dist_normal(0,1))
@@ -502,7 +499,7 @@ trueNpop <- simNpop$pars_out %>%
 postNpop <- as_draws_rvars(fitNpp) %>%
   mutate_variables(mu_p = as.vector(mu_p),
                    sigma_pop_p = as.vector(sigma_pop_p), rho_pop_p = R_pop_p[2,1],
-                   sigma_p = as.vector(sigma_p), rho_p = R_p[2,1]) %>%
+                   sigma_p = as.vector(sigma_p), rho_p = as.vector(R_p[2,1])) %>%
   as_draws_matrix(.[par_names])
 
 # plot

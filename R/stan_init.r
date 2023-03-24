@@ -119,7 +119,7 @@ stan_init <- function(stan_model, data, chains = 1)
                                    F_rate = F_rate, B_take_obs = B_take_all))
     R_obs <- replace(rr_dat$R_obs, is.na(rr_dat$R_obs), mean(rr_dat$R_obs, na.rm = TRUE))
     R_obs <- pmax(R_obs, 1)
-    p_obs <- rr_dat[, grep("p_age", names(rr_dat))]
+    p_obs <- as.matrix(rr_dat[, grep("p_age", names(rr_dat))])
     p_obs <- pmin(pmax(p_obs, 0.01), 0.99)
     p_obs_NA <- apply(is.na(p_obs), 1, any)
     p_obs[p_obs_NA, ] <- rep(colMeans(na.omit(p_obs)), each = sum(p_obs_NA))

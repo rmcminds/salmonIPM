@@ -24,13 +24,19 @@
 #'   function to fit. Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in the model
-#' specified by `stan_model` that accepts covariates (see Details for available
+#' specified by `stan_model` that accepts covariates (see **Details** for available
 #' model-response combinations) and `t1 ... tK` are terms involving variables in
 #' `fish_data`. Standard formula syntax such as `:` and `*` may be used;
 #' see [stats::formula()].
 #' @param scale  Logical indicating whether the model matrices constructed from
 #' `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
+#' @param prior Optional list of two-sided formulas of the form 
+#' `theta ~ distribution(params)`, where `theta` is a (hyper)parameter that can take
+#' a user-specified prior and `distribution()` is its canonical prior family. See 
+#' [`priors`] for details on the available parameters in each model and their
+#' corresponding prior families. Any (hyper)parameters `theta` not given explicit priors 
+#' will use the default values of the prior `params`.
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages. (This is not needed for `IPM_SMaS_np` because
 #'   in that case smolt age structure is provided in `fish_data`.)
@@ -141,7 +147,8 @@
 #' row corresponding to a female:
 #' * `age_E`  Female age in years.   
 #' * `E_obs`  Observed fecundity.  
-#' @param prior_data If `stan_model == "IPM_ICchinook_pp"`, named list
+#' @param prior_data (Deprecated; will be merged into `fish_data` in a future release.) 
+#' If `stan_model == "IPM_ICchinook_pp"`, named list
 #' with the following elements: 
 #' * `s`  Data frame with columns `year`, `mu_prior_D`, `sigma_prior_D`, 
 #' `mu_prior_SAR`, `sigma_prior_SAR`, `mu_prior_U`, `sigma_prior_U`, 
@@ -160,19 +167,25 @@
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
 #'   should be returned for later analysis with [loo::loo()].
 #' @param chains Positive integer specifying the number of MCMC chains; 
-#'   see [rstan::stan()].
+#'   see [rstan::sampling()].
 #' @param iter Positive integer specifying the number of iterations for each
-#'   chain (including warmup); see [rstan::stan()].
+#'   chain (including warmup); see [rstan::sampling()].
 #' @param warmup Positive integer specifying the number of warmup (aka burnin)
 #'   iterations per chain. If step-size adaptation is on (which it is by
 #'   default), this also controls the number of iterations for which adaptation
 #'   is run (and hence these warmup samples should not be used for inference).
 #'   The number of warmup iterations should not be larger than `iter`.
-#'   See [rstan::stan()].
+#'   See [rstan::sampling()].
 #' @param thin Positive integer specifying the period for saving samples. The
-#'   default is 1, which is usually the recommended value. See [rstan::stan()].
+#'   default is 1, which is usually the recommended value. See [rstan::sampling()].
 #' @param cores Number of cores to use when executing the chains in parallel.
-#'   Defaults to one less than the number of cores available. See [rstan::stan()].
+#'   Defaults to one less than the number of cores available. See [rstan::sampling()].
+#' @param control A named list of options to control sampler behavior. See [rstan::stan()]
+#' for details and available options. In contrast to **rstan**, the default value of 
+#' `adapt_delta` in **salmonIPM** is increased to 0.95 as we have found this 
+#' necessary to minimize divergences in most cases. Note that when setting other `control`
+#' parameters, `adapt_delta` will revert to its **rstan** default value of 0.8 unless
+#' explicitly specified.
 #' @param ... Additional arguments to pass to [rstan::sampling()].
 #'   
 #' @details 
@@ -211,13 +224,14 @@
 #' @encoding UTF-8
 
 salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, 
-                      SR_fun = "BH", par_models = NULL, scale = TRUE, 
+                      SR_fun = "BH", par_models = NULL, scale = TRUE, prior = NULL, 
                       ages = NULL, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
-                      cores = parallel::detectCores() - 1, ...)
+                      cores = parallel::detectCores() - 1, 
+                      control = list(adapt_delta = 0.95), ...)
 {
   if(is.null(stan_model)) 
     stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
@@ -226,12 +240,12 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   if(SR_fun == "ricker") SR_fun <- "Ricker"
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, 
-                   par_models = par_models, scale = scale, 
+                   par_models = par_models, scale = scale, prior = prior, 
                    ages = ages, age_F = age_F, age_B = age_B,
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   conditionGRonMS = conditionGRonMS, 
                    fish_data = fish_data, fish_data_fwd = fish_data_fwd, 
-                   fecundity_data = fecundity_data, prior_data = prior_data, 
-                   conditionGRonMS = conditionGRonMS)
+                   fecundity_data = fecundity_data, prior_data = prior_data)
   
   if(is.null(init))
      init <- stan_init(stan_model = stan_model, data = dat, chains = chains)
@@ -248,5 +262,5 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                          data = dat, init = init, pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 
-                         ...)
+                         control = control, ...)
 }

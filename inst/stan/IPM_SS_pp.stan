@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf.stan
+  #include /include/gnormal_lpdf.stan
   #include /include/veq.stan
   #include /include/vand.stan
   #include /include/rsub.stan
@@ -27,24 +27,29 @@ data {
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
+  real prior_mu_alpha[2];              // prior mean, sd for hyper-mean log intrinsic productivity
   int<lower=0> K_Rmax;                 // number of maximum recruitment covariates
   matrix[N,K_Rmax] X_Rmax;             // maximum recruitment covariates
+  real prior_mu_Rmax[2];               // prior mean, sd for hyper-mean log maximum recruitment
   int<lower=0> K_R;                    // number of recruitment covariates
   row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // kelt survival
   int<lower=0,upper=1> iter;           // is life cycle semelparous (0) or iteroparous (1)?
   int<lower=0> K_SS;                   // number of kelt survival covariates
   matrix[N,K_SS] X_SS;                 // kelt survival covariates
+  real prior_mu_SS[2];                 // prior a, b for mean kelt survival
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
+  real prior_tau[3];                   // prior mean, scale, shape for spawner observation error SD
   // spawner age structure
   int<lower=2> N_age;                  // number of (maiden) adult age classes
   int<lower=2> max_age;                // maximum (maiden) adult age
   matrix<lower=0>[N,iter ? N_age*2 : N_age] n_age_obs; // wild spawner [maiden | kelt] age frequencies
   vector<lower=0,upper=1>[N_age + iter] age_S_obs; // does S_obs include age a (1) or not (0)?
   vector<lower=0,upper=1>[N_age + iter] age_S_eff; // do age-a spawners contribute to reproduction (1) or not (0)?
+  vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
@@ -70,8 +75,6 @@ transformed data {
   vector[N] ones_N = rep_vector(1,N);      // for elementwise inverse of rowsums 
   int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
   int<lower=0,upper=N> fwd_init_indx[N_fwd,N_age]; // links "fitted" brood years to recruits in forward sims
-  real mu_mu_Rmax = max(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-mean of Rmax
-  real sigma_mu_Rmax = sd(log(S_obs[which_S_obs] ./ A[which_S_obs])); // prior log-SD of Rmax
   vector[max_age*N_pop] mu_S_init;         // prior mean of total spawner abundance in years 1:max_age
   real sigma_S_init = sd(log(S_obs[which_S_obs])); // prior log-SD of spawner abundance in years 1:max_age
   matrix[N_age,max_age*N_pop] mu_q_init;   // prior counts of maiden age distns in years 1:max_age
@@ -332,16 +335,16 @@ model {
   // Priors
   
   // recruitment
-  mu_alpha ~ normal(2,5);
+  mu_alpha ~ normal(prior_mu_alpha[1], prior_mu_alpha[2]);
   beta_alpha ~ normal(0,5);
   sigma_alpha ~ normal(0,3);
-  mu_Rmax ~ normal(mu_mu_Rmax, sigma_mu_Rmax);
+  mu_Rmax ~ normal(prior_mu_Rmax[1], prior_mu_Rmax[2]);
   beta_Rmax ~ normal(0,5);
   sigma_Rmax ~ normal(0,3);
   zeta_alpha ~ std_normal();  // [log(alpha), log(Rmax)] ~ MVN([mu_alpha, mu_Rmax], D*R_aRmax*D),
   zeta_Rmax ~ std_normal();   // where D = diag_matrix(sigma_alpha, sigma_Rmax)
   beta_R ~ normal(0,5);
-  rho_R ~ pexp(0,0.85,50);    // mildly regularize to ensure stationarity
+  rho_R ~ gnormal(0,0.85,50);    // mildly regularize to ensure stationarity
   sigma_year_R ~ normal(0,3);
   zeta_year_R ~ std_normal(); // eta_year_R[i] ~ N(rho_R*eta_year_R[i-1], sigma_year_R)
   sigma_R ~ normal(0,3);
@@ -350,8 +353,9 @@ model {
   // kelt survival
   if(iter)
   {
+    mu_SS ~ beta(prior_mu_SS[1], prior_mu_SS[2]);
     to_vector(beta_SS) ~ normal(0,3);
-    rho_SS[1] ~ pexp(0,0.85,20);   // mildly regularize to ensure stationarity
+    rho_SS[1] ~ gnormal(0,0.85,20);   // mildly regularize to ensure stationarity
     sigma_year_SS[1] ~ normal(0,3);
     zeta_year_SS ~ std_normal();
     sigma_SS[1] ~ normal(0,3);
@@ -359,11 +363,9 @@ model {
   }
   
   // (maiden) recruit age structure
-  for(i in 1:(N_age-1))
-  {
-    sigma_pop_p[i] ~ normal(0,2);
-    sigma_p[i] ~ normal(0,2); 
-  }
+  mu_p ~ dirichlet(prior_mu_p);
+  to_vector(sigma_pop_p) ~ normal(0,3);
+  to_vector(sigma_p) ~ normal(0,3); 
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // pop mean age probs logistic MVN: 
@@ -388,7 +390,7 @@ model {
   }
   
   // spawner observation error
-  tau ~ normal(0,1);
+  tau ~ gnormal(prior_tau[1], prior_tau[2], prior_tau[3]);
   
   // Observation model
   if(min(age_S_obs) == 1)  // total spawners

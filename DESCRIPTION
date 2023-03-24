@@ -12,7 +12,8 @@ Description: A hierarchical Bayesian model of salmon population dynamics. It
 Depends:
     R (>= 3.5),
     rstan (>= 2.18.1),
-    stats
+    stats,
+    gnorm
 Imports:
     methods,
     Rcpp (>= 0.12.0),
@@ -38,6 +39,6 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 Roxygen: list(markdown = TRUE)
 SystemRequirements: GNU make

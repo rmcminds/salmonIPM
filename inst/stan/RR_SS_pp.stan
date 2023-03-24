@@ -1,6 +1,6 @@
 functions {
 #include /include/SR.stan
-#include /include/pexp_lpdf.stan
+#include /include/gnormal_lpdf.stan
 #include /include/quantile.stan
 }
 
@@ -89,10 +89,10 @@ transformed parameters {
 model {
   // Priors
   mu_alpha ~ normal(0,5);
-  sigma_alpha ~ pexp(0,3,10);
+  sigma_alpha ~ gnormal(0,3,10);
   mu_Rmax ~ normal(mu_mu_Rmax, sigma_mu_Rmax);
   sigma_Rmax ~ normal(0,3);
-  rho_R ~ pexp(0,0.85,50);  // mildly regularize to ensure stationarity
+  rho_R ~ gnormal(0,0.85,50);  // mildly regularize to ensure stationarity
   sigma_year_R ~ normal(0,3);
   sigma_R ~ normal(0,2);
   

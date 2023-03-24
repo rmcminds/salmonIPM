@@ -13,6 +13,7 @@ salmonIPM(
   SR_fun = "BH",
   par_models = NULL,
   scale = TRUE,
+  prior = NULL,
   ages = NULL,
   age_F = NULL,
   age_B = NULL,
@@ -32,6 +33,7 @@ salmonIPM(
   warmup = floor(iter/2),
   thin = 1,
   cores = parallel::detectCores() - 1,
+  control = list(adapt_delta = 0.95),
   ...
 )
 }
@@ -67,7 +69,7 @@ function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ric
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
-specified by \code{stan_model} that accepts covariates (see Details for available
+specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
 model-response combinations) and \verb{t1 ... tK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
@@ -75,6 +77,13 @@ see \code{\link[stats:formula]{stats::formula()}}.}
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+
+\item{prior}{Optional list of two-sided formulas of the form
+\code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take
+a user-specified prior and \code{distribution()} is its canonical prior family. See
+\code{\link{priors}} for details on the available parameters in each model and their
+corresponding prior families. Any (hyper)parameters \code{theta} not given explicit priors
+will use the default values of the prior \code{params}.}
 
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages. (This is not needed for \code{IPM_SMaS_np} because
@@ -201,7 +210,8 @@ row corresponding to a female:
 \item \code{E_obs}  Observed fecundity.
 }}
 
-\item{prior_data}{If \code{stan_model == "IPM_ICchinook_pp"}, named list
+\item{prior_data}{(Deprecated; will be merged into \code{fish_data} in a future release.)
+If \code{stan_model == "IPM_ICchinook_pp"}, named list
 with the following elements:
 \itemize{
 \item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
@@ -227,23 +237,30 @@ multidimensional parameters can be excluded, rather than particular elements of 
 should be returned for later analysis with \code{\link[loo:loo]{loo::loo()}}.}
 
 \item{chains}{Positive integer specifying the number of MCMC chains;
-see \code{\link[rstan:stan]{rstan::stan()}}.}
+see \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 
 \item{iter}{Positive integer specifying the number of iterations for each
-chain (including warmup); see \code{\link[rstan:stan]{rstan::stan()}}.}
+chain (including warmup); see \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 
 \item{warmup}{Positive integer specifying the number of warmup (aka burnin)
 iterations per chain. If step-size adaptation is on (which it is by
 default), this also controls the number of iterations for which adaptation
 is run (and hence these warmup samples should not be used for inference).
 The number of warmup iterations should not be larger than \code{iter}.
-See \code{\link[rstan:stan]{rstan::stan()}}.}
+See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 
 \item{thin}{Positive integer specifying the period for saving samples. The
-default is 1, which is usually the recommended value. See \code{\link[rstan:stan]{rstan::stan()}}.}
+default is 1, which is usually the recommended value. See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 
 \item{cores}{Number of cores to use when executing the chains in parallel.
-Defaults to one less than the number of cores available. See \code{\link[rstan:stan]{rstan::stan()}}.}
+Defaults to one less than the number of cores available. See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
+
+\item{control}{A named list of options to control sampler behavior. See \code{\link[rstan:stan]{rstan::stan()}}
+for details and available options. In contrast to \strong{rstan}, the default value of
+\code{adapt_delta} in \strong{salmonIPM} is increased to 0.95 as we have found this
+necessary to minimize divergences in most cases. Note that when setting other \code{control}
+parameters, \code{adapt_delta} will revert to its \strong{rstan} default value of 0.8 unless
+explicitly specified.}
 
 \item{...}{Additional arguments to pass to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 }

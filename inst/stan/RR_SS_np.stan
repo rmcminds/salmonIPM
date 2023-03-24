@@ -1,6 +1,6 @@
 functions {
 #include /include/SR.stan
-#include /include/pexp_lpdf.stan
+#include /include/gnormal_lpdf.stan
 #include /include/quantile.stan
 }
 
@@ -82,7 +82,7 @@ model {
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   for(i in 1:N_pop)
   {
-    rho_R[i] ~ pexp(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
+    rho_R[i] ~ gnormal(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
     sigma_R[i] ~ normal(0,3);
   }
 
