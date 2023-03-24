@@ -206,10 +206,10 @@ stan_data <- function(stan_model, SR_fun = "BH",
   }
   
   if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np","IPM_ICchinook_pp")) {
-    if(grepl("ICchinook", stan_model)) {  # autoscale Mmax to data
-      log_MA <- log(M_obs/A)
-    } else {  # autoscale Mmax to data with ballpark SAR
+    if(grepl("ICchinook", stan_model)) {  # autoscale Mmax to data with ballpark SAR
       log_MA <- log((S_obs + B_take_obs)/((1 - F_rate)*0.01*A))
+    } else {  # autoscale Mmax to smolt data
+      log_MA <- log(M_obs/A)
     }
     prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
@@ -237,7 +237,7 @@ stan_data <- function(stan_model, SR_fun = "BH",
   }
   
   if(stan_model == "IPM_LCRchum_pp") {
-    log_MA <- log(M_obs/A) # autoscale Mmax to data
+    log_MA <- log(M_obs/A) # autoscale Mmax to smolt data
     prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
 
