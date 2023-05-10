@@ -9,16 +9,6 @@ options(device = ifelse(.Platform$OS.type == "windows", "windows", "quartz"))
 # Installing salmonIPM
 #------------------------------
 
-## @knitr toolchain
-M <- file.path(Sys.getenv("HOME"), ".R", 
-               ifelse(.Platform$OS.type == "windows", "Makevars.win", "Makevars"))
-cat("\nCXX14FLAGS += -Wno-unused -Wno-ignored-attributes -Wno-sign-compare -Wno-deprecated-declarations",
-    "CXX14FLAGS += -Wno-attributes -Wno-parentheses -Wno-unknown-pragmas -Wno-infinite-recursion",
-    "CXX14FLAGS += -mfpmath=sse -mstackrealign",
-    "PKG_CPPFLAGS += -DUSE_STANC3",
-    readLines(M),
-    file = M, sep = "\n", append = FALSE)
-
 ## @knitr install
 if(!require("devtools")) {
   install.packages("devtools")
