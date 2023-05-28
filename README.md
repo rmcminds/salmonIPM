@@ -4,7 +4,7 @@ This is the development repo for **salmonIPM**, an R package for fitting integra
 
 ## Installation
 
-1. Install and configure **rstan** by following the instructions in the [RStan Getting Started](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) vignette. In particular, **salmonIPM** requires **rstan** version 2.26 or higher, which (as of 2023-05-10) is only available from [https://mc-stan.org/r-packages/](https://mc-stan.org/r-packages/). If you have previously installed an earlier version of **rstan** from CRAN, you will need to uninstall and update it.
+1. Install and configure **rstan** by following the instructions in the [RStan Getting Started](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) vignette. In particular, **salmonIPM** requires **rstan** version 2.26 or higher, which (as of 2023-05-10) is only available from [https://mc-stan.org/r-packages/](https://mc-stan.org/r-packages/). If you have previously installed earlier versions of **rstan** and **StanHeaders** from CRAN, you will need to uninstall and update them as shown in the vignette.
 
 2. Install the current version of **salmonIPM** from GitHub using **devtools**. Because the repo is private for the time being, it is necessary to [generate a personal access token](https://github.com/settings/tokens) (PAT) and pass it to `install_github()` as discussed [here](https://stackoverflow.com/questions/21171142/how-to-install-r-package-from-private-repo-using-devtools-install-github).
 
