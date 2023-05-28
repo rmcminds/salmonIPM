@@ -28,9 +28,14 @@
 #' model-response combinations) and `t1 ... tK` are terms involving variables in
 #' `fish_data`. Standard formula syntax such as `:` and `*` may be used;
 #' see [stats::formula()].
+#' @param center Logical indicating whether the terms in model matrices 
+#' constructed from `fish_data` using the formulas in `par_models` should be centered.
+#' It is usually recommended to use the default (`TRUE`) so the baseline parameter
+#' estimate applies when predictors are at their sample means, but in some cases such
+#' as factor predictors `center = FALSE` may be appropriate.
 #' @param scale  Logical indicating whether the model matrices constructed from
 #' `fish_data` using the formulas in `par_models` should be scaled to have 
-#' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
+#' column SDs of 1. 
 #' @param prior Optional list of two-sided formulas of the form 
 #' `theta ~ distribution(params)`, where `theta` is a (hyper)parameter that can take
 #' a user-specified prior and `distribution()` is its canonical prior family. See 
@@ -224,8 +229,8 @@
 #' @encoding UTF-8
 
 salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, 
-                      SR_fun = "BH", par_models = NULL, scale = TRUE, prior = NULL, 
-                      ages = NULL, age_F = NULL, age_B = NULL,
+                      SR_fun = "BH", par_models = NULL, center = TRUE, scale = TRUE, 
+                      prior = NULL, ages = NULL, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 

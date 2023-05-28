@@ -4,7 +4,7 @@
 \alias{par_model_matrix}
 \title{Helper function to construct covariate model matrices from a list of two-sided formulas.}
 \usage{
-par_model_matrix(par_models, scale = TRUE, fish_data)
+par_model_matrix(par_models, center = TRUE, scale = TRUE, fish_data)
 }
 \arguments{
 \item{par_models}{A list of two-sided formulas of the form
@@ -12,9 +12,15 @@ par_model_matrix(par_models, scale = TRUE, fish_data)
 that accepts covariates and \verb{t1 ... tK} are terms involving variables in
 \code{fish_data}; see \code{\link[=salmonIPM]{salmonIPM()}} for details.}
 
+\item{center}{Logical indicating whether the terms in model matrices
+constructed from \code{fish_data} using the formulas in \code{par_models} should be centered.
+It is usually recommended to use the default (\code{TRUE}) so the baseline parameter
+estimate applies when predictors are at their sample means, but in some cases such
+as factor predictors \code{center = FALSE} may be appropriate.}
+
 \item{scale}{Logical indicating whether the terms in model matrices
 constructed from \code{fish_data} using the formulas in \code{par_models} should be scaled to have
-column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+column SDs of 1.}
 
 \item{fish_data}{See \code{\link[=salmonIPM]{salmonIPM()}}. In particular, the columns \code{...} may be used on
 the right-hand side of formulas in \code{par_models}.}

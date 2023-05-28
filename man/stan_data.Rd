@@ -39,7 +39,7 @@ see \code{\link[stats:formula]{stats::formula()}}.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
-column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+column SDs of 1.}
 
 \item{prior}{Optional list of two-sided formulas of the form
 \code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take

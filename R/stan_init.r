@@ -57,21 +57,13 @@ stan_init <- function(stan_model, data, chains = 1)
   
   # Data to estimate initial origin-composition parameters
   if(life_cycle == "LCRchum") {
-    n_H_obs <- rowSums(n_origin_obs[,-1])
+    n_nonlocal_obs <- n_origin_obs[, -1, drop = FALSE]
+    n_H_obs <- rowSums(n_nonlocal_obs)
     which_H <- which(n_H_obs > 0)
     n_H_obs <- n_H_obs[which_H]
     n_W_obs <- n_origin_obs[which_H,1]
-    
-    p_origin <- matrix(c(0.135411592660393,0.0771601000938529,0.286929034048003,0.0102868226187408,
-                         0.00943396226415094,0.00943396226415094,0.00943396226415094,0.0284385085450134,
-                         0.405170168449092,0.00943396226415094,0.00943396226415094,0.00943396226415094, 
-                         0.0091743119266055,0.053367124866482,0.221432516561387,0.0091743119266055,
-                         0.0091743119266055,0.0091743119266055,0.0091743119266055,0.0091743119266055,
-                         0.642631551232681,0.0091743119266055,0.0091743119266055,0.0091743119266055,
-                         0.0091743119266055,0.0091743119266055,0.0091743119266055,0.0091743119266055,
-                         0.0091743119266055,0.0091743119266055,0.0091743119266055,0.0091743119266055,
-                         0.0091743119266055,0.202442783082541,0.397475438447644,0.317512971130366), 
-                       nrow = 3, byrow = TRUE)
+    p_origin <- aggregate(pmax(n_nonlocal_obs, 0.1), list(pop = pop), sum)[-which_H_pop,-1]
+    p_origin <- t(sweep(p_origin, 2, colSums(p_origin), "/"))
   }
   
   ## Crude estimates of states 
@@ -385,7 +377,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_year_M = runif(1, 0.1, 0.5),
              zeta_year_M = rnorm(N_year, 0, 0.1),
              sigma_M = runif(1, 0.1, 0.5),
-             zeta_M = rep(0,N), #as.vector(scale(log(M_obs)))*0.1,
+             zeta_M = as.vector(scale(log(M_obs)))*0.1,
              # SAR
              mu_MS = plogis(rnorm(1, mean(qlogis(s_MS)), 0.5)),
              beta_MS = array(rnorm(K_MS, 0, 0.5/apply(abs(X_MS), 2, max))),
@@ -393,7 +385,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_year_MS = runif(1, 0.05, 2), 
              zeta_year_MS = as.vector(tapply(scale(qlogis(s_MS)), year, mean)),
              sigma_MS = runif(1, 0.5, 1),
-             zeta_MS = rep(0,N), #as.vector(scale(qlogis(s_MS))),
+             zeta_MS = as.vector(scale(qlogis(s_MS))),
              # spawner age structure and sex ratio
              mu_p = colMeans(p_obs),
              sigma_pop_p = runif(N_age - 1, 0.5, 1),

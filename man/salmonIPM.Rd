@@ -12,6 +12,7 @@ salmonIPM(
   stan_model = NULL,
   SR_fun = "BH",
   par_models = NULL,
+  center = TRUE,
   scale = TRUE,
   prior = NULL,
   ages = NULL,
@@ -74,9 +75,15 @@ model-response combinations) and \verb{t1 ... tK} are terms involving variables 
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
 
+\item{center}{Logical indicating whether the terms in model matrices
+constructed from \code{fish_data} using the formulas in \code{par_models} should be centered.
+It is usually recommended to use the default (\code{TRUE}) so the baseline parameter
+estimate applies when predictors are at their sample means, but in some cases such
+as factor predictors \code{center = FALSE} may be appropriate.}
+
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
-column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+column SDs of 1.}
 
 \item{prior}{Optional list of two-sided formulas of the form
 \code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take

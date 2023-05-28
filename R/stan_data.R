@@ -103,6 +103,8 @@ stan_data <- function(stan_model, SR_fun = "BH",
   if(life_cycle == "LCRchum") {
     n_origin_obs <- as.matrix(fish_data[, grep("n_origin", names(fish_data))])
     n_origin_obs <- replace(n_origin_obs, is.na(n_origin_obs), 0)
+    which_H_pop <- sapply(strsplit(colnames(n_origin_obs), "_"), 
+                          function(x) as.numeric(substring(x[2], 7)))[-1]
     if(any(is.na(n_M_obs) != is.na(n_F_obs)))
       stop("Conflicting NAs in n_M_obs and n_F_obs in rows ", 
            which(is.na(n_M_obs) != is.na(n_F_obs)))
@@ -237,7 +239,7 @@ stan_data <- function(stan_model, SR_fun = "BH",
   }
   
   if(stan_model == "IPM_LCRchum_pp") {
-    log_MA <- log(M_obs/A) # autoscale Mmax to smolt data
+    log_MA <- log(M_obs/A)[M_obs > 0] # autoscale Mmax to smolt data (can == 0 for hatcheries)
     prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
 
@@ -472,8 +474,8 @@ stan_data <- function(stan_model, SR_fun = "BH",
                   K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
                   X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
                   # smolt abundance and observation error
-                  N_M_obs = sum(!is.na(M_obs)),
-                  which_M_obs = as.vector(which(!is.na(M_obs))),
+                  N_M_obs = sum(!is.na(M_obs) & !pop %in% which_H_pop),
+                  which_M_obs = as.vector(which(!is.na(M_obs) & !pop %in% which_H_pop)),
                   M_obs = replace(M_obs, is.na(M_obs) | M_obs==0, 1),
                   N_tau_M_obs = sum(!is.na(tau_M_obs)),
                   which_tau_M_obs = as.vector(which(!is.na(tau_M_obs))),
@@ -486,8 +488,8 @@ stan_data <- function(stan_model, SR_fun = "BH",
                   X_MS = if(is.null(X$s_MS)) matrix(0,N,0) else X$s_MS,
                   prior_mu_MS = prior_mu_MS,
                   # spawner abundance and observation error
-                  N_S_obs = sum(!is.na(S_obs)),
-                  which_S_obs = as.vector(which(!is.na(S_obs))),
+                  N_S_obs = sum(!is.na(S_obs) & !pop %in% which_H_pop),
+                  which_S_obs = as.vector(which(!is.na(S_obs) & !pop %in% which_H_pop)),
                   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
                   N_tau_S_obs = sum(!is.na(tau_S_obs)),
                   which_tau_S_obs = as.vector(which(!is.na(tau_S_obs))),
@@ -495,15 +497,14 @@ stan_data <- function(stan_model, SR_fun = "BH",
                   # spawner age structure and sex ratio
                   N_age = N_age, 
                   max_age = max_age,
-                  n_age_obs = n_age_obs,
+                  n_age_obs = replace(n_age_obs, pop %in% which_H_pop, 0),
                   prior_mu_p = prior_mu_p,
-                  n_M_obs = as.vector(n_M_obs),
-                  n_F_obs = as.vector(n_F_obs),
+                  n_M_obs = as.vector(replace(n_M_obs, pop %in% which_H_pop, 0)),
+                  n_F_obs = as.vector(replace(n_F_obs, pop %in% which_H_pop, 0)),
                   p_G_obs = as.vector(p_G_obs),
                   # origin composition
-                  N_H_pop = length(unique(grep("Hatchery", fish_data$pop, value = TRUE))),
-                  which_H_pop = sapply(strsplit(colnames(n_origin_obs), "_"), 
-                                       function(x) as.numeric(substring(x[2], 7)))[-1],
+                  N_H_pop = length(which_H_pop),
+                  which_H_pop = which_H_pop,
                   n_origin_obs = n_origin_obs,
                   # fishery and hatchery removals and translocations
                   F_rate = replace(F_rate, is.na(F_rate), 0),
