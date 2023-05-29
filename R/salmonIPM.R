@@ -184,7 +184,7 @@
 #' @param thin Positive integer specifying the period for saving samples. The
 #'   default is 1, which is usually the recommended value. See [rstan::sampling()].
 #' @param cores Number of cores to use when executing the chains in parallel.
-#'   Defaults to one less than the number of cores available. See [rstan::sampling()].
+#'   Defaults to the number of physical cores available. See [rstan::sampling()].
 #' @param control A named list of options to control sampler behavior. See [rstan::stan()]
 #' for details and available options. In contrast to **rstan**, the default value of 
 #' `adapt_delta` in **salmonIPM** is increased to 0.95 as we have found this 
@@ -235,7 +235,7 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
-                      cores = parallel::detectCores() - 1, 
+                      cores = parallel::detectCores(logical = FALSE), 
                       control = list(adapt_delta = 0.95), ...)
 {
   if(is.null(stan_model)) 
