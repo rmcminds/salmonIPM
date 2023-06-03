@@ -10,7 +10,10 @@ stan_data(
   SR_fun = "BH",
   par_models = NULL,
   scale = TRUE,
+  prior = NULL,
   ages = NULL,
+  age_F = NULL,
+  age_B = NULL,
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
@@ -29,25 +32,40 @@ function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ric
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
-specified by \code{stan_model} that accepts covariates (see Details for available
+specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
 model-response combinations) and \verb{t1 ... tK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
-column SDs of 1 in addition to being centered (\code{TRUE}) or centered only (\code{FALSE}).}
+column SDs of 1.}
+
+\item{prior}{Optional list of two-sided formulas of the form
+\code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take
+a user-specified prior and \code{distribution()} is its canonical prior family. See
+\code{\link{priors}} for details on the available parameters in each model and their
+corresponding prior families. Any (hyper)parameters \code{theta} not given explicit priors
+will use the default values of the prior \code{params}.}
 
 \item{ages}{For multi-stage models, a named list giving the fixed ages in
 years of all subadult life stages. (This is not needed for \code{IPM_SMaS_np} because
 in that case smolt age structure is provided in \code{fish_data}.)}
 
-\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or binary numeric
+\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected.}
+
+\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected.}
+
+\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or 0/1 integer
 vector indicating, for each adult age, whether observed total spawner data
 includes that age. The default is to treat \code{S_obs} as including spawners of
 all ages.}
 
-\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or binary numeric
+\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, an optional logical or 0/1 integer
 vector indicating, for each adult age, whether spawners of that age
 contribute toward reproduction. This could be used, e.g., to exclude jacks
 from the effective breeding population. The default is to include spawners
@@ -86,15 +104,24 @@ the brood year (i.e., the Gilbert-Rich system).
 \item \code{S_obs}  Total number (not density) of all wild and hatchery-origin spawners.
 \item \code{tau_S_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, known observation error SDs
 for spawner abundance.
-\item \verb{n_age[min_age]_obs...n_age[max_age]_obs}  Multiple columns of
+\item \verb{n_age[min_age]_obs ... n_age[max_age]_obs}  Multiple columns of
 observed spawner age frequencies (i.e., counts), where \verb{[min_age]} and
 \verb{[max_age]} are the numeral age in years (total, not ocean age) of the
 youngest and oldest spawners, respectively.
-\item \verb{n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
+\item If \code{life_cycle == "SSiter"}, multiple columns of observed first-time (maiden) and
+repeat (kelt) spawner age frequencies
+\verb{n_age[min_age]M_obs ... n_age[max_age]M_obs ... n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs},
+where \verb{[min_age]} and \verb{[max_age]} are the integer total age in years of the youngest
+and oldest \emph{maiden} spawners, respectively. Contiguous maiden age columns
+(denoted by \code{M}) are followed by an equal number of contiguous kelt age columns
+(denoted by \code{K}) where each kelt age is 1 year greater than the corresponding maiden age.
+The maximum kelt age class is a plus-group, i.e. it should include all repeat spawners
+age \code{max_age + 1} or older.
+\item \verb{n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
 multiple columns of observed ocean age frequencies (i.e., counts),
 where \verb{[min_MSage]} and \verb{[max_MSage]} are the youngest and oldest ocean age
 in years, respectively.
-\item \verb{n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs}  If
+\item \verb{n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs}  If
 \code{life_cycle == "SMaS"}, multiple columns of observed Gilbert-Rich age
 frequencies, sorted first by smolt age (\code{min_Mage:max_Mage}) and then
 by total age \code{min_age:max_age}. For example, a life history with
@@ -146,7 +173,8 @@ row corresponding to a female:
 \item \code{E_obs}  Observed fecundity.
 }}
 
-\item{prior_data}{If \code{stan_model == "IPM_ICchinook_pp"}, named list
+\item{prior_data}{(Deprecated; will be merged into \code{fish_data} in a future release.)
+If \code{stan_model == "IPM_ICchinook_pp"}, named list
 with the following elements:
 \itemize{
 \item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},

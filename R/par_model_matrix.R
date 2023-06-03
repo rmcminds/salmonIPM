@@ -4,9 +4,14 @@
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in a `salmonIPM` model
 #' that accepts covariates and `t1 ... tK` are terms involving variables in
 #' `fish_data`; see [salmonIPM()] for details.
+#' @param center Logical indicating whether the terms in model matrices 
+#' constructed from `fish_data` using the formulas in `par_models` should be centered.
+#' It is usually recommended to use the default (`TRUE`) so the baseline parameter
+#' estimate applies when predictors are at their sample means, but in some cases such
+#' as factor predictors `center = FALSE` may be appropriate.
 #' @param scale  Logical indicating whether the terms in model matrices 
 #' constructed from `fish_data` using the formulas in `par_models` should be scaled to have 
-#' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`).
+#' column SDs of 1.
 #' @param fish_data See [salmonIPM()]. In particular, the columns `...` may be used on
 #' the right-hand side of formulas in `par_models`.
 #' 
@@ -17,14 +22,15 @@
 #' 
 #' @export
 
-par_model_matrix <- function(par_models, scale = TRUE, fish_data)
+par_model_matrix <- function(par_models, center = TRUE, scale = TRUE, fish_data)
 {
   X <- lapply(par_models, function(f) {
     stopifnot(attr(terms(f), "response") == 1) # formulas must be 2-sided
-    ff <- update(f, NULL ~ . - 1) # remove intercept
+    ff <- update(f, NULL ~ .)
     mf <- model.frame(ff, data = fish_data, na.action = na.fail) # no missing covariates
-    mm <- model.matrix(ff, data = mf) 
-    mm <- scale(mm, scale = scale)
+    mm <- model.matrix(ff, data = mf)
+    mm <- mm[, setdiff(colnames(mm), "(Intercept)"), drop = FALSE] # remove intercept
+    mm <- scale(mm, center = center, scale = scale)
     return(mm)
   })
   names(X) <- lapply(par_models, function(f) all.vars(f)[1]) # names are responses

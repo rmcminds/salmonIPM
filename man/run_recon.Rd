@@ -4,7 +4,7 @@
 \alias{run_recon}
 \title{Perform run reconstruction on brood table data}
 \usage{
-run_recon(fish_data)
+run_recon(fish_data, age_F = NULL, age_B = NULL)
 }
 \arguments{
 \item{fish_data}{Data frame that includes the following columns,
@@ -18,12 +18,21 @@ Will often be time-invariant within a population, but need not be.
 \item \verb{n_age[min_age]_obs...n_age[max_age]_obs}  Multiple columns of
 observed spawner age frequencies (i.e., counts), where \verb{[min_age]} and
 \verb{[max_age]} are the numeral age in years (total, not ocean age) of the
-youngest and oldest spawners, respectively.
+youngest and oldest spawners, respectively. Complex age structures such as
+Gilbert-Rich or maiden-kelt are not supported.
 \item \code{n_W_obs}  Observed frequency of natural-origin spawners.
 \item \code{n_H_obs}  Observed frequency of hatchery-origin spawners.
 \item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
 \item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
 }}
+
+\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected.}
+
+\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected.}
 }
 \value{
 A data frame with the following columns, some of which are simply

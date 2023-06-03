@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/pexp_lpdf.stan
+  #include /include/gnormal_lpdf.stan
   #include /include/veq.stan
   #include /include/vand.stan
   #include /include/rsub.stan
@@ -11,12 +11,12 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                      // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];         // population identifier
-  int<lower=1,upper=N> year[N];        // brood year identifier
+  int<lower=1,upper=N> pop[N];         // population index
+  int<lower=1,upper=N> year[N];        // brood year index
   // info for forward simulations
   int<lower=0> N_fwd;                  // total number of cases in forward simulations
-  int<lower=1,upper=N> pop_fwd[N_fwd]; // population identifier for forward simulations
-  int<lower=1,upper=N+N_fwd> year_fwd[N_fwd]; // brood year identifier for forward simulations
+  int<lower=1,upper=N> pop_fwd[N_fwd]; // population index for forward simulations
+  int<lower=1,upper=N+N_fwd> year_fwd[N_fwd]; // brood year index for forward simulations
   vector<lower=0>[N_fwd] A_fwd; // habitat area for each forward simulation
   vector<lower=0,upper=1>[N_fwd] F_rate_fwd; // fishing mortality for forward simulations
   vector<lower=0,upper=1>[N_fwd] B_rate_fwd; // broodstock take rate for forward simulations
@@ -27,8 +27,10 @@ data {
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
+  real prior_mu_alpha[2];              // prior mean, sd for hyper-mean log intrinsic productivity
   int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
+  real prior_mu_Mmax[2];               // prior mean, sd for hyper-mean log maximum smolt recruitment
   int<lower=0> K_M;                    // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];              // smolt recruitment covariates
   // downstream, SAR, upstream survival
@@ -50,30 +52,34 @@ data {
   int<lower=1,upper=max(year)> which_prior_U[N_prior_U]; // which years with prior upstream survival
   vector[N_prior_U] mu_prior_U;        // annual prior means of logit upstream survival
   vector[N_prior_U] sigma_prior_U;     // annual prior SDs of logit upstream survival
-  // fishery and hatchery removals
-  vector<lower=0,upper=1>[N] F_rate;   // fishing mortality of wild adults
-  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
-  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
   int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
+  real prior_tau_S[3];                 // prior mean, scale, shape for spawner observation error SD
   // spawner age structure
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
+  vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
   int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
   int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples
   int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples
+  // fishery and hatchery removals
+  vector[N] F_rate;                    // fishing mortality rate of wild adults
+  vector<lower=0,upper=1>[N_age] age_F; // is age a (non)selected (0/1) by fishery?
+  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
+  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
+  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
+  vector<lower=0,upper=1>[N_age] age_B; // is age a (non)selected (0/1) in broodstock?
 }
 
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years, not including fwd simulations
-  int<lower=1> pop_year_indx[N];          // index of years within each pop, starting at 1
+  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
   int<lower=1,upper=N> N_year_all;         // total number of years, including forward simulations
   int<lower=1> ocean_ages[N_age];          // ocean ages
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
@@ -95,13 +101,13 @@ transformed data {
   }
   for(i in 1:N_H) n_HW_obs[i] = n_H_obs[i] + n_W_obs[i];
   
-  pop_year_indx[1] = 1;
+  pop_year[1] = 1;
   for(i in 1:N)
   {
     if(i == 1 || pop[i-1] != pop[i])
-      pop_year_indx[i] = 1;
+      pop_year[i] = 1;
     else
-      pop_year_indx[i] = pop_year_indx[i-1] + 1;
+      pop_year[i] = pop_year[i-1] + 1;
   }
   
   fwd_init_indx = rep_array(0, N_fwd, N_age);
@@ -269,45 +275,43 @@ transformed parameters {
   {
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year_indx[i] - min_ocean_age, 0), N_age); 
+    int N_orphan_age = max(N_age - max(pop_year[i] - min_ocean_age, 0), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
     row_vector[N_age] exp_p; // exp(alr(p[i,]))
     row_vector[N_age] S_W_a; // true wild spawners by age
 
     // AR(1) smolt recruitment process errors  
-    if(pop_year_indx[i] == 1) 
+    if(pop_year[i] == 1) 
       epsilon_M[i] = zeta_M[i]*sigma_M/sqrt(1 - rho_M^2);
     else
       epsilon_M[i] = rho_M*epsilon_M[i-1] + zeta_M[i]*sigma_M;
 
     // Smolt recruitment
-    if(pop_year_indx[i] <= smolt_age)
-      M[i] = M_init[(pop[i]-1)*smolt_age + pop_year_indx[i]];  // use initial values
+    if(pop_year[i] <= smolt_age)
+      M[i] = M_init[(pop[i]-1)*smolt_age + pop_year[i]];  // use initial values
     else
       M[i] = M0[i-smolt_age];  // smolts from appropriate brood year
     
     // Spawner recruitment and age structure
     // Use initial values for orphan age classes, otherwise use process model
-    if(pop_year_indx[i] <= max_ocean_age)
+    if(pop_year[i] <= max_ocean_age)
     {
-      ii = (pop[i] - 1)*max_ocean_age + pop_year_indx[i];
+      ii = (pop[i] - 1)*max_ocean_age + pop_year[i];
       q_orphan = append_row(sum(head(q_init[ii], N_age - N_orphan_age + 1)), 
                             tail(q_init[ii], N_orphan_age - 1));
     }
     
     for(a in 1:N_age)
     {
-      if(ocean_ages[a] < pop_year_indx[i])
-        // Use recruitment process model
+      if(pop_year[i] <= ocean_ages[a]) // use initial values
+        S_W_a[a] = S_init[ii] * (1 - p_HOS_all[i]) * q_orphan[a - (N_age - N_orphan_age)];
+      else // use recruitment process model
         S_W_a[a] = M[i-ocean_ages[a]] * s_D[year[i]-ocean_ages[a]] * 
-                   SAR[year[i]-ocean_ages[a]] * p[i-ocean_ages[a],a] * s_U[year[i]];
-      else
-        // Use initial values
-        S_W_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
+                   SAR[year[i]-ocean_ages[a]] * p[i-ocean_ages[a],a] * s_U[year[i]] *
+                   (1 - age_F[a]*F_rate[i]) * (1 - age_B[a]*B_rate_all[i]);
     }
-    
-    // catch and broodstock removal (assumes no take of age 1)
-    S_W_a[2:N_age] = S_W_a[2:N_age]*(1 - F_rate[i])*(1 - B_rate_all[i]);
+
+    // Total spawners and age structure
     S_W[i] = sum(S_W_a);
     S_H[i] = S_W[i]*p_HOS_all[i]/(1 - p_HOS_all[i]);
     S[i] = S_W[i] + S_H[i];
@@ -325,49 +329,46 @@ model {
   // Priors
   
   // smolt production
-  mu_alpha ~ normal(2,5);
+  mu_alpha ~ normal(prior_mu_alpha[1], prior_mu_alpha[2]);
   beta_alpha ~ normal(0,5);
   sigma_alpha ~ normal(0,3);
-  mu_Mmax ~ normal(0,10);
+  mu_Mmax ~ normal(prior_mu_Mmax[1], prior_mu_Mmax[2]);
   beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   // log([alpha,Mmax]) ~ MVN([mu_alpha,mu_Mmax], D*R_aMmax*D), where D = diag_matrix(sigma_alpha,sigma_Mmax)
   zeta_alpha ~ std_normal();
   zeta_Mmax ~ std_normal();
   beta_M ~ normal(0,5);
-  rho_M ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
+  rho_M ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();     // epsilon_M ~ AR1(rho_M, sigma_M)
-  M_init ~ lognormal(0.0,5.0);
 
   // downstream, SAR, upstream survival
   // prior on logit-intercepts implies Unif(0,1) prior on intercept when
   // all covariates are at their sample means
   target += log_inv_logit(mu_D) + log1m_inv_logit(mu_D);
   beta_D ~ normal(0,5);
-  rho_D ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
-  sigma_D ~ pexp(0,2,10);
+  rho_D ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
+  sigma_D ~ gnormal(0,2,10);
   zeta_D ~ std_normal();      // epsilon_D ~ AR1(rho_D, sigma_D)
   logit(s_D[which_prior_D]) ~ normal(mu_prior_D, sigma_prior_D); // informative prior on s_D
   target += log_inv_logit(mu_SAR) + log1m_inv_logit(mu_SAR);
   beta_SAR ~ normal(0,5);
-  rho_SAR ~ pexp(0,0.85,50); // mildly regularize to ensure stationarity
-  sigma_SAR ~ pexp(0,2,10);
+  rho_SAR ~ gnormal(0,0.85,50); // mildly regularize to ensure stationarity
+  sigma_SAR ~ gnormal(0,2,10);
   zeta_SAR ~ std_normal();   // epsilon_SAR ~ AR1(rho_SAR, sigma_SAR)
   logit(SAR[which_prior_SAR]) ~ normal(mu_prior_SAR, sigma_prior_SAR); // informative prior on SAR
   target += log_inv_logit(mu_U) + log1m_inv_logit(mu_U);
   beta_U ~ normal(0,5);
-  rho_U ~ pexp(0,0.85,50);   // mildly regularize to ensure stationarity
-  sigma_U ~ pexp(0,2,10);
+  rho_U ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
+  sigma_U ~ gnormal(0,2,10);
   zeta_U ~ std_normal();     // epsilon_U ~ AR1(rho_U, sigma_U)
   logit(s_U[which_prior_U]) ~ normal(mu_prior_U, sigma_prior_U); // informative prior on s_U
   
   // spawner age structure
-  for(i in 1:(N_age-1))
-  {
-    sigma_pop_p[i] ~ normal(0,3);
-    sigma_p[i] ~ normal(0,3); 
-  }
+  mu_p ~ dirichlet(prior_mu_p);
+  to_vector(sigma_pop_p) ~ normal(0,3);
+  to_vector(sigma_p) ~ normal(0,3);
   L_pop_p ~ lkj_corr_cholesky(1);
   L_p ~ lkj_corr_cholesky(1);
   // mu_pop_alr_p[i,] ~ MVN(mu_alr_p,D*R_pop_p*D), where D = diag_matrix(sigma_pop_p)
@@ -378,11 +379,13 @@ model {
   to_vector(zeta_p) ~ std_normal();
   
   // removals
-  log_B_take = log(S_W[which_B]) + log1m(q[which_B,1]) + logit(B_rate); // B_take = S_W*(1 - q[,1])*B_rate/(1 - B_rate)
+  log_B_take = log(S_W[which_B]) + log(q[which_B,]*age_B) + logit(B_rate); 
+  // implies B_take[i] = S_W[i] * (q[i,] * ageB) * B_rate[i] / (1 - B_rate[i])
   B_take_obs ~ lognormal(log_B_take, 0.05); // penalty to force pred and obs broodstock take to match 
   
-  // initial spawners and wild spawner age distribution
+  // initial states
   // (accounting for amalgamation of q_init to q_orphan)
+  M_init ~ lognormal(0.0,5.0);
   S_init ~ lognormal(mu_S_init, sigma_S_init);
   {
     matrix[N_age,max_ocean_age*N_pop] q_init_mat;
@@ -392,7 +395,7 @@ model {
   }
 
   // observation error
-  tau_S ~ pexp(0,1,10);
+  tau_S ~ gnormal(prior_tau_S[1], prior_tau_S[2], prior_tau_S[3]);
 
   // Observation model
   S_obs[which_S_obs] ~ lognormal(log(S[which_S_obs]), tau_S);  // observed spawners

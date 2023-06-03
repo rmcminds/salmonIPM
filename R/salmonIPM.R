@@ -5,6 +5,7 @@
 #' @param life_cycle Character string indicating which life-cycle model to fit.
 #' One of the following options (must be `"SS"` if `model == "RR"`):
 #'   * `"SS"`  Spawner-to-spawner (the default)
+#'   * `"SSiter"` Spawner-to-spawner with iteroparity
 #'   * `"SMS"`  Spawner-smolt-spawner
 #'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
 #'   available for `pool_pops == FALSE`)
@@ -23,21 +24,38 @@
 #'   function to fit. Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in the model
-#' specified by `stan_model` that accepts covariates (see Details for available
+#' specified by `stan_model` that accepts covariates (see **Details** for available
 #' model-response combinations) and `t1 ... tK` are terms involving variables in
 #' `fish_data`. Standard formula syntax such as `:` and `*` may be used;
 #' see [stats::formula()].
+#' @param center Logical indicating whether the terms in model matrices 
+#' constructed from `fish_data` using the formulas in `par_models` should be centered.
+#' It is usually recommended to use the default (`TRUE`) so the baseline parameter
+#' estimate applies when predictors are at their sample means, but in some cases such
+#' as factor predictors `center = FALSE` may be appropriate.
 #' @param scale  Logical indicating whether the model matrices constructed from
 #' `fish_data` using the formulas in `par_models` should be scaled to have 
-#' column SDs of 1 in addition to being centered (`TRUE`) or centered only (`FALSE`). 
+#' column SDs of 1. 
+#' @param prior Optional list of two-sided formulas of the form 
+#' `theta ~ distribution(params)`, where `theta` is a (hyper)parameter that can take
+#' a user-specified prior and `distribution()` is its canonical prior family. See 
+#' [`priors`] for details on the available parameters in each model and their
+#' corresponding prior families. Any (hyper)parameters `theta` not given explicit priors 
+#' will use the default values of the prior `params`.
 #' @param ages For multi-stage models, a named list giving the fixed ages in
 #'   years of all subadult life stages. (This is not needed for `IPM_SMaS_np` because
 #'   in that case smolt age structure is provided in `fish_data`.)
-#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
+#' @param age_F Either a logical or 0/1 integer vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected by the fishery. 
+#' The default is all selected.
+#' @param age_B Either a logical or 0/1 integer vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected in broodstock collection. 
+#' The default is all selected.
+#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, an optional logical or 0/1 integer
 #'   vector indicating, for each adult age, whether observed total spawner data
 #'   includes that age. The default is to treat `S_obs` as including spawners of
 #'   all ages.
-#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, an optional logical or binary numeric
+#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, an optional logical or 0/1 integer
 #'   vector indicating, for each adult age, whether spawners of that age
 #'   contribute toward reproduction. This could be used, e.g., to exclude jacks
 #'   from the effective breeding population. The default is to include spawners
@@ -73,15 +91,24 @@
 #'   * `S_obs`  Total number (not density) of all wild and hatchery-origin spawners.  
 #'   * `tau_S_obs`  If `stan_model == "IPM_LCRchum_pp"`, known observation error SDs 
 #'   for spawner abundance.  
-#'   * `n_age[min_age]_obs...n_age[max_age]_obs`  Multiple columns of
+#'   * `n_age[min_age]_obs ... n_age[max_age]_obs`  Multiple columns of
 #'   observed spawner age frequencies (i.e., counts), where `[min_age]` and
 #'   `[max_age]` are the numeral age in years (total, not ocean age) of the
-#'   youngest and oldest spawners, respectively.  
-#'   * `n_MSage[min_MSage]_obs...n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`, 
+#'   youngest and oldest spawners, respectively. 
+#'   * If `life_cycle == "SSiter"`, multiple columns of observed first-time (maiden) and
+#'   repeat (kelt) spawner age frequencies
+#'   `n_age[min_age]M_obs ... n_age[max_age]M_obs ... n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs`, 
+#'   where `[min_age]` and `[max_age]` are the integer total age in years of the youngest 
+#'   and oldest *maiden* spawners, respectively. Contiguous maiden age columns 
+#'   (denoted by `M`) are followed by an equal number of contiguous kelt age columns 
+#'   (denoted by `K`) where each kelt age is 1 year greater than the corresponding maiden age. 
+#'   The maximum kelt age class is a plus-group, i.e. it should include all repeat spawners 
+#'   age `max_age + 1` or older.
+#'   * `n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`, 
 #'   multiple columns of observed ocean age frequencies (i.e., counts), 
 #'   where `[min_MSage]` and `[max_MSage]` are the youngest and oldest ocean age 
-#'   in years, respectively.  
-#'   * `n_GRage[min_age]_[min_Mage]_obs...n_GRage[max_age]_[max_Mage]_obs`  If
+#'   in years, respectively.
+#'   * `n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs`  If
 #'    `life_cycle == "SMaS"`, multiple columns of observed Gilbert-Rich age
 #'   frequencies, sorted first by smolt age (`min_Mage:max_Mage`) and then
 #'   by total age `min_age:max_age`. For example, a life history with
@@ -125,7 +152,8 @@
 #' row corresponding to a female:
 #' * `age_E`  Female age in years.   
 #' * `E_obs`  Observed fecundity.  
-#' @param prior_data If `stan_model == "IPM_ICchinook_pp"`, named list
+#' @param prior_data (Deprecated; will be merged into `fish_data` in a future release.) 
+#' If `stan_model == "IPM_ICchinook_pp"`, named list
 #' with the following elements: 
 #' * `s`  Data frame with columns `year`, `mu_prior_D`, `sigma_prior_D`, 
 #' `mu_prior_SAR`, `sigma_prior_SAR`, `mu_prior_U`, `sigma_prior_U`, 
@@ -144,19 +172,25 @@
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
 #'   should be returned for later analysis with [loo::loo()].
 #' @param chains Positive integer specifying the number of MCMC chains; 
-#'   see [rstan::stan()].
+#'   see [rstan::sampling()].
 #' @param iter Positive integer specifying the number of iterations for each
-#'   chain (including warmup); see [rstan::stan()].
+#'   chain (including warmup); see [rstan::sampling()].
 #' @param warmup Positive integer specifying the number of warmup (aka burnin)
 #'   iterations per chain. If step-size adaptation is on (which it is by
 #'   default), this also controls the number of iterations for which adaptation
 #'   is run (and hence these warmup samples should not be used for inference).
 #'   The number of warmup iterations should not be larger than `iter`.
-#'   See [rstan::stan()].
+#'   See [rstan::sampling()].
 #' @param thin Positive integer specifying the period for saving samples. The
-#'   default is 1, which is usually the recommended value. See [rstan::stan()].
+#'   default is 1, which is usually the recommended value. See [rstan::sampling()].
 #' @param cores Number of cores to use when executing the chains in parallel.
-#'   Defaults to one less than the number of cores available. See [rstan::stan()].
+#'   Defaults to the number of physical cores available. See [rstan::sampling()].
+#' @param control A named list of options to control sampler behavior. See [rstan::stan()]
+#' for details and available options. In contrast to **rstan**, the default value of 
+#' `adapt_delta` in **salmonIPM** is increased to 0.95 as we have found this 
+#' necessary to minimize divergences in most cases. Note that when setting other `control`
+#' parameters, `adapt_delta` will revert to its **rstan** default value of 0.8 unless
+#' explicitly specified.
 #' @param ... Additional arguments to pass to [rstan::sampling()].
 #'   
 #' @details 
@@ -174,16 +208,18 @@
 #' time-invariant predictor would not be identifiable in a `_np` model because
 #' populations are modeled independently.
 #' 
-#' |                    |                             |                                 |                            | **Response (family)**      |                        |                         |                                 |
-#' |:-------------------|:---------------------------:|:-------------------------------:|:--------------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------:|    
-#' | **Model**          | **`alpha` \cr (lognormal)** | **`psi` \cr (logistic normal)** | **`Rmax` \cr (lognormal)** | **`Mmax` \cr (lognormal)** | **`R` \cr (lognormal)**| **`M` \cr (lognormal)** | **`s_MS` \cr (logistic normal)**|
-#' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | 
-#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | 
-#' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
-#' | `IPM_SMS_pp`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
-#' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
-#' | `IPM_ICchinook_pp` | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                        | 
-#' | `IPM_LCRchum_pp`   | &#x2610;                    | &#x2611;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | 
+#' |                    |                             |                                 |                            | **Response (family)**      |                        |                         |                                 |                                 |
+#' |:-------------------|:---------------------------:|:-------------------------------:|:--------------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------:|:-------------------------------:|    
+#' | **Model**          | **`alpha` \cr (lognormal)** | **`psi` \cr (logistic normal)** | **`Rmax` \cr (lognormal)** | **`Mmax` \cr (lognormal)** | **`R` \cr (lognormal)**| **`M` \cr (lognormal)** | **`s_MS` \cr (logistic normal)**| **`s_SS` \cr (logistic normal)**|
+#' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_SSiter_np`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
+#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_SSiter_pp`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
+#' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' | `IPM_SMS_pp`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' | `IPM_ICchinook_pp` | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                        | &#x2610;                        | 
+#' | `IPM_LCRchum_pp`   | &#x2610;                    | &#x2611;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
 #' 
 #' @return An object of class `stanfit` representing the fitted model. See
 #'   [rstan::stan()] for details.
@@ -193,24 +229,28 @@
 #' @encoding UTF-8
 
 salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_model = NULL, 
-                      SR_fun = "BH", par_models = NULL, scale = TRUE, 
-                      ages = NULL, age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
+                      SR_fun = "BH", par_models = NULL, center = TRUE, scale = TRUE, 
+                      prior = NULL, ages = NULL, age_F = NULL, age_B = NULL,
+                      age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
                       init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
-                      cores = parallel::detectCores() - 1, ...)
+                      cores = parallel::detectCores(logical = FALSE), 
+                      control = list(adapt_delta = 0.95), ...)
 {
   if(is.null(stan_model)) 
     stan_model <- paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_")
+  stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, 
-                   par_models = par_models, scale = scale, 
-                   ages = ages, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   par_models = par_models, scale = scale, prior = prior, 
+                   ages = ages, age_F = age_F, age_B = age_B,
+                   age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   conditionGRonMS = conditionGRonMS, 
                    fish_data = fish_data, fish_data_fwd = fish_data_fwd, 
-                   fecundity_data = fecundity_data, prior_data = prior_data, 
-                   conditionGRonMS = conditionGRonMS)
+                   fecundity_data = fecundity_data, prior_data = prior_data)
   
   if(is.null(init))
      init <- stan_init(stan_model = stan_model, data = dat, chains = chains)
@@ -223,9 +263,9 @@ salmonIPM <- function(model = "IPM", life_cycle = "SS", pool_pops = TRUE, stan_m
   }
   if(log_lik) pars <- c(pars, "LL")
   
-  fit <- rstan::sampling(stanmodels[[stan_model]], 
+  fit <- rstan::sampling(stanmodels[[stanmodel]], 
                          data = dat, init = init, pars = pars,
                          chains = chains, cores = cores, 
                          iter = iter, warmup = warmup, thin = thin, 
-                         ...)
+                         control = control, ...)
 }

@@ -1,14 +1,14 @@
 functions {
 #include /include/SR.stan
-#include /include/pexp_lpdf.stan
+#include /include/gnormal_lpdf.stan
 #include /include/quantile.stan
 }
 
 data {
   int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;               // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];  // population identifier
-  int<lower=1,upper=N> year[N]; // brood year identifier
+  int<lower=1,upper=N> pop[N];  // population index
+  int<lower=1,upper=N> year[N]; // brood year index
   int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S_obs and R_obs)
   int<lower=1,upper=N> which_fit[N_fit]; // cases used in fitting
   vector<lower=0>[N] S_obs;     // observed annual total spawner abundance (not density)
@@ -82,7 +82,7 @@ model {
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   for(i in 1:N_pop)
   {
-    rho_R[i] ~ pexp(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
+    rho_R[i] ~ gnormal(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
     sigma_R[i] ~ normal(0,3);
   }
 
