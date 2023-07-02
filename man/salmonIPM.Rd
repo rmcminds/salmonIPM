@@ -33,7 +33,7 @@ salmonIPM(
   iter = 2000,
   warmup = floor(iter/2),
   thin = 1,
-  cores = parallel::detectCores() - 1,
+  cores = parallel::detectCores(logical = FALSE),
   control = list(adapt_delta = 0.95),
   ...
 )
@@ -260,7 +260,7 @@ See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 default is 1, which is usually the recommended value. See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 
 \item{cores}{Number of cores to use when executing the chains in parallel.
-Defaults to one less than the number of cores available. See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
+Defaults to the number of physical cores available. See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 
 \item{control}{A named list of options to control sampler behavior. See \code{\link[rstan:stan]{rstan::stan()}}
 for details and available options. In contrast to \strong{rstan}, the default value of

@@ -469,7 +469,7 @@ model {
   E_obs ~ normal(mu_E[a_E], sigma_E[a_E]);              // observed fecundity
   target += -normal_lccdf(0 | mu_E[a_E], sigma_E[a_E]); // zero-truncated normal (T[0, ] not vectorized)
   M_downstream = M;
-  M_downstream[downstream_trap] += M[which_upstream];
+  for(i in 1:N_upstream) M_downstream[downstream_trap[i]] += M[which_upstream[i]];
   // M_downstream[which_M_obs] ~ lognormal(log(M_obs[which_M_obs]), tau_M[which_M_obs]); // prior on smolts
   M_obs[which_M_obs] ~ lognormal(log(M_downstream[which_M_obs]), tau_M[which_M_obs]); // likelihood of smolts
   // S[which_S_obs] ~ lognormal(log(S_obs[which_S_obs]), tau_S[which_S_obs]); // prior on spawners
@@ -496,7 +496,7 @@ generated quantities {
   R_p = multiply_lower_tri_self_transpose(L_p);
   
   M_downstream = M;
-  M_downstream[downstream_trap] += M[which_upstream];
+  for(i in 1:N_upstream) M_downstream[downstream_trap[i]] += M[which_upstream[i]];
   LL_M_obs = rep_vector(0,N);
   for(i in 1:N_M_obs)
     LL_M_obs[which_M_obs[i]] = lognormal_lpdf(M[which_M_obs[i]] | log(M_obs[which_M_obs[i]]), tau_M[which_M_obs[i]]); 
