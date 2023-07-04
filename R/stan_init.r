@@ -57,13 +57,13 @@ stan_init <- function(stan_model, data, chains = 1)
   
   # Data to estimate initial origin-composition parameters
   if(life_cycle == "LCRchum") {
-    n_nonlocal_obs <- n_origin_obs[, -1, drop = FALSE]
-    n_H_obs <- rowSums(n_nonlocal_obs)
+    n_Oknown_obs <- n_O_obs[, -1, drop = FALSE]
+    n_H_obs <- rowSums(n_Oknown_obs)
     which_H <- which(n_H_obs > 0)
     n_H_obs <- n_H_obs[which_H]
-    n_W_obs <- n_origin_obs[which_H,1]
-    p_origin <- aggregate(pmax(n_nonlocal_obs, 0.1), list(pop = pop), sum)[-which_H_pop,-1]
-    p_origin <- t(sweep(p_origin, 2, colSums(p_origin), "/"))
+    n_W_obs <- n_O_obs[which_H,1]
+    P_D <- aggregate(pmax(n_Oknown_obs, 0.1), list(pop = pop), sum)[-which_H_pop,-1]
+    P_D <- t(sweep(P_D, 2, colSums(P_D), "/"))
   }
   
   ## Crude estimates of states 
@@ -398,7 +398,7 @@ stan_init <- function(stan_model, data, chains = 1)
              sigma_F = runif(1, 0.1, 0.5),
              zeta_F = rnorm(N, 0, 0.3),
              # H/W composition, removals
-             p_origin = p_origin,
+             P_D = P_D,
              B_rate = B_rate,
              # initial states, observation error
              M_init = rep(tapply(M_obs, pop, median), each = smolt_age),

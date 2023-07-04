@@ -101,9 +101,9 @@ stan_data <- function(stan_model, SR_fun = "BH",
   
   # Origin-frequency, sex-frequency and fecundity data
   if(life_cycle == "LCRchum") {
-    n_origin_obs <- as.matrix(fish_data[, grep("n_origin", names(fish_data))])
-    n_origin_obs <- replace(n_origin_obs, is.na(n_origin_obs), 0)
-    which_H_pop <- sapply(strsplit(colnames(n_origin_obs), "_"), 
+    n_O_obs <- as.matrix(fish_data[, grep("n_O", names(fish_data))])
+    n_O_obs <- replace(n_O_obs, is.na(n_O_obs), 0)
+    which_H_pop <- sapply(strsplit(colnames(n_O_obs), "_"), 
                           function(x) as.numeric(substring(x[2], 7)))[-1]
     if(any(is.na(n_M_obs) != is.na(n_F_obs)))
       stop("Conflicting NAs in n_M_obs and n_F_obs in rows ", 
@@ -505,7 +505,7 @@ stan_data <- function(stan_model, SR_fun = "BH",
                   # origin composition
                   N_H_pop = length(which_H_pop),
                   which_H_pop = which_H_pop,
-                  n_origin_obs = n_origin_obs,
+                  n_O_obs = n_O_obs,
                   # fishery and hatchery removals and translocations
                   F_rate = replace(F_rate, is.na(F_rate), 0),
                   age_F = age_F,
