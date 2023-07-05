@@ -153,7 +153,8 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
               (alpha - 1)*A_pop*Rmax/alpha)
   
   # Covariate model matrices
-  X <- par_model_matrix(par_models = par_models, scale = scale, fish_data = fish_data)
+  X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
+                        center = center, scale = scale)
   for(i in c("alpha","Rmax","R","Mmax","M","s_MS","s_SS")) 
   {
     X_i <- paste("X", tail(unlist(strsplit(i, "_")), 1), sep = "_")

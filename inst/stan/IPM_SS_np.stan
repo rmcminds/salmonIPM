@@ -33,7 +33,7 @@ data {
   // spawner age structure
   int<lower=2> N_age;                  // number of (maiden) adult age classes
   int<lower=2> max_age;                // maximum (maiden) adult age
-  matrix<lower=0>[N,iter ? N_age*2 : N_age] n_age_obs; // wild spawner [maiden | kelt] age frequencies
+  matrix<lower=0>[N,iter ? N_age*2 : N_age] n_age_obs; // W spawner [maiden ... kelt] age frequencies
   vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
@@ -116,8 +116,8 @@ parameters {
   vector<lower=0,upper=1>[N_B] B_rate;    // true broodstock take rate when B_take > 0
   // initial spawners, observation error
   vector<lower=0>[max_age*N_pop] S_init;  // true total spawner abundance in years 1:max_age
-  simplex[N_age] q_init[max_age*N_pop];   // true wild (maiden) age distribution in years 1:max_age
-  simplex[N_age*2] q_iter_init[iter*N_pop]; // true wild [maiden | kelt] age distribution in year 1
+  simplex[N_age] q_init[max_age*N_pop];   // true W (maiden) age distribution in years 1:max_age
+  simplex[N_age*2] q_iter_init[iter*N_pop]; // true W [maiden ... kelt] age distribution in year 1
   vector<lower=0>[N_pop] tau;             // observation error SDs of total spawners
 }
 
@@ -141,7 +141,7 @@ transformed parameters {
   // spawner age structure
   vector[N_age-1] mu_alr_p[N_pop];     // population mean log ratio age distributions
   simplex[N_age] p[N];                 // true cohort (maiden) age distributions
-  matrix<lower=0,upper=1>[N,iter ? N_age*2 : N_age] q; // true spawner or [maiden | kelt] age distns
+  matrix<lower=0,upper=1>[N,iter ? N_age*2 : N_age] q; // true W spawner or [maiden ... kelt] age distns
 
   // Pad p_HOS and B_rate
   p_HOS_all = rep_vector(0,N);
@@ -190,8 +190,8 @@ transformed parameters {
 
     if(iter)  // iteroparous
     {
-      row_vector[N_age+1] S_M_a = rep_row_vector(0, N_age + 1); // true wild maiden spawners by age
-      row_vector[N_age+1] S_K_a = rep_row_vector(0, N_age + 1); // true wild kelt spawners by age
+      row_vector[N_age+1] S_M_a = rep_row_vector(0, N_age + 1); // true W maiden spawners by age
+      row_vector[N_age+1] S_K_a = rep_row_vector(0, N_age + 1); // true W kelt spawners by age
       
       // AR(1) kelt survival process errors
       if(pop_year[i] == 1)
@@ -206,7 +206,7 @@ transformed parameters {
       {
         if(pop_year[i] <= ages[a]) // use initial values
         {
-          if(pop_year[i] == 1) // use [maiden | kelt] initial age dist
+          if(pop_year[i] == 1) // use [maiden ... kelt] initial age dist
             S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_iter_init[pop[i]][a];
           else // use maiden-only initial age dist
             S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
@@ -226,7 +226,7 @@ transformed parameters {
       
       S_W_a[i,] = S_M_a + S_K_a;    
       S_W[i] = sum(S_W_a[i,]);
-      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
+      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden ... kelt] spawner age distribution
     }
     else  // semelparous
     {

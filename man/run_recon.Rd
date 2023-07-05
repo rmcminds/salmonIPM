@@ -26,13 +26,15 @@ Gilbert-Rich or maiden-kelt are not supported.
 \item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
 }}
 
-\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+\item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
 whether each adult age is fully (non)selected by the fishery.
-The default is all selected.}
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
 
-\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+\item{age_B}{Logical or 0/1 vector of length \code{N_age} indicating
 whether each adult age is fully (non)selected in broodstock collection.
-The default is all selected.}
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
 }
 \value{
 A data frame with the following columns, some of which are simply

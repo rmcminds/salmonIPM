@@ -34,18 +34,17 @@
 #'
 #' @export
 
-stan_data <- function(stan_model, SR_fun = "BH", 
-                      par_models = NULL, scale = TRUE, prior = NULL, 
-                      ages = NULL, age_F = NULL, age_B = NULL,
-                      age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, 
-                      prior_data = NULL)
+stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
+                                     "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
+                                     "IPM_LCRchum_pp","IPM_ICchinook_pp",
+                                     "RR_SS_np","RR_SS_pp"), 
+                      SR_fun = "BH", ages = NULL, 
+                      par_models = NULL, center = TRUE, scale = TRUE, prior = NULL, 
+                      age_F = NULL, age_B = NULL, age_S_obs = NULL, age_S_eff = NULL, 
+                      conditionGRonMS = FALSE, fish_data, fish_data_fwd = NULL, 
+                      fecundity_data = NULL, prior_data = NULL)
 {
-  if(!stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
-                        "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
-                        "IPM_LCRchum_pp","IPM_ICchinook_pp",
-                        "RR_SS_np","RR_SS_pp"))
-    stop("Stan model ", stan_model, " does not exist")
+  stan_model <- match.arg(stan_model)
   
   # Basic objects and data dimensions
   # General error-checking
@@ -65,7 +64,8 @@ stan_data <- function(stan_model, SR_fun = "BH",
   model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
                             gsub("iter", "", life_cycle), # same Stan code for iteroparity
                             sep = "_")
-  X <- par_model_matrix(par_models = par_models, scale = scale, fish_data = fish_data)
+  X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
+                        center = center, scale = scale)
   
   # Age dimensions
   if(life_cycle == "SSiter") {
@@ -104,7 +104,7 @@ stan_data <- function(stan_model, SR_fun = "BH",
     n_O_obs <- as.matrix(fish_data[, grep("n_O", names(fish_data))])
     n_O_obs <- replace(n_O_obs, is.na(n_O_obs), 0)
     which_H_pop <- sapply(strsplit(colnames(n_O_obs), "_"), 
-                          function(x) as.numeric(substring(x[2], 7)))[-1]
+                          function(x) as.numeric(substring(x[2], 2)))[-1]
     if(any(is.na(n_M_obs) != is.na(n_F_obs)))
       stop("Conflicting NAs in n_M_obs and n_F_obs in rows ", 
            which(is.na(n_M_obs) != is.na(n_F_obs)))
@@ -120,6 +120,13 @@ stan_data <- function(stan_model, SR_fun = "BH",
     if(any(is.na(n_W_obs) != is.na(n_H_obs)))
       stop("Conflicting NAs in n_W_obs and n_H_obs in rows ", 
            which(is.na(n_W_obs) != is.na(n_H_obs)))
+    if(any(!fit_p_HOS & n_H_obs > 0))
+      warning("Hatchery spawners present in rows ", which(!fit_p_HOS & n_H_obs > 0),
+              " but fit_p_HOS == FALSE. See help(salmonIPM) for why this might be a problem.")
+    if(any(fit_p_HOS & n_H_obs + n_W_obs == 0))
+      warning("fit_p_HOS == TRUE in rows ", which(fit_p_HOS & n_H_obs + n_W_obs == 0),
+              " but origin-frequency samples are missing. 
+              See help(salmonIPM) for why this might be a problem.")
   }
   
   # Stage-specific age information
@@ -188,7 +195,7 @@ stan_data <- function(stan_model, SR_fun = "BH",
     log_RA <- log((S_obs + B_take_obs)/((1 - F_rate)*A)) # autoscale Rmax to data
     prior_Rmax_mean <- quantile(log_RA, 0.8, na.rm = TRUE)
     prior_Rmax_sd <- 2*sd(log_RA, na.rm = TRUE)
-
+    
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","Rmax","mu_p","mu_SS","tau"), several.ok = TRUE)
       prior_alpha <- stan_prior(pdfs$alpha, lognormal(2,2))
@@ -242,7 +249,7 @@ stan_data <- function(stan_model, SR_fun = "BH",
     log_MA <- log(M_obs/A)[M_obs > 0] # autoscale Mmax to smolt data (can == 0 for hatcheries)
     prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
-
+    
     pars <- match.arg(pars, c("mu_psi","mu_Mmax","mu_MS","mu_p"), several.ok = TRUE)
     prior_mu_psi <- stan_prior(pdfs$mu_psi, beta(1,1))
     prior_mu_Mmax <- stan_prior(pdfs$mu_Mmax, normal(prior_Mmax_mean, prior_Mmax_sd))

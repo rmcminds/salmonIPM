@@ -4,12 +4,18 @@
 \alias{stan_init}
 \title{Generate initial values for fitting IPMs or run-reconstruction spawner-recruit models.}
 \usage{
-stan_init(stan_model, data, chains = 1)
+stan_init(
+  stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
+    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
+    "RR_SS_np", "RR_SS_pp"),
+  stan_data,
+  chains = 1
+)
 }
 \arguments{
 \item{stan_model}{Character string specifying the \strong{salmonIPM} model to be fit.}
 
-\item{data}{Named list of input data for fitting either an IPM or
+\item{stan_data}{Named list of input data for fitting either an IPM or
 run-reconstruction spawner-recruit model in \href{http://mc-stan.org}{Stan},
 as returned by \code{\link[=stan_data]{stan_data()}}.}
 
@@ -43,9 +49,9 @@ fd <- data.frame(pop = rep(1:N_pop, each = N_year), year = rep(1:N_year, N_pop),
 sim_out <- simIPM(pars = pars, fish_data = fd, N_age = 3, max_age = 5)
 
 # Prepare simulated data for Stan
-dat <- stan_data("IPM_SS_pp", fish_data = sim_out$sim_dat)
+dat <- stan_data("IPM_SS_pp", stan_data = sim_out$sim_dat)
 
 # Generate inits for 3 chains
-inits <- stan_init("IPM_SS_pp", data = dat, chains = 3)
+inits <- stan_init("IPM_SS_pp", stan_data = dat, chains = 3)
 
 }

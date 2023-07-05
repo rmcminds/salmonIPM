@@ -46,7 +46,7 @@ data {
   // spawner age structure
   int<lower=2> N_age;                  // number of (maiden) adult age classes
   int<lower=2> max_age;                // maximum (maiden) adult age
-  matrix<lower=0>[N,iter ? N_age*2 : N_age] n_age_obs; // wild spawner [maiden | kelt] age frequencies
+  matrix<lower=0>[N,iter ? N_age*2 : N_age] n_age_obs; // W spawner [maiden ... kelt] age frequencies
   vector<lower=0,upper=1>[N_age + iter] age_S_obs; // does S_obs include age a (1) or not (0)?
   vector<lower=0,upper=1>[N_age + iter] age_S_eff; // do age-a spawners contribute to reproduction (1) or not (0)?
   vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
@@ -159,7 +159,7 @@ parameters {
   // initial spawners, observation error
   vector<lower=0>[max_age*N_pop] S_init; // true total spawner abundance in years 1-max_age
   simplex[N_age] q_init[max_age*N_pop];  // true wild (maiden) spawner age distribution in years 1:max_age
-  simplex[N_age*2] q_iter_init[iter*N_pop]; // initial [maiden | kelt] age distribution in year 1
+  simplex[N_age*2] q_iter_init[iter*N_pop]; // initial [maiden ... kelt] age distribution in year 1
   real<lower=0> tau;                     // observation error SD of total spawners
 }
 
@@ -186,7 +186,7 @@ transformed parameters {
   row_vector[N_age-1] mu_alr_p;          // mean of log-ratio cohort (maiden) age distributions
   matrix[N_pop,N_age-1] mu_pop_alr_p;    // population mean log-ratio (maiden) age distributions
   matrix<lower=0,upper=1>[N,N_age] p;    // cohort (maiden) age distributions
-  matrix<lower=0,upper=1>[N,iter ? N_age*2 : N_age] q; // true spawner or [maiden | kelt] age distns
+  matrix<lower=0,upper=1>[N,iter ? N_age*2 : N_age] q; // true W spawner or [maiden ... kelt] age distns
   
   // Multivariate Matt trick for [log(alpha), log(Rmax)]
   {
@@ -271,7 +271,7 @@ transformed parameters {
       {
         if(pop_year[i] <= ages[a]) // use initial values
         {
-          if(pop_year[i] == 1) // use [maiden | kelt] initial age dist
+          if(pop_year[i] == 1) // use [maiden ... kelt] initial age dist
             S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_iter_init[pop[i]][a];
           else // use maiden-only initial age dist
             S_M_a[a] = S_init[ii]*(1 - p_HOS_all[i])*q_orphan[a - (N_age - N_orphan_age)];
@@ -291,7 +291,7 @@ transformed parameters {
       
       S_W_a[i,] = S_M_a + S_K_a;    
       S_W[i] = sum(S_W_a[i,]);
-      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden | kelt] spawner age distribution
+      q[i,] = append_col(S_M_a[:N_age], S_K_a[2:])/S_W[i]; // [maiden ... kelt] spawner age distribution
     }
     else  // semelparous
     {

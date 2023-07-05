@@ -90,15 +90,16 @@ otherwise will be ignored and may be omitted.
 }}
 
 \item{par_models}{Optional list of two-sided formulas of the form
-\code{theta ~ t1 + ... + tK}, where \code{theta} is a parameter or state in the model
+\code{theta ~ x1 + ... + xK}, where \code{theta} is a parameter or state in the model
 specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
-model-response combinations) and \verb{t1 ... tK} are terms involving variables in
+model-response combinations) and \verb{x1 ... xK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
-column SDs of 1.}
+column SDs of 1. Unit-scaling predictors is less critical than centering, but is advisable
+if variables have scales very far from 1.}
 
 \item{N_age}{Number of (maiden) adult age classes.}
 
@@ -108,13 +109,15 @@ column SDs of 1.}
 in years of all subadult life stages. For example, if \code{life_cycle == "SMS"},
 \code{list(M = a)} where \code{a} is integer smolt age.}
 
-\item{age_F}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+\item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
 whether each adult age is fully (non)selected by the fishery.
-The default is all selected.}
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
 
-\item{age_B}{Either a logical or 0/1 integer vector of length \code{N_age} indicating
+\item{age_B}{Logical or 0/1 vector of length \code{N_age} indicating
 whether each adult age is fully (non)selected in broodstock collection.
-The default is all selected.}
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
 
 \item{fish_data}{Data frame with columns:
 \itemize{

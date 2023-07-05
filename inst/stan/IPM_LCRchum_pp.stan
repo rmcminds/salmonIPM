@@ -183,7 +183,7 @@ parameters {
   real<lower=0> sigma_F;                 // annual SD of logit proportion female
   vector[N] zeta_F;                      // logit proportion females by outmigration year (Z-scores)
   // origin composition, removals
-  simplex[N_W_pop] P_D[N_H_pop];         // straying probability from each hatchery to each wild pop 
+  simplex[N_W_pop] P_D[N_H_pop];         // P(dispersal from hatchery h to wild pop j) 
   vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
   // initial states and observation error
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
@@ -359,15 +359,12 @@ transformed parameters {
       q_O[i,2:] = S_O[year[i]][pop[i],which_H_pop]; // known (hatchery) origin
       q_O[i,] = q_O[i,]/sum(q_O[i,]);
 
-      // Density-independent egg production from brood year i
+      // Expected egg production from brood year i
       // weighted by age structure and sex ratio 
       // discounted for proportion of non-green (not fully fecund) females
-      // if(is_nan(q[i,]*mu_E*q_F[i]*S[i]))
-      //   print("i = ", i, " S_W_a = ", S_W_a, "  q[i,] = ", q[i,], "  q_F[i] = ", q_F[i], "  S[i] = ", S[i], "  E_hat[i] = ", q[i,]*mu_E*p_F[i]*S[i]);
       E_hat[i] = q[i,] * mu_E * q_F[i] * (p_G_obs[i] + delta_NG * p_NG_obs[i]) * S[i];
       
       // Smolt production from brood year i
-      // Density-dependent egg-to-smolt survival
       M_hat[i] = SR(SR_fun, psi_Xbeta[i], Mmax_Xbeta[i], E_hat[i], A[i]);
       M0[i] = M_hat[i] * exp(eta_year_M[year[i]] + dot_product(X_M[i], beta_M) + sigma_M*zeta_M[i]);
     }
@@ -488,7 +485,7 @@ generated quantities {
   vector[N] LL_M_obs;           // pointwise log-likelihood of smolts
   vector[N] LL_S_obs;           // pointwise log-likelihood of spawners
   vector[N] LL_n_age_obs;       // pointwise log-likelihood of wild age frequencies
-  vector[N] LL_n_O_obs;    // pointwise log-likelihood of origin-frequencies
+  vector[N] LL_n_O_obs;         // pointwise log-likelihood of origin-frequencies
   vector[N] LL_n_F_obs;         // pointwise log-likelihood of female vs. male frequencies
   vector[N] LL;                 // total pointwise log-likelihood     
 

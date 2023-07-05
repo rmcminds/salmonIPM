@@ -4,6 +4,8 @@
 #' `theta ~ t1 + ... + tK`, where `theta` is a parameter or state in a `salmonIPM` model
 #' that accepts covariates and `t1 ... tK` are terms involving variables in
 #' `fish_data`; see [salmonIPM()] for details.
+#' @param fish_data See [salmonIPM()]. In particular, the columns `...` may be used on
+#' the right-hand side of formulas in `par_models`.
 #' @param center Logical indicating whether the terms in model matrices 
 #' constructed from `fish_data` using the formulas in `par_models` should be centered.
 #' It is usually recommended to use the default (`TRUE`) so the baseline parameter
@@ -12,8 +14,6 @@
 #' @param scale  Logical indicating whether the terms in model matrices 
 #' constructed from `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1.
-#' @param fish_data See [salmonIPM()]. In particular, the columns `...` may be used on
-#' the right-hand side of formulas in `par_models`.
 #' 
 #' @return A named list of model matrices corresponding to the elements of `par_models`.
 #' 
@@ -22,7 +22,7 @@
 #' 
 #' @export
 
-par_model_matrix <- function(par_models, center = TRUE, scale = TRUE, fish_data)
+par_model_matrix <- function(par_models, fish_data, center = TRUE, scale = TRUE)
 {
   X <- lapply(par_models, function(f) {
     stopifnot(attr(terms(f), "response") == 1) # formulas must be 2-sided
