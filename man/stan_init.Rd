@@ -22,9 +22,9 @@ as returned by \code{\link[=stan_data]{stan_data()}}.}
 \item{chains}{A positive integer specifying the number of Markov chains.}
 }
 \value{
-A named list with starting values for the parameters and states in
-the model that is passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} as the \code{init} argument to be
-used when fitting \strong{salmonIPM} models.
+A length-\code{chains} list of named lists containing starting values
+for the primitive parameters and states in the model. Passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}
+as the \code{init} argument when fitting \strong{salmonIPM} models.
 }
 \description{
 This function is mostly used internally, but may occasionally be called directly

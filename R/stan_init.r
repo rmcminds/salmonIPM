@@ -9,9 +9,9 @@
 #'   as returned by [stan_data()].
 #' @param chains A positive integer specifying the number of Markov chains.
 #'
-#' @return A named list with starting values for the parameters and states in
-#'   the model that is passed to [rstan::sampling()] as the `init` argument to be
-#'   used when fitting **salmonIPM** models.
+#' @return A length-`chains` list of named lists containing starting values 
+#' for the primitive parameters and states in the model. Passed to [rstan::sampling()] 
+#' as the `init` argument when fitting **salmonIPM** models.
 #'
 #' @examples
 #' # Simulate data for a multi-population spawner-to-spawner model

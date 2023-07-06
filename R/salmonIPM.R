@@ -25,6 +25,9 @@
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which spawner-recruit
 #'   function to fit. Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
+#' @param ages For multi-stage models, a named list giving the ages in
+#'   years of all fixed-age subadult life stages. This is not needed for `IPM_SMaS_np` 
+#'   because in that case smolt age structure is provided in `fish_data`.
 #' @param par_models  Optional list of two-sided formulas of the form 
 #' `theta ~ x1 + ... + xK`, where `theta` is a parameter or state in the model
 #' specified by `stan_model` that accepts covariates (see **Details** for available
@@ -47,35 +50,6 @@
 #' [`priors`] for details on the available parameters in each model and their
 #' corresponding families. Any (hyper)parameters not given explicit priors 
 #' will use the default values of the prior `params`.
-#' @param ages For multi-stage models, a named list giving the ages in
-#'   years of all fixed-age subadult life stages. This is not needed for `IPM_SMaS_np` 
-#'   because in that case smolt age structure is provided in `fish_data`.
-#' @param age_F Logical or 0/1 vector of length `N_age` indicating 
-#' whether each adult age is fully (non)selected by the fishery. 
-#' The default is all selected. If `life_cycle == "SSiter"`, `N_age` refers to the total 
-#' number of maiden and repeat age classes (counting the repeat plus group as 1).
-#' @param age_B Logical or 0/1 vector of length `N_age` indicating 
-#' whether each adult age is fully (non)selected in broodstock collection. 
-#' The default is all selected. If `life_cycle == "SSiter"`, `N_age` refers to the total 
-#' number of maiden and repeat age classes (counting the repeat plus group as 1).
-#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, a logical or 0/1 integer
-#'   vector indicating, for each adult age, whether the observed total spawner data
-#'   includes that age. The default is to treat `S_obs` as including spawners of
-#'   all ages. This option may be useful if certain age classes are not counted. If `life_cycle == "SSiter"`, `N_age` refers to the total 
-#' number of maiden and repeat age classes (counting the repeat plus group as 1).
-#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, a logical or 0/1
-#'   vector indicating, for each adult age, whether spawners of that age
-#'   contribute to reproduction. This can be used, e.g., to exclude jacks
-#'   from the effective breeding population. The default is to include spawners
-#'   of all ages. If `life_cycle == "SSiter"`, `N_age` refers to the total 
-#' number of maiden and repeat age classes (counting the repeat plus group as 1).
-#' @param conditionGRonMS If `life_cycle == "SMaS"`, logical indicating
-#' whether the Gilbert-Rich age frequencies `n_GRage_obs` in `fish_data` are conditioned
-#' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
-#' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
-#' age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within 
-#' each ocean age; i.e., in a `smolt age x ocean age` contingency table, the cell frequencies
-#'  are conditioned on the column totals. 
 #' @param fish_data Data frame where each row corresponds to a unique population `x` year,
 #'   that includes the following `colnames` in no particular order except where noted: 
 #'   * `pop`  Factor, numeric, or character population name or ID. Will be coerced to a
@@ -170,9 +144,39 @@
 #'   population. 
 #'   * `...`  Additional variables to be used as covariates. These can vary spatially and/or
 #'   temporally.  
+#' @param age_F Logical or 0/1 vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected by the fishery. 
+#' The default is all selected. If `life_cycle == "SSiter"`, `N_age` refers to the total 
+#' number of maiden and repeat age classes (counting the repeat plus group as 1).
+#' @param age_B Logical or 0/1 vector of length `N_age` indicating 
+#' whether each adult age is fully (non)selected in broodstock collection. 
+#' The default is all selected. If `life_cycle == "SSiter"`, `N_age` refers to the total 
+#' number of maiden and repeat age classes (counting the repeat plus group as 1).
+#' @param age_S_obs If `stan_model == "IPM_SS_pp"`, a logical or 0/1 integer
+#'   vector indicating, for each adult age, whether the observed total spawner data
+#'   includes that age. The default is to treat `S_obs` as including spawners of
+#'   all ages. This option may be useful if certain age classes are not counted. If `life_cycle == "SSiter"`, `N_age` refers to the total 
+#' number of maiden and repeat age classes (counting the repeat plus group as 1).
+#' @param age_S_eff If `stan_model == "IPM_SS_pp"`, a logical or 0/1
+#'   vector indicating, for each adult age, whether spawners of that age
+#'   contribute to reproduction. This can be used, e.g., to exclude jacks
+#'   from the effective breeding population. The default is to include spawners
+#'   of all ages. If `life_cycle == "SSiter"`, `N_age` refers to the total 
+#' number of maiden and repeat age classes (counting the repeat plus group as 1).
+#' @param conditionGRonMS If `life_cycle == "SMaS"`, logical indicating
+#' whether the Gilbert-Rich age frequencies `n_GRage_obs` in `fish_data` are conditioned
+#' on ocean age. If `FALSE` (the default) the counts are assumed to be sampled randomly
+#' from the population. If `TRUE`, it is assumed that the number of spawners of each ocean
+#' age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within 
+#' each ocean age; i.e., in a `smolt age x ocean age` contingency table, the cell frequencies
+#'  are conditioned on the column totals. 
+#' @param fecundity_data If `life_cycle == "LCRchum"`, data frame with
+#' the following columns, representing observations of fecundity with each
+#' row corresponding to a female:
+#' * `age_E`  Female age in years.   
+#' * `E_obs`  Observed fecundity.  
 #' @param fish_data_fwd Deprecated. Only if `stan_model == "IPM_SS_pp"`, optional data frame
-#'   with the following columns, representing "forward" or "future"
-#'   simulations: 
+#'   with the following columns, representing "forward" or "future" simulations: 
 #'   * `pop`  Numeric or character population ID. All values must also appear in `fish_data$pop`.   
 #'   * `year`  Integer variable giving the year the fish spawned (i.e., the brood year). 
 #'   For each population in `fish_data_fwd$pop`, the first year appearing in 
@@ -190,11 +194,6 @@
 #'   scenarios or "branches" with different inputs (e.g., harvest rate). In this
 #'   case, all branches are subjected to the same sequence of process errors in
 #'   recruitment and age structure. 
-#' @param fecundity_data If `life_cycle == "LCRchum"`, data frame with
-#' the following columns, representing observations of fecundity with each
-#' row corresponding to a female:
-#' * `age_E`  Female age in years.   
-#' * `E_obs`  Observed fecundity.  
 #' @param prior_data Deprecated; will be merged into `fish_data` in a future release. 
 #' If `stan_model == "IPM_ICchinook_pp"`, named list
 #' with the following elements: 
@@ -205,14 +204,19 @@
 #' @param init A list of named lists of initial values to be passed to
 #'   [rstan::sampling()]. If `NULL`, initial values will be automatically
 #'   generated from the supplied data using [stan_init()].
-#' @param pars Vector of character strings specifying parameters to monitor.
-#'   If `NULL`, default values are used. If a non-default value is supplied, the
-#'   user should make sure the parameters requested appear in the model specified.
-#' @param include Logical scalar defaulting to `TRUE` indicating whether to include
+#' @param pars A character vector specifying (hyper)parameters, states, 
+#' and/or quantities of interest ("parameters") to be saved. 
+#' The default is to save all parameters. Parameters can be explicitly named or 
+#' one or more shortcuts can be used to specify hierarchical levels of parameters; 
+#' see [stan_pars()] for details. If parameters are explicitly named, the
+#' user should make sure they exist in `stan_model`, e.g. by calling `stan_pars(stan_model)`.
+#' If `include = TRUE`, only samples for parameters named in pars are stored. 
+#' Conversely, if `include = FALSE`, samples for all parameters *except* those named in pars 
+#' are stored in the fitted results. #' @param include Logical scalar defaulting to `TRUE` indicating whether to include
 #'  or exclude the parameters given by `pars`. If `FALSE`, only entire 
 #'  multidimensional parameters can be excluded, rather than particular elements of them. 
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
-#'   should be returned, e.g. for later use with [loo::loo()].
+#'   should be saved, e.g. for later use with [loo::loo()].
 #' @param chains Positive integer specifying the number of HMC chains; 
 #'   see [rstan::sampling()].
 #' @param iter Positive integer specifying the number of iterations for each
@@ -272,35 +276,34 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       model = c("IPM","RR"), 
                       life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum","ICchinook"), 
                       pool_pops = TRUE, SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
-                      par_models = NULL, center = TRUE, scale = TRUE, 
-                      prior = NULL, ages = NULL, age_F = NULL, age_B = NULL,
+                      ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
+                      prior = NULL, fish_data, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fish_data, fish_data_fwd = NULL, fecundity_data = NULL, prior_data = NULL,
-                      init = NULL, pars = NULL, include = TRUE, log_lik = FALSE, 
+                      fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL,
+                      init = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
                       cores = parallel::detectCores(logical = FALSE), 
                       control = NULL, ...)
 {
+  model <- match.arg(model)
+  life_cycle <- match.arg(life_cycle)
   stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
+  SR_fun <- match.arg(SR_fun)
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, ages = ages, 
-                   par_models = par_models, scale = scale, prior = prior, 
-                   age_F = age_F, age_B = age_B, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                   conditionGRonMS = conditionGRonMS, fish_data = fish_data, 
-                   fecundity_data = fecundity_data, fish_data_fwd = fish_data_fwd, 
-                   prior_data = prior_data)
+                   par_models = par_models, center = center, scale = scale, prior = prior, 
+                   fish_data = fish_data, age_F = age_F, age_B = age_B, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data, 
+                   fish_data_fwd = fish_data_fwd, prior_data = prior_data)
   
   if(is.null(init))
     init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   
-  if(is.null(pars)) 
-  {
-    pars <- stan_pars(stan_model)
-  } else if(!include) {
-    pars <- setdiff(stan_pars(stan_model), pars)
-  }
+  if(all(pars %in% c("all","hyper","shared","states","ppd")))
+    pars <- stan_pars(stan_model, pars = pars)
+  if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all"), pars)
   if(log_lik) pars <- c(pars, "LL")
   
   if(is.null(control$adapt_delta)) control <- c(control, adapt_delta = 0.95)

@@ -11,22 +11,22 @@ salmonIPM(
   life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum", "ICchinook"),
   pool_pops = TRUE,
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
+  ages = NULL,
   par_models = NULL,
   center = TRUE,
   scale = TRUE,
   prior = NULL,
-  ages = NULL,
+  fish_data,
   age_F = NULL,
   age_B = NULL,
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
-  fish_data,
-  fish_data_fwd = NULL,
   fecundity_data = NULL,
+  fish_data_fwd = NULL,
   prior_data = NULL,
   init = NULL,
-  pars = NULL,
+  pars = "all",
   include = TRUE,
   log_lik = FALSE,
   chains = 4,
@@ -71,6 +71,10 @@ one at a time because calculations are vectorized and warmup is shared.}
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
 
+\item{ages}{For multi-stage models, a named list giving the ages in
+years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
+because in that case smolt age structure is provided in \code{fish_data}.}
+
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ x1 + ... + xK}, where \code{theta} is a parameter or state in the model
 specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
@@ -96,41 +100,6 @@ a user-specified prior and \code{distribution()} is its canonical prior family. 
 \code{\link{priors}} for details on the available parameters in each model and their
 corresponding families. Any (hyper)parameters not given explicit priors
 will use the default values of the prior \code{params}.}
-
-\item{ages}{For multi-stage models, a named list giving the ages in
-years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
-because in that case smolt age structure is provided in \code{fish_data}.}
-
-\item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected by the fishery.
-The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{age_B}{Logical or 0/1 vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected in broodstock collection.
-The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1 integer
-vector indicating, for each adult age, whether the observed total spawner data
-includes that age. The default is to treat \code{S_obs} as including spawners of
-all ages. This option may be useful if certain age classes are not counted. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1
-vector indicating, for each adult age, whether spawners of that age
-contribute to reproduction. This can be used, e.g., to exclude jacks
-from the effective breeding population. The default is to include spawners
-of all ages. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{conditionGRonMS}{If \code{life_cycle == "SMaS"}, logical indicating
-whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
-on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
-from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
-age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within
-each ocean age; i.e., in a \verb{smolt age x ocean age} contingency table, the cell frequencies
-are conditioned on the column totals.}
 
 \item{fish_data}{Data frame where each row corresponds to a unique population \code{x} year,
 that includes the following \code{colnames} in no particular order except where noted:
@@ -229,9 +198,47 @@ population.
 temporally.
 }}
 
+\item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{age_B}{Logical or 0/1 vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1 integer
+vector indicating, for each adult age, whether the observed total spawner data
+includes that age. The default is to treat \code{S_obs} as including spawners of
+all ages. This option may be useful if certain age classes are not counted. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1
+vector indicating, for each adult age, whether spawners of that age
+contribute to reproduction. This can be used, e.g., to exclude jacks
+from the effective breeding population. The default is to include spawners
+of all ages. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{conditionGRonMS}{If \code{life_cycle == "SMaS"}, logical indicating
+whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
+on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
+from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
+age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within
+each ocean age; i.e., in a \verb{smolt age x ocean age} contingency table, the cell frequencies
+are conditioned on the column totals.}
+
+\item{fecundity_data}{If \code{life_cycle == "LCRchum"}, data frame with
+the following columns, representing observations of fecundity with each
+row corresponding to a female:
+\itemize{
+\item \code{age_E}  Female age in years.
+\item \code{E_obs}  Observed fecundity.
+}}
+
 \item{fish_data_fwd}{Deprecated. Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future"
-simulations:
+with the following columns, representing "forward" or "future" simulations:
 \itemize{
 \item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
 \item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
@@ -252,14 +259,6 @@ scenarios or "branches" with different inputs (e.g., harvest rate). In this
 case, all branches are subjected to the same sequence of process errors in
 recruitment and age structure.}
 
-\item{fecundity_data}{If \code{life_cycle == "LCRchum"}, data frame with
-the following columns, representing observations of fecundity with each
-row corresponding to a female:
-\itemize{
-\item \code{age_E}  Female age in years.
-\item \code{E_obs}  Observed fecundity.
-}}
-
 \item{prior_data}{Deprecated; will be merged into \code{fish_data} in a future release.
 If \code{stan_model == "IPM_ICchinook_pp"}, named list
 with the following elements:
@@ -274,16 +273,20 @@ and upstream, respectively.
 \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. If \code{NULL}, initial values will be automatically
 generated from the supplied data using \code{\link[=stan_init]{stan_init()}}.}
 
-\item{pars}{Vector of character strings specifying parameters to monitor.
-If \code{NULL}, default values are used. If a non-default value is supplied, the
-user should make sure the parameters requested appear in the model specified.}
-
-\item{include}{Logical scalar defaulting to \code{TRUE} indicating whether to include
+\item{pars}{A character vector specifying (hyper)parameters, states,
+and/or quantities of interest ("parameters") to be saved.
+The default is to save all parameters. Parameters can be explicitly named or
+one or more shortcuts can be used to specify hierarchical levels of parameters;
+see \code{\link[=stan_pars]{stan_pars()}} for details. If parameters are explicitly named, the
+user should make sure they exist in \code{stan_model}, e.g. by calling \code{stan_pars(stan_model)}.
+If \code{include = TRUE}, only samples for parameters named in pars are stored.
+Conversely, if \code{include = FALSE}, samples for all parameters \emph{except} those named in pars
+are stored in the fitted results. #' @param include Logical scalar defaulting to \code{TRUE} indicating whether to include
 or exclude the parameters given by \code{pars}. If \code{FALSE}, only entire
 multidimensional parameters can be excluded, rather than particular elements of them.}
 
 \item{log_lik}{Logical scalar indicating whether the pointwise log-likelihood
-should be returned, e.g. for later use with \code{\link[loo:loo]{loo::loo()}}.}
+should be saved, e.g. for later use with \code{\link[loo:loo]{loo::loo()}}.}
 
 \item{chains}{Positive integer specifying the number of HMC chains;
 see \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}

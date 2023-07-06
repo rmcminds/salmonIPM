@@ -38,11 +38,10 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                                      "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
                                      "IPM_LCRchum_pp","IPM_ICchinook_pp",
                                      "RR_SS_np","RR_SS_pp"), 
-                      SR_fun = "BH", ages = NULL, 
-                      par_models = NULL, center = TRUE, scale = TRUE, prior = NULL, 
-                      age_F = NULL, age_B = NULL, age_S_obs = NULL, age_S_eff = NULL, 
-                      conditionGRonMS = FALSE, fish_data, fish_data_fwd = NULL, 
-                      fecundity_data = NULL, prior_data = NULL)
+                      SR_fun = "BH", ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
+                      prior = NULL, fish_data, age_F = NULL, age_B = NULL, 
+                      age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE, 
+                      fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL)
 {
   stan_model <- match.arg(stan_model)
   
@@ -192,7 +191,8 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   stopifnot(all(sapply(pdfs, is.call)))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp")) {
-    log_RA <- log((S_obs + B_take_obs)/((1 - F_rate)*A)) # autoscale Rmax to data
+    # autoscale Rmax to data
+    log_RA <- log((S_obs + B_take_obs)/((1 - F_rate)*A)) 
     prior_Rmax_mean <- quantile(log_RA, 0.8, na.rm = TRUE)
     prior_Rmax_sd <- 2*sd(log_RA, na.rm = TRUE)
     
@@ -215,9 +215,11 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   }
   
   if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np","IPM_ICchinook_pp")) {
-    if(grepl("ICchinook", stan_model)) {  # autoscale Mmax to data with ballpark SAR
+    if(grepl("ICchinook", stan_model)) {  
+      # autoscale Mmax to data with ballpark SAR
       log_MA <- log((S_obs + B_take_obs)/((1 - F_rate)*0.01*A))
-    } else {  # autoscale Mmax to smolt data
+    } else {  
+      # autoscale Mmax to smolt data
       log_MA <- log(M_obs/A)
     }
     prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
@@ -246,7 +248,8 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   }
   
   if(stan_model == "IPM_LCRchum_pp") {
-    log_MA <- log(M_obs/A)[M_obs > 0] # autoscale Mmax to smolt data (can == 0 for hatcheries)
+    # autoscale Mmax to smolt data (can == 0 for hatcheries)
+    log_MA <- log(replace(M_obs, M_obs == 0, NA)/A) 
     prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
     

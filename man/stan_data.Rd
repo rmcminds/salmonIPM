@@ -15,14 +15,14 @@ stan_data(
   center = TRUE,
   scale = TRUE,
   prior = NULL,
+  fish_data,
   age_F = NULL,
   age_B = NULL,
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
-  fish_data,
-  fish_data_fwd = NULL,
   fecundity_data = NULL,
+  fish_data_fwd = NULL,
   prior_data = NULL
 )
 }
@@ -62,37 +62,6 @@ a user-specified prior and \code{distribution()} is its canonical prior family. 
 \code{\link{priors}} for details on the available parameters in each model and their
 corresponding families. Any (hyper)parameters not given explicit priors
 will use the default values of the prior \code{params}.}
-
-\item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected by the fishery.
-The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{age_B}{Logical or 0/1 vector of length \code{N_age} indicating
-whether each adult age is fully (non)selected in broodstock collection.
-The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1 integer
-vector indicating, for each adult age, whether the observed total spawner data
-includes that age. The default is to treat \code{S_obs} as including spawners of
-all ages. This option may be useful if certain age classes are not counted. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1
-vector indicating, for each adult age, whether spawners of that age
-contribute to reproduction. This can be used, e.g., to exclude jacks
-from the effective breeding population. The default is to include spawners
-of all ages. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
-number of maiden and repeat age classes (counting the repeat plus group as 1).}
-
-\item{conditionGRonMS}{If \code{life_cycle == "SMaS"}, logical indicating
-whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
-on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
-from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
-age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within
-each ocean age; i.e., in a \verb{smolt age x ocean age} contingency table, the cell frequencies
-are conditioned on the column totals.}
 
 \item{fish_data}{Data frame where each row corresponds to a unique population \code{x} year,
 that includes the following \code{colnames} in no particular order except where noted:
@@ -191,9 +160,47 @@ population.
 temporally.
 }}
 
+\item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected by the fishery.
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{age_B}{Logical or 0/1 vector of length \code{N_age} indicating
+whether each adult age is fully (non)selected in broodstock collection.
+The default is all selected. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{age_S_obs}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1 integer
+vector indicating, for each adult age, whether the observed total spawner data
+includes that age. The default is to treat \code{S_obs} as including spawners of
+all ages. This option may be useful if certain age classes are not counted. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{age_S_eff}{If \code{stan_model == "IPM_SS_pp"}, a logical or 0/1
+vector indicating, for each adult age, whether spawners of that age
+contribute to reproduction. This can be used, e.g., to exclude jacks
+from the effective breeding population. The default is to include spawners
+of all ages. If \code{life_cycle == "SSiter"}, \code{N_age} refers to the total
+number of maiden and repeat age classes (counting the repeat plus group as 1).}
+
+\item{conditionGRonMS}{If \code{life_cycle == "SMaS"}, logical indicating
+whether the Gilbert-Rich age frequencies \code{n_GRage_obs} in \code{fish_data} are conditioned
+on ocean age. If \code{FALSE} (the default) the counts are assumed to be sampled randomly
+from the population. If \code{TRUE}, it is assumed that the number of spawners of each ocean
+age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within
+each ocean age; i.e., in a \verb{smolt age x ocean age} contingency table, the cell frequencies
+are conditioned on the column totals.}
+
+\item{fecundity_data}{If \code{life_cycle == "LCRchum"}, data frame with
+the following columns, representing observations of fecundity with each
+row corresponding to a female:
+\itemize{
+\item \code{age_E}  Female age in years.
+\item \code{E_obs}  Observed fecundity.
+}}
+
 \item{fish_data_fwd}{Deprecated. Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future"
-simulations:
+with the following columns, representing "forward" or "future" simulations:
 \itemize{
 \item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
 \item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
@@ -213,14 +220,6 @@ year may occur multiple times, perhaps to facilitate comparisons across
 scenarios or "branches" with different inputs (e.g., harvest rate). In this
 case, all branches are subjected to the same sequence of process errors in
 recruitment and age structure.}
-
-\item{fecundity_data}{If \code{life_cycle == "LCRchum"}, data frame with
-the following columns, representing observations of fecundity with each
-row corresponding to a female:
-\itemize{
-\item \code{age_E}  Female age in years.
-\item \code{E_obs}  Observed fecundity.
-}}
 
 \item{prior_data}{Deprecated; will be merged into \code{fish_data} in a future release.
 If \code{stan_model == "IPM_ICchinook_pp"}, named list
