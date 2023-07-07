@@ -16,4 +16,4 @@ if(!require("devtools")) {
 devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT")
 ```
 
-We recommend using multiple cores if available when installing **salmonIPM** to reduce compilation time. You can do this by setting the R environment variable `MAKEFLAGS = -jX`, where `X` is the number of cores. This can be done interactively using `Sys.setenv()` or it can be specified in `.Renviron`.
+We recommend using multiple cores if available when installing **salmonIPM** to reduce compilation time. You can do this by setting the R environment variable `MAKEFLAGS = -jX`, where `X` is the number of cores. This can be done interactively using `Sys.setenv(MAKEFLAGS = -jX)` or it can be specified in `.Renviron`.
