@@ -238,7 +238,7 @@ transformed parameters {
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;
   
-  // Population-specific egg-smolt survival and capacity terms (independent)
+  // Population-specific egg-smolt survival and capacity terms (uncorrelated)
   {
     vector[N_pop] logit_psi = logit(mu_psi) + sigma_psi*zeta_psi;
     psi = rep_vector(0,N_pop);

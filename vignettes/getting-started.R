@@ -3,7 +3,7 @@
 #===========================================================================
 
 # graphics device for this script
-options(device = ifelse(.Platform$OS.type == "windows", "windows", "quartz"))
+if(.Platform$OS.type == "windows") options(device = "windows")
 
 #------------------------------
 # Installing salmonIPM
@@ -108,8 +108,7 @@ fit1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                      chains = 4, iter = 2000, warmup = 1000, 
                      seed = 123)
 
-print(fit1pop, pars = c("p","R_p","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+print(fit1pop, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------

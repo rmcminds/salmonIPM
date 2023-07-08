@@ -2,14 +2,14 @@
 #'
 #' @param stan_model Character string specifying the **salmonIPM** model to be
 #'   fit. A more concise alternative to specifying `model`, `life_cycle`, and `pool_pops` 
-#'   (and will override those arguments).
+#'   and will override those arguments.
 #' @param model Either `"IPM"` or `"RR"`, indicating whether to fit an IPM 
 #'   or run-reconstruction regression model.
 #' @param life_cycle Character string indicating which life-cycle model to fit.
 #' One of the following options (must be `"SS"` if `model == "RR"`):
 #'   * `"SS"`  Spawner-to-spawner (the default)
 #'   * `"SSiter"` Spawner-to-spawner with iteroparity (an alias for `"SS"` with 
-#'   `stan_data(stan_model, fish_data = fish_data)$iter` set to 1)
+#'   `stan_data("IPM_SS_[x]p", fish_data = fish_data)$iter` set to 1)
 #'   * `"SMS"`  Spawner-smolt-spawner with a fixed smolt age
 #'   * `"SMaS"`  Spawner-smolt-spawner with multiple smolt age classes (currently only
 #'   available for `pool_pops == FALSE`)
@@ -20,18 +20,18 @@
 #' @param pool_pops Logical defaulting to `TRUE`, indicating whether
 #'   to model multiple populations hierarchically rather than as independent "fixed effects".
 #'   It is possible to fit a model to multiple populations simultaneously even though they
-#'   share no parameters; indeed this is usually more efficient than fitting them
+#'   share no parameters; indeed this is more efficient than fitting them
 #'   one at a time because calculations are vectorized and warmup is shared.
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which spawner-recruit
-#'   function to fit. Synonyms `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are also accepted.
+#'   function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are accepted.
 #' @param ages For multi-stage models, a named list giving the ages in
 #'   years of all fixed-age subadult life stages. This is not needed for `IPM_SMaS_np` 
 #'   because in that case smolt age structure is provided in `fish_data`.
 #' @param par_models  Optional list of two-sided formulas of the form 
-#' `theta ~ x1 + ... + xK`, where `theta` is a parameter or state in the model
+#' `theta ~ x1 + ... + xK`, where `theta` is a (hyper)parameter or state in the model
 #' specified by `stan_model` that accepts covariates (see **Details** for available
-#' model-response combinations) and `x1 ... xK` are terms involving variables in
+#' model-parameter combinations) and `x1 + ... + xK` are terms involving variables in
 #' `fish_data`. Standard formula syntax such as `:` and `*` may be used;
 #' see [stats::formula()].
 #' @param center Logical indicating whether the terms in model matrices 
@@ -43,19 +43,19 @@
 #' @param scale  Logical indicating whether the model matrices constructed from
 #' `fish_data` using the formulas in `par_models` should be scaled to have 
 #' column SDs of 1. Unit-scaling predictors is less critical than centering, but is advisable
-#' if variables have scales very far from 1.
+#' if variables have scales far from 1. 
 #' @param prior Optional list of two-sided formulas of the form 
-#' `theta ~ distribution(params)`, where `theta` is a (hyper)parameter that can take
+#' `theta ~ distribution(params)`, where `theta` is a hyperparameter that can take
 #' a user-specified prior and `distribution()` is its canonical prior family. See 
 #' [`priors`] for details on the available parameters in each model and their
-#' corresponding families. Any (hyper)parameters not given explicit priors 
+#' corresponding families. Any hyperparameters not given explicit priors 
 #' will use the default values of the prior `params`.
 #' @param fish_data Data frame where each row corresponds to a unique population `x` year,
 #'   that includes the following `colnames` in no particular order except where noted: 
 #'   * `pop`  Factor, numeric, or character population name or ID. Will be coerced to a
-#'   factor, but it is recommended that this be a factor with informative 
+#'   factor, but it is recommended that this be a factor with concise, informative 
 #'   levels, e.g. `"Johnson Cr"`. This is especially true if there are multiple populations, 
-#'   in which case `levels(factor(pop))` will be used in interpreting and plotting the posterior draws.
+#'   in which case `levels(factor(pop))` can be used in interpreting and plotting the posterior draws.
 #'   * `year`  Numeric or integer giving the calendar year corresponding to each
 #'   observation. Note that `fish_data` is not indexed by brood year. For a brood table
 #'   run reconstruction, see [run_recon()].
@@ -63,10 +63,12 @@
 #'   time-invariant within a population, but need not be. Habitat size is used internally
 #'   to convert population size scaling parameters (e.g., `Rmax`) from density
 #'   to abundance, so if `A == 1` no rescaling is done and these parameters are in units of
-#'   fish. This is fine if `N_pop == 1` or if `pool_pops == FALSE`, but in hierarchical
+#'   fish. This is fine if `pool_pops == FALSE`, but in hierarchical
 #'   multi-population models it is advisable to provide habitat size so that the
-#'   assumption of hierarchical exchangeability is more valid.
-#'   * `M_obs`  Total number of wild-origin smolts (only needed for models including smolt stage).  
+#'   assumption of hierarchical exchangeability is more valid. 
+#'   * `M_obs`  If `life_cycle %in% c("SMS","SMaS","LCRchum")`,  
+#'   the observed number of wild-origin smolts (`integer` or `numeric`). Missing /
+#'   unknown observations are coded as `NA`.
 #'   * `tau_M_obs`  If `life_cycle == "LCRchum"`,  known lognormal observation error SDs 
 #'   for smolt abundance. Missing values (`NA`) will be imputed.
 #'   * `downstream_trap`  If `life_cycle == "LCRchum"`, row indices
@@ -81,24 +83,31 @@
 #'   where `[min_Mage]` and `[max_Mage]` are the numeral age in years of the youngest 
 #'   and oldest smolts, respectively. Note that age is measured in calendar years from 
 #'   the brood year (i.e., the Gilbert-Rich system). 
-#'   * `S_obs`  Total number (not density) of all wild and hatchery-origin spawners.  
+#'   * `S_obs`  Observed total number of all wild and hatchery-origin spawners 
+#'   (`integer` or `numeric`). Missing / unknown observations are coded as `NA`.
 #'   * `tau_S_obs`  If `life_cycle == "LCRchum"`, known lognormal observation error SDs 
 #'   for spawner abundance. Missing values (`NA`) will be imputed.
 #'   * `n_age[min_age]_obs ... n_age[max_age]_obs`  Integer columns of
-#'   observed spawner age frequencies (counts), where `[min_age]` and
-#'   `[max_age]` are the numeral age in years (total, not ocean age) of the
-#'   youngest and oldest spawners, respectively. 
-#'   * `n_age[min_age]M_obs ... n_age[max_age]M_obs ... n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs`, 
+#'   observed spawner age frequencies (counts), where `[min_age]` and `[max_age]` are the numeral age 
+#'   in years (total, not ocean age) of the youngest and oldest spawners. This is ignored
+#'   if `life_cycle %in% c("SSiter","SMaS")`Note that `n_age_obs` and all other 
+#'   compositional data types should not contain `NA`. If the sample included no individuals 
+#'   of a given category or if no samples were collected, the observed frequency is 0.
+#'   * `n_age[min_age]M_obs ... n_age[max_age]M_obs n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs`, 
 #'   If `life_cycle == "SSiter"`, integer columns of observed first-time (maiden) and
-#'   repeat (kelt) spawner age frequencies (counts) where `[min_age]` and `[max_age]` are the 
+#'   repeat (former kelt) spawner age frequencies where `[min_age]` and `[max_age]` are the 
 #'   total age in years of the youngest and oldest **maiden** spawners, respectively. 
-#'   Contiguous maiden age columns (denoted by `M`) are followed by an equal number of 
-#'   contiguous repeat age columns (denoted by `K`) where each repeat age is 1 year greater 
+#'   Contiguous maiden age columns denoted by `M` are followed by an equal number of 
+#'   contiguous repeat age columns denoted by `K`, where each repeat age is 1 year greater 
 #'   than the corresponding maiden age. The maximum repeat age class is a plus-group, 
-#'   i.e. it must include all repeat spawners age `max_age + 1` or older.
+#'   i.e. it includes all repeat spawners age `max_age + 1` or older.
 #'   * `n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`, 
-#'   integer columns of observed ocean age frequencies (counts), where `[min_MSage]` and 
-#'   `[max_MSage]` are the youngest and oldest ocean age in years, respectively.
+#'   integer columns of observed spawner ocean age frequencies,
+#'   where `[min_MSage]` and `[max_MSage]` are the youngest and oldest ocean age in years, respectively.
+#'   Nonzero ocean age frequencies are only required if `conditionGRonMS == TRUE`
+#'   (the columns must be present in any case). If `conditionGRonMS == FALSE`, then
+#'   `n_MSage_obs` represents **independent** samples, not simply the (implicit) ocean-age 
+#'   marginal totals of `n_GRage_obs`.
 #'   * `n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs`  If
 #'    `life_cycle == "SMaS"`, integer columns of observed Gilbert-Rich age
 #'   frequencies, varying fastest by smolt age (`min_Mage:max_Mage`) and then
@@ -107,37 +116,39 @@
 #'   `c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")`.
 #'   All combinations of smolt age and (implicitly) ocean age must be represented,
 #'   even if some were never observed. 
-#'   * `n_M_obs`  If `life_cycle == "LCRchum"`, integer observed frequency of male spawners.
-#'   * `n_F_obs`  If `life_cycle == "LCRchum"`, integer observed frequency of female spawners.
-#'   * `p_G_obs`  If `life_cycle == "LCRchum"`, observed proportion (assumed known
-#'   without error) of female spawners that are "green", i.e. fully fecund.
-#'   * `n_W_obs`  Integer observed frequency of natural-origin spawners.   
-#'   * `n_H_obs`  Integer observed frequency of hatchery-origin spawners.   
+#'   * `n_W_obs`  Integer observed frequencies of natural-origin spawners.   
+#'   * `n_H_obs`  Integer observed frequencies of hatchery-origin spawners.   
 #'   * `fit_p_HOS`  Logical or 0/1 indicating for each row `i` in `fish_data` whether the 
-#'   model should estimate `p_HOS[i] > 0`. This is only required if `model == "IPM"` and
-#'  `life_cycle != "LCRchum"`. `stan_data()` will give a warning in either of two conditions:
+#'   model should estimate `p_HOS[i] > 0`. Required if `model == "IPM"` and `life_cycle != "LCRchum"`. 
+#'  [stan_data()] will give a warning if any row `i` meets either of two conditions:
 #'  `as.logical(fit_p_HOS[i]) == FALSE` but `n_W_obs[i] + n_H_obs[i] > 0`, or
 #'  `as.logical(fit_p_HOS[i]) == TRUE` but `n_W_obs[i] + n_H_obs[i] == 0`. The first 
 #'   means HOR were observed, so not accounting for them risks biasing the
-#'   estimate of `S[i]` (aka "masking"). The second means the model is being asked to
-#'   estimate `p_HOS[i]` with no case-specific hatchery / wild origin frequency data. 
-#'   Because `p_HOS[i]` is an a priori independent parameter (a "fixed effect"), 
+#'   estimated parameters and states (aka "masking"). The second means the model is being asked to
+#'   estimate `p_HOS[i]` with no case-specific hatchery / wild origin-frequency data. 
+#'   Because `p_HOS[i]` is an *a priori* independent parameter (a "fixed effect"), 
 #'   this is a challenging task. There may be some shared information via the process model 
 #'   to indirectly inform it, but in our experience this is likely to lead to poor 
 #'   estimates and sampling problems.
 #'   * `n_O0_obs n_O[which_O_pop[1]]_obs ... n_O[which_O_pop[N_O_pop]]_obs` 
 #'   If `life_cycle = "LCRchum"`, multiple columns of observed origin frequencies.
-#'   The first column, named "O" for origin and "0" for zero / null / naught, refers to
+#'   The first column, named "O" for origin and "0" for null / naught, refers to
 #'   unknown natural origin, i.e. unmarked spawners presumed to be NOR. The next `N_O_pop` 
 #'   columns are numbered by the levels of `factor(fish_data$pop)` corresponding to the
 #'   set of known-origin populations. Typically these are hatcheries, but NOR
-#'   may be marked by PIT tags, parentage-based tagging, or other means. The 
+#'   may be identified by PIT tags, parentage-based tagging, or other means. The 
 #'   `LCRchum` model uses origin-composition observations to infer the dispersal
 #'   rates of hatchery (or other known-origin) fish, so `n_W_obs` (the same as `n_O0_obs`
-#'   assuming all known origins are hatcheries) and `n_H_obs` (equal to `rowSums(n_O_obs)`
+#'   assuming all known origins are hatcheries) and `n_H_obs` (equal to `sum(n_O_obs[-1])`
 #'   in that case) are not needed, although they can be included in `fish_data` for 
 #'   informational purposes or for post-processing draws. Likewise `fit_p_HOS` is not
 #'   needed and will be ignored.
+#'   * `n_M_obs`  If `life_cycle == "LCRchum"`, integer observed frequencies 
+#'   of male spawners.
+#'   * `n_F_obs`  If `life_cycle == "LCRchum"`, integer observed frequencies of 
+#'   female spawners.
+#'   * `p_G_obs`  If `life_cycle == "LCRchum"`, observed proportion (assumed known
+#'   without error) of female spawners that are "green", i.e. fully fecund.
 #'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
 #'   * `B_take_obs`  Number of adults taken for hatchery broodstock.   
 #'   * `S_add_obs`  If `stan_model == "IPM_LCRchum_pp"`, number of adults translocated into 
@@ -210,9 +221,7 @@
 #' one or more shortcuts can be used to specify hierarchical levels of parameters; 
 #' see [stan_pars()] for details. If parameters are explicitly named, the
 #' user should make sure they exist in `stan_model`, e.g. by calling `stan_pars(stan_model)`.
-#' If `include = TRUE`, only samples for parameters named in pars are stored. 
-#' Conversely, if `include = FALSE`, samples for all parameters *except* those named in pars 
-#' are stored in the fitted results. #' @param include Logical scalar defaulting to `TRUE` indicating whether to include
+#' @param include Logical scalar defaulting to `TRUE` indicating whether to include
 #'  or exclude the parameters given by `pars`. If `FALSE`, only entire 
 #'  multidimensional parameters can be excluded, rather than particular elements of them. 
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
@@ -239,7 +248,7 @@
 #'   
 #' @details 
 #' The following parameters and states can be modeled as functions of covariates using
-#' the argument `par_models`. The response distribution families are automatically 
+#' the argument `par_models`. The response distribution families and link functions are automatically 
 #' implemented so there is no need to `log()`- or `qlogis()`-transform the left-hand side
 #' of the formula, although such syntax will also work. (This is because the LHS is not
 #' found in `fish_data` and is just syntactic sugar to determine the parameter name.) The design
@@ -252,18 +261,18 @@
 #' time-invariant predictor would not be identifiable in a `_np` model because
 #' populations are modeled independently.
 #' 
-#' |                    |                             |                                 |                            | **Response (family)**      |                        |                         |                                 |                                 |
-#' |:-------------------|:---------------------------:|:-------------------------------:|:--------------------------:|:--------------------------:|:----------------------:|:-----------------------:|:-------------------------------:|:-------------------------------:|    
-#' | **Model**          | **`alpha` \cr (lognormal)** | **`psi` \cr (logistic normal)** | **`Rmax` \cr (lognormal)** | **`Mmax` \cr (lognormal)** | **`R` \cr (lognormal)**| **`M` \cr (lognormal)** | **`s_MS` \cr (logistic normal)**| **`s_SS` \cr (logistic normal)**|
-#' | `IPM_SS_np`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
-#' | `IPM_SSiter_np`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
-#' | `IPM_SS_pp`        | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2610;                        | 
-#' | `IPM_SSiter_pp`    | &#x2611;                    | &#x2610;                        | &#x2611;                   | &#x2610;                   | &#x2611;               | &#x2610;                | &#x2610;                        | &#x2611;                        | 
-#' | `IPM_SMS_np`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
-#' | `IPM_SMS_pp`       | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
-#' | `IPM_SMaS_np`      | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
-#' | `IPM_ICchinook_pp` | &#x2611;                    | &#x2610;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2610;                        | &#x2610;                        | 
-#' | `IPM_LCRchum_pp`   | &#x2610;                    | &#x2611;                        | &#x2610;                   | &#x2611;                   | &#x2610;               | &#x2611;                | &#x2611;                        | &#x2610;                        | 
+#' |                    |                         |                             |                        | **Response (family)**  |                    |                     |                              |                              |
+#' |:-------------------|:-----------------------:|:---------------------------:|:----------------------:|:----------------------:|:------------------:|:-------------------:|:----------------------------:|:----------------------------:|    
+#' | Model              | `alpha` \cr (lognormal) | `psi` \cr (logistic normal) | `Rmax` \cr (lognormal) | `Mmax` \cr (lognormal) | `R` \cr (lognormal)| `M` \cr (lognormal) | `s_MS` \cr (logistic normal) | `s_SS` \cr (logistic normal) |
+#' | `IPM_SS_np`        | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2610;                     | 
+#' | `IPM_SSiter_np`    | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2611;                     | 
+#' | `IPM_SS_pp`        | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2610;                     | 
+#' | `IPM_SSiter_pp`    | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2611;                     | 
+#' | `IPM_SMS_np`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
+#' | `IPM_SMS_pp`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
+#' | `IPM_SMaS_np`      | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
+#' | `IPM_ICchinook_pp` | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2610;                     | &#x2610;                     | 
+#' | `IPM_LCRchum_pp`   | &#x2610;                | &#x2611;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' 
 #' @return An object of class `stanfit` representing the fitted model. See
 #'   [rstan::stanfit] for details.
@@ -289,6 +298,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   life_cycle <- match.arg(life_cycle)
   stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   SR_fun <- match.arg(SR_fun)
+  if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
   
@@ -306,7 +316,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all"), pars)
   if(log_lik) pars <- c(pars, "LL")
   
-  if(is.null(control$adapt_delta)) control <- c(control, adapt_delta = 0.95)
+  if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95
   
   fit <- rstan::sampling(stanmodels[[stanmodel]], 
                          data = dat, init = init, pars = pars,

@@ -49,7 +49,7 @@ fd <- data.frame(pop = rep(1:N_pop, each = N_year), year = rep(1:N_year, N_pop),
 sim_out <- simIPM(pars = pars, fish_data = fd, N_age = 3, max_age = 5)
 
 # Prepare simulated data for Stan
-dat <- stan_data("IPM_SS_pp", stan_data = sim_out$sim_dat)
+dat <- stan_data("IPM_SS_pp", fish_data = sim_out$sim_dat)
 
 # Generate inits for 3 chains
 inits <- stan_init("IPM_SS_pp", stan_data = dat, chains = 3)

@@ -25,7 +25,7 @@ iteroparous spawner-to-spawner (\code{"SSiter"}), or spawner-smolt-spawner (\cod
 
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
-function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
+function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
 \itemize{
@@ -90,16 +90,16 @@ otherwise will be ignored and may be omitted.
 }}
 
 \item{par_models}{Optional list of two-sided formulas of the form
-\code{theta ~ x1 + ... + xK}, where \code{theta} is a parameter or state in the model
+\code{theta ~ x1 + ... + xK}, where \code{theta} is a (hyper)parameter or state in the model
 specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
-model-response combinations) and \verb{x1 ... xK} are terms involving variables in
+model-parameter combinations) and \code{x1 + ... + xK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1. Unit-scaling predictors is less critical than centering, but is advisable
-if variables have scales very far from 1.}
+if variables have scales far from 1.}
 
 \item{N_age}{Number of (maiden) adult age classes.}
 

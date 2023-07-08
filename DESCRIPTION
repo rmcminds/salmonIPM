@@ -1,16 +1,17 @@
 Package: salmonIPM
-Title: Integrated Population Model for Salmon
-Version: 1.3.2
+Title: Integrated Population Models for Pacific Salmon
+Version: 1.3.3
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"
   ))
-Description: A hierarchical Bayesian model of salmon population dynamics. It
-    estimates historical run reconstructions based on adult abdundance, harvest,
-    age structure, and possible external drivers. It also computes forecasts of
-    future run sizes, by year and age.
+Description: Fits IPMs or run-reconstruction regressions representing anadromous 
+    Pacific salmonid population dynamics using a hierarchical Bayesian framework 
+    implemented in Stan. Various models are available, representing alternative 
+    life-history structures and independent or hierarchically pooled populations.
+    Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 Depends:
-    R (>= 3.5),
+    R (>= 4.2),
     rstan (>= 2.26.0),
     stats,
     gnorm
@@ -41,4 +42,5 @@ Suggests:
 VignetteBuilder: knitr
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
+NeedsCompilation: yes
 SystemRequirements: GNU make

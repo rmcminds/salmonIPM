@@ -8,7 +8,7 @@ stan_pars(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
     "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
     "RR_SS_np", "RR_SS_pp"),
-  pars = c("all", "hyper", "shared", "states", "ppd")
+  pars = c("all", "hyper", "group", "states", "ppd")
 )
 }
 \arguments{
@@ -17,7 +17,7 @@ See \code{\link[=salmonIPM]{salmonIPM()}} for details.}
 
 \item{pars}{An optional character vector specifying one or more hierarchical levels
 of parameters. Options are \code{"all"} (the default), \code{"hyper"} (top-level parameters that
-are given priors), \code{"shared"} (\code{pop}- or \code{year}-level parameters shared by multiple states),
+are given priors), \code{"group"} (\code{pop}- or \code{year}-level parameters shared by multiple states),
 \code{"states"} (the lowest level, corresponding to unique rows in \code{fish_data}), and
 \code{"ppd"} (only if \code{model == "RR"}, observation-level predictions drawn from the posterior
 predictive distribution).

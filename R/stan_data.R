@@ -45,6 +45,12 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
 {
   stan_model <- match.arg(stan_model)
   
+  # Helper function to simplify capturing regex from string
+  cregex <- function(string, regex) {
+    rgxpr <- regexpr(regex, string)
+    return(regmatches(string, rgxpr))
+  }
+  
   # Basic objects and data dimensions
   # General error-checking
   fish_data <- as.data.frame(fish_data)
@@ -66,72 +72,90 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
   
-  # Age dimensions
-  if(life_cycle == "SSiter") {
-    N_age <- sum(grepl("n_age", names(fish_data)))/2
-    max_age <- max(as.numeric(substring(grep("M_obs", names(fish_data), value = TRUE), 6, 6)))
-  } else if(life_cycle == "SMaS") {
+  # Age of fixed subadult stages
+  if(!life_cycle %in% c("SS","SSiter","SMaS") & (any(is.na(ages)) | is.null(ages)))
+    stop("Multi-stage models must specify age for all fixed-age subadult stages")
+  
+  # Age-frequency data
+  if(life_cycle == "SMaS") {
     if(!is.logical(conditionGRonMS))
       stop("conditionGRonMS must be TRUE or FALSE for model 'IPM_SMaS_np'")
-    N_Mage <- sum(grepl("n_Mage", names(fish_data)))
-    max_Mage <- max(as.numeric(substring(grep("n_Mage", names(fish_data), value = TRUE), 7, 7)))
-    N_MSage <- sum(grepl("n_MSage", names(fish_data)))
-    max_MSage <- max(as.numeric(substring(grep("n_MSage", names(fish_data), value = TRUE), 8, 8))) 
+    
+    n_Mage_obs <- as.matrix(fish_data[, grep("n_Mage", names(fish_data))])
+    if(any(is.na(n_Mage_obs))) 
+      stop("NA found in compositional data (n_Mage_obs). If an age class was not seen ",
+           "in the sample or no sample was taken, the observed frequency is 0.")
+    N_Mage <- ncol(n_Mage_obs)
+    if(all(n_Mage_obs == 0) & conditionGRonMS)
+      stop("ocean age-composition (n_MSage_obs) must be included if conditionGRonMS == TRUE")
+    max_Mage <- max(as.numeric(cregex(colnames(n_Mage_obs), "\\d+")))
+    
+    n_MSage_obs <- as.matrix(fish_data[, grep("n_MSage", names(fish_data))])
+    if(any(is.na(n_MSage_obs))) 
+      stop("NA found in compositional data (n_MSage_obs). If an age class was not seen ",
+           "in the sample or no sample was taken, the observed frequency is 0.")
+    N_MSage <- ncol(n_MSage_obs)
+    max_MSage <- max(as.numeric(cregex(colnames(n_MSage_obs), "\\d+")))
     max_age <- max_Mage + max_MSage
+    
+    n_GRage_obs <- as.matrix(fish_data[, grep("n_GRage", names(fish_data))])
+    if(any(is.na(n_GRage_obs)))
+      stop("NA found in compositional data (n_GRage_obs). If an age class was not seen ",
+           "in the sample or no sample was taken, the observed frequency is 0.")
+    N_GRage <- sum(grepl("n_GRage", names(fish_data)))
+    if(N_GRage != N_Mage*N_MSage)
+      stop("ncol(n_GRage_obs) does not equal ncol(n_Mage_obs) * ncol(n_MSage_obs).
+           Make sure Gilbert-Rich age frequencies include all combinations of smolt
+           and (implicitly) ocean age. See ?salmonIPM for details.")
   } else {
-    N_age <- sum(grepl("n_age", names(fish_data)))
-    max_age <- max(as.numeric(substring(grep("n_age", names(fish_data), value = TRUE), 6, 6)))
+    n_age_obs <- as.matrix(fish_data[, grep("n_age", names(fish_data))])
+    if(any(is.na(n_age_obs)))
+      stop("NA found in compositional data (n_age_obs). If an age class was not seen ", 
+           "in the sample or no sample was taken, the observed frequency is 0.")
+    if(!life_cycle == "SSiter" & any(colSums(n_age_obs) == 0))
+      stop("n_age_obs contains at least one age class that was never observed")
+    N_age <- ncol(n_age_obs) / ifelse(life_cycle == "SSiter", 2, 1)
+    max_age <- max(as.numeric(cregex(colnames(n_age_obs), "\\d+"))) - 
+      ifelse(life_cycle == "SSiter", 1, 0)
   }
-  
-  # F_rate error checking (requires max_age to be previously defined)
-  F_rate_NA <- tapply(F_rate, pop, function(x) any(is.na(x[-c(1:max_age)])))
-  if(any(F_rate_NA))
-    stop("Missing values not allowed in fish_data$F_rate except in years 1:max_age", i)
-  
-  # General age-frequency data
-  n_age_obs <- as.matrix(fish_data[, grep("n_age", names(fish_data))])
-  n_age_obs_NA <- is.na(n_age_obs)
-  if(any(!rowSums(n_age_obs_NA) %in% c(0, ncol(n_age_obs))))
-    stop("Conflicting NAs in age frequency data in rows ", 
-         which(!rowSums(n_age_obs_NA) %in% c(0, ncol(n_age_obs))))
-  n_age_obs <- replace(n_age_obs, n_age_obs_NA, 0)
-  if(!life_cycle %in% c("SSiter","SMaS") & any(colSums(n_age_obs) == 0))
-    stop("n_age_obs contains at least one age class that was never observed")
-  
+
   # Origin-frequency, sex-frequency and fecundity data
   if(life_cycle == "LCRchum") {
     n_O_obs <- as.matrix(fish_data[, grep("n_O", names(fish_data))])
-    n_O_obs <- replace(n_O_obs, is.na(n_O_obs), 0)
+    if(any(is.na(n_O_obs))) 
+      stop("NA found in compositional data (n_O_obs). If an origin was not seen ",
+           "in the sample or no sample was taken, the observed frequency is 0.")
     which_H_pop <- sapply(strsplit(colnames(n_O_obs), "_"), 
                           function(x) as.numeric(substring(x[2], 2)))[-1]
-    if(any(is.na(n_M_obs) != is.na(n_F_obs)))
-      stop("Conflicting NAs in n_M_obs and n_F_obs in rows ", 
-           which(is.na(n_M_obs) != is.na(n_F_obs)))
-    if(is.null(fecundity_data)) {
+    
+    if(any(is.na(n_M_obs + n_F_obs))) 
+      stop("NA found in compositional data (n_[M|F]_obs). If a sex was not seen ",
+           "in the sample or no sample was taken, the observed frequency is 0.")
+    
+    if(is.null(fecundity_data))
       stop("Fecundity data must be provided for Lower Columbia chum IPM") 
-    } else if(any(is.na(fecundity_data))) {
-      stop("Missing values are not allowed in fecundity data")
-    }
+    if(any(is.na(fecundity_data)))
+      stop("Missing observations are not allowed in fecundity data")
   } else {
     fit_p_HOS <- as.logical(fit_p_HOS)
-    n_W_obs = as.vector(replace(n_W_obs[fit_p_HOS], is.na(n_W_obs[fit_p_HOS]), 0))
-    n_H_obs = as.vector(replace(n_H_obs[fit_p_HOS], is.na(n_H_obs[fit_p_HOS]), 0))
-    if(any(is.na(n_W_obs) != is.na(n_H_obs)))
-      stop("Conflicting NAs in n_W_obs and n_H_obs in rows ", 
-           which(is.na(n_W_obs) != is.na(n_H_obs)))
+    if(any(is.na(n_W_obs + n_H_obs)))
+      stop("NA found in compositional data (n_[W|H]_obs). If a rearing type was not seen ",
+           "in the sample or no sample was taken, the observed frequency is 0.")
     if(any(!fit_p_HOS & n_H_obs > 0))
       warning("Hatchery spawners present in rows ", which(!fit_p_HOS & n_H_obs > 0),
-              " but fit_p_HOS == FALSE. See help(salmonIPM) for why this might be a problem.")
+              " but fit_p_HOS == FALSE. See ?salmonIPM to learn why this is problematic.")
     if(any(fit_p_HOS & n_H_obs + n_W_obs == 0))
       warning("fit_p_HOS == TRUE in rows ", which(fit_p_HOS & n_H_obs + n_W_obs == 0),
-              " but origin-frequency samples are missing. 
-              See help(salmonIPM) for why this might be a problem.")
+              " but origin-frequency samples are missing. ",
+              "See ?salmonIPM to learn why this is problematic.")
+    n_W_obs <- n_W_obs[fit_p_HOS]
+    n_H_obs <- n_H_obs[fit_p_HOS]
   }
   
-  # Stage-specific age information
-  if(!life_cycle %in% c("SS","SSiter","SMaS") & (any(is.na(ages)) | is.null(ages)))
-    stop("Multi-stage models must specify age in years for all stages.
-         See ?salmonIPM(ages) for details.")
+  # F_rate error checking
+  F_rate_NA <- tapply(F_rate, pop, function(x) any(is.na(x[-c(1:max_age)])))
+  if(any(F_rate_NA))
+    stop("Missing values not allowed in fish_data$F_rate except in years 1:max_age")
   
   # Fishery and broodstock age-selectivity
   if(is.null(age_F)) 
@@ -433,7 +457,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   # smolt age structure
                   N_Mage = N_Mage,
                   max_Mage = max_Mage,
-                  n_Mage_obs = as.matrix(fish_data[,grep("n_Mage", names(fish_data))]),
+                  n_Mage_obs = n_Mage_obs,
                   # SAR
                   K_MS = ifelse(is.null(X$s_MS), 0, ncol(X$s_MS)), 
                   X_MS = if(is.null(X$s_MS)) matrix(0,N,0) else X$s_MS,
@@ -445,8 +469,8 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   # spawner ocean and Gilbert-Rich age structure
                   N_MSage =  N_MSage, 
                   max_MSage = max_MSage,
-                  n_MSage_obs = as.matrix(fish_data[,grep("n_MSage", names(fish_data))]),
-                  n_GRage_obs = as.matrix(fish_data[,grep("n_GRage", names(fish_data))]),
+                  n_MSage_obs = n_MSage_obs,
+                  n_GRage_obs = n_GRage_obs,
                   conditionGRonMS = as.numeric(conditionGRonMS),
                   # H/W composition
                   N_H = sum(fit_p_HOS),

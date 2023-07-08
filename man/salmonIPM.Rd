@@ -41,7 +41,7 @@ salmonIPM(
 \arguments{
 \item{stan_model}{Character string specifying the \strong{salmonIPM} model to be
 fit. A more concise alternative to specifying \code{model}, \code{life_cycle}, and \code{pool_pops}
-(and will override those arguments).}
+and will override those arguments.}
 
 \item{model}{Either \code{"IPM"} or \code{"RR"}, indicating whether to fit an IPM
 or run-reconstruction regression model.}
@@ -51,7 +51,7 @@ One of the following options (must be \code{"SS"} if \code{model == "RR"}):
 \itemize{
 \item \code{"SS"}  Spawner-to-spawner (the default)
 \item \code{"SSiter"} Spawner-to-spawner with iteroparity (an alias for \code{"SS"} with
-\code{stan_data(stan_model, fish_data = fish_data)$iter} set to 1)
+\code{stan_data("IPM_SS_[x]p", fish_data = fish_data)$iter} set to 1)
 \item \code{"SMS"}  Spawner-smolt-spawner with a fixed smolt age
 \item \code{"SMaS"}  Spawner-smolt-spawner with multiple smolt age classes (currently only
 available for \code{pool_pops == FALSE})
@@ -64,21 +64,21 @@ and upstream survival (\code{pool_pops == TRUE})
 \item{pool_pops}{Logical defaulting to \code{TRUE}, indicating whether
 to model multiple populations hierarchically rather than as independent "fixed effects".
 It is possible to fit a model to multiple populations simultaneously even though they
-share no parameters; indeed this is usually more efficient than fitting them
+share no parameters; indeed this is more efficient than fitting them
 one at a time because calculations are vectorized and warmup is shared.}
 
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
-function to fit. Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
+function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
 \item{ages}{For multi-stage models, a named list giving the ages in
 years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
 because in that case smolt age structure is provided in \code{fish_data}.}
 
 \item{par_models}{Optional list of two-sided formulas of the form
-\code{theta ~ x1 + ... + xK}, where \code{theta} is a parameter or state in the model
+\code{theta ~ x1 + ... + xK}, where \code{theta} is a (hyper)parameter or state in the model
 specified by \code{stan_model} that accepts covariates (see \strong{Details} for available
-model-response combinations) and \verb{x1 ... xK} are terms involving variables in
+model-parameter combinations) and \code{x1 + ... + xK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
 
@@ -92,22 +92,22 @@ and numeric predictors, the latter can be centered and scaled prior to modeling.
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1. Unit-scaling predictors is less critical than centering, but is advisable
-if variables have scales very far from 1.}
+if variables have scales far from 1.}
 
 \item{prior}{Optional list of two-sided formulas of the form
-\code{theta ~ distribution(params)}, where \code{theta} is a (hyper)parameter that can take
+\code{theta ~ distribution(params)}, where \code{theta} is a hyperparameter that can take
 a user-specified prior and \code{distribution()} is its canonical prior family. See
 \code{\link{priors}} for details on the available parameters in each model and their
-corresponding families. Any (hyper)parameters not given explicit priors
+corresponding families. Any hyperparameters not given explicit priors
 will use the default values of the prior \code{params}.}
 
 \item{fish_data}{Data frame where each row corresponds to a unique population \code{x} year,
 that includes the following \code{colnames} in no particular order except where noted:
 \itemize{
 \item \code{pop}  Factor, numeric, or character population name or ID. Will be coerced to a
-factor, but it is recommended that this be a factor with informative
+factor, but it is recommended that this be a factor with concise, informative
 levels, e.g. \code{"Johnson Cr"}. This is especially true if there are multiple populations,
-in which case \code{levels(factor(pop))} will be used in interpreting and plotting the posterior draws.
+in which case \code{levels(factor(pop))} can be used in interpreting and plotting the posterior draws.
 \item \code{year}  Numeric or integer giving the calendar year corresponding to each
 observation. Note that \code{fish_data} is not indexed by brood year. For a brood table
 run reconstruction, see \code{\link[=run_recon]{run_recon()}}.
@@ -115,10 +115,12 @@ run reconstruction, see \code{\link[=run_recon]{run_recon()}}.
 time-invariant within a population, but need not be. Habitat size is used internally
 to convert population size scaling parameters (e.g., \code{Rmax}) from density
 to abundance, so if \code{A == 1} no rescaling is done and these parameters are in units of
-fish. This is fine if \code{N_pop == 1} or if \code{pool_pops == FALSE}, but in hierarchical
+fish. This is fine if \code{pool_pops == FALSE}, but in hierarchical
 multi-population models it is advisable to provide habitat size so that the
 assumption of hierarchical exchangeability is more valid.
-\item \code{M_obs}  Total number of wild-origin smolts (only needed for models including smolt stage).
+\item \code{M_obs}  If \code{life_cycle \%in\% c("SMS","SMaS","LCRchum")},
+the observed number of wild-origin smolts (\code{integer} or \code{numeric}). Missing /
+unknown observations are coded as \code{NA}.
 \item \code{tau_M_obs}  If \code{life_cycle == "LCRchum"},  known lognormal observation error SDs
 for smolt abundance. Missing values (\code{NA}) will be imputed.
 \item \code{downstream_trap}  If \code{life_cycle == "LCRchum"}, row indices
@@ -133,24 +135,31 @@ multiple columns of observed smolt age frequencies (i.e., counts),
 where \verb{[min_Mage]} and \verb{[max_Mage]} are the numeral age in years of the youngest
 and oldest smolts, respectively. Note that age is measured in calendar years from
 the brood year (i.e., the Gilbert-Rich system).
-\item \code{S_obs}  Total number (not density) of all wild and hatchery-origin spawners.
+\item \code{S_obs}  Observed total number of all wild and hatchery-origin spawners
+(\code{integer} or \code{numeric}). Missing / unknown observations are coded as \code{NA}.
 \item \code{tau_S_obs}  If \code{life_cycle == "LCRchum"}, known lognormal observation error SDs
 for spawner abundance. Missing values (\code{NA}) will be imputed.
 \item \verb{n_age[min_age]_obs ... n_age[max_age]_obs}  Integer columns of
-observed spawner age frequencies (counts), where \verb{[min_age]} and
-\verb{[max_age]} are the numeral age in years (total, not ocean age) of the
-youngest and oldest spawners, respectively.
-\item \verb{n_age[min_age]M_obs ... n_age[max_age]M_obs ... n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs},
+observed spawner age frequencies (counts), where \verb{[min_age]} and \verb{[max_age]} are the numeral age
+in years (total, not ocean age) of the youngest and oldest spawners. This is ignored
+if \code{life_cycle \%in\% c("SSiter","SMaS")}Note that \code{n_age_obs} and all other
+compositional data types should not contain \code{NA}. If the sample included no individuals
+of a given category or if no samples were collected, the observed frequency is 0.
+\item \verb{n_age[min_age]M_obs ... n_age[max_age]M_obs n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs},
 If \code{life_cycle == "SSiter"}, integer columns of observed first-time (maiden) and
-repeat (kelt) spawner age frequencies (counts) where \verb{[min_age]} and \verb{[max_age]} are the
+repeat (former kelt) spawner age frequencies where \verb{[min_age]} and \verb{[max_age]} are the
 total age in years of the youngest and oldest \strong{maiden} spawners, respectively.
-Contiguous maiden age columns (denoted by \code{M}) are followed by an equal number of
-contiguous repeat age columns (denoted by \code{K}) where each repeat age is 1 year greater
+Contiguous maiden age columns denoted by \code{M} are followed by an equal number of
+contiguous repeat age columns denoted by \code{K}, where each repeat age is 1 year greater
 than the corresponding maiden age. The maximum repeat age class is a plus-group,
-i.e. it must include all repeat spawners age \code{max_age + 1} or older.
+i.e. it includes all repeat spawners age \code{max_age + 1} or older.
 \item \verb{n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs}  If \code{life_cycle == "SMaS"},
-integer columns of observed ocean age frequencies (counts), where \verb{[min_MSage]} and
-\verb{[max_MSage]} are the youngest and oldest ocean age in years, respectively.
+integer columns of observed spawner ocean age frequencies,
+where \verb{[min_MSage]} and \verb{[max_MSage]} are the youngest and oldest ocean age in years, respectively.
+Nonzero ocean age frequencies are only required if \code{conditionGRonMS == TRUE}
+(the columns must be present in any case). If \code{conditionGRonMS == FALSE}, then
+\code{n_MSage_obs} represents \strong{independent} samples, not simply the (implicit) ocean-age
+marginal totals of \code{n_GRage_obs}.
 \item \verb{n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs}  If
 \code{life_cycle == "SMaS"}, integer columns of observed Gilbert-Rich age
 frequencies, varying fastest by smolt age (\code{min_Mage:max_Mage}) and then
@@ -159,37 +168,39 @@ subyearling or yearling smolts and ocean ages 2:3 would have column names
 \code{c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs", "n_GRage_5_2_obs")}.
 All combinations of smolt age and (implicitly) ocean age must be represented,
 even if some were never observed.
-\item \code{n_M_obs}  If \code{life_cycle == "LCRchum"}, integer observed frequency of male spawners.
-\item \code{n_F_obs}  If \code{life_cycle == "LCRchum"}, integer observed frequency of female spawners.
-\item \code{p_G_obs}  If \code{life_cycle == "LCRchum"}, observed proportion (assumed known
-without error) of female spawners that are "green", i.e. fully fecund.
-\item \code{n_W_obs}  Integer observed frequency of natural-origin spawners.
-\item \code{n_H_obs}  Integer observed frequency of hatchery-origin spawners.
+\item \code{n_W_obs}  Integer observed frequencies of natural-origin spawners.
+\item \code{n_H_obs}  Integer observed frequencies of hatchery-origin spawners.
 \item \code{fit_p_HOS}  Logical or 0/1 indicating for each row \code{i} in \code{fish_data} whether the
-model should estimate \code{p_HOS[i] > 0}. This is only required if \code{model == "IPM"} and
-\code{life_cycle != "LCRchum"}. \code{stan_data()} will give a warning in either of two conditions:
+model should estimate \code{p_HOS[i] > 0}. Required if \code{model == "IPM"} and \code{life_cycle != "LCRchum"}.
+\code{\link[=stan_data]{stan_data()}} will give a warning if any row \code{i} meets either of two conditions:
 \code{as.logical(fit_p_HOS[i]) == FALSE} but \code{n_W_obs[i] + n_H_obs[i] > 0}, or
 \code{as.logical(fit_p_HOS[i]) == TRUE} but \code{n_W_obs[i] + n_H_obs[i] == 0}. The first
 means HOR were observed, so not accounting for them risks biasing the
-estimate of \code{S[i]} (aka "masking"). The second means the model is being asked to
-estimate \code{p_HOS[i]} with no case-specific hatchery / wild origin frequency data.
-Because \code{p_HOS[i]} is an a priori independent parameter (a "fixed effect"),
+estimated parameters and states (aka "masking"). The second means the model is being asked to
+estimate \code{p_HOS[i]} with no case-specific hatchery / wild origin-frequency data.
+Because \code{p_HOS[i]} is an \emph{a priori} independent parameter (a "fixed effect"),
 this is a challenging task. There may be some shared information via the process model
 to indirectly inform it, but in our experience this is likely to lead to poor
 estimates and sampling problems.
 \item \verb{n_O0_obs n_O[which_O_pop[1]]_obs ... n_O[which_O_pop[N_O_pop]]_obs}
 If \code{life_cycle = "LCRchum"}, multiple columns of observed origin frequencies.
-The first column, named "O" for origin and "0" for zero / null / naught, refers to
+The first column, named "O" for origin and "0" for null / naught, refers to
 unknown natural origin, i.e. unmarked spawners presumed to be NOR. The next \code{N_O_pop}
 columns are numbered by the levels of \code{factor(fish_data$pop)} corresponding to the
 set of known-origin populations. Typically these are hatcheries, but NOR
-may be marked by PIT tags, parentage-based tagging, or other means. The
+may be identified by PIT tags, parentage-based tagging, or other means. The
 \code{LCRchum} model uses origin-composition observations to infer the dispersal
 rates of hatchery (or other known-origin) fish, so \code{n_W_obs} (the same as \code{n_O0_obs}
-assuming all known origins are hatcheries) and \code{n_H_obs} (equal to \code{rowSums(n_O_obs)}
+assuming all known origins are hatcheries) and \code{n_H_obs} (equal to \code{sum(n_O_obs[-1])}
 in that case) are not needed, although they can be included in \code{fish_data} for
 informational purposes or for post-processing draws. Likewise \code{fit_p_HOS} is not
 needed and will be ignored.
+\item \code{n_M_obs}  If \code{life_cycle == "LCRchum"}, integer observed frequencies
+of male spawners.
+\item \code{n_F_obs}  If \code{life_cycle == "LCRchum"}, integer observed frequencies of
+female spawners.
+\item \code{p_G_obs}  If \code{life_cycle == "LCRchum"}, observed proportion (assumed known
+without error) of female spawners that are "green", i.e. fully fecund.
 \item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
 \item \code{B_take_obs}  Number of adults taken for hatchery broodstock.
 \item \code{S_add_obs}  If \code{stan_model == "IPM_LCRchum_pp"}, number of adults translocated into
@@ -278,10 +289,9 @@ and/or quantities of interest ("parameters") to be saved.
 The default is to save all parameters. Parameters can be explicitly named or
 one or more shortcuts can be used to specify hierarchical levels of parameters;
 see \code{\link[=stan_pars]{stan_pars()}} for details. If parameters are explicitly named, the
-user should make sure they exist in \code{stan_model}, e.g. by calling \code{stan_pars(stan_model)}.
-If \code{include = TRUE}, only samples for parameters named in pars are stored.
-Conversely, if \code{include = FALSE}, samples for all parameters \emph{except} those named in pars
-are stored in the fitted results. #' @param include Logical scalar defaulting to \code{TRUE} indicating whether to include
+user should make sure they exist in \code{stan_model}, e.g. by calling \code{stan_pars(stan_model)}.}
+
+\item{include}{Logical scalar defaulting to \code{TRUE} indicating whether to include
 or exclude the parameters given by \code{pars}. If \code{FALSE}, only entire
 multidimensional parameters can be excluded, rather than particular elements of them.}
 
@@ -323,7 +333,7 @@ Fits an integrated or run-reconstruction spawner-recruit model.
 }
 \details{
 The following parameters and states can be modeled as functions of covariates using
-the argument \code{par_models}. The response distribution families are automatically
+the argument \code{par_models}. The response distribution families and link functions are automatically
 implemented so there is no need to \code{log()}- or \code{qlogis()}-transform the left-hand side
 of the formula, although such syntax will also work. (This is because the LHS is not
 found in \code{fish_data} and is just syntactic sugar to determine the parameter name.) The design
@@ -336,7 +346,7 @@ estimable given the design matrix. For example, the effect of a spatially varyin
 time-invariant predictor would not be identifiable in a \verb{_np} model because
 populations are modeled independently.\tabular{lcccccccc}{
     \tab  \tab  \tab  \tab \strong{Response (family)} \tab  \tab  \tab  \tab  \cr
-   \strong{Model} \tab \strong{\code{alpha} \cr (lognormal)} \tab \strong{\code{psi} \cr (logistic normal)} \tab \strong{\code{Rmax} \cr (lognormal)} \tab \strong{\code{Mmax} \cr (lognormal)} \tab \strong{\code{R} \cr (lognormal)} \tab \strong{\code{M} \cr (lognormal)} \tab \strong{\code{s_MS} \cr (logistic normal)} \tab \strong{\code{s_SS} \cr (logistic normal)} \cr
+   Model \tab \code{alpha} \cr (lognormal) \tab \code{psi} \cr (logistic normal) \tab \code{Rmax} \cr (lognormal) \tab \code{Mmax} \cr (lognormal) \tab \code{R} \cr (lognormal) \tab \code{M} \cr (lognormal) \tab \code{s_MS} \cr (logistic normal) \tab \code{s_SS} \cr (logistic normal) \cr
    \code{IPM_SS_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr
    \code{IPM_SSiter_np} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \cr
    \code{IPM_SS_pp} \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \cr

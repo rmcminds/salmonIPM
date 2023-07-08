@@ -69,12 +69,12 @@ Priors for parameters that are bounded on the positive real line
 For parameters that are modeled as functions of covariates (see \code{\link[=salmonIPM]{salmonIPM()}}),
 the specified prior applies when all predictors are at their sample means.
 
-The generalized normal density with \verb{shape >> 1} is useful as a "soft-uniform" prior
-to regularize the posterior away from regions of parameter space that may cause
+The generalized normal density with \verb{shape >> 1} is useful as a platykurtic "soft-uniform"
+prior to regularize the posterior away from regions of parameter space that may cause
 computational or sampling problems. In the case of spawner and smolt observation error
 log-SDs, the default prior bounds them ≳ 0.1.\tabular{lcccccccccccc}{
     \tab  \tab  \tab  \tab  \tab  \tab  \tab \strong{Parameter (PDF)} \tab  \tab  \tab  \tab  \tab  \cr
-   \strong{Model} \tab \strong{\code{alpha} \cr \code{lognormal}} \tab \strong{\code{mu_alpha} \cr \code{normal}} \tab \strong{\code{mu_psi} \cr \code{beta}} \tab \strong{\code{Rmax} \cr \code{lognormal}} \tab \strong{\code{mu_Rmax} \cr \code{normal}} \tab \strong{\code{Mmax} \cr \code{lognormal}} \tab \strong{\code{mu_Mmax} \cr \code{normal}} \tab \strong{\code{mu_MS} \cr \code{beta}} \tab \strong{\code{mu_p} \cr \code{dirichlet}} \tab \strong{\code{mu_SS} \cr \code{beta}} \tab \strong{\code{tau} \cr \code{gnormal}} \tab \strong{\code{tau_S} \cr \code{tau_M} \cr \code{gnormal}} \cr
+   \strong{Model} \tab \code{alpha} \cr \code{lognormal} \tab \code{mu_alpha} \cr \code{normal} \tab \code{mu_psi} \cr \code{beta} \tab \code{Rmax} \cr \code{lognormal} \tab \code{mu_Rmax} \cr \code{normal} \tab \code{Mmax} \cr \code{lognormal} \tab \code{mu_Mmax} \cr \code{normal} \tab \code{mu_MS} \cr \code{beta} \tab \code{mu_p} \cr \code{dirichlet} \tab \code{mu_SS} \cr \code{beta} \tab \code{tau} \cr \code{gnormal} \tab \code{tau_S} \cr \code{tau_M} \cr \code{gnormal} \cr
    \code{IPM_SS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \cr
    \code{IPM_SSiter_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SS_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \cr
