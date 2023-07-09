@@ -1,6 +1,6 @@
 # salmonIPM
 
-This is the development repo for **salmonIPM**, an R package for fitting integrated population models to salmon data.
+This is the development repo for **salmonIPM**, an R package that fits integrated population models to data from anadromous Pacific salmonid populations using a hierarchical Bayesian framework implemented in [Stan](https://mc-stan.org/). Various models are available, representing alternative life-history and data structures as well as independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 
 ## Installation
 
@@ -9,10 +9,9 @@ This is the development repo for **salmonIPM**, an R package for fitting integra
 2. Install the current version of **salmonIPM** from GitHub using **devtools**. Because the repo is private for the time being, it is necessary to [generate a personal access token](https://github.com/settings/tokens) (PAT) and pass it to `install_github()` as discussed [here](https://stackoverflow.com/questions/21171142/how-to-install-r-package-from-private-repo-using-devtools-install-github).
 
 ```r
-if(!require("devtools")) {
-  install.packages("devtools")
-  library("devtools")
-}
+if(!require("devtools")) install.packages("devtools")
+library("devtools")
+
 devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT")
 ```
 

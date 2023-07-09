@@ -5,7 +5,7 @@ Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"
   ))
-Description: Fits IPMs or run-reconstruction regressions representing anadromous 
+Description: Fits IPMs or run-reconstruction regressions for anadromous 
     Pacific salmonid population dynamics using a hierarchical Bayesian framework 
     implemented in Stan. Various models are available, representing alternative 
     life-history structures and independent or hierarchically pooled populations.
