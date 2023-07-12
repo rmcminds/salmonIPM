@@ -233,7 +233,7 @@ transformed parameters {
   // observation error SDs
   vector<lower=0>[N] tau_M;              // smolt observation error SDs
   vector<lower=0>[N] tau_S;              // spawner observation error SDs
-  
+
   // Pad B_rate
   B_rate_all = rep_vector(0,N);
   B_rate_all[which_B] = B_rate;

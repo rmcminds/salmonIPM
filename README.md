@@ -1,6 +1,6 @@
 # salmonIPM
 
-This is the development repo for **salmonIPM**, an R package that fits integrated population models to data from anadromous Pacific salmonid populations using a hierarchical Bayesian framework implemented in [Stan](https://mc-stan.org/). Various models are available, representing alternative life-history and data structures as well as independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
+This is the development repo for **salmonIPM**, an R package that fits integrated population models to data from anadromous Pacific salmonid populations using a hierarchical Bayesian framework implemented in [Stan](https://mc-stan.org/). Various models are available, representing alternative life histories and data structures as well as independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 
 ## Installation
 

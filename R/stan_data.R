@@ -239,7 +239,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   }
   
   if(stan_model %in% c("IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np","IPM_ICchinook_pp")) {
-    if(grepl("ICchinook", stan_model)) {  
+    if(stan_model == "IPM_ICchinook_pp") {  
       # autoscale Mmax to data with ballpark SAR
       log_MA <- log((S_obs + B_take_obs)/((1 - F_rate)*0.01*A))
     } else {  

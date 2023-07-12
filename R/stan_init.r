@@ -153,7 +153,7 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     B_rate[is.na(B_rate)] <- 0.1
   }
   
-  if(life_cycle == "LCRchum") {
+  if(stan_model == "IPM_LCRchum_pp") {
     E <- S_obs_noNA*0.5*mean(fecundity_data$E_obs)
     s_EM <- pmin(M_obs/E, 0.9)
   }
