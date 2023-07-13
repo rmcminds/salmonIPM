@@ -24,7 +24,8 @@ Imports:
     shinystan,
     posterior,
     loo,
-    MASS
+    MASS,
+    lifecycle
 LinkingTo: 
     BH (>= 1.66.0),
     Rcpp (>= 0.12.0),
@@ -38,7 +39,8 @@ LazyData: true
 Biarch: true
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    lifecycle
 VignetteBuilder: knitr
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)

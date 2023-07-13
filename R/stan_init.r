@@ -166,9 +166,13 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       IPM_SS_np = list(
         # recruitment
         alpha = array(exp(runif(N_pop, 1, 3))),
+        alpha_W = array(exp(runif(N_pop, 1, 3))),
+        alpha_H = array(exp(runif(N_pop, 1, 3))),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
         Rmax = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Rmax_W = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Rmax_H = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         beta_Rmax = matrix(rnorm(K_Rmax*N_pop, 0, 0.5/apply(abs(X_Rmax), 2, max)), 
                            N_pop, K_Rmax, byrow = TRUE),
         beta_R = matrix(rnorm(K_R*N_pop, 0, 0.5/apply(abs(X_R), 2, max)), 

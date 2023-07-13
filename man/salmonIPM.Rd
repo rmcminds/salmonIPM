@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{salmonIPM}
 \alias{salmonIPM}
-\title{Fits an integrated or run-reconstruction spawner-recruit model.}
+\title{Fit an IPM or run-reconstruction regression model}
 \usage{
 salmonIPM(
   stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"),
@@ -11,6 +11,7 @@ salmonIPM(
   life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum", "ICchinook"),
   pool_pops = TRUE,
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
+  RRS = "none",
   ages = NULL,
   par_models = NULL,
   center = TRUE,
@@ -70,6 +71,14 @@ one at a time because calculations are vectorized and warmup is shared.}
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
+
+\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+A character string or vector of strings naming parameters of the function specified by
+\code{SR_fun} that differ between wild- and hatchery-origin spawners. If \code{pool_pops == TRUE},
+these should be the names of the population-specific parameters, not their hyper-means.
+For example, if \code{stan_model \%in\% c("IPM_SS_np","IPM_SS_pp")}, the options are
+\code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
+Currently \code{RRS} is only implemented for \code{stan_model == "IPM_SS_np"}.}
 
 \item{ages}{For multi-stage models, a named list giving the ages in
 years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
@@ -329,7 +338,7 @@ An object of class \code{stanfit} representing the fitted model. See
 \link[rstan:stanfit-class]{rstan::stanfit} for details.
 }
 \description{
-Fits an integrated or run-reconstruction spawner-recruit model.
+Fit an IPM or run-reconstruction regression model
 }
 \details{
 The following parameters and states can be modeled as functions of covariates using

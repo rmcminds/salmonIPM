@@ -1,4 +1,4 @@
-#' Fits an integrated or run-reconstruction spawner-recruit model.
+#' Fit an IPM or run-reconstruction regression model
 #'
 #' @param stan_model Character string specifying the **salmonIPM** model to be
 #'   fit. A more concise alternative to specifying `model`, `life_cycle`, and `pool_pops` 
@@ -25,6 +25,13 @@
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which spawner-recruit
 #'   function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are accepted.
+#' @param RRS `r lifecycle::badge("experimental")` 
+#'   A character string or vector of strings naming parameters of the function specified by 
+#'   `SR_fun` that differ between wild- and hatchery-origin spawners. If `pool_pops == TRUE`,
+#'   these should be the names of the population-specific parameters, not their hyper-means.
+#'   For example, if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, the options are
+#'   `"none"` (the default), `"alpha"`, `"Rmax"`, or `c("alpha","Rmax")`. 
+#'   Currently `RRS` is only implemented for `stan_model == "IPM_SS_np"`.
 #' @param ages For multi-stage models, a named list giving the ages in
 #'   years of all fixed-age subadult life stages. This is not needed for `IPM_SMaS_np` 
 #'   because in that case smolt age structure is provided in `fish_data`.
@@ -285,7 +292,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       model = c("IPM","RR"), 
                       life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum","ICchinook"), 
                       pool_pops = TRUE, SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
-                      ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
+                      RRS = "none", ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL,
@@ -296,15 +303,22 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
 {
   model <- match.arg(model)
   life_cycle <- match.arg(life_cycle)
+  pool_pops <- grepl("_pp", stan_model)     # override if stan_model is specified
   stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   SR_fun <- match.arg(SR_fun)
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
+  RRS_check <- RRS %in% c("none", stan_pars(stan_model))
+  if(!all(RRS_check))
+    stop("Error in RRS: ", RRS[!RRS_check], " is not a SR_fun parameter in ", stan_model, 
+         ".\n  See pars in stan_pars('", stan_model, "', ", 
+         ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
   
-  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, ages = ages, 
+  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages, 
                    par_models = par_models, center = center, scale = scale, prior = prior, 
-                   fish_data = fish_data, age_F = age_F, age_B = age_B, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   fish_data = fish_data, age_F = age_F, age_B = age_B, 
+                   age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data, 
                    fish_data_fwd = fish_data_fwd, prior_data = prior_data)
   

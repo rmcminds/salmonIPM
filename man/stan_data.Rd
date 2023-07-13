@@ -2,14 +2,14 @@
 % Please edit documentation in R/stan_data.R
 \name{stan_data}
 \alias{stan_data}
-\title{Prepare input data for integrated or run-reconstruction spawner-recruit
-models.}
+\title{Prepare input data for IPMs or run-reconstruction models}
 \usage{
 stan_data(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
     "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
     "RR_SS_np", "RR_SS_pp"),
   SR_fun = "BH",
+  RRS = "none",
   ages = NULL,
   par_models = NULL,
   center = TRUE,
@@ -32,6 +32,14 @@ stan_data(
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
+
+\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+A character string or vector of strings naming parameters of the function specified by
+\code{SR_fun} that differ between wild- and hatchery-origin spawners. If \code{pool_pops == TRUE},
+these should be the names of the population-specific parameters, not their hyper-means.
+For example, if \code{stan_model \%in\% c("IPM_SS_np","IPM_SS_pp")}, the options are
+\code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
+Currently \code{RRS} is only implemented for \code{stan_model == "IPM_SS_np"}.}
 
 \item{ages}{For multi-stage models, a named list giving the ages in
 years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}

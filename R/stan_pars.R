@@ -26,8 +26,9 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   
   par_list <- list( 
     IPM_SS_np = list(
-      hyper = c("alpha","beta_alpha","Rmax","beta_Rmax","beta_R","rho_R","sigma_R",
-                "mu_p","sigma_p","R_p","tau"),
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                "Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax",
+                "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p","tau"),
       states = c("R","p","S","q","p_HOS")
     ),
     

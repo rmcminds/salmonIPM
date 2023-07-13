@@ -1,5 +1,4 @@
-#' Prepare input data for integrated or run-reconstruction spawner-recruit
-#' models.
+#' Prepare input data for IPMs or run-reconstruction models
 #' 
 #' This function is mostly used internally, but may occasionally be useful for diagnosing
 #' problems (e.g., checking the numeric coding of populations and years or the 
@@ -38,7 +37,8 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                                      "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
                                      "IPM_LCRchum_pp","IPM_ICchinook_pp",
                                      "RR_SS_np","RR_SS_pp"), 
-                      SR_fun = "BH", ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
+                      SR_fun = "BH", RRS = "none", ages = NULL, 
+                      par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL, 
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE, 
                       fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL)
@@ -69,6 +69,11 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
                             gsub("iter", "", life_cycle), # same Stan code for iteroparity
                             sep = "_")
+  RRS_check <- RRS %in% c("none", stan_pars(stan_model))
+  if(!all(RRS_check))
+    stop("Error in RRS: ", RRS[!RRS_check], " is not a SR_fun parameter in ", stan_model, 
+         ".\n  See pars in stan_pars('", stan_model, "', ", 
+         ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
   
@@ -339,6 +344,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
                   # recruitment
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  RRS = array(as.logical(c("alpha","Rmax") %in% RRS)),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
