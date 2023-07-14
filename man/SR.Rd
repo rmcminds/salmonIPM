@@ -6,7 +6,6 @@
 \usage{
 SR(
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
-  RRS = "none",
   alpha = NULL,
   alpha_W = NULL,
   alpha_H = NULL,
@@ -25,34 +24,31 @@ SR(
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
-\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-A character string or vector of strings naming parameters of the function specified by
-\code{SR_fun} (i.e., \code{"alpha"} and/or \code{"Rmax"}) that differ between wild- and hatchery-origin
-spawners, such that the relative reproductive success of hatchery spawners is not equal
-to 1. The default is \code{"none"}.}
-
-\item{alpha}{If \code{RRS == "none"}, numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+\item{alpha}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
 or \code{draws} of intrinsic productivity (i.e., recruits per spawner at zero spawner
 density; slope of the spawner-recruit function at the origin).}
 
-\item{alpha_W, alpha_H}{If \code{"alpha" \%in\% RRS}, numeric vectors, matrices, data frames,
-\code{\link[posterior:rvar]{posterior::rvar()}} or \code{draws} objects of intrinsic productivity for wild- and hatchery-
-origin spawners, respectively.}
+\item{alpha_W, alpha_H}{Numeric vectors, matrices, data frames, \code{\link[posterior:rvar]{posterior::rvar()}}
+or \code{draws} of intrinsic productivity for wild- and hatchery-origin spawners,
+respectively. If they differ, both must be specified and \code{alpha} must not be used
+(and conversely).}
 
-\item{Rmax}{If \code{RRS == "none"}, numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+\item{Rmax}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
 or \code{draws} of maximum recruitment per unit of habitat (length or area). This corresponds to
 the asymptote of the Beverton-Holt or the mode of the Ricker.}
 
-\item{Rmax_W, Rmax_H}{If \code{"Rmax" \%in\% RRS}, numeric vectors, matrices, data frames,
-\code{\link[posterior:rvar]{posterior::rvar()}} or \code{draws} objects of maximum recruitment per unit habitat
-for wild- and hatchery- origin spawners, respectively.}
+\item{Rmax_W, Rmax_H}{Numeric vectors, matrices, data frames, \code{\link[posterior:rvar]{posterior::rvar()}}
+or \code{draws} of maximum recruitment per unit of habitat for wild- and hatchery-origin spawners,
+respectively. If they differ, both must be specified and \code{Rmax} must not be used
+(and conversely).}
 
-\item{S}{If \code{RRS == "none"}, numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+\item{S}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
 or \code{draws} of spawner abundance.}
 
-\item{S_W, S_H}{If \code{RRS != "none"}, numeric vectors, matrices, data frames,
-\code{\link[posterior:rvar]{posterior::rvar()}} or \code{draws} objects of wild- and hatchery-origin spawner abundance,
-respectively.}
+\item{S_W, S_H}{Numeric vectors, matrices, data frames, \code{\link[posterior:rvar]{posterior::rvar()}}
+or \code{draws} of wild- and hatchery-origin spawner abundance, respectively.
+Must be specified if either \code{alpha} or \code{Rmax} differ by rearing type,
+in which case \code{S} must not be used (and conversely).}
 
 \item{A}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
 spawning habitat size (either stream length or area), used to standardize \code{Rmax}.
@@ -77,7 +73,7 @@ facilitates a common interpretation and priors with the Beverton-Holt.
 Note that the functions for the \code{RRS != "none"} case are written in their most general
 form, with both \code{alpha} and \code{Rmax} differing between wild and hatchery spawners. If
 only one parameter is specified in \code{RRS}, then the \verb{_W} and \verb{_H} values of the other
-parameter are equal and the expression for \code{R} can be simplified.
+parameter are equal and the expression can be simplified.
 
 \code{RRS == "none"}\tabular{rl}{
     \tab  \cr
@@ -129,13 +125,10 @@ abline(h = Rmax, lty = 2)
 # differential hatchery / wild relative reproductive success
 alpha_W <- 3
 alpha_H <- 2
-Rmax_W <- 1000
-Rmax_H <- 800
 S_W <- 400
 S_H <- 100
 # compare to BH result above
-SR(RRS = c("alpha","Rmax"), alpha_W = alpha_W, alpha_H = alpha_H, 
-   Rmax_W = Rmax_W, Rmax_H = Rmax_H, S_W = S_W, S_H = S_H)
+SR(alpha_W = alpha_W, alpha_H = alpha_H, Rmax = Rmax, S_W = S_W, S_H = S_H)
 
 }
 \seealso{

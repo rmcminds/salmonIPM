@@ -2,28 +2,26 @@
 #' 
 #' Compute recruitment given spawner abundance, a spawner-recruit function and parameters.
 #' 
-#' @param RRS `r lifecycle::badge("experimental")` 
-#'   A character string or vector of strings naming parameters of the function specified by 
-#'   `SR_fun` (i.e., `"alpha"` and/or `"Rmax"`) that differ between wild- and hatchery-origin 
-#'   spawners, such that the relative reproductive success of hatchery spawners is not equal
-#'   to 1. The default is `"none"`.
-#' @param alpha If `RRS == "none"`, numeric vector, matrix, data frame, [posterior::rvar()],
+#' @param alpha Numeric vector, matrix, data frame, [posterior::rvar()],
 #'   or `draws` of intrinsic productivity (i.e., recruits per spawner at zero spawner 
 #'   density; slope of the spawner-recruit function at the origin).
-#' @param alpha_W,alpha_H If `"alpha" %in% RRS`, numeric vectors, matrices, data frames, 
-#'   [posterior::rvar()] or `draws` objects of intrinsic productivity for wild- and hatchery-
-#'   origin spawners, respectively.
-#' @param Rmax If `RRS == "none"`, numeric vector, matrix, data frame, [posterior::rvar()], 
+#' @param alpha_W,alpha_H Numeric vectors, matrices, data frames, [posterior::rvar()] 
+#'   or `draws` of intrinsic productivity for wild- and hatchery-origin spawners, 
+#'   respectively. If they differ, both must be specified and `alpha` must not be used
+#'   (and conversely). 
+#' @param Rmax Numeric vector, matrix, data frame, [posterior::rvar()], 
 #'   or `draws` of maximum recruitment per unit of habitat (length or area). This corresponds to 
 #'   the asymptote of the Beverton-Holt or the mode of the Ricker.
-#' @param Rmax_W,Rmax_H If `"Rmax" %in% RRS`, numeric vectors, matrices, data frames, 
-#'   [posterior::rvar()] or `draws` objects of maximum recruitment per unit habitat 
-#'   for wild- and hatchery- origin spawners, respectively.
-#' @param S If `RRS == "none"`, numeric vector, matrix, data frame, [posterior::rvar()], 
+#' @param Rmax_W,Rmax_H Numeric vectors, matrices, data frames, [posterior::rvar()] 
+#'   or `draws` of maximum recruitment per unit of habitat for wild- and hatchery-origin spawners, 
+#'   respectively. If they differ, both must be specified and `Rmax` must not be used
+#'   (and conversely).
+#' @param S Numeric vector, matrix, data frame, [posterior::rvar()], 
 #'   or `draws` of spawner abundance.
-#' @param S_W,S_H If `RRS != "none"`, numeric vectors, matrices, data frames, 
-#'   [posterior::rvar()] or `draws` objects of wild- and hatchery-origin spawner abundance,
-#'   respectively.
+#' @param S_W,S_H Numeric vectors, matrices, data frames, [posterior::rvar()] 
+#'   or `draws` of wild- and hatchery-origin spawner abundance, respectively. 
+#'   Must be specified if either `alpha` or `Rmax` differ by rearing type, 
+#'   in which case `S` must not be used (and conversely).
 #' @param A A numeric vector, matrix, data frame, [posterior::rvar()], or `draws` of 
 #'   spawning habitat size (either stream length or area), used to standardize `Rmax`. 
 #'   The default is 1, in which case `Rmax` is in units of abundance (which is also density).
@@ -92,20 +90,17 @@
 #' # differential hatchery / wild relative reproductive success
 #' alpha_W <- 3
 #' alpha_H <- 2
-#' Rmax_W <- 1000
-#' Rmax_H <- 800
 #' S_W <- 400
 #' S_H <- 100
 #' # compare to BH result above
-#' SR(RRS = c("alpha","Rmax"), alpha_W = alpha_W, alpha_H = alpha_H, 
-#'    Rmax_W = Rmax_W, Rmax_H = Rmax_H, S_W = S_W, S_H = S_H)
+#' SR(alpha_W = alpha_W, alpha_H = alpha_H, Rmax = Rmax, S_W = S_W, S_H = S_H)
 #'
 #' @seealso [salmonIPM()] for fitting models, [simIPM()] for simulating data
 #' 
 #' @importFrom posterior is_rvar
 #' @export
 
-SR <- function(SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
+SR <- function(SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"),
                alpha = NULL, alpha_W = NULL, alpha_H = NULL, 
                Rmax = NULL, Rmax_W = NULL, Rmax_H = NULL,
                S = NULL, S_W = NULL, S_H = NULL, A = 1, R_per_S = FALSE) 
@@ -114,30 +109,34 @@ SR <- function(SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = 
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
-  stopifnot(all(RRS %in% c("none","alpha","Rmax")))
+  
+  if((!is.null(alpha) & (!is.null(alpha_W) | !is.null(alpha_H))) | 
+     is.null(alpha_W) != is.null(alpha_H))
+    stop("If alpha_W and alpha_H differ, both must be specified and `alpha`",
+         "\n  must not be used (and conversely)")
+  if((!is.null(Rmax) & (!is.null(Rmax_W) | !is.null(Rmax_H))) | 
+     is.null(Rmax_W) != is.null(Rmax_H))
+    stop("If Rmax_W and Rmax_H differ, both must be specified and `Rmax`",
+         "\n  must not be used (and conversely)")
+  if((!is.null(alpha_W) | !is.null(alpha_H) | !is.null(Rmax_W) | !is.null(Rmax_H)) & 
+     (is.null(S_W) | is.null(S_H)))
+    stop("S_W and S_H must be specified if either `alpha` or `Rmax` differ by rearing type",
+         "\n  in which case `S` must not be used (and conversely)")
 
   # Use most general form of unequal-RRS model to avoid repetition
-  if(identical(RRS, "alpha")) {
+  if(!is.null(alpha_W) & is.null(Rmax_W)) {
     Rmax_W <- Rmax
     Rmax_H <- Rmax
   }
-  if(identical(RRS, "Rmax")) {
+  if(is.null(alpha_W) & !is.null(Rmax_W)) {
     alpha_W <- alpha
     alpha_H <- alpha
   }
   
-  if(is.data.frame(alpha)) alpha <- as.matrix(alpha)
-  if(is.data.frame(alpha_W)) alpha_W <- as.matrix(alpha_W)
-  if(is.data.frame(alpha_H)) alpha_H <- as.matrix(alpha_H)
-  if(is.data.frame(Rmax)) Rmax <- as.matrix(Rmax)
-  if(is.data.frame(Rmax_W)) Rmax_W <- as.matrix(Rmax_W)
-  if(is.data.frame(Rmax_H)) Rmax_H <- as.matrix(Rmax_H)
-  if(is.data.frame(S)) S <- as.matrix(S)
-  if(is.data.frame(S_W)) S_W <- as.matrix(S_W)
-  if(is.data.frame(S_H)) S_H <- as.matrix(S_H)
-  if(is.data.frame(A)) A <- as.matrix(A)
-  
-  if(identical(RRS, "none")) { # relative reproductive success == 1
+  for(i in c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","S","S_W","S_H","A"))
+    if(is.data.frame(get(i))) assign(i, as.matrix(get(i)))
+
+  if(!is.null(alpha) & !is.null(Rmax)) { # relative reproductive success == 1
     R <- switch(
       SR_fun,
       exp = alpha*S,
