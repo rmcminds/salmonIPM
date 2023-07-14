@@ -74,7 +74,8 @@ function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} a
 
 \item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 A character string or vector of strings naming parameters of the function specified by
-\code{SR_fun} that differ between wild- and hatchery-origin spawners. If \code{pool_pops == TRUE},
+\code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
+relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.
 For example, if \code{stan_model \%in\% c("IPM_SS_np","IPM_SS_pp")}, the options are
 \code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.

@@ -27,7 +27,8 @@
 #'   function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are accepted.
 #' @param RRS `r lifecycle::badge("experimental")` 
 #'   A character string or vector of strings naming parameters of the function specified by 
-#'   `SR_fun` that differ between wild- and hatchery-origin spawners. If `pool_pops == TRUE`,
+#'   `SR_fun` that differ between wild- and hatchery-origin spawners, such that the
+#'   relative reproductive success of hatchery spawners is not equal to 1. If `pool_pops == TRUE`,
 #'   these should be the names of the population-specific parameters, not their hyper-means.
 #'   For example, if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, the options are
 #'   `"none"` (the default), `"alpha"`, `"Rmax"`, or `c("alpha","Rmax")`. 
@@ -291,8 +292,9 @@
 salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"), 
                       model = c("IPM","RR"), 
                       life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum","ICchinook"), 
-                      pool_pops = TRUE, SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
-                      RRS = "none", ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
+                      pool_pops = TRUE, 
+                      SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
+                      ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
                       fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL,
