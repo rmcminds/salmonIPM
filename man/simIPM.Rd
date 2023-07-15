@@ -2,11 +2,12 @@
 % Please edit documentation in R/simIPM.R
 \name{simIPM}
 \alias{simIPM}
-\title{Simulate data from a salmonid integrated population model}
+\title{Simulate data from a salmonid IPM}
 \usage{
 simIPM(
   life_cycle = "SS",
   SR_fun = "BH",
+  RRS = "none",
   pars,
   par_models = NULL,
   scale = TRUE,
@@ -26,6 +27,15 @@ iteroparous spawner-to-spawner (\code{"SSiter"}), or spawner-smolt-spawner (\cod
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
+
+\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+A character string or vector of strings naming parameters of the function specified by
+\code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
+relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
+these should be the names of the population-specific parameters, not their hyper-means.
+For example, if \code{stan_model \%in\% c("IPM_SS_np","IPM_SS_pp")}, the options are
+\code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
+Currently \code{RRS} is only implemented for \code{stan_model == "IPM_SS_np"}.}
 
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
 \itemize{
@@ -147,7 +157,8 @@ used in generating the pseudo-data.
 Generate pseudo-data, group-level parameters, and states from a specified
 \strong{salmonIPM} integrated population model given values for the hyperparameters.
 This may be useful, e.g., in simulation-based calibration and model sensitivity
-checking.
+checking. It is not suitable for simulating data from a fitted model, because initial
+states are drawn randomly rather than being passed in.
 }
 \seealso{
 \code{\link[=salmonIPM]{salmonIPM()}} for fitting models

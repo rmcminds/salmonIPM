@@ -133,8 +133,9 @@ SR <- function(SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"),
     alpha_H <- alpha
   }
   
-  for(i in c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","S","S_W","S_H","A"))
+  for(i in c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","S","S_W","S_H","A")) {
     if(is.data.frame(get(i))) assign(i, as.matrix(get(i)))
+  }
 
   if(!is.null(alpha) & !is.null(Rmax)) { # relative reproductive success == 1
     R <- switch(
