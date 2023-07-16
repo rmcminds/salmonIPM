@@ -22,7 +22,7 @@
 #'   or `draws` of wild- and hatchery-origin spawner abundance, respectively. 
 #'   Must be specified if either `alpha` or `Rmax` differ by rearing type, 
 #'   in which case `S` must not be used (and conversely).
-#' @param A A numeric vector, matrix, data frame, [posterior::rvar()], or `draws` of 
+#' @param A Numeric vector, matrix, data frame, [posterior::rvar()], or `draws` of 
 #'   spawning habitat size (either stream length or area), used to standardize `Rmax`. 
 #'   The default is 1, in which case `Rmax` is in units of abundance (which is also density).
 #' @param R_per_S Logical indicating whether to return recruits per spawner rather than
@@ -30,35 +30,45 @@
 #' @inheritParams salmonIPM
 #'   
 #' @return A vector, matrix, data frame, [posterior::rvar()] or `draws`, depending on the 
-#'   argument types, containing either recruits or recruits per spawner.
+#'   argument types, containing either recruits or recruits per spawner. Calculations are 
+#'   vectorized and elements of shorter arguments are recycled as necessary.
 #'   
 #' @details The **salmonIPM** package uses a nonstandard parameterization of the Ricker
 #'   model by the maximum recruitment `Rmax`. This is typically better identified by
-#'   data than the carrying capacity or per capita density dependence, and it 
-#'   facilitates a common interpretation and priors with the Beverton-Holt.
+#'   data than per capita density dependence, and it facilitates a common interpretation 
+#'   and priors with the Beverton-Holt. Here \eqn{e} is the base of the natural logarithm.
 #'   
-#'   Note that the functions for the `RRS != "none"` case are written in their most general
+#'   Note that the functions for the `RRS != "none"` case are written below in their most general
 #'   form, with both `alpha` and `Rmax` differing between wild and hatchery spawners. If
 #'   only one parameter is specified in `RRS`, then the `_W` and `_H` values of the other
-#'   parameter are equal and the expression can be simplified.
-#'   
-#'   `RRS == "none"`
-#'   |                       |                                                                       |
-#'   |----------------------:|:----------------------------------------------------------------------|
-#'   | Discrete exponential: | `alpha*S`                                                             |
-#'   | Beverton-Holt:        | `alpha*S / (1 + alpha*S/(A*Rmax))`                                    |
-#'   | Ricker:               | `alpha*S*exp(-alpha*S / (exp(1)*A*Rmax))`                             |
+#'   parameter are equal and the expression can be further simplified.
 #'
-#'   `RRS != "none"`
-#'   |                       |                                                                                                     |
-#'   |----------------------:|:----------------------------------------------------------------------------------------------------|
-#'   | Discrete exponential: | `alpha_W*S_W + alpha_H*S_H`                                                                         |
-#'   | Beverton-Holt:        | `(alpha_W*S_W + alpha_H*S_H) / (1 + alpha_W*S_W/(A*Rmax_W) + alpha_H*S_H/(A*Rmax_H))`               |
-#'   | Ricker:               | `(alpha_W*S_W + alpha_H*S_H) * exp(-alpha_W*S_W/(exp(1)*A*Rmax_W) - alpha_H*S_H/(exp(1)*A*Rmax_H))` |
-#'   
-#'   Calculations are vectorized and elements of shorter arguments are recycled 
-#'   as necessary.
-#'   
+#' `RRS == "none"`    
+#' 
+#' \eqn{
+#' R = 
+#' \begin{cases}
+#' \alpha S & \text{exponential} 
+#' \\\\
+#' \dfrac{\alpha S}{1 + \dfrac{\alpha S}{A R_\text{max}}} & \text{Beverton-Holt} 
+#' \\\\
+#' \alpha S \text{exp} {\left(- \dfrac{\alpha S}{e A R_\text{max}} \right)} & \text{Ricker}
+#' \end{cases}
+#' }
+#' 
+#' `RRS != "none"`
+#' 
+#' \eqn{
+#' R = 
+#' \begin{cases}
+#' \alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H} & \text{exponential} 
+#' \\\\
+#' \dfrac{\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H}}{1 + \dfrac{\alpha_\text{W} S_\text{W}}{A R_\text{max,W}} + \dfrac{\alpha_\text{H} S_\text{H}}{A R_\text{max,H}}} & \text{Beverton-Holt (Leslie-Gower)} 
+#' \\\\
+#' \left(\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H} \right)  \text{exp}\left(-\dfrac{\alpha_\text{W} S_\text{W}}{e A R_\text{max,W}} - \dfrac{\alpha_\text{H} S_\text{H}}{e A R_\text{max,H}} \right) & \text{Ricker}
+#' \end{cases}
+#' }
+#' 
 #' @examples 
 #' alpha <- 3
 #' Rmax <- 1000

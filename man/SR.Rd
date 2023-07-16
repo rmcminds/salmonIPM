@@ -50,7 +50,7 @@ or \code{draws} of wild- and hatchery-origin spawner abundance, respectively.
 Must be specified if either \code{alpha} or \code{Rmax} differ by rearing type,
 in which case \code{S} must not be used (and conversely).}
 
-\item{A}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
+\item{A}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
 spawning habitat size (either stream length or area), used to standardize \code{Rmax}.
 The default is 1, in which case \code{Rmax} is in units of abundance (which is also density).}
 
@@ -59,7 +59,8 @@ recruits (the default).}
 }
 \value{
 A vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}} or \code{draws}, depending on the
-argument types, containing either recruits or recruits per spawner.
+argument types, containing either recruits or recruits per spawner. Calculations are
+vectorized and elements of shorter arguments are recycled as necessary.
 }
 \description{
 Compute recruitment given spawner abundance, a spawner-recruit function and parameters.
@@ -67,32 +68,39 @@ Compute recruitment given spawner abundance, a spawner-recruit function and para
 \details{
 The \strong{salmonIPM} package uses a nonstandard parameterization of the Ricker
 model by the maximum recruitment \code{Rmax}. This is typically better identified by
-data than the carrying capacity or per capita density dependence, and it
-facilitates a common interpretation and priors with the Beverton-Holt.
+data than per capita density dependence, and it facilitates a common interpretation
+and priors with the Beverton-Holt. Here \eqn{e} is the base of the natural logarithm.
 
-Note that the functions for the \code{RRS != "none"} case are written in their most general
+Note that the functions for the \code{RRS != "none"} case are written below in their most general
 form, with both \code{alpha} and \code{Rmax} differing between wild and hatchery spawners. If
 only one parameter is specified in \code{RRS}, then the \verb{_W} and \verb{_H} values of the other
-parameter are equal and the expression can be simplified.
+parameter are equal and the expression can be further simplified.
 
-\code{RRS == "none"}\tabular{rl}{
-    \tab  \cr
-   Discrete exponential: \tab \code{alpha*S} \cr
-   Beverton-Holt: \tab \code{alpha*S / (1 + alpha*S/(A*Rmax))} \cr
-   Ricker: \tab \code{alpha*S*exp(-alpha*S / (exp(1)*A*Rmax))} \cr
+\code{RRS == "none"}
+
+\eqn{
+R = 
+\begin{cases}
+\alpha S & \text{exponential} 
+\\\\
+\dfrac{\alpha S}{1 + \dfrac{\alpha S}{A R_\text{max}}} & \text{Beverton-Holt} 
+\\\\
+\alpha S \text{exp} {\left(- \dfrac{\alpha S}{e A R_\text{max}} \right)} & \text{Ricker}
+\end{cases}
 }
 
+\code{RRS != "none"}
 
-\code{RRS != "none"}\tabular{rl}{
-    \tab  \cr
-   Discrete exponential: \tab \code{alpha_W*S_W + alpha_H*S_H} \cr
-   Beverton-Holt: \tab \code{(alpha_W*S_W + alpha_H*S_H) / (1 + alpha_W*S_W/(A*Rmax_W) + alpha_H*S_H/(A*Rmax_H))} \cr
-   Ricker: \tab \code{(alpha_W*S_W + alpha_H*S_H) * exp(-alpha_W*S_W/(exp(1)*A*Rmax_W) - alpha_H*S_H/(exp(1)*A*Rmax_H))} \cr
+\eqn{
+R = 
+\begin{cases}
+\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H} & \text{exponential} 
+\\\\
+\dfrac{\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H}}{1 + \dfrac{\alpha_\text{W} S_\text{W}}{A R_\text{max,W}} + \dfrac{\alpha_\text{H} S_\text{H}}{A R_\text{max,H}}} & \text{Beverton-Holt (Leslie-Gower)} 
+\\\\
+\left(\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H} \right)  \text{exp}\left(-\dfrac{\alpha_\text{W} S_\text{W}}{e A R_\text{max,W}} - \dfrac{\alpha_\text{H} S_\text{H}}{e A R_\text{max,H}} \right) & \text{Ricker}
+\end{cases}
 }
-
-
-Calculations are vectorized and elements of shorter arguments are recycled
-as necessary.
 }
 \examples{
 alpha <- 3
