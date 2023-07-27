@@ -10,8 +10,6 @@ This is the development repo for **salmonIPM**, an R package that fits integrate
 
 ```r
 if(!require("devtools")) install.packages("devtools")
-library(devtools)
-
 devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT")
 ```
 
