@@ -419,8 +419,7 @@ fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                     chains = 4, iter = 2000, warmup = 1000, 
                     seed = 321)
 
-print(fitNnp, pars = c("mu_p","sigma_p","p","R_p","p_HOS","S","R","q"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 
 #-----------------------------------------------------
@@ -433,9 +432,7 @@ fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH",
                     chains = 4, iter = 2000, warmup = 1000, 
                     seed = 321)
 
-print(fitNpp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","p",
-                       "p_HOS","S","R","q"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+print(fitNpp, pars = stan_pars("IPM_SS_pp", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 
 #----------------------------------------------------------
