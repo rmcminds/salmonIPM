@@ -98,7 +98,7 @@
 #' @export
 
 simIPM <- function(life_cycle = "SS", SR_fun = "BH", 
-                   pars, par_models = NULL, scale = TRUE, 
+                   pars, par_models = NULL, center = TRUE, scale = TRUE, 
                    N_age, max_age, ages = NULL, age_F = NULL, age_B = NULL, 
                    fish_data)
 {
