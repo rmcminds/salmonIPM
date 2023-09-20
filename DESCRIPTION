@@ -1,6 +1,6 @@
 Package: salmonIPM
 Title: Integrated Population Models for Pacific Salmon
-Version: 1.3.3
+Version: 1.4.0
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"
@@ -24,8 +24,8 @@ Imports:
     shinystan,
     posterior,
     loo,
-    MASS,
-    lifecycle
+    lifecycle,
+    mvtnorm
 LinkingTo: 
     BH (>= 1.66.0),
     Rcpp (>= 0.12.0),

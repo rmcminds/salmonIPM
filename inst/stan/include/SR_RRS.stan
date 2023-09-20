@@ -21,8 +21,12 @@ real SR(int SR_fun, int[] RRS, real alpha, real alpha_W, real alpha_H,
       R = alpha_W*S_W + alpha_H*S_H;
     if(SR_fun == 2) // Beverton-Holt (Leslie-Gower)
       R = (alpha_W*S_W + alpha_H*S_H) / (1 + (alpha_W*S_W + alpha_H*S_H)/(A*Rmax));
-    if(SR_fun == 3) // Ricker
-      R = (alpha_W*S_W + alpha_H*S_H) * exp(-(alpha_W*S_W + alpha_H*S_H)/(e()*A*Rmax));
+    if(SR_fun == 3) { // Ricker
+      real log_alpha_W = log(alpha_W);
+      real log_alpha_H = log(alpha_H);
+      real DD = 1 - alpha_W*S_W/(e()*A*Rmax*log_alpha_W) - alpha_H*S_H/(e()*A*Rmax*log_alpha_H);
+      R = S_W*exp(log_alpha_W*DD) + S_H*exp(log_alpha_H*DD);
+    }
   }
 
   // intrinsic productivity: H == W, max production: H != W
@@ -31,7 +35,7 @@ real SR(int SR_fun, int[] RRS, real alpha, real alpha_W, real alpha_H,
     if(SR_fun == 1) // discrete exponential
       R = alpha*S;
     if(SR_fun == 2) // Beverton-Holt (Leslie-Gower)
-      R = alpha*S / (1 + alpha_W*S_W/(A*Rmax_W) + alpha_H*S_H/(A*Rmax_H));
+      R = alpha*S / (1 + alpha*S_W/(A*Rmax_W) + alpha*S_H/(A*Rmax_H));
     if(SR_fun == 3) // Ricker
       R = alpha*S * exp(-alpha*S_W/(e()*A*Rmax_W) - alpha*S_H/(e()*A*Rmax_H));
   }
@@ -43,8 +47,12 @@ real SR(int SR_fun, int[] RRS, real alpha, real alpha_W, real alpha_H,
       R = alpha_W*S_W + alpha_H*S_H;
     if(SR_fun == 2) // Beverton-Holt (Leslie-Gower)
       R = (alpha_W*S_W + alpha_H*S_H) / (1 + alpha_W*S_W/(A*Rmax_W) + alpha_H*S_H/(A*Rmax_H));
-    if(SR_fun == 3) // Ricker
-      R = (alpha_W*S_W + alpha_H*S_H) * exp(-alpha_W*S_W/(e()*A*Rmax_W) - alpha_H*S_H/(e()*A*Rmax_H));
+    if(SR_fun == 3) { // Ricker
+      real log_alpha_W = log(alpha_W);
+      real log_alpha_H = log(alpha_H);
+      real DD = 1 - alpha_W*S_W/(e()*A*Rmax_W*log_alpha_W) - alpha_H*S_H/(e()*A*Rmax_H*log_alpha_H);
+      R = S_W*exp(log_alpha_W*DD) + S_H*exp(log_alpha_H*DD);
+    }
   }
   
   return(R);

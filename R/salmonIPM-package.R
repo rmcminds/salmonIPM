@@ -11,7 +11,7 @@
 #' @importFrom utils capture.output head tail
 #' @importFrom RcppParallel RcppParallelLibs CxxFlags
 #' @importFrom rstan sampling
-#' @importFrom MASS mvrnorm
+#' @importFrom mvtnorm rmvnorm
 #' @keywords internal
 #'
 #' @references

@@ -6,10 +6,11 @@
 \usage{
 simIPM(
   life_cycle = "SS",
-  SR_fun = "BH",
+  SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
   RRS = "none",
   pars,
   par_models = NULL,
+  center = TRUE,
   scale = TRUE,
   N_age,
   max_age,
@@ -40,16 +41,25 @@ Currently \code{RRS} is only implemented for \code{stan_model == "IPM_SS_np"}.}
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
 \itemize{
 \item \code{mu_alpha}  Hyper-mean of log intrinsic productivity.
+\item \code{mu_alpha_W},\code{mu_alpha_H} Hyper-means of log intrinsic productivity for
+wild- and hatchery-origin spawners, respectively. If they differ, both must be
+specified and \code{mu_alpha} must not be used (and conversely).
 \item \code{beta_alpha}  Vector of regression coefficients for log intrinsic productivity.
 Must be specified if \code{par_models} includes \code{alpha ~ ...}; otherwise will be ignored
 and may be omitted.
 \item \code{sigma_alpha}  Hyper-SD of log intrinsic productivity.
 \item \code{mu_Rmax}  If \code{life_cycle == "SS"}, hyper-mean of log maximum recruitment.
+\item \code{mu_Rmax_W},\code{mu_Rmax_H} Hyper-means of log maximum recruitment for
+wild- and hatchery-origin spawners, respectively. If they differ, both must be
+specified and \code{mu_Rmax} must not be used (and conversely).
 \item \code{beta_Rmax}  If \code{life_cycle == "SS"}, vector of regression coefficients for
 log maximum recruitment. Must be specified if \code{par_models} includes \code{Rmax ~ ...};
 otherwise will be ignored and may be omitted.
 \item \code{sigma_Rmax}  If \code{life_cycle == "SS"}, hyper-SD of log maximum recruitment.
-\item \code{rho_alphaRmax}  If \code{life_cycle == "SS"}, correlation between log(alpha) and log(Rmax).
+\item \code{rho_alphaRmax}  If \code{life_cycle == "SS"}, correlation between population-level
+log(alpha) and log(Rmax).
+\item \code{rho_WH} If either \code{mu_alpha} or \verb{mu_[R|M]max} differ by rearing type, correlation
+between the respective \verb{_W} and \verb{_H} population-level parameters.
 \item \code{beta_R}  If \code{life_cycle == "SS"}, vector of regression coefficients for
 log recruitment. Must be specified if \code{par_models} includes \code{R ~ ...};
 otherwise will be ignored and may be omitted.
@@ -61,6 +71,9 @@ log productivity anomalies.
 \item \code{mu_Mmax}  If \code{life_cycle == "SMS"}, hyper-mean of log maximum smolt recruitment.
 \item \code{beta_Mmax}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
 log maximum smolt recruitment.
+\item \code{mu_Mmax_W},\code{mu_Mmax_H} Hyper-means of log maximum smolt recruitment for
+wild- and hatchery-origin spawners, respectively. If they differ, both must be specified
+and \code{mu_Mmax} must not be used (and conversely).
 \item \code{sigma_Mmax}  If \code{life_cycle == "SMS"}, hyper-SD of log maximum smolt recruitment.
 \item \code{rho_alphaMmax}  If \code{life_cycle == "SMS"}, correlation between log(alpha) and log(Mmax).
 \item \code{beta_M}  If \code{life_cycle == "SMS"}, vector of regression coefficients for
@@ -105,6 +118,13 @@ specified by \code{stan_model} that accepts covariates (see \strong{Details} for
 model-parameter combinations) and \code{x1 + ... + xK} are terms involving variables in
 \code{fish_data}. Standard formula syntax such as \code{:} and \code{*} may be used;
 see \code{\link[stats:formula]{stats::formula()}}.}
+
+\item{center}{Logical indicating whether the terms in model matrices
+constructed from \code{fish_data} using the formulas in \code{par_models} should be centered.
+It is usually recommended to use the default (\code{TRUE}) so the baseline parameter
+estimate applies when predictors are at their sample means, but in some cases such
+as factor predictors \code{center = FALSE} may be appropriate. If combining categorical
+and numeric predictors, the latter can be centered and scaled prior to modeling.}
 
 \item{scale}{Logical indicating whether the model matrices constructed from
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have

@@ -1,25 +1,35 @@
-#' Simulate data from a salmonid integrated population model
+#' Simulate data from a salmonid IPM
 #'
 #' Generate pseudo-data, group-level parameters, and states from a specified
 #' **salmonIPM** integrated population model given values for the hyperparameters.
 #' This may be useful, e.g., in simulation-based calibration and model sensitivity
-#' checking.
+#' checking. It is not suitable for simulating data from a fitted model, because initial
+#' states are drawn randomly rather than being passed in.
 #'
 #' @param life_cycle Character string indicating which life-cycle model to
 #'   simulate. Currently available options are spawner-to-spawner (`"SS"`, the default), 
 #'   iteroparous spawner-to-spawner (`"SSiter"`), or spawner-smolt-spawner (`"SMS"`).
 #' @param pars Named list of (hyper)parameters to be used for simulations:
 #'   * `mu_alpha`  Hyper-mean of log intrinsic productivity.
+#'   * `mu_alpha_W`,`mu_alpha_H` Hyper-means of log intrinsic productivity for 
+#'   wild- and hatchery-origin spawners, respectively. If they differ, both must be 
+#'   specified and `mu_alpha` must not be used (and conversely). 
 #'   * `beta_alpha`  Vector of regression coefficients for log intrinsic productivity.
 #'   Must be specified if `par_models` includes `alpha ~ ...`; otherwise will be ignored
 #'   and may be omitted.
 #'   * `sigma_alpha`  Hyper-SD of log intrinsic productivity.
 #'   * `mu_Rmax`  If `life_cycle == "SS"`, hyper-mean of log maximum recruitment.
+#'   * `mu_Rmax_W`,`mu_Rmax_H` Hyper-means of log maximum recruitment for 
+#'   wild- and hatchery-origin spawners, respectively. If they differ, both must be 
+#'   specified and `mu_Rmax` must not be used (and conversely). 
 #'   * `beta_Rmax`  If `life_cycle == "SS"`, vector of regression coefficients for 
 #'   log maximum recruitment. Must be specified if `par_models` includes `Rmax ~ ...`; 
 #'   otherwise will be ignored and may be omitted.
 #'   * `sigma_Rmax`  If `life_cycle == "SS"`, hyper-SD of log maximum recruitment.
-#'   * `rho_alphaRmax`  If `life_cycle == "SS"`, correlation between log(alpha) and log(Rmax).
+#'   * `rho_alphaRmax`  If `life_cycle == "SS"`, correlation between population-level
+#'   log(alpha) and log(Rmax).
+#'   * `rho_WH` If either `mu_alpha` or `mu_[R|M]max` differ by rearing type, correlation 
+#'   between the respective `_W` and `_H` population-level parameters.
 #'   * `beta_R`  If `life_cycle == "SS"`, vector of regression coefficients for 
 #'   log recruitment. Must be specified if `par_models` includes `R ~ ...`; 
 #'   otherwise will be ignored and may be omitted.
@@ -31,6 +41,9 @@
 #'   * `mu_Mmax`  If `life_cycle == "SMS"`, hyper-mean of log maximum smolt recruitment.
 #'   * `beta_Mmax`  If `life_cycle == "SMS"`, vector of regression coefficients for 
 #'   log maximum smolt recruitment.
+#'   * `mu_Mmax_W`,`mu_Mmax_H` Hyper-means of log maximum smolt recruitment for 
+#'   wild- and hatchery-origin spawners, respectively. If they differ, both must be specified
+#'   and `mu_Mmax` must not be used (and conversely). 
 #'   * `sigma_Mmax`  If `life_cycle == "SMS"`, hyper-SD of log maximum smolt recruitment.
 #'   * `rho_alphaMmax`  If `life_cycle == "SMS"`, correlation between log(alpha) and log(Mmax).
 #'   * `beta_M`  If `life_cycle == "SMS"`, vector of regression coefficients for
@@ -94,29 +107,36 @@
 #' used in generating the pseudo-data.
 #' 
 #' @seealso [salmonIPM()] for fitting models
-#'
+#' @importFrom mvtnorm rmvnorm
 #' @export
 
-simIPM <- function(life_cycle = "SS", SR_fun = "BH", 
-                   pars, par_models = NULL, scale = TRUE, 
+simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
+                   RRS = "none", pars, par_models = NULL, center = TRUE, scale = TRUE, 
                    N_age, max_age, ages = NULL, age_F = NULL, age_B = NULL, 
                    fish_data)
 {
-  # Function to simulate correlated pop-specific intrinsic productivity and max recruitment
-  alphaRmax_mvn <- function(N_pop, mu_alpha, sigma_alpha, mu_Rmax, sigma_Rmax, rho_alphaRmax) 
-  {
-    Sigma_alphaRmax <- diag(c(sigma_alpha, sigma_Rmax)^2)
-    Sigma_alphaRmax[1,2] <- rho_alphaRmax*sigma_alpha*sigma_Rmax
-    Sigma_alphaRmax[2,1] <- Sigma_alphaRmax[1,2]
-    alphaRmax <- matrix(exp(mvrnorm(N_pop, c(mu_alpha, mu_Rmax), Sigma_alphaRmax)), N_pop, 2)
-    return(list(alpha = alphaRmax[,1], Rmax = alphaRmax[,2]))
-  }
-  
   # Assign objects
+  SR_fun <- match.arg(SR_fun)
+  if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
-  for(i in 1:length(pars)) assign(names(pars)[i], pars[[i]])
-  for(i in 1:ncol(fish_data)) assign(colnames(fish_data)[i], fish_data[,i])
+
+  if((!is.null(pars$mu_alpha) & (!is.null(pars$mu_alpha_W) | !is.null(pars$mu_alpha_H))) | 
+     is.null(pars$mu_alpha_W) != is.null(pars$mu_alpha_H))
+    stop("If mu_alpha_W and mu_alpha_H differ, both must be specified and `mu_alpha`",
+         "\n  must not be used (and conversely)")
+  if((!is.null(pars$mu_Rmax) & (!is.null(pars$mu_Rmax_W) | !is.null(pars$mu_Rmax_H))) | 
+     is.null(pars$mu_Rmax_W) != is.null(pars$mu_Rmax_H))
+    stop("If mu_Rmax_W and mu_Rmax_H differ, both must be specified and `mu_Rmax`",
+         "\n  must not be used (and conversely)")
+  if((!is.null(pars$mu_Mmax) & (!is.null(pars$mu_Mmax_W) | !is.null(pars$mu_Mmax_H))) | 
+     is.null(pars$mu_Mmax_W) != is.null(pars$mu_Mmax_H))
+    stop("If mu_Mmax_W and mu_Mmax_H differ, both must be specified and `mu_Mmax`",
+         "\n  must not be used (and conversely)")
+  
+  for(n in unique(c(names(pars), "rho_alphaRmax", "rho_alphaMmax", "rho_WH"))) 
+    assign(n, if(is.null(pars[[n]])) NA else pars[[n]])
+  for(n in colnames(fish_data)) assign(n, fish_data[,n])
   N <- nrow(fish_data)                  
   N_pop <- length(unique(fish_data$pop))             
   A_pop <- tapply(A, pop, mean)
@@ -139,19 +159,38 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
   age_B <- as.numeric(age_B)
   
   # Simulate correlated pop-specific intrinsic productivity and max recruitment
-  alphaRmax <- alphaRmax_mvn(N_pop, mu_alpha, sigma_alpha, 
-                             switch(life_cycle, SMS = mu_Mmax, mu_Rmax),
-                             switch(life_cycle, SMS = sigma_Mmax, sigma_Rmax),
-                             switch(life_cycle, SMS = rho_alphaMmax, rho_alphaRmax))
-  alpha <- alphaRmax$alpha
-  if(life_cycle == "SMS") Mmax <- alphaRmax$Rmax else Rmax <- alphaRmax$Rmax
-  
+  R_names <- c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","Mmax","Mmax_W","Mmax_H")
+  mu <- unlist(pars[paste0("mu_", R_names)])
+  names(mu) <- gsub("mu_", "", names(mu))
+  R <- matrix(1, nrow = length(R_names), ncol = length(R_names), dimnames = list(R_names, R_names))
+  for(i in rownames(R))
+    for(j in colnames(R))
+    {
+      if(grepl("alpha",i) & grepl("Rmax",j) | grepl("Rmax",i) & grepl("alpha",j)) 
+        R[i,j] <- R[i,j]*rho_alphaRmax 
+      if(grepl("alpha",i) & grepl("Mmax",j) | grepl("Mmax",i) & grepl("alpha",j)) 
+        R[i,j] <- R[i,j]*rho_alphaMmax
+      if(grepl("_W",i) & grepl("_H",j) | grepl("_H",i) & grepl("_W",j))
+        R[i,j] <- R[i,j]*rho_WH
+    }
+  R <- R[names(mu), names(mu), drop = FALSE]
+  sigma <- unlist(pars[paste0("sigma_", gsub("mu_|_W|_H", "", names(mu)))])
+  D <- diag(sigma, nrow = length(sigma))
+  Sigma <- D %*% R %*% D
+  alphaRmax <- data.frame(exp(rmvnorm(N_pop, mu, Sigma)))
+  for(n in R_names) assign(n, alphaRmax[[n]])
+
   # Carrying capacity (for scaling S_init)
-  # assumes BH
-  K <- switch(life_cycle,
-              SMS = mu_MS*(alpha - 1)*A_pop*Mmax/alpha, 
-              (alpha - 1)*A_pop*Rmax/alpha)
-  
+  # assumes BH if density-dependent 
+  if(SR_fun == "exp") {
+    K <- 1
+  } else {
+    K_fun <- function(alpha, Rmax, A_pop) (alpha - 1)*A_pop*Rmax/alpha
+    K <- switch(life_cycle,
+                SMS = mu_MS * K_fun(c(alpha_W, alpha), c(Mmax_W, Mmax), A_pop),
+                K_fun(c(alpha_W, alpha), c(Rmax_W, Rmax), A_pop))
+  }
+
   # Covariate model matrices
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
@@ -172,6 +211,17 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
       assign(X_i, X[[i]])
     }
   }
+  
+  # S-R parameters including covariate effects
+  alpha_Xbeta <- if(is.null(alpha)) NULL else alpha[pop] * exp(X_alpha %*% beta_alpha)
+  alpha_W_Xbeta <- if(is.null(alpha_W)) NULL else alpha_W[pop] * exp(X_alpha %*% beta_alpha)
+  alpha_H_Xbeta <- if(is.null(alpha_H)) NULL else alpha_H[pop] * exp(X_alpha %*% beta_alpha)
+  Rmax_Xbeta <- if(is.null(Rmax)) NULL else Rmax[pop] * exp(X_Rmax %*% beta_Rmax)
+  Rmax_W_Xbeta <- if(is.null(Rmax_W)) NULL else Rmax_W[pop] * exp(X_Rmax %*% beta_Rmax)
+  Rmax_H_Xbeta <- if(is.null(Rmax_H)) NULL else Rmax_H[pop] * exp(X_Rmax %*% beta_Rmax)
+  Mmax_Xbeta <- if(is.null(Mmax)) NULL else Mmax[pop] * exp(X_Mmax %*% beta_Mmax)
+  Mmax_W_Xbeta <- if(is.null(Mmax_W)) NULL else Mmax_W[pop] * exp(X_Mmax %*% beta_Mmax)
+  Mmax_H_Xbeta <- if(is.null(Mmax_H)) NULL else Mmax_H[pop] * exp(X_Mmax %*% beta_Mmax)
   
   # Annual recruitment, SAR, and kelt survival anomalies
   if(life_cycle %in% c("SS","SSiter")) 
@@ -207,10 +257,10 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
   # Conditional age-at-(maiden)-return
   mu_alr_p <- log(head(mu_p, N_age-1)) - log(tail(mu_p,1))
   Sigma_pop_p <-  tcrossprod(sigma_pop_p) * R_pop_p
-  mu_pop_alr_p <- matrix(mvrnorm(N_pop, mu_alr_p, Sigma_pop_p), ncol = N_age - 1)
+  mu_pop_alr_p <- rmvnorm(N_pop, mu_alr_p, Sigma_pop_p)
   Sigma_alr_p <- tcrossprod(sigma_p) * R_p
   alr_p <- t(matrix(apply(mu_pop_alr_p[pop,,drop = FALSE], 1, 
-                          function(x) mvrnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
+                          function(x) rmvnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
   exp_alr_p <- cbind(exp(alr_p), 1)
   p <- sweep(exp_alr_p, 1, rowSums(exp_alr_p), "/")
   
@@ -222,14 +272,18 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
   dat_init$S <- rlnorm(nrow(dat_init), log(S_init_K*K[dat_init$pop]), 
                        ifelse(life_cycle == "SMS", tau_S, tau))
   if(life_cycle == "SMS")
-    dat_init$M0 <- SR(SR_fun, alpha[dat_init$pop], Mmax[dat_init$pop], 
-                      dat_init$S, A[dat_init$pop]) * rlnorm(N_init, 0, sigma_M)
+    dat_init$M0 <- SR(SR_fun, 
+                      alpha = if(is.null(alpha)) alpha_W[dat_init$pop] else alpha[dat_init$pop], 
+                      Mmax = if(is.null(Mmax)) Mmax_W[dat_init$pop] else Mmax[dat_init$pop], 
+                      S = dat_init$S, A = A[dat_init$pop]) * rlnorm(N_init, 0, sigma_M)
   dat_init$R <- switch(life_cycle,
                        SMS = dat_init$M0 * plogis(qlogis(mu_MS) + rnorm(N_init, 0, sigma_MS)),
-                       SR(SR_fun, alpha[dat_init$pop], Rmax[dat_init$pop], 
-                          dat_init$S, A[dat_init$pop]) * rlnorm(N_init, 0, sigma_R))
+                       SR(SR_fun, 
+                          alpha = if(is.null(alpha)) alpha_W[dat_init$pop] else alpha[dat_init$pop], 
+                          Rmax = if(is.null(Rmax)) Rmax_W[dat_init$pop] else Rmax[dat_init$pop], 
+                          S = dat_init$S, A = A[dat_init$pop]) * rlnorm(N_init, 0, sigma_R))
   alr_p_init <- t(matrix(apply(mu_pop_alr_p[dat_init$pop,,drop = FALSE], 1, 
-                               function(x) mvrnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
+                               function(x) rmvnorm(1, x, Sigma_alr_p)), nrow = N_age - 1))
   exp_alr_p_init <- cbind(exp(alr_p_init), 1)
   p_init <- sweep(exp_alr_p_init, 1, rowSums(exp_alr_p_init), "/")
   if(life_cycle == "SSiter")
@@ -343,18 +397,18 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
     if(life_cycle %in% c("SS","SSiter"))
     {
       R_hat[i] <- SR(SR_fun, 
-                     alpha[pop[i]] * exp(sum(X_alpha[i,]*beta_alpha)), 
-                     Rmax[pop[i]] * exp(sum(X_Rmax[i,]*beta_Rmax)), 
-                     S[i], A[i])
+                     alpha_Xbeta[pop[i]], alpha_W_Xbeta[pop[i]], alpha_H_Xbeta[pop[i]], 
+                     Rmax_Xbeta[pop[i]], Rmax_W_Xbeta[pop[i]], Rmax_H_Xbeta[pop[i]], 
+                     S[i], S_W[i], S_H[i], A[i])
       R[i] <- R_hat[i] * rlnorm(1, sum(X_R[i,]*beta_R) + eta_year_R[year[i]], sigma_R)
     }
     
     if(life_cycle == "SMS")
     {
       M_hat[i] <- SR(SR_fun, 
-                     alpha[pop[i]] * exp(sum(X_alpha[i,]*beta_alpha)), 
-                     Mmax[pop[i]] * exp(sum(X_Mmax[i,]*beta_Mmax)), 
-                     S[i], A[i])
+                     alpha_Xbeta[pop[i]], alpha_W_Xbeta[pop[i]], alpha_H_Xbeta[pop[i]], 
+                     Mmax_Xbeta[pop[i]], Mmax_W_Xbeta[pop[i]], Mmax_H_Xbeta[pop[i]], 
+                     S[i], S_W[i], S_H[i], A[i])
       M0[i] <- M_hat[i] * rlnorm(1, sum(X_M[i,]*beta_M) + eta_year_M[year[i]], sigma_M)
     }
   }  # end loop over rows of fish_data
@@ -399,12 +453,16 @@ simIPM <- function(life_cycle = "SS", SR_fun = "BH",
                       S = S, S_W_a = S_W_a, 
                       q = switch(life_cycle, SSiter = NULL, q),
                       q_MK = switch(life_cycle, SSiter = q_MK, NULL),
-                      alpha = alpha, 
+                      alpha = alpha, alpha_W = alpha_W, alpha_H = alpha_H,
                       Rmax = switch(life_cycle, SMS = NULL, Rmax), 
+                      Rmax_W = switch(life_cycle, SMS = NULL, Rmax_W), 
+                      Rmax_H = switch(life_cycle, SMS = NULL, Rmax_H), 
                       eta_year_R = switch(life_cycle, SMS = NULL, eta_year_R),
                       R_hat = switch(life_cycle, SMS = NULL, R_hat), 
                       R = switch(life_cycle, SMS = NULL, R),
                       Mmax = switch(life_cycle, SMS = Mmax, NULL), 
+                      Mmax_W = switch(life_cycle, SMS = Mmax_W, NULL), 
+                      Mmax_H = switch(life_cycle, SMS = Mmax_H, NULL), 
                       eta_year_M = switch(life_cycle, SMS = eta_year_M, NULL), 
                       M_hat = switch(life_cycle, SMS = M_hat, NULL),
                       M = switch(life_cycle, SMS = M, NULL),
