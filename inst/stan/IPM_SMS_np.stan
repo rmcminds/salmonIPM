@@ -2,7 +2,6 @@ functions {
   #include /include/SR.stan
   #include /include/gnormal_lpdf_vec.stan
   #include /include/mat_lmult.stan
-  #include /include/quantile.stan
 }
 
 data {

@@ -6,7 +6,6 @@ functions {
   #include /include/rsub.stan
   #include /include/which.stan
   #include /include/mat_lmult.stan
-  #include /include/quantile.stan
 }
 
 data {
