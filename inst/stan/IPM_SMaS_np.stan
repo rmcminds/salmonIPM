@@ -5,7 +5,6 @@ functions {
   #include /include/rep_vec.stan
   #include /include/to_row_vector_row_major.stan
   #include /include/seq.stan
-  #include /include/quantile.stan
 }
 
 data {
