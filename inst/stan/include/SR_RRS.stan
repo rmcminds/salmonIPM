@@ -22,10 +22,7 @@ real SR(int SR_fun, int[] RRS, real alpha, real alpha_W, real alpha_H,
     if(SR_fun == 2) // Beverton-Holt (Leslie-Gower)
       R = (alpha_W*S_W + alpha_H*S_H) / (1 + (alpha_W*S_W + alpha_H*S_H)/(A*Rmax));
     if(SR_fun == 3) { // Ricker
-      real log_alpha_W = log(alpha_W);
-      real log_alpha_H = log(alpha_H);
-      real DD = 1 - alpha_W*S_W/(e()*A*Rmax*log_alpha_W) - alpha_H*S_H/(e()*A*Rmax*log_alpha_H);
-      R = S_W*exp(log_alpha_W*DD) + S_H*exp(log_alpha_H*DD);
+      R = (alpha_W*S_W + alpha_H*S_H) * exp(-(alpha_W*S_W + alpha_H*S_H)/(e()*A*Rmax));
     }
   }
 
@@ -48,10 +45,7 @@ real SR(int SR_fun, int[] RRS, real alpha, real alpha_W, real alpha_H,
     if(SR_fun == 2) // Beverton-Holt (Leslie-Gower)
       R = (alpha_W*S_W + alpha_H*S_H) / (1 + alpha_W*S_W/(A*Rmax_W) + alpha_H*S_H/(A*Rmax_H));
     if(SR_fun == 3) { // Ricker
-      real log_alpha_W = log(alpha_W);
-      real log_alpha_H = log(alpha_H);
-      real DD = 1 - alpha_W*S_W/(e()*A*Rmax_W*log_alpha_W) - alpha_H*S_H/(e()*A*Rmax_H*log_alpha_H);
-      R = S_W*exp(log_alpha_W*DD) + S_H*exp(log_alpha_H*DD);
+      R = (alpha_W*S_W + alpha_H*S_H) * exp(-alpha_W*S_W/(e()*A*Rmax_W) - alpha_H*S_H/(e()*A*Rmax_H));
     }
   }
   

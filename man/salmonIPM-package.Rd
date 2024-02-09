@@ -3,7 +3,6 @@
 \docType{package}
 \name{salmonIPM-package}
 \alias{salmonIPM-package}
-\alias{_PACKAGE}
 \title{The 'salmonIPM' package.}
 \description{
 Fits IPMs or run-reconstruction regressions for anadromous Pacific salmonid population dynamics using a hierarchical Bayesian framework implemented in Stan. Various models are available, representing alternative life-history structures and independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.

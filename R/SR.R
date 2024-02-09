@@ -160,11 +160,7 @@ SR <- function(SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"),
       SR_fun,
       exp = alpha_W*S_W + alpha_H*S_H,
       BH = (alpha_W*S_W + alpha_H*S_H) / (1 + alpha_W*S_W/(A*Rmax_W) + alpha_H*S_H/(A*Rmax_H)),
-      Ricker = 
-        S_W*exp(log(alpha_W)*(1 - alpha_W*S_W/(exp(1)*A*Rmax_W*log(alpha_W)) - 
-                                alpha_H*S_H/(exp(1)*A*Rmax_H*log(alpha_H)))) +
-        S_H*exp(log(alpha_H)*(1 - alpha_W*S_W/(exp(1)*A*Rmax_W*log(alpha_W)) - 
-                                alpha_H*S_H/(exp(1)*A*Rmax_H*log(alpha_H))))
+      Ricker = (alpha_W*S_W + alpha_H*S_H) * exp(-alpha_W*S_W/(exp(1)*A*Rmax_W) - alpha_H*S_H/(exp(1)*A*Rmax_H))
     )
   }
   
