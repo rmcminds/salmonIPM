@@ -165,14 +165,14 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       stanmodel,
       IPM_SS_np = list(
         # recruitment
-        alpha = array(exp(runif(N_pop, 1, 3))),
-        alpha_W = array(exp(runif(N_pop, 1, 3))),
-        alpha_H = array(exp(runif(N_pop, 1, 3))),
+        alpha = array(exp(runif(!RRS[1]*N_pop, 1, 3))),
+        alpha_W = array(exp(runif(RRS[1]*N_pop, 1, 3))),
+        alpha_H = array(exp(runif(RRS[1]*N_pop, 1, 3))),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
-        Rmax = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
-        Rmax_W = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
-        Rmax_H = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Rmax = array(rlnorm(!RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Rmax_W = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Rmax_H = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         beta_Rmax = matrix(rnorm(K_Rmax*N_pop, 0, 0.5/apply(abs(X_Rmax), 2, max)), 
                            N_pop, K_Rmax, byrow = TRUE),
         beta_R = matrix(rnorm(K_R*N_pop, 0, 0.5/apply(abs(X_R), 2, max)), 
@@ -199,7 +199,7 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
         q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
         q_iter_init = if(iter) {
           matrix(colMeans(q_iter_obs), N_pop, N_age*2, byrow = TRUE)
-        } else matrix(0, 0, N_pop),
+        } else matrix(0, 0, N_age*2),
         tau = array(runif(N_pop, 0.5, 1))
       ),
       

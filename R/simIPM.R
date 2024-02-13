@@ -274,7 +274,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
   if(life_cycle == "SMS")
     dat_init$M0 <- SR(SR_fun, 
                       alpha = if(is.null(alpha)) alpha_W[dat_init$pop] else alpha[dat_init$pop], 
-                      Mmax = if(is.null(Mmax)) Mmax_W[dat_init$pop] else Mmax[dat_init$pop], 
+                      Rmax = if(is.null(Mmax)) Mmax_W[dat_init$pop] else Mmax[dat_init$pop], 
                       S = dat_init$S, A = A[dat_init$pop]) * rlnorm(N_init, 0, sigma_M)
   dat_init$R <- switch(life_cycle,
                        SMS = dat_init$M0 * plogis(qlogis(mu_MS) + rnorm(N_init, 0, sigma_MS)),
