@@ -32,8 +32,8 @@ options(mc.cores = parallel::detectCores(logical = FALSE))
 #------------------------------
 
 ## @knitr data_setup
-set.seed(1234)
-N <- 30
+set.seed(123)
+N <- 50
 N_age <- 3
 max_age <- 5
 ## @knitr
@@ -43,12 +43,12 @@ max_age <- 5
 #------------------------------
 
 ## @knitr pars
-pars <- list(mu_alpha_W = 2, mu_alpha_H = 1, sigma_alpha = 0, 
-             mu_Rmax_W = 5, mu_Rmax_H = 4, sigma_Rmax = 0, 
-             rho_alphaRmax = 0, rho_WH = 0, rho_R = 0.6, sigma_year_R = 0.2, sigma_R = 0,
+pars <- list(mu_alpha_W = 1.5, mu_alpha_H = 0.5, sigma_alpha = 0, 
+             mu_Rmax_W = 7, mu_Rmax_H = 6, sigma_Rmax = 0, 
+             rho_alphaRmax = 0, rho_WH = 0, rho_R = 0.5, sigma_year_R = 0.3, sigma_R = 0,
              mu_p = c(0.05, 0.55, 0.4), sigma_pop_p = rep(0,2), R_pop_p = diag(2), 
              sigma_p = c(0.2, 0.2), R_p = matrix(c(1, 0.5, 0.5, 1), 2, 2), 
-             tau = 0.3, S_init_K = 0.3)
+             tau = 0.2, S_init_K = 0.2)
 ## @knitr
 
 #------------------------------
@@ -64,7 +64,8 @@ pars <- list(mu_alpha_W = 2, mu_alpha_H = 1, sigma_alpha = 0,
 ## @knitr data_struct
 df <- data.frame(pop = 1, year = 1:N + 2020 - N, A = 1, 
                  p_HOS = rbeta(N, 2, 2), 
-                 B_rate = 0, F_rate = rbeta(N, 3, 2),
+                 B_rate = rbeta(N, 1, 9), 
+                 F_rate = rbeta(N, 3, 2),
                  n_age_obs = runif(N, 10, 100),
                  n_HW_obs = runif(N, 10, 100))
 
@@ -73,7 +74,7 @@ df <- data.frame(pop = 1, year = 1:N + 2020 - N, A = 1,
 #------------------------------
 
 ## @knitr data
-sim <- simIPM(life_cycle = "SS", SR_fun = "BH", pars = pars, 
+sim <- simIPM(life_cycle = "SS", SR_fun = "Ricker", pars = pars, 
               fish_data = df, N_age = N_age, max_age = max_age)
 names(sim$pars_out)
 sim$pars_out[c("alpha_W","alpha_H","Rmax_W","Rmax_H")]
@@ -86,7 +87,7 @@ format(head(sim$sim_dat, 10), digits = 2)
 
 ## @knitr fit
 fit <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, 
-                 SR_fun = "BH", RRS = c("alpha","Rmax"),
+                 SR_fun = "Ricker", RRS = c("alpha","Rmax"),
                  fish_data = sim$sim_dat, 
                  chains = 4, iter = 2000, warmup = 1000, 
                  seed = 123)
@@ -159,7 +160,8 @@ SR_fit <- as.matrix(fit, c("alpha_W","alpha_H","Rmax_W","Rmax_H")) %>%
                    alpha_H = rep(alpha_H, each = 200),
                    Rmax_W = rep(Rmax_W, each = 200),
                    Rmax_H = rep(Rmax_H, each = 200),
-                   R = SR(alpha_W = alpha_W, alpha_H = alpha_H,
+                   R = SR(SR_fun = "Ricker",
+                          alpha_W = alpha_W, alpha_H = alpha_H,
                           Rmax_W = Rmax_W, Rmax_H = Rmax_H, 
                           S_W = S_W, S_H = S_H))
 
@@ -213,7 +215,8 @@ S_grid <- states %>% data.frame() %>%
 
 # recruits
 R_fit <- outer(S_grid$S_W, S_grid$S_H, function(x, y) 
-  SR(alpha_W = median(SR_pars$alpha_W), alpha_H = median(SR_pars$alpha_H), 
+  SR(SR_fun = "Ricker",
+     alpha_W = median(SR_pars$alpha_W), alpha_H = median(SR_pars$alpha_H), 
      Rmax_W = median(SR_pars$Rmax_W), Rmax_H = median(SR_pars$Rmax_H),
      S_W = x, S_H = y))
 
@@ -228,7 +231,7 @@ par3d(windowRect = c(200,100,1000,900))
 persp3d(S_grid$S_W, S_grid$S_H, R_fit, col = csurf, alpha = 0.7,
         xlab = bquote(S[W]), ylab = bquote(S[H]), zlab = "R")
 spheres3d(median(states$S_W), median(states$S_H), median(states$R), 
-          radius = 5, col = cpts)
+          radius = 40, col = cpts)
 view3d(userMatrix = matrix(c(-0.82,0.37,-0.42,0,-0.56,-0.42,0.72,0,
                              0.09,0.83,0.55,0,0,0,0,1), 4, 4))
 ## @knitr

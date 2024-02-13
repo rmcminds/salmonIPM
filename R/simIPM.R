@@ -269,8 +269,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
   N_init <- nrow(dat_init)
   for(i in 1:N_pop)
     dat_init$year[dat_init$pop==i] <- min(year[pop==i]) - (max_age:1)
-  dat_init$S <- rlnorm(nrow(dat_init), log(S_init_K*K[dat_init$pop]), 
-                       ifelse(life_cycle == "SMS", tau_S, tau))
+  dat_init$S <- rlnorm(nrow(dat_init), log(S_init_K*K[dat_init$pop]), sigma_R)
   if(life_cycle == "SMS")
     dat_init$M0 <- SR(SR_fun, 
                       alpha = if(is.null(alpha)) alpha_W[dat_init$pop] else alpha[dat_init$pop], 
@@ -445,7 +444,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
             n_age_obs = switch(life_cycle, SSiter = NULL, n_age_obs),
             n_MKage_obs = switch(life_cycle, SSiter = n_MKage_obs, NULL)),
       n_H_obs = n_H_obs, n_W_obs = n_W_obs, 
-      fit_p_HOS = p_HOS > 0, B_take_obs = B_take, F_rate = F_rate,
+      fit_p_HOS = p_HOS > 0, B_take_obs = round(B_take), F_rate = F_rate,
       fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]
     ),
     pars_out = c(pars, 
