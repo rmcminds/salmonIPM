@@ -221,7 +221,7 @@ transformed parameters {
   {
     int mm;                                   // index into M_init, q_M_init
     // number of orphan smolt age classes <lower=0,upper=N_Mage>
-    int N_orphan_Mage = max(N_Mage - max(pop_year[i] - min_Mage, 0), N_Mage); 
+    int N_orphan_Mage = max(N_Mage - to_int(fmin(pop_year[i], min_Mage)), N_Mage); 
     // orphan smolt age distn (amalgamated simplex)
     vector[N_orphan_Mage] q_M_orphan;
     vector[N_Mage] alr_p_M;                   // alr(p_M[i,])
@@ -231,7 +231,7 @@ transformed parameters {
     vector[N_Mage*(N_MSage-1)] alr_p_MS;      // alr(p_MS[i,]) 
     int ss;                                   // index into S_init, q_GR_init
     // number of orphan ocean-age classes <lower=0,upper=N_MSage>
-    int N_orphan_MSage = max(N_MSage - max(pop_year[i] - min_MSage, 0), N_MSage); 
+    int N_orphan_MSage = max(N_MSage - to_int(fmin(pop_year[i], min_MSage)), N_MSage); 
     // slice of orphan G-R age distn for a given smolt age (amalgamated simplex)
     vector[N_orphan_MSage] q_GR_orphan;
     matrix[N_Mage,N_MSage] S_W_a;             // true W spawners by smolt and ocean age

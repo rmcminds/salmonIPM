@@ -181,7 +181,7 @@ transformed parameters {
   {
     int ii; // index into S_init and q_init
     // number of orphan (maiden) age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year[i] - min_age, 0), N_age);
+    int N_orphan_age = max(N_age - to_int(fdim(pop_year[i], min_age)), N_age); 
     vector[N_orphan_age] q_orphan; // orphan (maiden) age distribution
     vector[N_age] alr_p; // alr(p[i,])
 

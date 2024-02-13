@@ -173,7 +173,7 @@ transformed parameters {
   {
     int ii;                  // index into S_init and q_init
     // number of orphan age classes <lower=0,upper=N_age>
-    int N_orphan_age = max(N_age - max(pop_year[i] - min_ocean_age, 0), N_age); 
+    int N_orphan_age = max(N_age - to_int(fdim(pop_year[i], min_ocean_age)), N_age); 
     vector[N_orphan_age] q_orphan; // orphan age distribution (amalgamated simplex)
     vector[N_age] alr_p;     // alr(p[i,])
     row_vector[N_age] S_W_a; // true wild spawners by age
