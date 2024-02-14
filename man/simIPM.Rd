@@ -109,7 +109,10 @@ otherwise will be ignored and may be omitted.
 \item \code{tau}  If \code{life_cycle != "SMS"}, spawner observation error SD.
 \item \code{tau_M}  If \code{life_cycle == "SMS"}, smolt observation error SD.
 \item \code{tau_S}  If \code{life_cycle == "SMS"}, pawner observation error SD.
-\item \code{S_init_K}  Mean of initial spawning population size as a fraction of carrying capacity.
+\item \code{S_init}  Scalar giving median of initial spawning population size.
+If both \code{S_init} and \code{S_init_K} are specified, the latter is ignored.
+\item \code{S_init_K}  Scalar giving median of initial spawning population size as a fraction of carrying capacity.
+Note that if \code{alpha < 1}, \code{K} is undefined and specifying \code{S_init_K} will result in an error.
 }}
 
 \item{par_models}{Optional list of two-sided formulas of the form

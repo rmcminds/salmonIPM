@@ -79,7 +79,10 @@
 #'   * `tau`  If `life_cycle != "SMS"`, spawner observation error SD.
 #'   * `tau_M`  If `life_cycle == "SMS"`, smolt observation error SD.
 #'   * `tau_S`  If `life_cycle == "SMS"`, pawner observation error SD.
-#'   * `S_init_K`  Mean of initial spawning population size as a fraction of carrying capacity. 
+#'   * `S_init`  Scalar giving median of initial spawning population size. 
+#'   If both `S_init` and `S_init_K` are specified, the latter is ignored. 
+#'   * `S_init_K`  Scalar giving median of initial spawning population size as a fraction of carrying capacity. 
+#'   Note that if `alpha < 1`, `K` is undefined and specifying `S_init_K` will result in an error.
 #' @param N_age Number of (maiden) adult age classes.
 #' @param max_age Oldest (maiden) adult age class.
 #' @param ages For multi-stage models, a named list giving the fixed ages
@@ -120,7 +123,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
-
+  
   if((!is.null(pars$mu_alpha) & (!is.null(pars$mu_alpha_W) | !is.null(pars$mu_alpha_H))) | 
      is.null(pars$mu_alpha_W) != is.null(pars$mu_alpha_H))
     stop("If mu_alpha_W and mu_alpha_H differ, both must be specified and `mu_alpha`",
@@ -179,18 +182,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
   Sigma <- D %*% R %*% D
   alphaRmax <- data.frame(exp(rmvnorm(N_pop, mu, Sigma)))
   for(n in R_names) assign(n, alphaRmax[[n]])
-
-  # Carrying capacity (for scaling S_init)
-  # assumes BH if density-dependent 
-  if(SR_fun == "exp") {
-    K <- 1
-  } else {
-    K_fun <- function(alpha, Rmax, A_pop) (alpha - 1)*A_pop*Rmax/alpha
-    K <- switch(life_cycle,
-                SMS = mu_MS * K_fun(c(alpha_W, alpha), c(Mmax_W, Mmax), A_pop),
-                K_fun(c(alpha_W, alpha), c(Rmax_W, Rmax), A_pop))
-  }
-
+  
   # Covariate model matrices
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
@@ -254,7 +246,7 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
     s_MS <- plogis(rnorm(N, qlogis(mu_MS) + X_MS %*% beta_MS + eta_year_MS[year], sigma_MS))
   }
   
-  # Conditional age-at-(maiden)-return
+  # Conditional age at (maiden) return
   mu_alr_p <- log(head(mu_p, N_age-1)) - log(tail(mu_p,1))
   Sigma_pop_p <-  tcrossprod(sigma_pop_p) * R_pop_p
   mu_pop_alr_p <- rmvnorm(N_pop, mu_alr_p, Sigma_pop_p)
@@ -264,12 +256,26 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
   exp_alr_p <- cbind(exp(alr_p), 1)
   p <- sweep(exp_alr_p, 1, rowSums(exp_alr_p), "/")
   
-  # Initial states
+  # Initial states (before year 1 of data)
   dat_init <- data.frame(pop = rep(1:N_pop, each = max_age), year = NA, S = NA)
   N_init <- nrow(dat_init)
   for(i in 1:N_pop)
     dat_init$year[dat_init$pop==i] <- min(year[pop==i]) - (max_age:1)
-  dat_init$S <- rlnorm(nrow(dat_init), log(S_init_K*K[dat_init$pop]), sigma_R)
+  if(exists("S_init")) {
+    S_init <- rep(S_init, N_pop)
+  } else {  # compute S_init if using S_init_K method
+    K_fun <- function(SR_fun, alpha, Rmax, A)  
+      switch(SR_fun,
+             exp = NA,
+             BH = (alpha - 1)*A*Rmax/alpha,
+             Ricker = exp(1)*A*Rmax*log(alpha)/alpha)
+    K0 <- K_fun(SR_fun, c(alpha_W, alpha), c(Rmax_W, Rmax, Mmax_W, Mmax), A_pop)
+    K <- switch(life_cycle, SMS = mu_MS*K0, K0)
+    if(any(is.na(K) | K <= 0)) 
+      stop("K is undefined; use S_init instead of S_init_K to specify initial abundance")
+    S_init <- S_init_K*K
+  }
+  dat_init$S <- rlnorm(nrow(dat_init), log(S_init[dat_init$pop]), sigma_R)
   if(life_cycle == "SMS")
     dat_init$M0 <- SR(SR_fun, 
                       alpha = if(is.null(alpha)) alpha_W[dat_init$pop] else alpha[dat_init$pop], 
