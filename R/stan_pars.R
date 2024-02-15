@@ -56,7 +56,9 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     ),
     
     IPM_SMS_np = list(
-      hyper = c("alpha","beta_alpha","Mmax","beta_Mmax","beta_M","rho_M","sigma_M",
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                "Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax",
+                "beta_M","rho_M","sigma_M",
                 "mu_MS","beta_MS","rho_MS","sigma_MS", "mu_p","sigma_p","R_p","tau_M","tau_S"),
       states = c("M","s_MS","p","S","q","p_HOS")
     ),
@@ -71,7 +73,9 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     ),
     
     IPM_SMaS_np = list(
-      hyper = c("alpha","beta_alpha","Mmax","beta_Mmax","beta_M","rho_M","sigma_M",
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                "Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax",
+                "beta_M","rho_M","sigma_M",
                 "mu_p_M","sigma_p_M","R_p_M","tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_MS","R_MS",
                 "mu_p_MS","sigma_p_MS","R_p_MS","tau_S"),

@@ -113,12 +113,14 @@
 #' @importFrom mvtnorm rmvnorm
 #' @export
 
-simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
-                   RRS = "none", pars, par_models = NULL, center = TRUE, scale = TRUE, 
-                   N_age, max_age, ages = NULL, age_F = NULL, age_B = NULL, 
-                   fish_data)
+simIPM <- function(life_cycle = c("SS","SSiter","SMS"), 
+                   SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
+                   RRS = "none", N_age, max_age, ages = NULL, 
+                   pars, par_models = NULL, center = TRUE, scale = TRUE, 
+                   age_F = NULL, age_B = NULL, fish_data)
 {
   # Assign objects
+  life_cycle <- match.arg(life_cycle)
   SR_fun <- match.arg(SR_fun)
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
@@ -275,7 +277,8 @@ simIPM <- function(life_cycle = "SS", SR_fun = c("BH","B-H","bh","b-h","Ricker",
       stop("K is undefined; use S_init instead of S_init_K to specify initial abundance")
     S_init <- S_init_K*K
   }
-  dat_init$S <- rlnorm(nrow(dat_init), log(S_init[dat_init$pop]), sigma_R)
+  dat_init$S <- rlnorm(nrow(dat_init), log(S_init[dat_init$pop]), 
+                       switch(life_cycle, SMS = tau_S, tau))
   if(life_cycle == "SMS")
     dat_init$M0 <- SR(SR_fun, 
                       alpha = if(is.null(alpha)) alpha_W[dat_init$pop] else alpha[dat_init$pop], 

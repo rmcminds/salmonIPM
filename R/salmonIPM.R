@@ -30,9 +30,9 @@
 #'   `SR_fun` that differ between wild- and hatchery-origin spawners, such that the
 #'   relative reproductive success of hatchery spawners is not equal to 1. If `pool_pops == TRUE`,
 #'   these should be the names of the population-specific parameters, not their hyper-means.
-#'   For example, if `stan_model %in% c("IPM_SS_np","IPM_SS_pp")`, the options are
+#'   For example, if `life_cycle %in% c("SS","SSiter")`, the options are
 #'   `"none"` (the default), `"alpha"`, `"Rmax"`, or `c("alpha","Rmax")`. 
-#'   Currently `RRS` is only implemented for `stan_model == "IPM_SS_np"`.
+#'   Currently `RRS` is only implemented for `pool_pops == FALSE`.
 #' @param ages For multi-stage models, a named list giving the ages in
 #'   years of all fixed-age subadult life stages. This is not needed for `IPM_SMaS_np` 
 #'   because in that case smolt age structure is provided in `fish_data`.

@@ -5,16 +5,16 @@
 \title{Simulate data from a salmonid IPM}
 \usage{
 simIPM(
-  life_cycle = "SS",
+  life_cycle = c("SS", "SSiter", "SMS"),
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
   RRS = "none",
+  N_age,
+  max_age,
+  ages = NULL,
   pars,
   par_models = NULL,
   center = TRUE,
   scale = TRUE,
-  N_age,
-  max_age,
-  ages = NULL,
   age_F = NULL,
   age_B = NULL,
   fish_data
@@ -34,9 +34,17 @@ A character string or vector of strings naming parameters of the function specif
 \code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
 relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.
-For example, if \code{stan_model \%in\% c("IPM_SS_np","IPM_SS_pp")}, the options are
+For example, if \code{life_cycle \%in\% c("SS","SSiter")}, the options are
 \code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
-Currently \code{RRS} is only implemented for \code{stan_model == "IPM_SS_np"}.}
+Currently \code{RRS} is only implemented for \code{pool_pops == FALSE}.}
+
+\item{N_age}{Number of (maiden) adult age classes.}
+
+\item{max_age}{Oldest (maiden) adult age class.}
+
+\item{ages}{For multi-stage models, a named list giving the fixed ages
+in years of all subadult life stages. For example, if \code{life_cycle == "SMS"},
+\code{list(M = a)} where \code{a} is integer smolt age.}
 
 \item{pars}{Named list of (hyper)parameters to be used for simulations:
 \itemize{
@@ -133,14 +141,6 @@ and numeric predictors, the latter can be centered and scaled prior to modeling.
 \code{fish_data} using the formulas in \code{par_models} should be scaled to have
 column SDs of 1. Unit-scaling predictors is less critical than centering, but is advisable
 if variables have scales far from 1.}
-
-\item{N_age}{Number of (maiden) adult age classes.}
-
-\item{max_age}{Oldest (maiden) adult age class.}
-
-\item{ages}{For multi-stage models, a named list giving the fixed ages
-in years of all subadult life stages. For example, if \code{life_cycle == "SMS"},
-\code{list(M = a)} where \code{a} is integer smolt age.}
 
 \item{age_F}{Logical or 0/1 vector of length \code{N_age} indicating
 whether each adult age is fully (non)selected by the fishery.

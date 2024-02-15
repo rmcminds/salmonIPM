@@ -38,9 +38,9 @@ A character string or vector of strings naming parameters of the function specif
 \code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
 relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.
-For example, if \code{stan_model \%in\% c("IPM_SS_np","IPM_SS_pp")}, the options are
+For example, if \code{life_cycle \%in\% c("SS","SSiter")}, the options are
 \code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
-Currently \code{RRS} is only implemented for \code{stan_model == "IPM_SS_np"}.}
+Currently \code{RRS} is only implemented for \code{pool_pops == FALSE}.}
 
 \item{ages}{For multi-stage models, a named list giving the ages in
 years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}

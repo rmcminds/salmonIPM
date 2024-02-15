@@ -394,6 +394,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   year = year,
                   # smolt production
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  RRS = array(as.logical(c("alpha","Mmax") %in% RRS)),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
@@ -446,6 +447,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   year = year,
                   # smolt production
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  RRS = array(as.logical(c("alpha","Mmax") %in% RRS)),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,

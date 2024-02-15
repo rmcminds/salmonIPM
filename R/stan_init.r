@@ -247,10 +247,14 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       
       IPM_SMS_np = list(
         # smolt recruitment
-        alpha = array(exp(runif(N_pop, 1, 3))),
+        alpha = array(exp(runif(!RRS[1]*N_pop, 1, 3))),
+        alpha_W = array(exp(runif(RRS[1]*N_pop, 1, 3))),
+        alpha_H = array(exp(runif(RRS[1]*N_pop, 1, 3))),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
-        Mmax = array(rlnorm(N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Mmax = array(rlnorm(!RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Mmax_W = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Mmax_H = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         beta_Mmax = matrix(rnorm(K_Mmax*N_pop, 0, 0.5/apply(abs(X_Mmax), 2, max)), 
                            N_pop, K_Mmax, byrow = TRUE),
         beta_M = matrix(rnorm(K_M*N_pop, 0, 0.5/apply(abs(X_M), 2, max)), 
@@ -323,10 +327,14 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       
       IPM_SMaS_np = list(
         # smolt recruitment
-        alpha = array(rlnorm(N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
+        alpha = array(rlnorm(!RRS[1]*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
+        alpha_W = array(rlnorm(RRS[1]*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
+        alpha_H = array(rlnorm(RRS[1]*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
-        Mmax = array(rlnorm(N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
+        Mmax = array(rlnorm(!RRS[2]*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
+        Mmax_W = array(rlnorm(RRS[2]*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
+        Mmax_H = array(rlnorm(RRS[2]*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
         beta_Mmax = matrix(rnorm(K_Mmax*N_pop, 0, 0.5/apply(abs(X_Mmax), 2, max)), 
                            N_pop, K_Mmax, byrow = TRUE),
         beta_M = matrix(rnorm(K_M*N_pop, 0, 0.5/apply(abs(X_M), 2, max)), 
