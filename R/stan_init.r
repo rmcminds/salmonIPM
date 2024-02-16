@@ -165,12 +165,12 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       stanmodel,
       IPM_SS_np = list(
         # recruitment
-        alpha = array(exp(runif(!RRS[1]*N_pop, 1, 3))),
+        alpha = array(exp(runif((!RRS[1])*N_pop, 1, 3))),
         alpha_W = array(exp(runif(RRS[1]*N_pop, 1, 3))),
         alpha_H = array(exp(runif(RRS[1]*N_pop, 1, 3))),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
-        Rmax = array(rlnorm(!RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Rmax = array(rlnorm((!RRS[2])*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         Rmax_W = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         Rmax_H = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         beta_Rmax = matrix(rnorm(K_Rmax*N_pop, 0, 0.5/apply(abs(X_Rmax), 2, max)), 
@@ -227,7 +227,7 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
         sigma_p = array(runif(N_age-1, 0.5, 1)),
         zeta_p = zeta_p,
         # kelt survival
-        mu_SS = if(iter) plogis(rnorm(1, mean(qlogis(s_SS)), 0.5)) else array(numeric(0)),
+        mu_SS = if(iter) array(plogis(rnorm(1, mean(qlogis(s_SS))), 0.5)) else array(numeric(0)),
         beta_SS = array(rnorm(K_SS, 0, 0.5/apply(abs(X_SS), 2, max))),
         rho_SS = array(runif(iter, 0.1, 0.7)),
         sigma_year__SS = array(runif(iter, 0.05, 2)), 
@@ -241,18 +241,18 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
         q_init = matrix(colMeans(q_obs), max_age*N_pop, N_age, byrow = TRUE),
         q_iter_init = if(iter) {
           matrix(colMeans(q_iter_obs), N_pop, N_age*2, byrow = TRUE)
-        } else matrix(0, 0, N_pop),
+        } else matrix(0, 0, N_age*2),
         tau = runif(1, 0.5, 1)
       ),
       
       IPM_SMS_np = list(
         # smolt recruitment
-        alpha = array(exp(runif(!RRS[1]*N_pop, 1, 3))),
+        alpha = array(exp(runif((!RRS[1])*N_pop, 1, 3))),
         alpha_W = array(exp(runif(RRS[1]*N_pop, 1, 3))),
         alpha_H = array(exp(runif(RRS[1]*N_pop, 1, 3))),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
-        Mmax = array(rlnorm(!RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
+        Mmax = array(rlnorm((!RRS[2])*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         Mmax_W = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         Mmax_H = array(rlnorm(RRS[2]*N_pop, log(tapply(R_obs/A, pop, quantile, 0.9)), 0.5)),
         beta_Mmax = matrix(rnorm(K_Mmax*N_pop, 0, 0.5/apply(abs(X_Mmax), 2, max)), 
@@ -327,12 +327,12 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       
       IPM_SMaS_np = list(
         # smolt recruitment
-        alpha = array(rlnorm(!RRS[1]*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
+        alpha = array(rlnorm((!RRS[1])*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
         alpha_W = array(rlnorm(RRS[1]*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
         alpha_H = array(rlnorm(RRS[1]*N_pop, max(log(M_obs/S_obs), na.rm = TRUE), 1)),
         beta_alpha = matrix(rnorm(K_alpha*N_pop, 0, 0.5/apply(abs(X_alpha), 2, max)), 
                             N_pop, K_alpha, byrow = TRUE),
-        Mmax = array(rlnorm(!RRS[2]*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
+        Mmax = array(rlnorm((!RRS[2])*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
         Mmax_W = array(rlnorm(RRS[2]*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
         Mmax_H = array(rlnorm(RRS[2]*N_pop, log(tapply(M_obs/A, pop, quantile, 0.9, na.rm = TRUE)), 0.5)),
         beta_Mmax = matrix(rnorm(K_Mmax*N_pop, 0, 0.5/apply(abs(X_Mmax), 2, max)), 
