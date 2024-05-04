@@ -102,8 +102,7 @@ fit1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                      chains = 4, iter = 2000, warmup = 1000, 
                      seed = 123)
 
-print(fit1pop, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+print(fit1pop, pars = stan_pars("IPM_SSiter_np", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 
 #-----------------------------------------------------
@@ -412,8 +411,7 @@ fitNnp <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                     chains = 4, iter = 2000, warmup = 1000, 
                     seed = 321)
 
-print(fitNnp, pars = c("mu_p","sigma_p","R_p","p","s_SS","p_HOS","S","R","q"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+print(fitNnp, pars = stan_pars("IPM_SSiter_np", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 
 #-----------------------------------------------------
@@ -427,9 +425,7 @@ fitNpp <- salmonIPM(life_cycle = "SSiter", pool_pops = TRUE, SR_fun = "BH",
                     control = list(adapt_delta = 0.95, max_treedepth = 12),
                     seed = 321)
 
-print(fitNpp, pars = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","R_pop_p",
-                       "R_p","p","eta_year_SS","s_SS","p_HOS","S","R","q"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+print(fitNpp, pars = stan_pars("IPM_SSiter_pp", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
 ## @knitr
 
 #----------------------------------------------------------
