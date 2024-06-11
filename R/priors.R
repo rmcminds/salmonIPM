@@ -40,6 +40,11 @@
 #' For parameters that are modeled as functions of covariates (see [salmonIPM::salmonIPM()]),
 #' the specified prior applies when all predictors are at their sample means.
 #' 
+#' If `RRS != "none"`, the global spawner-recruit parameters must be replaced with their
+#' `W` and `H` counterparts; e.g. if `RRS == "alpha"` then instead of a prior on `alpha` 
+#' one would specify priors on `alpha_W` and `alpha_H`. If the former is provided, it will
+#' have no effect. See [salmonIPM::salmonIPM()] for details of the `RRS` argument.
+#' 
 #' The generalized normal density with `shape >> 1` is useful as a platykurtic "soft-uniform" 
 #' prior to regularize the posterior away from regions of parameter space that may cause
 #' computational or sampling problems. In the case of spawner and smolt observation error

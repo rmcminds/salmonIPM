@@ -69,6 +69,11 @@ Priors for parameters that are bounded on the positive real line
 For parameters that are modeled as functions of covariates (see \code{\link[=salmonIPM]{salmonIPM()}}),
 the specified prior applies when all predictors are at their sample means.
 
+If \code{RRS != "none"}, the global spawner-recruit parameters must be replaced with their
+\code{W} and \code{H} counterparts; e.g. if \code{RRS == "alpha"} then instead of a prior on \code{alpha}
+one would specify priors on \code{alpha_W} and \code{alpha_H}. If the former is provided, it will
+have no effect. See \code{\link[=salmonIPM]{salmonIPM()}} for details of the \code{RRS} argument.
+
 The generalized normal density with \verb{shape >> 1} is useful as a platykurtic "soft-uniform"
 prior to regularize the posterior away from regions of parameter space that may cause
 computational or sampling problems. In the case of spawner and smolt observation error

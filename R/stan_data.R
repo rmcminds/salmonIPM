@@ -226,9 +226,19 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     prior_Rmax_sd <- 2*sd(log_RA, na.rm = TRUE)
     
     if(grepl("_np", stan_model)) {
-      pars <- match.arg(pars, c("alpha","Rmax","mu_p","mu_SS","tau"), several.ok = TRUE)
-      prior_alpha <- stan_prior(pdfs$alpha, lognormal(2,2))
-      prior_Rmax <- stan_prior(pdfs$Rmax, lognormal(prior_Rmax_mean, prior_Rmax_sd))
+      pars <- match.arg(pars, c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","mu_p","mu_SS","tau"), several.ok = TRUE)
+      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(2,2)), 
+                           dim = ifelse("alpha" %in% RRS, 0, 2))
+      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(2,2)),
+                             dim = ifelse("alpha" %in% RRS, 2, 0))
+      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(2,2)),
+                             dim = ifelse("alpha" %in% RRS, 2, 0))
+      prior_Rmax <- array(stan_prior(pdfs$Rmax, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
+                          dim = ifelse("Rmax" %in% RRS, 0, 2))
+      prior_Rmax_W <- array(stan_prior(pdfs$Rmax_W, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
+                            dim = ifelse("Rmax" %in% RRS, 2, 0))
+      prior_Rmax_H <- array(stan_prior(pdfs$Rmax_H, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
+                            dim = ifelse("Rmax" %in% RRS, 2, 0))
       prior_tau <- stan_prior(pdfs$tau, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
     }
     
@@ -349,10 +359,14 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
                   prior_alpha = if(pool_pops) NULL else prior_alpha,
+                  prior_alpha_W = if(pool_pops) NULL else prior_alpha_W,
+                  prior_alpha_H = if(pool_pops) NULL else prior_alpha_H,
                   prior_mu_alpha = if(pool_pops) prior_mu_alpha else NULL,
                   K_Rmax = ifelse(is.null(X$Rmax), 0, ncol(X$Rmax)), 
                   X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
                   prior_Rmax = if(pool_pops) NULL else prior_Rmax,
+                  prior_Rmax_W = if(pool_pops) NULL else prior_Rmax_W,
+                  prior_Rmax_H = if(pool_pops) NULL else prior_Rmax_H,
                   prior_mu_Rmax = if(pool_pops) prior_mu_Rmax else NULL,
                   K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
                   X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
