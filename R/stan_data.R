@@ -266,8 +266,18 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","Mmax","mu_MS","mu_p","tau_M","tau_S"), several.ok = TRUE)
-      prior_alpha <- stan_prior(pdfs$alpha, lognormal(2,5))
-      prior_Mmax <- stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(2,5)), 
+                           dim = ifelse("alpha" %in% RRS, 0, 2))
+      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(2,5)),
+                             dim = ifelse("alpha" %in% RRS, 2, 0))
+      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(2,5)),
+                             dim = ifelse("alpha" %in% RRS, 2, 0))
+      prior_Mmax <- array(stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
+                          dim = ifelse("Mmax" %in% RRS, 0, 2))
+      prior_Mmax_W <- array(stan_prior(pdfs$Mmax_W, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
+                            dim = ifelse("Mmax" %in% RRS, 2, 0))
+      prior_Mmax_H <- array(stan_prior(pdfs$Mmax_H, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
+                            dim = ifelse("Mmax" %in% RRS, 2, 0))
       prior_tau_M <- stan_prior(pdfs$tau_M, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
       prior_tau_S <- stan_prior(pdfs$tau_S, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
     }
@@ -413,10 +423,14 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
                   prior_alpha = if(pool_pops) NULL else prior_alpha,
+                  prior_alpha_W = if(pool_pops) NULL else prior_alpha_W,
+                  prior_alpha_H = if(pool_pops) NULL else prior_alpha_H,
                   prior_mu_alpha = if(pool_pops) prior_mu_alpha else NULL,
                   K_Mmax = ifelse(is.null(X$Mmax), 0, ncol(X$Mmax)), 
                   X_Mmax = if(is.null(X$Mmax)) matrix(0,N,0) else X$Mmax,
                   prior_Mmax = if(pool_pops) NULL else prior_Mmax,
+                  prior_Mmax_W = if(pool_pops) NULL else prior_Mmax_W,
+                  prior_Mmax_H = if(pool_pops) NULL else prior_Mmax_H,
                   prior_mu_Mmax = if(pool_pops) prior_mu_Mmax else NULL,
                   K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
                   X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
@@ -466,9 +480,13 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
                   prior_alpha = prior_alpha,
+                  prior_alpha_W = if(pool_pops) NULL else prior_alpha_W,
+                  prior_alpha_H = if(pool_pops) NULL else prior_alpha_H,
                   K_Mmax = ifelse(is.null(X$Mmax), 0, ncol(X$Mmax)), 
                   X_Mmax = if(is.null(X$Mmax)) matrix(0,N,0) else X$Mmax,
                   prior_Mmax = prior_Mmax,
+                  prior_Mmax_W = if(pool_pops) NULL else prior_Mmax_W,
+                  prior_Mmax_H = if(pool_pops) NULL else prior_Mmax_H,
                   K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
                   X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
                   # smolt abundance

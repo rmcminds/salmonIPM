@@ -23,13 +23,18 @@ data {
   vector<lower=0,upper=1>[N_fwd] p_HOS_fwd; // p_HOS for forward simulations
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=0,upper=1> RRS[2];         // fit H vs. W {alpha, Rmax} (1) or not (0)?
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
-  real prior_mu_alpha[2];              // prior mean, sd for hyper-mean log intrinsic productivity
+  real prior_mu_alpha[!RRS[1]*2];      // prior mean, sd for hyper-mean log intrinsic productivity
+  real prior_mu_alpha_W[RRS[1]*2];     // prior mean, sd for hyper-mean log W intrinsic productivity
+  real prior_mu_alpha_H[RRS[1]*2];     // prior mean, sd for hyper-mean log H intrinsic productivity
   int<lower=0> K_Rmax;                 // number of maximum recruitment covariates
   matrix[N,K_Rmax] X_Rmax;             // maximum recruitment covariates
-  real prior_mu_Rmax[2];               // prior mean, sd for hyper-mean log maximum recruitment
+  real prior_mu_Rmax[!RRS[2]*2];       // prior mean, sd for hyper-mean log maximum recruitment
+  real prior_mu_Rmax_W[RRS[2]*2];      // prior mean, sd for hyper-mean log W maximum recruitment
+  real prior_mu_Rmax_H[RRS[2]*2];      // prior mean, sd for hyper-mean log H maximum recruitment
   int<lower=0> K_R;                    // number of recruitment covariates
   row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // kelt survival

@@ -89,8 +89,7 @@ format(head(sim$sim_dat, 10), digits = 2)
 ## @knitr fit
 fit <- salmonIPM(life_cycle = "SMS", pool_pops = FALSE, 
                  SR_fun = "BH", ages = list(M = 2), fish_data = sim$sim_dat, 
-                 chains = 4, iter = 2000, warmup = 1000, 
-                 seed = 123)
+                 chains = 4, iter = 2000, warmup = 1000, seed = 123)
 
 print(fit, pars = stan_pars("IPM_SMS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
 ## @knitr

@@ -16,10 +16,14 @@ data {
   vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
-  real prior_alpha[2];                 // prior meanlog, sdlog for intrinsic productivity
+  real prior_alpha[!RRS[1]*2];         // prior meanlog, sdlog for intrinsic productivity
+  real prior_alpha_W[RRS[1]*2];        // prior meanlog, sdlog for W intrinsic productivity
+  real prior_alpha_H[RRS[1]*2];        // prior meanlog, sdlog for H intrinsic productivity
   int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
-  real prior_Mmax[2];                  // prior meanlog, sdlog for maximum smolt recruitment
+  real prior_Mmax[!RRS[2]*2];          // prior meanlog, sdlog for maximum smolt recruitment
+  real prior_Mmax_W[RRS[2]*2];         // prior meanlog, sdlog for W maximum smolt recruitment
+  real prior_Mmax_H[RRS[2]*2];         // prior meanlog, sdlog for H maximum smolt recruitment
   int<lower=0> K_M;                    // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];              // smolt recruitment covariates
   // smolt abundance
@@ -261,14 +265,18 @@ model {
   // Priors
   
   // smolt recruitment
-  if(RRS[1])
-    append_row(alpha_W, alpha_H) ~ lognormal(prior_alpha[1], prior_alpha[2]);
-  else
+  if(RRS[1]) {
+    alpha_W ~ lognormal(prior_alpha_W[1], prior_alpha_W[2]);
+    alpha_H ~ lognormal(prior_alpha_H[1], prior_alpha_H[2]);
+  } else {
     alpha ~ lognormal(prior_alpha[1], prior_alpha[2]);
-  if(RRS[2])
-    append_row(Mmax_W, Mmax_H) ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
-  else
+  }
+  if(RRS[2]) {
+    Mmax_W ~ lognormal(prior_Mmax_W[1], prior_Mmax_W[2]);
+    Mmax_H ~ lognormal(prior_Mmax_H[1], prior_Mmax_H[2]);
+  } else {
     Mmax ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
+  }
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ gnormal(0,0.85,20);  // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);

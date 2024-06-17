@@ -1,6 +1,5 @@
 #' The 'salmonIPM' package.
 #'
-#' @docType package
 #' @name salmonIPM-package
 #' @aliases salmonIPM-package
 #' @useDynLib salmonIPM, .registration = TRUE
