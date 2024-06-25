@@ -495,10 +495,10 @@ trueNpop <- simNpop$pars_out %>%
 
 # extract and transform draws using posterior package
 postNpop <- as_draws_rvars(fitNpp) %>% 
-  mutate_variables(mu_p = as.vector(mu_p), 
-                   sigma_pop_p = as.vector(sigma_pop_p), rho_pop_p = R_pop_p[2,1], 
-                   sigma_p = as.vector(sigma_p), rho_p = R_p[2,1]) %>% 
-  as_draws_matrix(.[par_names])
+  mutate_variables(mu_p = as.vector(mu_p), sigma_pop_p = as.vector(sigma_pop_p), 
+                   rho_pop_p = as.vector(R_pop_p[2,1]), sigma_p = as.vector(sigma_p), 
+                   rho_p = as.vector(R_p[2,1])) %>% 
+  .[par_names] %>% as_draws_matrix()
 
 # plot
 par(mfrow = c(4,4), mar = c(5,1,0,1))
@@ -515,8 +515,5 @@ legend("right", c("true","prior","posterior"), cex = 1.5,
        lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
        inset = c(-1,0), xpd = NA, bty = "n")
 ## @knitr
-
-
-
 
 

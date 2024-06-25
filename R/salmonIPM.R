@@ -328,8 +328,8 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
     init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   
   if(all(pars %in% c("all","hyper","shared","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars)
-  if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all"), pars)
+    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS)
+  if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, RRS = RRS), pars)
   if(log_lik) pars <- c(pars, "LL")
   
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95

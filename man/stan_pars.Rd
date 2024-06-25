@@ -8,7 +8,9 @@ stan_pars(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
     "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
     "RR_SS_np", "RR_SS_pp"),
-  pars = c("all", "hyper", "group", "states", "ppd")
+  pars = c("all", "hyper", "group", "states", "ppd"),
+  SR_fun = "BH",
+  RRS = "none"
 )
 }
 \arguments{
@@ -20,9 +22,20 @@ of parameters. Options are \code{"all"} (the default), \code{"hyper"} (top-level
 are given priors), \code{"group"} (\code{pop}- or \code{year}-level parameters shared by multiple states),
 \code{"states"} (the lowest level, corresponding to unique rows in \code{fish_data}), and
 \code{"ppd"} (only if \code{model == "RR"}, observation-level predictions drawn from the posterior
-predictive distribution).
+predictive distribution).}
 
-Using pars="beta" will restrict the displayed parameters to only the regression coefficients (without the intercept). "alpha" can also be used as a shortcut for "(Intercept)". If the model has varying intercepts and/or slopes they can be selected using pars = "varying".}
+\item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
+\code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
+function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
+
+\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+A character string or vector of strings naming parameters of the function specified by
+\code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
+relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
+these should be the names of the population-specific parameters, not their hyper-means.
+For example, if \code{life_cycle \%in\% c("SS","SSiter")}, the options are
+\code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
+Currently \code{RRS} is only implemented for \code{pool_pops == FALSE}.}
 }
 \value{
 Character vector with names of selected parameters and states

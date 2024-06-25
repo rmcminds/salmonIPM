@@ -10,7 +10,7 @@ data {
   int<lower=1,upper=N> year[N];        // brood year index
   // recruitment
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  int<lower=0,upper=1> RRS[2];         // fit H vs. W {alpha, Rmax} (1) or not (0)?
+  int<lower=0,upper=1> RRS[2];         // fit W vs. H {alpha, Rmax} (1) or not (0)?
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
@@ -168,6 +168,7 @@ transformed parameters {
   } else {
     alpha_Xbeta = alpha[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
   }
+  
   if(RRS[2]) {
     Rmax_W_Xbeta = Rmax_W[pop] .* exp(rows_dot_product(X_Rmax, beta_Rmax[pop,]));
     Rmax_H_Xbeta = Rmax_H[pop] .* exp(rows_dot_product(X_Rmax, beta_Rmax[pop,]));

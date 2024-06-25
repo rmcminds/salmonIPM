@@ -69,7 +69,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
                             gsub("iter", "", life_cycle), # same Stan code for iteroparity
                             sep = "_")
-  RRS_check <- RRS %in% c("none", stan_pars(stan_model))
+  RRS_check <- RRS %in% c("none", stan_pars(stan_model, pars = "hyper"))
   if(!all(RRS_check))
     stop("Error in RRS: ", RRS[!RRS_check], " is not a SR_fun parameter in ", stan_model, 
          ".\n  See pars in stan_pars('", stan_model, "', ", 
@@ -147,7 +147,8 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       stop("NA found in compositional data (n_[W|H]_obs). If a rearing type was not seen ",
            "in the sample or no sample was taken, the observed frequency is 0.")
     if(any(!fit_p_HOS & n_H_obs > 0))
-      warning("Hatchery spawners present in rows ", which(!fit_p_HOS & n_H_obs > 0),
+      warning("Hatchery spawners present in rows ", 
+              paste(which(!fit_p_HOS & n_H_obs > 0), collapse = ", "),
               " but fit_p_HOS == FALSE. See ?salmonIPM to learn why this is problematic.")
     if(any(fit_p_HOS & n_H_obs + n_W_obs == 0))
       warning("fit_p_HOS == TRUE in rows ", which(fit_p_HOS & n_H_obs + n_W_obs == 0),
@@ -243,10 +244,16 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     }
     
     if(grepl("_pp", stan_model)) {
-      pars <- match.arg(pars, c("mu_alpha","mu_Rmax","mu_p","mu_SS","tau"), several.ok = TRUE)
+      pars <- match.arg(pars, c("mu_alpha","mu_alpha_W","mu_alpha_H",
+                                "mu_Rmax","mu_Rmax_W","mu_Rmax_H","mu_p","mu_SS","tau"), 
+                        several.ok = TRUE)
       prior_mu_alpha <- stan_prior(pdfs$mu_alpha, normal(2,5))
+      prior_mu_alpha_W <- stan_prior(pdfs$mu_alpha_W, normal(2,5))
+      prior_mu_alpha_H <- stan_prior(pdfs$mu_alpha_H, normal(2,5))
       prior_mu_Rmax <- stan_prior(pdfs$mu_Rmax, normal(prior_Rmax_mean, prior_Rmax_sd))
-      prior_tau <- stan_prior(pdfs$tau, gnormal(0,1,2)) # normal
+      prior_mu_Rmax_W <- stan_prior(pdfs$mu_Rmax_W, normal(prior_Rmax_mean, prior_Rmax_sd))
+      prior_mu_Rmax_H <- stan_prior(pdfs$mu_Rmax_H, normal(prior_Rmax_mean, prior_Rmax_sd))
+      prior_tau <- stan_prior(pdfs$tau, gnormal(0,1,2)) # default normal
     }
     
     prior_mu_p <- stan_prior(pdfs$mu_p, dirichlet(rep(1, N_age)))
@@ -364,7 +371,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
                   # recruitment
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                  RRS = array(as.logical(c("alpha","Rmax") %in% RRS)),
+                  RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Rmax", RRS)))),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
@@ -372,12 +379,16 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   prior_alpha_W = if(pool_pops) NULL else prior_alpha_W,
                   prior_alpha_H = if(pool_pops) NULL else prior_alpha_H,
                   prior_mu_alpha = if(pool_pops) prior_mu_alpha else NULL,
+                  prior_mu_alpha_W = if(pool_pops) prior_mu_alpha_W else NULL,
+                  prior_mu_alpha_H = if(pool_pops) prior_mu_alpha_H else NULL,
                   K_Rmax = ifelse(is.null(X$Rmax), 0, ncol(X$Rmax)), 
                   X_Rmax = if(is.null(X$Rmax)) matrix(0,N,0) else X$Rmax,
                   prior_Rmax = if(pool_pops) NULL else prior_Rmax,
                   prior_Rmax_W = if(pool_pops) NULL else prior_Rmax_W,
                   prior_Rmax_H = if(pool_pops) NULL else prior_Rmax_H,
                   prior_mu_Rmax = if(pool_pops) prior_mu_Rmax else NULL,
+                  prior_mu_Rmax_W = if(pool_pops) prior_mu_Rmax_W else NULL,
+                  prior_mu_Rmax_H = if(pool_pops) prior_mu_Rmax_H else NULL,
                   K_R = ifelse(is.null(X$R), 0, ncol(X$R)), 
                   X_R = if(is.null(X$R)) matrix(0,N,0) else X$R,
                   # kelt survival
@@ -418,7 +429,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   year = year,
                   # smolt production
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                  RRS = array(as.logical(c("alpha","Mmax") %in% RRS)),
+                  RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Mmax", RRS)))),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
@@ -475,7 +486,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   year = year,
                   # smolt production
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                  RRS = array(as.logical(c("alpha","Mmax") %in% RRS)),
+                  RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Mmax", RRS)))),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
                   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
