@@ -35,8 +35,7 @@
 
 stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
                                      "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
-                                     "IPM_LCRchum_pp","IPM_ICchinook_pp",
-                                     "RR_SS_np","RR_SS_pp"), 
+                                     "IPM_LCRchum_pp","RR_SS_np","RR_SS_pp"), 
                       SR_fun = "BH", RRS = "none", ages = NULL, 
                       par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL, 
@@ -71,9 +70,10 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                             sep = "_")
   RRS_check <- RRS %in% c("none", stan_pars(stan_model, pars = "hyper"))
   if(!all(RRS_check))
-    stop("Error in RRS: ", RRS[!RRS_check], " is not a SR_fun parameter in ", stan_model, 
-         ".\n  See pars in stan_pars('", stan_model, "', ", 
-         ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
+    stop("Error in RRS: ", paste(RRS[!RRS_check], collapse = " "), 
+         " is not a SR_fun parameter in ", stan_model, ".\n  See stan_pars('", 
+         stan_model, "', ", ifelse(pool_pops, "'group'", "'hyper'"), 
+         ") for pars that can take 'W' and 'H' subscripts.")
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
   
@@ -273,11 +273,11 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","Mmax","mu_MS","mu_p","tau_M","tau_S"), several.ok = TRUE)
-      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(2,5)), 
+      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(5,5)), 
                            dim = ifelse("alpha" %in% RRS, 0, 2))
-      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(2,5)),
+      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(5,5)),
                              dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(2,5)),
+      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(5,5)),
                              dim = ifelse("alpha" %in% RRS, 2, 0))
       prior_Mmax <- array(stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
                           dim = ifelse("Mmax" %in% RRS, 0, 2))
@@ -291,8 +291,12 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     if(grepl("_pp", stan_model)) {
       pars <- match.arg(pars, c("mu_alpha","mu_Mmax","mu_MS","mu_p","tau_M","tau_S"), several.ok = TRUE)
-      prior_mu_alpha <- stan_prior(pdfs$mu_alpha, normal(2,5))
+      prior_mu_alpha <- stan_prior(pdfs$mu_alpha, normal(5,5))
+      prior_mu_alpha_W <- stan_prior(pdfs$mu_alpha_W, normal(5,5))
+      prior_mu_alpha_H <- stan_prior(pdfs$mu_alpha_H, normal(5,5))
       prior_mu_Mmax <- stan_prior(pdfs$mu_Mmax, normal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_mu_Mmax_W <- stan_prior(pdfs$mu_Mmax_W, normal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_mu_Mmax_H <- stan_prior(pdfs$mu_Mmax_H, normal(prior_Mmax_mean, prior_Mmax_sd))
       prior_tau_M <- stan_prior(pdfs$tau_M, gnormal(0,1,2)) # normal
       prior_tau_S <- stan_prior(pdfs$tau_S, gnormal(0,1,2)) # normal
     }
@@ -311,38 +315,42 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     pars <- match.arg(pars, c("mu_psi","mu_Mmax","mu_MS","mu_p"), several.ok = TRUE)
     prior_mu_psi <- stan_prior(pdfs$mu_psi, beta(1,1))
+    prior_mu_psi_W <- stan_prior(pdfs$mu_psi_W, beta(1,1))
+    prior_mu_psi_H <- stan_prior(pdfs$mu_psi_H, beta(1,1))
     prior_mu_Mmax <- stan_prior(pdfs$mu_Mmax, normal(prior_Mmax_mean, prior_Mmax_sd))
+    prior_mu_Mmax_W <- stan_prior(pdfs$mu_Mmax_W, normal(prior_Mmax_mean, prior_Mmax_sd))
+    prior_mu_Mmax_H <- stan_prior(pdfs$mu_Mmax_H, normal(prior_Mmax_mean, prior_Mmax_sd))
     prior_mu_MS <- stan_prior(pdfs$mu_MS, beta(1,1))
     prior_mu_p <- stan_prior(pdfs$mu_p, dirichlet(rep(1, N_age)))
   }
   
-  # Prior data
-  ## Deprecated: move this into fish_data columns
-  if(life_cycle == "ICchinook") {
-    if(is.null(prior_data)) {
-      stop("Priors for survival must be specified for model IPM_ICchinook_pp")
-    } else {
-      s <- prior_data$s[prior_data$s$year %in% fish_data$year,]
-      
-      prior_D <- na.omit(s[,c("year","mu_prior_D","sigma_prior_D")])
-      N_prior_D <- nrow(prior_D)
-      which_prior_D <- match(prior_D$year, sort(unique(fish_data$year)))
-      mu_prior_D <- prior_D$mu_prior_D
-      sigma_prior_D <- prior_D$sigma_prior_D
-      
-      prior_SAR <- na.omit(s[,c("year","mu_prior_SAR","sigma_prior_SAR")])
-      N_prior_SAR <- nrow(prior_SAR)
-      which_prior_SAR <- match(prior_SAR$year, sort(unique(fish_data$year)))
-      mu_prior_SAR <- prior_SAR$mu_prior_SAR
-      sigma_prior_SAR <- prior_SAR$sigma_prior_SAR
-      
-      prior_U <- na.omit(s[,c("year","mu_prior_U","sigma_prior_U")])
-      N_prior_U <- nrow(prior_U)
-      which_prior_U <- match(prior_U$year, sort(unique(fish_data$year)))
-      mu_prior_U <- prior_U$mu_prior_U
-      sigma_prior_U <- prior_U$sigma_prior_U
-    }
-  }
+  # # Prior data
+  # ## Deprecated: move this into fish_data columns
+  # if(life_cycle == "ICchinook") {
+  #   if(is.null(prior_data)) {
+  #     stop("Priors for survival must be specified for model IPM_ICchinook_pp")
+  #   } else {
+  #     s <- prior_data$s[prior_data$s$year %in% fish_data$year,]
+  #     
+  #     prior_D <- na.omit(s[,c("year","mu_prior_D","sigma_prior_D")])
+  #     N_prior_D <- nrow(prior_D)
+  #     which_prior_D <- match(prior_D$year, sort(unique(fish_data$year)))
+  #     mu_prior_D <- prior_D$mu_prior_D
+  #     sigma_prior_D <- prior_D$sigma_prior_D
+  #     
+  #     prior_SAR <- na.omit(s[,c("year","mu_prior_SAR","sigma_prior_SAR")])
+  #     N_prior_SAR <- nrow(prior_SAR)
+  #     which_prior_SAR <- match(prior_SAR$year, sort(unique(fish_data$year)))
+  #     mu_prior_SAR <- prior_SAR$mu_prior_SAR
+  #     sigma_prior_SAR <- prior_SAR$sigma_prior_SAR
+  #     
+  #     prior_U <- na.omit(s[,c("year","mu_prior_U","sigma_prior_U")])
+  #     N_prior_U <- nrow(prior_U)
+  #     which_prior_U <- match(prior_U$year, sort(unique(fish_data$year)))
+  #     mu_prior_U <- prior_U$mu_prior_U
+  #     sigma_prior_U <- prior_U$sigma_prior_U
+  #   }
+  # }
   
   # Run reconstruction
   if(model_life_cycle == "RR_SS") {
@@ -437,12 +445,16 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   prior_alpha_W = if(pool_pops) NULL else prior_alpha_W,
                   prior_alpha_H = if(pool_pops) NULL else prior_alpha_H,
                   prior_mu_alpha = if(pool_pops) prior_mu_alpha else NULL,
+                  prior_mu_alpha_W = if(pool_pops) prior_mu_alpha_W else NULL,
+                  prior_mu_alpha_H = if(pool_pops) prior_mu_alpha_H else NULL,
                   K_Mmax = ifelse(is.null(X$Mmax), 0, ncol(X$Mmax)), 
                   X_Mmax = if(is.null(X$Mmax)) matrix(0,N,0) else X$Mmax,
                   prior_Mmax = if(pool_pops) NULL else prior_Mmax,
                   prior_Mmax_W = if(pool_pops) NULL else prior_Mmax_W,
                   prior_Mmax_H = if(pool_pops) NULL else prior_Mmax_H,
                   prior_mu_Mmax = if(pool_pops) prior_mu_Mmax else NULL,
+                  prior_mu_Mmax_W = if(pool_pops) prior_mu_Mmax_W else NULL,
+                  prior_mu_Mmax_H = if(pool_pops) prior_mu_Mmax_H else NULL,
                   K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
                   X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
                   # smolt abundance
@@ -544,6 +556,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   year = year,
                   # egg deposition
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  RRS = array(c(any(grepl("psi", RRS)), any(grepl("Mmax", RRS)))),
                   A = A,
                   N_E = nrow(fecundity_data),
                   age_E = fecundity_data$age_E,
@@ -553,9 +566,13 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   K_psi = ifelse(is.null(X$psi), 0, ncol(X$psi)), 
                   X_psi = if(is.null(X$psi)) matrix(0,N,0) else X$psi,
                   prior_mu_psi = prior_mu_psi,
+                  prior_mu_psi_W = prior_mu_psi_W,
+                  prior_mu_psi_H = prior_mu_psi_H,
                   K_Mmax = ifelse(is.null(X$Mmax), 0, ncol(X$Mmax)), 
                   X_Mmax = if(is.null(X$Mmax)) matrix(0,N,0) else X$Mmax,
                   prior_mu_Mmax = prior_mu_Mmax,
+                  prior_mu_Mmax_W = prior_mu_Mmax_W,
+                  prior_mu_Mmax_H = prior_mu_Mmax_H,
                   K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
                   X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
                   # smolt abundance and observation error
@@ -601,73 +618,73 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   S_add_obs = replace(S_add_obs, is.na(S_add_obs), 0)
                 ),
                 
-                IPM_ICchinook = list(
-                  # info for observed data
-                  N = N,
-                  pop = pop, 
-                  year = year,
-                  # info for forward simulations
-                  N_fwd = N_fwd,
-                  pop_fwd = as.vector(fish_data_fwd$pop),
-                  year_fwd = as.vector(fish_data_fwd$year),
-                  A_fwd = as.vector(fish_data_fwd$A),
-                  B_rate_fwd = as.vector(fish_data_fwd$B_rate),
-                  F_rate_fwd = as.vector(fish_data_fwd$F_rate),
-                  p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
-                  # recruitment
-                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
-                  smolt_age = ages$M,
-                  A = A,
-                  K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
-                  X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
-                  prior_mu_alpha = prior_mu_alpha,
-                  K_Mmax = ifelse(is.null(X$Mmax), 0, ncol(X$Mmax)), 
-                  X_Mmax = if(is.null(X$Mmax)) matrix(0,N,0) else X$Mmax,
-                  prior_mu_Mmax = prior_mu_Mmax,
-                  K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
-                  X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
-                  # downstream, SAR, upstream survival
-                  # K_D = ncol(env_data$s_D),
-                  # X_D = as.matrix(env_data$s_D),
-                  N_prior_D = N_prior_D,
-                  which_prior_D = as.vector(which_prior_D),
-                  mu_prior_D = as.vector(mu_prior_D),
-                  sigma_prior_D = as.vector(sigma_prior_D),
-                  # K_SAR = ncol(env_data$s_SAR),
-                  # X_SAR = as.matrix(env_data$s_SAR),
-                  N_prior_SAR = N_prior_SAR,
-                  which_prior_SAR = as.vector(which_prior_SAR),
-                  mu_prior_SAR = as.vector(mu_prior_SAR),
-                  sigma_prior_SAR = as.vector(sigma_prior_SAR),
-                  # K_U = ncol(env_data$s_U),
-                  # X_U = as.matrix(env_data$s_U),
-                  N_prior_U = N_prior_U,
-                  which_prior_U = as.vector(which_prior_U),
-                  mu_prior_U = as.vector(mu_prior_U),
-                  sigma_prior_U = as.vector(sigma_prior_U),
-                  # spawner abundance
-                  N_S_obs = sum(!is.na(S_obs)),
-                  which_S_obs = as.vector(which(!is.na(S_obs))),
-                  S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
-                  prior_tau_S = prior_tau_S,
-                  # spawner age structure
-                  N_age = N_age, 
-                  max_age = max_age,
-                  n_age_obs = n_age_obs,
-                  prior_mu_p = prior_mu_p,
-                  # H/W composition
-                  N_H = sum(fit_p_HOS),
-                  which_H = as.vector(which(fit_p_HOS)),
-                  n_W_obs = n_W_obs,
-                  n_H_obs = n_H_obs,
-                  # fishery and hatchery removals
-                  F_rate = replace(F_rate, is.na(F_rate), 0),
-                  age_F = age_F,
-                  N_B = sum(B_take_obs > 0),
-                  which_B = as.vector(which(B_take_obs > 0)),
-                  B_take_obs = B_take_obs[B_take_obs > 0],
-                  age_B = age_B
-                ),
+                # IPM_ICchinook = list(
+                #   # info for observed data
+                #   N = N,
+                #   pop = pop, 
+                #   year = year,
+                #   # info for forward simulations
+                #   N_fwd = N_fwd,
+                #   pop_fwd = as.vector(fish_data_fwd$pop),
+                #   year_fwd = as.vector(fish_data_fwd$year),
+                #   A_fwd = as.vector(fish_data_fwd$A),
+                #   B_rate_fwd = as.vector(fish_data_fwd$B_rate),
+                #   F_rate_fwd = as.vector(fish_data_fwd$F_rate),
+                #   p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
+                #   # recruitment
+                #   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                #   smolt_age = ages$M,
+                #   A = A,
+                #   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
+                #   X_alpha = if(is.null(X$alpha)) matrix(0,N,0) else X$alpha,
+                #   prior_mu_alpha = prior_mu_alpha,
+                #   K_Mmax = ifelse(is.null(X$Mmax), 0, ncol(X$Mmax)), 
+                #   X_Mmax = if(is.null(X$Mmax)) matrix(0,N,0) else X$Mmax,
+                #   prior_mu_Mmax = prior_mu_Mmax,
+                #   K_M = ifelse(is.null(X$M), 0, ncol(X$M)), 
+                #   X_M = if(is.null(X$M)) matrix(0,N,0) else X$M,
+                #   # downstream, SAR, upstream survival
+                #   # K_D = ncol(env_data$s_D),
+                #   # X_D = as.matrix(env_data$s_D),
+                #   N_prior_D = N_prior_D,
+                #   which_prior_D = as.vector(which_prior_D),
+                #   mu_prior_D = as.vector(mu_prior_D),
+                #   sigma_prior_D = as.vector(sigma_prior_D),
+                #   # K_SAR = ncol(env_data$s_SAR),
+                #   # X_SAR = as.matrix(env_data$s_SAR),
+                #   N_prior_SAR = N_prior_SAR,
+                #   which_prior_SAR = as.vector(which_prior_SAR),
+                #   mu_prior_SAR = as.vector(mu_prior_SAR),
+                #   sigma_prior_SAR = as.vector(sigma_prior_SAR),
+                #   # K_U = ncol(env_data$s_U),
+                #   # X_U = as.matrix(env_data$s_U),
+                #   N_prior_U = N_prior_U,
+                #   which_prior_U = as.vector(which_prior_U),
+                #   mu_prior_U = as.vector(mu_prior_U),
+                #   sigma_prior_U = as.vector(sigma_prior_U),
+                #   # spawner abundance
+                #   N_S_obs = sum(!is.na(S_obs)),
+                #   which_S_obs = as.vector(which(!is.na(S_obs))),
+                #   S_obs = replace(S_obs, is.na(S_obs) | S_obs==0, 1),
+                #   prior_tau_S = prior_tau_S,
+                #   # spawner age structure
+                #   N_age = N_age, 
+                #   max_age = max_age,
+                #   n_age_obs = n_age_obs,
+                #   prior_mu_p = prior_mu_p,
+                #   # H/W composition
+                #   N_H = sum(fit_p_HOS),
+                #   which_H = as.vector(which(fit_p_HOS)),
+                #   n_W_obs = n_W_obs,
+                #   n_H_obs = n_H_obs,
+                #   # fishery and hatchery removals
+                #   F_rate = replace(F_rate, is.na(F_rate), 0),
+                #   age_F = age_F,
+                #   N_B = sum(B_take_obs > 0),
+                #   which_B = as.vector(which(B_take_obs > 0)),
+                #   B_take_obs = B_take_obs[B_take_obs > 0],
+                #   age_B = age_B
+                # ),
                 
                 RR_SS = list(
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),

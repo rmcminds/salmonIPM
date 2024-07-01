@@ -1,5 +1,5 @@
 functions {
-  #include /include/SR_RRS.stan
+  #include /include/SR.stan
   #include /include/gnormal_lpdf.stan
 }
 
@@ -120,6 +120,6 @@ generated quantities {
     
     if(R_NA[i] == 1)
       R_sim[i] = SR(SR_fun, {0,0}, alpha[pop[i]], 0, 0, Rmax[pop[i]], 0, 0,
-                    S_sim[i], 0, 0, A[i])*exp(err_sim[i]);
+                    S_sim[i], 0, 0, A[i]) * exp(err_sim[i]);
   }
 }

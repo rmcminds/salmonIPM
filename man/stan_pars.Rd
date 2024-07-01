@@ -6,8 +6,7 @@
 \usage{
 stan_pars(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
-    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
-    "RR_SS_np", "RR_SS_pp"),
+    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "RR_SS_np", "RR_SS_pp"),
   pars = c("all", "hyper", "group", "states", "ppd"),
   SR_fun = "BH",
   RRS = "none"
@@ -28,8 +27,7 @@ predictive distribution).}
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
-\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-A character string or vector of strings naming parameters of the function specified by
+\item{RRS}{A character string or vector of strings naming parameters of the function specified by
 \code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
 relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.

@@ -15,8 +15,6 @@
 #'   available for `pool_pops == FALSE`)
 #'   * `"LCRchum"`  Customized spawner-smolt-spawner model for Lower Columbia River chum
 #'   (`pool_pops == TRUE`)
-#'   * `"ICchinook"`  Customized spawner-smolt-spawner model with downstream, SAR,
-#'   and upstream survival (`pool_pops == TRUE`)
 #' @param pool_pops Logical defaulting to `TRUE`, indicating whether
 #'   to model multiple populations hierarchically rather than as independent "fixed effects".
 #'   It is possible to fit a model to multiple populations simultaneously even though they
@@ -25,8 +23,7 @@
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which spawner-recruit
 #'   function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are accepted.
-#' @param RRS `r lifecycle::badge("experimental")` 
-#'   A character string or vector of strings naming parameters of the function specified by 
+#' @param RRS A character string or vector of strings naming parameters of the function specified by 
 #'   `SR_fun` that differ between wild- and hatchery-origin spawners, such that the
 #'   relative reproductive success of hatchery spawners is not equal to 1. If `pool_pops == TRUE`,
 #'   these should be the names of the population-specific parameters, not their hyper-means.
@@ -213,13 +210,6 @@
 #'   scenarios or "branches" with different inputs (e.g., harvest rate). In this
 #'   case, all branches are subjected to the same sequence of process errors in
 #'   recruitment and age structure. 
-#' @param prior_data Deprecated; will be merged into `fish_data` in a future release. 
-#' If `stan_model == "IPM_ICchinook_pp"`, named list
-#' with the following elements: 
-#' * `s`  Data frame with columns `year`, `mu_prior_D`, `sigma_prior_D`, 
-#' `mu_prior_SAR`, `sigma_prior_SAR`, `mu_prior_U`, `sigma_prior_U`, 
-#' giving the annual prior means and SDs of logit survival downstream, at sea, 
-#' and upstream, respectively.
 #' @param init A list of named lists of initial values to be passed to
 #'   [rstan::sampling()]. If `NULL`, initial values will be automatically
 #'   generated from the supplied data using [stan_init()].
@@ -279,7 +269,6 @@
 #' | `IPM_SMS_np`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' | `IPM_SMS_pp`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' | `IPM_SMaS_np`      | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
-#' | `IPM_ICchinook_pp` | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2610;                     | &#x2610;                     | 
 #' | `IPM_LCRchum_pp`   | &#x2610;                | &#x2611;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' 
 #' @return An object of class `stanfit` representing the fitted model. See
@@ -291,13 +280,13 @@
 
 salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"), 
                       model = c("IPM","RR"), 
-                      life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum","ICchinook"), 
+                      life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum"), 
                       pool_pops = TRUE, 
                       SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
                       ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL,
+                      fecundity_data = NULL, fish_data_fwd = NULL, 
                       init = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
                       chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
                       cores = parallel::detectCores(logical = FALSE), 
@@ -322,7 +311,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                    fish_data = fish_data, age_F = age_F, age_B = age_B, 
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data, 
-                   fish_data_fwd = fish_data_fwd, prior_data = prior_data)
+                   fish_data_fwd = fish_data_fwd)
   
   if(is.null(init))
     init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)

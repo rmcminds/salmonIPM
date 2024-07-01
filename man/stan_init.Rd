@@ -6,8 +6,7 @@
 \usage{
 stan_init(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
-    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
-    "RR_SS_np", "RR_SS_pp"),
+    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "RR_SS_np", "RR_SS_pp"),
   stan_data,
   chains = 1
 )

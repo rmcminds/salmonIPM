@@ -29,8 +29,7 @@ iteroparous spawner-to-spawner (\code{"SSiter"}), or spawner-smolt-spawner (\cod
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
-\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-A character string or vector of strings naming parameters of the function specified by
+\item{RRS}{A character string or vector of strings naming parameters of the function specified by
 \code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
 relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.

@@ -1,5 +1,5 @@
 functions {
-  #include /include/SR_RRS.stan
+  #include /include/SR.stan
   #include /include/gnormal_lpdf_vec.stan
   #include /include/col_sums.stan
   #include /include/rep_vec.stan

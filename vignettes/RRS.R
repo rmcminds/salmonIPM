@@ -315,7 +315,7 @@ fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE,
 print(fitNnp, 
       pars = c("alpha_W","alpha_H","delta_alpha",
                "Rmax_W","Rmax_H","delta_Rmax"), 
-      probs = c(c(0.025, 0.5, 0.975)))
+      probs = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------
@@ -331,7 +331,7 @@ fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE,
 print(fitNpp, 
       pars = c("mu_alpha_W","mu_alpha_H","delta_mu_alpha",
                "mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax"), 
-      probs = c(c(0.025, 0.5, 0.975)))
+      probs = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #----------------------------------------------------------

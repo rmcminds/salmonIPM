@@ -8,7 +8,7 @@
 salmonIPM(
   stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"),
   model = c("IPM", "RR"),
-  life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum", "ICchinook"),
+  life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum"),
   pool_pops = TRUE,
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
   RRS = "none",
@@ -25,7 +25,6 @@ salmonIPM(
   conditionGRonMS = FALSE,
   fecundity_data = NULL,
   fish_data_fwd = NULL,
-  prior_data = NULL,
   init = NULL,
   pars = "all",
   include = TRUE,
@@ -58,8 +57,6 @@ One of the following options (must be \code{"SS"} if \code{model == "RR"}):
 available for \code{pool_pops == FALSE})
 \item \code{"LCRchum"}  Customized spawner-smolt-spawner model for Lower Columbia River chum
 (\code{pool_pops == TRUE})
-\item \code{"ICchinook"}  Customized spawner-smolt-spawner model with downstream, SAR,
-and upstream survival (\code{pool_pops == TRUE})
 }}
 
 \item{pool_pops}{Logical defaulting to \code{TRUE}, indicating whether
@@ -72,8 +69,7 @@ one at a time because calculations are vectorized and warmup is shared.}
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
-\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-A character string or vector of strings naming parameters of the function specified by
+\item{RRS}{A character string or vector of strings naming parameters of the function specified by
 \code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
 relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.
@@ -280,16 +276,6 @@ scenarios or "branches" with different inputs (e.g., harvest rate). In this
 case, all branches are subjected to the same sequence of process errors in
 recruitment and age structure.}
 
-\item{prior_data}{Deprecated; will be merged into \code{fish_data} in a future release.
-If \code{stan_model == "IPM_ICchinook_pp"}, named list
-with the following elements:
-\itemize{
-\item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
-\code{mu_prior_SAR}, \code{sigma_prior_SAR}, \code{mu_prior_U}, \code{sigma_prior_U},
-giving the annual prior means and SDs of logit survival downstream, at sea,
-and upstream, respectively.
-}}
-
 \item{init}{A list of named lists of initial values to be passed to
 \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. If \code{NULL}, initial values will be automatically
 generated from the supplied data using \code{\link[=stan_init]{stan_init()}}.}
@@ -364,7 +350,6 @@ populations are modeled independently.\tabular{lcccccccc}{
    \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SMS_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
-   \code{IPM_ICchinook_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \cr
    \code{IPM_LCRchum_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
 }
 }

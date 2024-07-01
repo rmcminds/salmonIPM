@@ -81,8 +81,9 @@ transformed parameters {
   // Predict recruitment
   R_hat = rep_vector(0,N);
   for(i in 1:N_fit)
-    R_hat[which_fit[i]] = SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
-                             S_obs[which_fit[i]], A[which_fit[i]]);
+    R_hat[which_fit[i]] = SR(SR_fun, {0,0}, alpha[pop[which_fit[i]]], 0, 0,
+                             Rmax[pop[which_fit[i]]], 0, 0,
+                             S_obs[which_fit[i]], 0, 0, A[which_fit[i]]);
 }
 
 model {
@@ -125,6 +126,7 @@ generated quantities {
     }
 
     if(R_NA[i] == 1)
-      R_sim[i] = SR(SR_fun,alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i]) * lognormal_rng(eta_year_R[year[i]], sigma_R);
+      R_sim[i] = SR(SR_fun, {0,0}, alpha[pop[i]], 0, 0, Rmax[pop[i]], 0, 0, 
+                    S_sim[i], 0, 0, A[i]) * lognormal_rng(eta_year_R[year[i]], sigma_R);
   }
 }

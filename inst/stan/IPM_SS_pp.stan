@@ -1,5 +1,5 @@
 functions {
-  #include /include/SR_RRS.stan
+  #include /include/SR.stan
   #include /include/gnormal_lpdf.stan
   #include /include/veq.stan
   #include /include/vand.stan
@@ -401,7 +401,7 @@ model {
   sigma_Rmax ~ normal(0,3);
   append_row(zeta_Rmax, append_row(zeta_Rmax_W, zeta_Rmax_H)) ~ std_normal();
   beta_R ~ normal(0,5);
-  rho_R ~ gnormal(0,0.85,50); // mildly regularize to ensure stationarity
+  rho_R ~ gnormal(0,0.85,30); // mildly regularize to ensure stationarity
   sigma_year_R ~ normal(0,3);
   zeta_year_R ~ std_normal(); // eta_year_R[i] ~ N(rho_R*eta_year_R[i-1], sigma_year_R)
   sigma_R ~ normal(0,3);

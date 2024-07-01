@@ -6,8 +6,7 @@
 \usage{
 stan_data(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
-    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
-    "RR_SS_np", "RR_SS_pp"),
+    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "RR_SS_np", "RR_SS_pp"),
   SR_fun = "BH",
   RRS = "none",
   ages = NULL,
@@ -33,8 +32,7 @@ stan_data(
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
-\item{RRS}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-A character string or vector of strings naming parameters of the function specified by
+\item{RRS}{A character string or vector of strings naming parameters of the function specified by
 \code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
 relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
 these should be the names of the population-specific parameters, not their hyper-means.
@@ -240,16 +238,6 @@ year may occur multiple times, perhaps to facilitate comparisons across
 scenarios or "branches" with different inputs (e.g., harvest rate). In this
 case, all branches are subjected to the same sequence of process errors in
 recruitment and age structure.}
-
-\item{prior_data}{Deprecated; will be merged into \code{fish_data} in a future release.
-If \code{stan_model == "IPM_ICchinook_pp"}, named list
-with the following elements:
-\itemize{
-\item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
-\code{mu_prior_SAR}, \code{sigma_prior_SAR}, \code{mu_prior_U}, \code{sigma_prior_U},
-giving the annual prior means and SDs of logit survival downstream, at sea,
-and upstream, respectively.
-}}
 }
 \value{
 A named list that is passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} as the \code{data}
