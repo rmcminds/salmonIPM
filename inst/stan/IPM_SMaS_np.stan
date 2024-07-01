@@ -14,13 +14,18 @@ data {
   int<lower=1,upper=N> year[N];         // calendar year index
   // smolt production
   int<lower=1> SR_fun;                  // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=0,upper=1> RRS[2];          // fit H vs. W {alpha, Rmax} (1) or not (0)?
   vector[N] A;                          // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                 // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;            // intrinsic productivity covariates
-  real prior_alpha[2];                  // prior meanlog, sdlog for intrinsic productivity
+  real prior_alpha[!RRS[1]*2];          // prior meanlog, sdlog for intrinsic productivity
+  real prior_alpha_W[RRS[1]*2];         // prior meanlog, sdlog for W intrinsic productivity
+  real prior_alpha_H[RRS[1]*2];         // prior meanlog, sdlog for H intrinsic productivity
   int<lower=0> K_Mmax;                  // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;              // maximum smolt recruitment covariates
-  real prior_Mmax[2];                   // prior meanlog, sdlog for maximum smolt recruitment
+  real prior_Mmax[!RRS[2]*2];           // prior meanlog, sdlog for maximum smolt recruitment
+  real prior_Mmax_W[RRS[2]*2];          // prior meanlog, sdlog for W maximum smolt recruitment
+  real prior_Mmax_H[RRS[2]*2];          // prior meanlog, sdlog for H maximum smolt recruitment
   int<lower=0> K_M;                     // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];               // smolt recruitment covariates
   // smolt abundance
@@ -129,9 +134,13 @@ transformed data {
 parameters {
   //?// indicates params that could be arrays instead of matrices
   // smolt recruitment
-  vector<lower=0>[N_pop] alpha;               // intrinsic spawner-smolt productivity
+  vector<lower=0>[!RRS[1]*N_pop] alpha;       // intrinsic spawner-smolt productivity
+  vector<lower=0>[RRS[1]*N_pop] alpha_W;      // intrinsic spawner-smolt productivity of wild spawners
+  vector<lower=0>[RRS[1]*N_pop] alpha_H;      // intrinsic spawner-smolt productivity of hatchery spawners
   matrix[N_pop,K_alpha] beta_alpha;           // regression coefs for log alpha
-  vector<lower=0>[N_pop] Mmax;                // asymptotic smolt recruitment
+  vector<lower=0>[!RRS[2]*N_pop] Mmax;        // maximum smolt recruitment
+  vector<lower=0>[RRS[2]*N_pop] Mmax_W;       // maximum smolt recruitment of wild spawners
+  vector<lower=0>[RRS[2]*N_pop] Mmax_H;       // maximum smolt recruitment of hatchery spawners
   matrix[N_pop,K_Mmax] beta_Mmax;             // regression coefs for log Mmax
   matrix[N_pop,K_M] beta_M;                   //?// regression coefs for spawner-smolt productivity
   vector<lower=-1,upper=1>[N_pop] rho_M;      // AR(1) coefs for spawner-smolt productivity
@@ -169,8 +178,12 @@ parameters {
 transformed parameters {
   //?// indicates transformed params that could be arrays instead of matrices
   // smolt recruitment
-  vector<lower=0>[N] alpha_Xbeta;        // intrinsic productivity including covariate effects
-  vector<lower=0>[N] Mmax_Xbeta;         // maximum recruitment including covariate effects
+  vector[N] alpha_Xbeta;                 // intrinsic productivity including covariate effects
+  vector[N] alpha_W_Xbeta;               // wild intrinsic productivity including covariate effects
+  vector[N] alpha_H_Xbeta;               // hatchery intrinsic productivity including covariate effects
+  vector[N] Mmax_Xbeta;                  // maximum recruitment including covariate effects
+  vector[N] Mmax_W_Xbeta;                // wild maximum recruitment including covariate effects
+  vector[N] Mmax_H_Xbeta;                // hatchery maximum recruitment including covariate effects
   vector<lower=0>[N] M_hat;              // expected smolt abundance (not density) by brood year
   vector[N] epsilon_M;                   // process error in smolt abundance by brood year
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
@@ -201,9 +214,19 @@ transformed parameters {
   B_rate_all[which_B] = B_rate;
   
   // S-R parameters including covariate effects
-  alpha_Xbeta = alpha[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
-  Mmax_Xbeta = Mmax[pop] .* exp(rows_dot_product(X_Mmax, beta_Mmax[pop,]));
-  
+  if(RRS[1]) {
+    alpha_W_Xbeta = alpha_W[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
+    alpha_H_Xbeta = alpha_H[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
+  } else {
+    alpha_Xbeta = alpha[pop] .* exp(rows_dot_product(X_alpha, beta_alpha[pop,]));
+  }
+  if(RRS[2]) {
+    Mmax_W_Xbeta = Mmax_W[pop] .* exp(rows_dot_product(X_Mmax, beta_Mmax[pop,]));
+    Mmax_H_Xbeta = Mmax_H[pop] .* exp(rows_dot_product(X_Mmax, beta_Mmax[pop,]));
+  } else {
+    Mmax_Xbeta = Mmax[pop] .* exp(rows_dot_product(X_Mmax, beta_Mmax[pop,]));
+  }
+
   // Log-ratio transform of pop-specific mean cohort age distributions
   for(j in 1:N_pop)
   {
@@ -221,7 +244,7 @@ transformed parameters {
   {
     int mm;                                   // index into M_init, q_M_init
     // number of orphan smolt age classes <lower=0,upper=N_Mage>
-    int N_orphan_Mage = max(N_Mage - max(pop_year[i] - min_Mage, 0), N_Mage); 
+    int N_orphan_Mage = max(N_Mage - to_int(fmin(pop_year[i], min_Mage)), N_Mage); 
     // orphan smolt age distn (amalgamated simplex)
     vector[N_orphan_Mage] q_M_orphan;
     vector[N_Mage] alr_p_M;                   // alr(p_M[i,])
@@ -231,7 +254,7 @@ transformed parameters {
     vector[N_Mage*(N_MSage-1)] alr_p_MS;      // alr(p_MS[i,]) 
     int ss;                                   // index into S_init, q_GR_init
     // number of orphan ocean-age classes <lower=0,upper=N_MSage>
-    int N_orphan_MSage = max(N_MSage - max(pop_year[i] - min_MSage, 0), N_MSage); 
+    int N_orphan_MSage = max(N_MSage - to_int(fmin(pop_year[i], min_MSage)), N_MSage); 
     // slice of orphan G-R age distn for a given smolt age (amalgamated simplex)
     vector[N_orphan_MSage] q_GR_orphan;
     matrix[N_Mage,N_MSage] S_W_a;             // true W spawners by smolt and ocean age
@@ -326,7 +349,8 @@ transformed parameters {
       q_GR[i,] = to_row_vector_row_major(S_W_a/S_W[i]);
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha_Xbeta[i], Mmax_Xbeta[i], S[i], A[i]);
+    M_hat[i] = SR(SR_fun, RRS, alpha_Xbeta[i], alpha_W_Xbeta[i], alpha_H_Xbeta[i],
+                  Mmax_Xbeta[i], Mmax_W_Xbeta[i], Mmax_H_Xbeta[i], S[i], S_W[i], S_H[i], A[i]);
     M0[i] = M_hat[i] * exp(dot_product(X_M[i], beta_M[pop[i],]) + epsilon_M[i]);
   }
 }
@@ -337,8 +361,18 @@ model {
   // Priors
   
   // smolt recruitment
-  alpha ~ lognormal(prior_alpha[1], prior_alpha[2]);
-  Mmax ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
+  if(RRS[1]) {
+    alpha_W ~ lognormal(prior_alpha_W[1], prior_alpha_W[2]);
+    alpha_H ~ lognormal(prior_alpha_H[1], prior_alpha_H[2]);
+  } else {
+    alpha ~ lognormal(prior_alpha[1], prior_alpha[2]);
+  }
+  if(RRS[2]) {
+    Mmax_W ~ lognormal(prior_Mmax_W[1], prior_Mmax_W[2]);
+    Mmax_H ~ lognormal(prior_Mmax_H[1], prior_Mmax_H[2]);
+  } else {
+    Mmax ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
+  }
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ gnormal(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
@@ -414,8 +448,10 @@ model {
 }
 
 generated quantities {
+  vector[RRS[1]*N_pop] delta_alpha;   // H vs. W discount in log intrinsic productivity
+  vector[RRS[2]*N_pop] delta_Mmax;    // H vs. W discount in log maximum recruitment
   corr_matrix[N_Mage-1] R_p_M[N_pop]; // correlation matrices of log-ratio smolt age distns
-  corr_matrix[N_Mage] R_MS[N_pop]; // correlation matrices of logit SAR by smolt age
+  corr_matrix[N_Mage] R_MS[N_pop];    // correlation matrices of logit SAR by smolt age
   corr_matrix[N_Mage*(N_MSage-1)] R_p_MS[N_pop]; // correlation matrices of log-ratio ocean age distns
   vector[N] LL_M_obs;        // pointwise log-likelihood of smolts
   vector[N] LL_n_Mage_obs;   // pointwise log-likelihood of smolt age frequencies
@@ -424,6 +460,9 @@ generated quantities {
   vector[N] LL_n_GR_age_obs; // pointwise log-likelihood of Gilbert-Rich age frequencies
   vector[N_H] LL_n_H_obs;    // pointwise log-likelihood of hatchery vs. wild frequencies
   vector[N] LL;              // total pointwise log-likelihood                              
+
+  delta_alpha = log(alpha_H) - log(alpha_W);
+  delta_Mmax = log(Mmax_H) - log(Mmax_W);
   
   for(j in 1:N_pop)
   {

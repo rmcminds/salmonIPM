@@ -88,8 +88,9 @@ df1pop <- data.frame(pop = 1, year = 1:N + 2020 - N,
 #------------------------------
 
 ## @knitr singlepop_data
-sim1pop <- simIPM(life_cycle = "SS", SR_fun = "BH", pars = pars1pop, 
-                  fish_data = df1pop, N_age = N_age, max_age = max_age)
+sim1pop <- simIPM(life_cycle = "SS", SR_fun = "BH", 
+                  N_age = N_age, max_age = max_age, 
+                  pars = pars1pop, fish_data = df1pop)
 names(sim1pop$pars_out)
 sim1pop$pars_out[c("alpha","Rmax")]
 format(head(sim1pop$sim_dat, 10), digits = 2)
@@ -327,9 +328,11 @@ pars1pop$beta_R <- -0.5
 #------------------------------
 
 ## @knitr singlepop_covariate_data
-simX1pop <- simIPM(life_cycle = "SS", SR_fun = "BH", pars = pars1pop, 
-                   par_models = list(Rmax ~ X1, R ~ X2),
-                   fish_data = df1pop, N_age = N_age, max_age = max_age)
+simX1pop <- simIPM(life_cycle = "SS", SR_fun = "BH", 
+                   N_age = N_age, max_age = max_age,
+                   pars = pars1pop, par_models = list(Rmax ~ X1, R ~ X2), 
+                   fish_data = df1pop)
+                   
 format(head(simX1pop$sim_dat, 10), digits = 2)
 ## @knitr
 
@@ -344,7 +347,7 @@ fitX1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                       chains = 4, iter = 2000, warmup = 1000, 
                       seed = 123)
 
-print(fitX1pop, pars = c("beta_Rmax","beta_R"), prob = c(c(0.025, 0.5, 0.975)))
+print(fitX1pop, pars = c("beta_Rmax","beta_R"), prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 
@@ -401,8 +404,9 @@ dfNpop <- data.frame(pop = rep(LETTERS[1:N_pop], each = N_year),
 #------------------------------
 
 ## @knitr multipop_data
-simNpop <- simIPM(life_cycle = "SS", SR_fun = "BH", pars = parsNpop, 
-                  fish_data = dfNpop, N_age = N_age, max_age = max_age)
+simNpop <- simIPM(life_cycle = "SS", SR_fun = "BH", 
+                  N_age = N_age, max_age = max_age,
+                  pars = parsNpop, fish_data = dfNpop)
 simNpop$sim_dat$S_obs[sample(N, N/10)] <- NA
 names(simNpop$pars_out)
 simNpop$pars_out[c("alpha","Rmax")]
@@ -419,7 +423,7 @@ fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                     chains = 4, iter = 2000, warmup = 1000, 
                     seed = 321)
 
-print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
+print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------
@@ -432,7 +436,7 @@ fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH",
                     chains = 4, iter = 2000, warmup = 1000, 
                     seed = 321)
 
-print(fitNpp, pars = stan_pars("IPM_SS_pp", "hyper"), prob = c(c(0.025, 0.5, 0.975)))
+print(fitNpp, pars = stan_pars("IPM_SS_pp", "hyper"), prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #----------------------------------------------------------
@@ -495,10 +499,10 @@ trueNpop <- simNpop$pars_out %>%
 
 # extract and transform draws using posterior package
 postNpop <- as_draws_rvars(fitNpp) %>% 
-  mutate_variables(mu_p = as.vector(mu_p), 
-                   sigma_pop_p = as.vector(sigma_pop_p), rho_pop_p = R_pop_p[2,1], 
-                   sigma_p = as.vector(sigma_p), rho_p = R_p[2,1]) %>% 
-  as_draws_matrix(.[par_names])
+  mutate_variables(mu_p = as.vector(mu_p), sigma_pop_p = as.vector(sigma_pop_p), 
+                   rho_pop_p = as.vector(R_pop_p[2,1]), sigma_p = as.vector(sigma_p), 
+                   rho_p = as.vector(R_p[2,1])) %>% 
+  .[par_names] %>% as_draws_matrix()
 
 # plot
 par(mfrow = c(4,4), mar = c(5,1,0,1))
@@ -515,8 +519,5 @@ legend("right", c("true","prior","posterior"), cex = 1.5,
        lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
        inset = c(-1,0), xpd = NA, bty = "n")
 ## @knitr
-
-
-
 
 

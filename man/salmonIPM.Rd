@@ -3,14 +3,15 @@
 \encoding{UTF-8}
 \name{salmonIPM}
 \alias{salmonIPM}
-\title{Fits an integrated or run-reconstruction spawner-recruit model.}
+\title{Fit an IPM or run-reconstruction regression model}
 \usage{
 salmonIPM(
   stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"),
   model = c("IPM", "RR"),
-  life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum", "ICchinook"),
+  life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum"),
   pool_pops = TRUE,
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
+  RRS = "none",
   ages = NULL,
   par_models = NULL,
   center = TRUE,
@@ -23,12 +24,10 @@ salmonIPM(
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
   fecundity_data = NULL,
-  fish_data_fwd = NULL,
-  prior_data = NULL,
-  init = NULL,
   pars = "all",
   include = TRUE,
   log_lik = FALSE,
+  init = NULL,
   chains = 4,
   iter = 2000,
   warmup = floor(iter/2),
@@ -57,8 +56,6 @@ One of the following options (must be \code{"SS"} if \code{model == "RR"}):
 available for \code{pool_pops == FALSE})
 \item \code{"LCRchum"}  Customized spawner-smolt-spawner model for Lower Columbia River chum
 (\code{pool_pops == TRUE})
-\item \code{"ICchinook"}  Customized spawner-smolt-spawner model with downstream, SAR,
-and upstream survival (\code{pool_pops == TRUE})
 }}
 
 \item{pool_pops}{Logical defaulting to \code{TRUE}, indicating whether
@@ -70,6 +67,14 @@ one at a time because calculations are vectorized and warmup is shared.}
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
+
+\item{RRS}{A character string or vector of strings naming parameters of the function specified by
+\code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
+relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
+these should be the names of the population-specific parameters, not their hyper-means.
+For example, if \code{life_cycle \%in\% c("SS","SSiter")}, the options are
+\code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
+Currently \code{RRS} is only implemented for \code{pool_pops == FALSE}.}
 
 \item{ages}{For multi-stage models, a named list giving the ages in
 years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
@@ -248,42 +253,6 @@ row corresponding to a female:
 \item \code{E_obs}  Observed fecundity.
 }}
 
-\item{fish_data_fwd}{Deprecated. Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future" simulations:
-\itemize{
-\item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
-\item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
-For each population in \code{fish_data_fwd$pop}, the first year appearing in
-\code{fish_data_fwd$year} must be one greater than the last year appearing in
-\code{fish_data$year}, i.e.,
-\code{min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1}.
-\item \code{A}  Spawning habitat size (either stream length or area).
-Will usually be time-invariant within a population, but need not be.
-\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
-\item \code{B_rate}  Total broodstock removal rate (proportion) of natural-origin fish.
-\item \code{p_HOS}  Proportion of hatchery-origin spawners.
-}
-
-Unlike \code{fish_data}, a given combination of population and
-year may occur multiple times, perhaps to facilitate comparisons across
-scenarios or "branches" with different inputs (e.g., harvest rate). In this
-case, all branches are subjected to the same sequence of process errors in
-recruitment and age structure.}
-
-\item{prior_data}{Deprecated; will be merged into \code{fish_data} in a future release.
-If \code{stan_model == "IPM_ICchinook_pp"}, named list
-with the following elements:
-\itemize{
-\item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
-\code{mu_prior_SAR}, \code{sigma_prior_SAR}, \code{mu_prior_U}, \code{sigma_prior_U},
-giving the annual prior means and SDs of logit survival downstream, at sea,
-and upstream, respectively.
-}}
-
-\item{init}{A list of named lists of initial values to be passed to
-\code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. If \code{NULL}, initial values will be automatically
-generated from the supplied data using \code{\link[=stan_init]{stan_init()}}.}
-
 \item{pars}{A character vector specifying (hyper)parameters, states,
 and/or quantities of interest ("parameters") to be saved.
 The default is to save all parameters. Parameters can be explicitly named or
@@ -297,6 +266,10 @@ multidimensional parameters can be excluded, rather than particular elements of 
 
 \item{log_lik}{Logical scalar indicating whether the pointwise log-likelihood
 should be saved, e.g. for later use with \code{\link[loo:loo]{loo::loo()}}.}
+
+\item{init}{A list of named lists of initial values to be passed to
+\code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. The default (and recommended) \code{NULL} randomly generates
+initial values for each chain given the data and model using \code{\link[=stan_init]{stan_init()}}.}
 
 \item{chains}{Positive integer specifying the number of HMC chains;
 see \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
@@ -329,7 +302,7 @@ An object of class \code{stanfit} representing the fitted model. See
 \link[rstan:stanfit-class]{rstan::stanfit} for details.
 }
 \description{
-Fits an integrated or run-reconstruction spawner-recruit model.
+Fit an IPM or run-reconstruction regression model
 }
 \details{
 The following parameters and states can be modeled as functions of covariates using
@@ -354,7 +327,6 @@ populations are modeled independently.\tabular{lcccccccc}{
    \code{IPM_SMS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SMS_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
    \code{IPM_SMaS_np} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
-   \code{IPM_ICchinook_pp} \tab ☑ \tab ☐ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☐ \cr
    \code{IPM_LCRchum_pp} \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☐ \tab ☑ \tab ☑ \tab ☐ \cr
 }
 }

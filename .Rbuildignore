@@ -1,2 +1,3 @@
 ^salmonIPM\.Rproj$
 ^\.Rproj\.user$
+^inst/stan/IPM_ICchinook_pp.stan.ignore

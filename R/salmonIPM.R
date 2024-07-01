@@ -1,4 +1,4 @@
-#' Fits an integrated or run-reconstruction spawner-recruit model.
+#' Fit an IPM or run-reconstruction regression model
 #'
 #' @param stan_model Character string specifying the **salmonIPM** model to be
 #'   fit. A more concise alternative to specifying `model`, `life_cycle`, and `pool_pops` 
@@ -15,8 +15,6 @@
 #'   available for `pool_pops == FALSE`)
 #'   * `"LCRchum"`  Customized spawner-smolt-spawner model for Lower Columbia River chum
 #'   (`pool_pops == TRUE`)
-#'   * `"ICchinook"`  Customized spawner-smolt-spawner model with downstream, SAR,
-#'   and upstream survival (`pool_pops == TRUE`)
 #' @param pool_pops Logical defaulting to `TRUE`, indicating whether
 #'   to model multiple populations hierarchically rather than as independent "fixed effects".
 #'   It is possible to fit a model to multiple populations simultaneously even though they
@@ -25,6 +23,13 @@
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential), 
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which spawner-recruit
 #'   function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"` and `"ricker"` are accepted.
+#' @param RRS A character string or vector of strings naming parameters of the function specified by 
+#'   `SR_fun` that differ between wild- and hatchery-origin spawners, such that the
+#'   relative reproductive success of hatchery spawners is not equal to 1. If `pool_pops == TRUE`,
+#'   these should be the names of the population-specific parameters, not their hyper-means.
+#'   For example, if `life_cycle %in% c("SS","SSiter")`, the options are
+#'   `"none"` (the default), `"alpha"`, `"Rmax"`, or `c("alpha","Rmax")`. 
+#'   Currently `RRS` is only implemented for `pool_pops == FALSE`.
 #' @param ages For multi-stage models, a named list giving the ages in
 #'   years of all fixed-age subadult life stages. This is not needed for `IPM_SMaS_np` 
 #'   because in that case smolt age structure is provided in `fish_data`.
@@ -186,35 +191,6 @@
 #' row corresponding to a female:
 #' * `age_E`  Female age in years.   
 #' * `E_obs`  Observed fecundity.  
-#' @param fish_data_fwd Deprecated. Only if `stan_model == "IPM_SS_pp"`, optional data frame
-#'   with the following columns, representing "forward" or "future" simulations: 
-#'   * `pop`  Numeric or character population ID. All values must also appear in `fish_data$pop`.   
-#'   * `year`  Integer variable giving the year the fish spawned (i.e., the brood year). 
-#'   For each population in `fish_data_fwd$pop`, the first year appearing in 
-#'   `fish_data_fwd$year` must be one greater than the last year appearing in 
-#'   `fish_data$year`, i.e., 
-#'   `min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1`.
-#'   * `A`  Spawning habitat size (either stream length or area). 
-#'   Will usually be time-invariant within a population, but need not be.   
-#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
-#'   * `B_rate`  Total broodstock removal rate (proportion) of natural-origin fish.  
-#'   * `p_HOS`  Proportion of hatchery-origin spawners.
-#'   
-#'   Unlike `fish_data`, a given combination of population and
-#'   year may occur multiple times, perhaps to facilitate comparisons across
-#'   scenarios or "branches" with different inputs (e.g., harvest rate). In this
-#'   case, all branches are subjected to the same sequence of process errors in
-#'   recruitment and age structure. 
-#' @param prior_data Deprecated; will be merged into `fish_data` in a future release. 
-#' If `stan_model == "IPM_ICchinook_pp"`, named list
-#' with the following elements: 
-#' * `s`  Data frame with columns `year`, `mu_prior_D`, `sigma_prior_D`, 
-#' `mu_prior_SAR`, `sigma_prior_SAR`, `mu_prior_U`, `sigma_prior_U`, 
-#' giving the annual prior means and SDs of logit survival downstream, at sea, 
-#' and upstream, respectively.
-#' @param init A list of named lists of initial values to be passed to
-#'   [rstan::sampling()]. If `NULL`, initial values will be automatically
-#'   generated from the supplied data using [stan_init()].
 #' @param pars A character vector specifying (hyper)parameters, states, 
 #' and/or quantities of interest ("parameters") to be saved. 
 #' The default is to save all parameters. Parameters can be explicitly named or 
@@ -226,6 +202,9 @@
 #'  multidimensional parameters can be excluded, rather than particular elements of them. 
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
 #'   should be saved, e.g. for later use with [loo::loo()].
+#' @param init A list of named lists of initial values to be passed to
+#'   [rstan::sampling()]. The default (and recommended) `NULL` randomly generates
+#'   initial values for each chain given the data and model using [stan_init()].
 #' @param chains Positive integer specifying the number of HMC chains; 
 #'   see [rstan::sampling()].
 #' @param iter Positive integer specifying the number of iterations for each
@@ -271,7 +250,6 @@
 #' | `IPM_SMS_np`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' | `IPM_SMS_pp`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' | `IPM_SMaS_np`      | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
-#' | `IPM_ICchinook_pp` | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2610;                     | &#x2610;                     | 
 #' | `IPM_LCRchum_pp`   | &#x2610;                | &#x2611;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' 
 #' @return An object of class `stanfit` representing the fitted model. See
@@ -283,37 +261,43 @@
 
 salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"), 
                       model = c("IPM","RR"), 
-                      life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum","ICchinook"), 
-                      pool_pops = TRUE, SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), 
+                      life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum"), 
+                      pool_pops = TRUE, 
+                      SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
                       ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL,
-                      init = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
-                      chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
+                      fecundity_data = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
+                      init = NULL, chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
                       cores = parallel::detectCores(logical = FALSE), 
                       control = NULL, ...)
 {
   model <- match.arg(model)
   life_cycle <- match.arg(life_cycle)
+  pool_pops <- grepl("_pp", stan_model)     # override if stan_model is specified
   stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   SR_fun <- match.arg(SR_fun)
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
+  RRS_check <- RRS %in% c("none", stan_pars(stan_model))
+  if(!all(RRS_check))
+    stop("Error in RRS: ", RRS[!RRS_check], " is not a SR_fun parameter in ", stan_model, 
+         ".\n  See pars in stan_pars('", stan_model, "', ", 
+         ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
   
-  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, ages = ages, 
+  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages, 
                    par_models = par_models, center = center, scale = scale, prior = prior, 
-                   fish_data = fish_data, age_F = age_F, age_B = age_B, age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                   conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data, 
-                   fish_data_fwd = fish_data_fwd, prior_data = prior_data)
+                   fish_data = fish_data, age_F = age_F, age_B = age_B, 
+                   age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                   conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data)
   
   if(is.null(init))
     init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   
   if(all(pars %in% c("all","hyper","shared","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars)
-  if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all"), pars)
+    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS)
+  if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, RRS = RRS), pars)
   if(log_lik) pars <- c(pars, "LL")
   
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95

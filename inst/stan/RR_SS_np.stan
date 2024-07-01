@@ -1,6 +1,6 @@
 functions {
-#include /include/SR.stan
-#include /include/gnormal_lpdf.stan
+  #include /include/SR.stan
+  #include /include/gnormal_lpdf.stan
 }
 
 data {
@@ -22,7 +22,7 @@ data {
 
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
-  int<lower=1,upper=N> N_year = max(year); // number of years, not incl fwd simulations
+  int<lower=1,upper=N> N_year = max(year); // number of years
   int<lower=2> ages[N_age];                // adult ages
   real mu_Rmax = max(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-mean of Rmax
   real sigma_Rmax = sd(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-SD of Rmax
@@ -50,12 +50,15 @@ transformed parameters {
     
   for(i in 1:N_fit)
   {
-    R_hat[which_fit[i]] = SR(SR_fun, alpha[pop[which_fit[i]]], Rmax[pop[which_fit[i]]], 
-                             S_obs[which_fit[i]], A[which_fit[i]]);
-    if(i==1 || pop[which_fit[i-1]] != pop[which_fit[i]])
+    int ii = which_fit[i];
+    int il = which_fit[i-1];
+    
+    R_hat[ii] = SR(SR_fun, {0,0}, alpha[pop[ii]], 0, 0, Rmax[pop[ii]], 0, 0, 
+                   S_obs[ii], 0, 0, A[ii]);
+    if(i==1 || pop[il] != pop[ii])
     {
-      R_ar1[which_fit[i]] = R_hat[which_fit[i]];
-      sigma_ar1[which_fit[i]] = sigma_R[pop[which_fit[i]]]/sqrt(1 - rho_R[pop[which_fit[i]]]^2);
+      R_ar1[ii] = R_hat[ii];
+      sigma_ar1[ii] = sigma_R[pop[ii]]/sqrt(1 - rho_R[pop[ii]]^2);
     }
     else
     {
@@ -63,14 +66,14 @@ transformed parameters {
       int dt;      // number of years since last non-missing observation
       real rho2j;  // sum of powers of rho_R
       
-      err = log(R_obs[which_fit[i-1]]) - log(R_hat[which_fit[i-1]]);
-      dt = which_fit[i] - which_fit[i-1];
-      R_ar1[which_fit[i]] = R_hat[which_fit[i]]*exp(rho_R[pop[which_fit[i]]]^dt * err);
+      err = log(R_obs[il]) - log(R_hat[il]);
+      dt = ii - il;
+      R_ar1[ii] = R_hat[ii]*exp(rho_R[pop[ii]]^dt * err);
       
       rho2j = 0;
       for(j in 0:(dt-1))
-        rho2j = rho2j + rho_R[pop[which_fit[i]]] ^ (2*j);
-      sigma_ar1[which_fit[i]] = sigma_R[pop[which_fit[i]]] * sqrt(rho2j);
+        rho2j = rho2j + rho_R[pop[ii]] ^ (2*j);
+      sigma_ar1[ii] = sigma_R[pop[ii]] * sqrt(rho2j);
     }
   }
 }
@@ -116,6 +119,7 @@ generated quantities {
       err_sim[i] = normal_rng(rho_R[pop[i]]*err_sim[i-1], sigma_R[pop[i]]);
     
     if(R_NA[i] == 1)
-      R_sim[i] = SR(SR_fun, alpha[pop[i]], Rmax[pop[i]], S_sim[i], A[i])*exp(err_sim[i]);
+      R_sim[i] = SR(SR_fun, {0,0}, alpha[pop[i]], 0, 0, Rmax[pop[i]], 0, 0,
+                    S_sim[i], 0, 0, A[i]) * exp(err_sim[i]);
   }
 }

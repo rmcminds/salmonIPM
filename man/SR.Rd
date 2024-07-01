@@ -4,34 +4,63 @@
 \alias{SR}
 \title{Spawner-recruit functions}
 \usage{
-SR(SR_fun = "BH", alpha, Rmax, S, A = 1, R_per_S = FALSE)
+SR(
+  SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
+  alpha = NULL,
+  alpha_W = NULL,
+  alpha_H = NULL,
+  Rmax = NULL,
+  Rmax_W = NULL,
+  Rmax_H = NULL,
+  S = NULL,
+  S_W = NULL,
+  S_H = NULL,
+  A = 1,
+  R_per_S = FALSE
+)
 }
 \arguments{
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
-\code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}.
-Synonyms \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are also accepted.}
+\code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
+function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
 
-\item{alpha}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
-or \code{draws} of #'   intrinsic productivity (i.e., recruits per spawner at zero spawner
+\item{alpha}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+or \code{draws} of intrinsic productivity (i.e., recruits per spawner at zero spawner
 density; slope of the spawner-recruit function at the origin).}
 
-\item{Rmax}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
-maximum recruitment per unit of habitat (length or area). This corresponds to
+\item{alpha_W, alpha_H}{Numeric vectors, matrices, data frames, \code{\link[posterior:rvar]{posterior::rvar()}}
+or \code{draws} of intrinsic productivity for wild- and hatchery-origin spawners,
+respectively. If they differ, both must be specified and \code{alpha} must not be used
+(and conversely).}
+
+\item{Rmax}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+or \code{draws} of maximum recruitment per unit of habitat (length or area). This corresponds to
 the asymptote of the Beverton-Holt or the mode of the Ricker.}
 
-\item{S}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
-spawner abundance.}
+\item{Rmax_W, Rmax_H}{Numeric vectors, matrices, data frames, \code{\link[posterior:rvar]{posterior::rvar()}}
+or \code{draws} of maximum recruitment per unit of habitat for wild- and hatchery-origin spawners,
+respectively. If they differ, both must be specified and \code{Rmax} must not be used
+(and conversely).}
 
-\item{A}{A numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
+\item{S}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}},
+or \code{draws} of spawner abundance.}
+
+\item{S_W, S_H}{Numeric vectors, matrices, data frames, \code{\link[posterior:rvar]{posterior::rvar()}}
+or \code{draws} of wild- and hatchery-origin spawner abundance, respectively.
+Must be specified if either \code{alpha} or \code{Rmax} differ by rearing type,
+in which case \code{S} must not be used (and conversely).}
+
+\item{A}{Numeric vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}}, or \code{draws} of
 spawning habitat size (either stream length or area), used to standardize \code{Rmax}.
-The default is 1, in which case \code{Rmax} is in units of abundance rather than density.}
+The default is 1, in which case \code{Rmax} is in units of abundance (which is also density).}
 
 \item{R_per_S}{Logical indicating whether to return recruits per spawner rather than
 recruits (the default).}
 }
 \value{
 A vector, matrix, data frame, \code{\link[posterior:rvar]{posterior::rvar()}} or \code{draws}, depending on the
-argument types, containing either recruits or recruits per spawner.
+argument types, containing either recruits or recruits per spawner. Calculations are
+vectorized and elements of shorter arguments are recycled as necessary.
 }
 \description{
 Compute recruitment given spawner abundance, a spawner-recruit function and parameters.
@@ -39,17 +68,39 @@ Compute recruitment given spawner abundance, a spawner-recruit function and para
 \details{
 The \strong{salmonIPM} package uses a nonstandard parameterization of the Ricker
 model by the maximum recruitment \code{Rmax}. This is typically better identified by
-data than the carrying capacity or per capita density dependence, and it
-facilitates a common interpretation and priors with the Beverton-Holt.\tabular{rl}{
-    \tab  \cr
-   Discrete exponential: \tab \code{R = alpha * S} \cr
-   Beverton-Holt: \tab \code{R = alpha * S / (1 + alpha * S / (A * Rmax))} \cr
-   Ricker: \tab \code{R = alpha * S * exp(-alpha * S / (A * exp(1) * Rmax))} \cr
+data than per capita density dependence, and it facilitates a common interpretation
+and priors with the Beverton-Holt. Here \eqn{e} is the base of the natural logarithm.
+
+Note that the functions for the \code{RRS != "none"} case are written below in their most general
+form, with both \code{alpha} and \code{Rmax} differing between wild and hatchery spawners. If
+only one parameter is specified in \code{RRS}, then the \verb{_W} and \verb{_H} values of the other
+parameter are equal and the expression can be further simplified.
+
+\code{RRS == "none"}
+
+\eqn{
+R = 
+\begin{cases}
+\alpha S & \text{exponential} 
+\\\\
+\dfrac{\alpha S}{1 + \dfrac{\alpha S}{A R_\text{max}}} & \text{Beverton-Holt} 
+\\\\
+\alpha S \text{exp} {\left(- \dfrac{\alpha S}{e A R_\text{max}} \right)} & \text{Ricker}
+\end{cases}
 }
 
+\code{RRS != "none"}
 
-Calculations are vectorized and elements of shorter arguments are recycled
-as necessary.
+\eqn{
+R = 
+\begin{cases}
+\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H} & \text{exponential} 
+\\\\
+\dfrac{\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H}}{1 + \dfrac{\alpha_\text{W} S_\text{W}}{A R_\text{max,W}} + \dfrac{\alpha_\text{H} S_\text{H}}{A R_\text{max,H}}} & \text{Beverton-Holt (Leslie-Gower)} 
+\\\\
+\left(\alpha_\text{W} S_\text{W} + \alpha_\text{H} S_\text{H} \right)  \text{exp}\left(-\dfrac{\alpha_\text{W} S_\text{W}}{e A R_\text{max,W}} - \dfrac{\alpha_\text{H} S_\text{H}}{e A R_\text{max,H}} \right) & \text{Ricker}
+\end{cases}
+}
 }
 \examples{
 alpha <- 3
@@ -58,20 +109,34 @@ S <- 500
 
 # default is Beverton-Holt
 SR(alpha = alpha, Rmax = Rmax, S = S) 
+
 # approximately Rmax
 SR(alpha = alpha, Rmax = Rmax, S = 1e6) 
+
 # scale Rmax by habitat area
 SR(alpha = alpha, Rmax = Rmax, S = S, A = 0.1) 
+
 # discrete exponential ignores Rmax
 SR(SR_fun = "exp", alpha = alpha, Rmax = Rmax, S = S) 
+
 # vectorization with recycling
 SR(alpha = rep(alpha, 10), Rmax = rep(Rmax, 10), S = matrix(S, 10, 4)) 
+
 # return recruits per spawner
 SR(alpha = alpha, Rmax = Rmax, S = S, R_per_S = TRUE) 
+
 # plot Ricker and show Rmax
 curve(SR(SR_fun = "Ricker", alpha = alpha, Rmax = Rmax, S = x), from = 0, to = 2000,
       xlab = "Spawners", ylab = "Recruits", main = "Ricker")
 abline(h = Rmax, lty = 2)
+
+# differential hatchery / wild relative reproductive success
+alpha_W <- 3
+alpha_H <- 2
+S_W <- 400
+S_H <- 100
+# compare to BH result above
+SR(alpha_W = alpha_W, alpha_H = alpha_H, Rmax = Rmax, S_W = S_W, S_H = S_H)
 
 }
 \seealso{

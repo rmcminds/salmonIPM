@@ -8,95 +8,126 @@
 #' `"states"` (the lowest level, corresponding to unique rows in `fish_data`), and
 #' `"ppd"` (only if `model == "RR"`, observation-level predictions drawn from the posterior
 #' predictive distribution).
+#' @inheritParams salmonIPM
 #' 
-#' Using pars="beta" will restrict the displayed parameters to only the regression coefficients (without the intercept). "alpha" can also be used as a shortcut for "(Intercept)". If the model has varying intercepts and/or slopes they can be selected using pars = "varying".
-#'
 #' @return Character vector with names of selected parameters and states
 #' 
 #' @export
 
 stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
                                      "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
-                                     "IPM_LCRchum_pp","IPM_ICchinook_pp",
-                                     "RR_SS_np","RR_SS_pp"), 
-                      pars = c("all","hyper","group","states","ppd")) 
+                                     "IPM_LCRchum_pp","RR_SS_np","RR_SS_pp"), 
+                      pars = c("all","hyper","group","states","ppd"), 
+                      SR_fun = "BH", RRS = "none")
 {
   stan_model <- match.arg(stan_model)
   pars <- match.arg(pars, several.ok = TRUE)
   
   par_list <- list( 
     IPM_SS_np = list(
-      hyper = c("alpha","beta_alpha","Rmax","beta_Rmax","beta_R","rho_R","sigma_R",
-                "mu_p","sigma_p","R_p","tau"),
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                switch(SR_fun, exp = NULL, c("Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax")),
+                "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p","tau"),
       states = c("R","p","S","q","p_HOS")
     ),
     
     IPM_SSiter_np = list(
-      hyper = c("alpha","beta_alpha","Rmax","beta_Rmax","beta_R","rho_R","sigma_R",
-                "mu_p","sigma_p","R_p","mu_SS","beta_SS","rho_SS","sigma_SS","tau"),
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                switch(SR_fun, exp = NULL, c("Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax")),
+                "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p",
+                "mu_SS","beta_SS","rho_SS","sigma_SS","tau"),
       states = c("R","p","s_SS","S","q","p_HOS")
     ),
     
     IPM_SS_pp = list(
-      hyper = c("mu_alpha","beta_alpha","sigma_alpha","mu_Rmax","beta_Rmax","sigma_Rmax",
-                "rho_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
+      hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
+                "beta_alpha","sigma_alpha",
+                switch(SR_fun, exp = NULL,
+                       c(if("mu_Rmax" %in% RRS) c("mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax") else "mu_Rmax",
+                         "beta_Rmax","sigma_Rmax")),
+                ifelse(identical(RRS, "none"), "rho_alphaRmax", "R_alphaRmax"),
+                "beta_R","sigma_year_R","rho_R","sigma_R",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau"),
-      group = c("alpha","Rmax","eta_year_R","mu_pop_alr_p"),
+      group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
+                "eta_year_R","mu_pop_alr_p"),
       states = c("R","p","S","q","p_HOS")
     ),
     
     IPM_SSiter_pp = list(
-      hyper = c("mu_alpha","beta_alpha","sigma_alpha","mu_Rmax","beta_Rmax","sigma_Rmax",
-                "rho_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
+      hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
+                "beta_alpha","sigma_alpha",
+                switch(SR_fun, exp = NULL,
+                       c(if("mu_Rmax" %in% RRS) c("mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax") else "mu_Rmax",
+                         "beta_Rmax","sigma_Rmax")),
+                ifelse(identical(RRS, "none"), "rho_alphaRmax", "R_alphaRmax"),
+                "beta_R","sigma_year_R","rho_R","sigma_R",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p",
                 "mu_SS","beta_SS","rho_SS","sigma_year_SS","sigma_SS","tau"),
-      group = c("alpha","Rmax","eta_year_R","mu_pop_alr_p","eta_year_SS"),
+      group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
+                "eta_year_R","mu_pop_alr_p","eta_year_SS"),
       states = c("R","p","s_SS","S","p_HOS","q")
     ),
     
     IPM_SMS_np = list(
-      hyper = c("alpha","beta_alpha","Mmax","beta_Mmax","beta_M","rho_M","sigma_M",
-                "mu_MS","beta_MS","rho_MS","sigma_MS", "mu_p","sigma_p","R_p","tau_M","tau_S"),
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                switch(SR_fun, exp = NULL, c("Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax")),
+                "beta_M","rho_M","sigma_M","mu_MS","beta_MS","rho_MS","sigma_MS",
+                "mu_p","sigma_p","R_p","tau_M","tau_S"),
       states = c("M","s_MS","p","S","q","p_HOS")
     ),
     
     IPM_SMS_pp = list(
-      hyper = c("mu_alpha","beta_alpha","sigma_alpha","mu_Mmax","beta_Mmax","sigma_Mmax",
-                "rho_alphaMmax","beta_M","rho_M","sigma_year_M","sigma_M","tau_M",
+      hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
+                "beta_alpha","sigma_alpha",
+                switch(SR_fun, exp = NULL,
+                       c(if("mu_Mmax" %in% RRS) c("mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax") else "mu_Mmax",
+                         "beta_Mmax","sigma_Mmax")),
+                ifelse(identical(RRS, "none"), "rho_alphaMmax", "R_alphaMmax"),
+                "beta_M","rho_M","sigma_year_M","sigma_M","tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_year_MS","sigma_MS",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau_S"),
-      group = c("alpha","Mmax","eta_year_M","eta_year_MS","mu_pop_alr_p"),
+      group = c("alpha","alpha_W","alpha_H","delta_alpha","Mmax","Mmax_W","Mmax_H","delta_Mmax",
+                "eta_year_M","eta_year_MS","mu_pop_alr_p"),
       states = c("M","s_MS","p","S","q","p_HOS")
     ),
     
     IPM_SMaS_np = list(
-      hyper = c("alpha","beta_alpha","Mmax","beta_Mmax","beta_M","rho_M","sigma_M",
-                "mu_p_M","sigma_p_M","R_p_M","tau_M",
+      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
+                switch(SR_fun, exp = NULL, c("Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax")),
+                "beta_M","rho_M","sigma_M","mu_p_M","sigma_p_M","R_p_M","tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_MS","R_MS",
                 "mu_p_MS","sigma_p_MS","R_p_MS","tau_S"),
       states = c("p_M","M","q_M","s_MS","p_MS","S","q_MS","q_GR","p_HOS")
     ),
     
-    IPM_ICchinook_pp = list(
-      hyper = c("mu_alpha","beta_alpha","sigma_alpha","mu_Mmax","beta_Mmax","sigma_Mmax",
-                "rho_alphaMmax","beta_M","rho_M","sigma_M",
-                "mu_D","beta_D","rho_D","sigma_D",
-                "mu_SAR","beta_SAR","rho_SAR","sigma_SAR",
-                "mu_U","beta_U","rho_U","sigma_U",
-                "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau_S"),
-      group = c("alpha","Mmax","s_D","SAR","s_U","mu_pop_alr_p"),
-      states = c("M","p","p_HOS","S","q")
-    ),
+    # IPM_ICchinook_pp = list(
+    #   hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
+    #             "beta_alpha","sigma_alpha",
+    #             switch(SR_fun, exp = NULL,
+    #                    c(if("mu_Mmax" %in% RRS) c("mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax") else "mu_Mmax",
+    #                      "beta_Mmax","sigma_Mmax")),
+    #             ifelse(identical(RRS, "none"), "rho_alphaMmax", "R_alphaMmax"),
+    #             "beta_M","rho_M","sigma_M","mu_D","beta_D","rho_D","sigma_D",
+    #             "mu_SAR","beta_SAR","rho_SAR","sigma_SAR","mu_U","beta_U","rho_U","sigma_U",
+    #             "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau_S"),
+    #   group = c("alpha","alpha_W","alpha_H","delta_alpha","Mmax","Mmax_W","Mmax_H","delta_Mmax",
+    #             "s_D","SAR","s_U","mu_pop_alr_p"),
+    #   states = c("M","p","p_HOS","S","q")
+    # ),
     
     IPM_LCRchum_pp = list(
-      hyper = c("mu_E","sigma_E","delta_NG","mu_psi","beta_psi","sigma_psi",
-                "mu_Mmax","beta_Mmax","sigma_Mmax",
-                "beta_M","rho_M","sigma_year_M","sigma_M",
+      hyper = c("mu_E","sigma_E","delta_NG",
+                if("mu_psi" %in% RRS) c("mu_psi_W","mu_psi_H","delta_mu_psi") else "mu_psi",
+                "beta_psi","sigma_psi",
+                switch(SR_fun, exp = NULL,
+                       c(if("mu_Mmax" %in% RRS) c("mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax") else "mu_Mmax",
+                         "beta_Mmax","sigma_Mmax")),
+                "beta_M","rho_M","sigma_year_M","sigma_M","mu_tau_M","sigma_tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_year_MS","sigma_MS",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p",
-                "mu_F","sigma_pop_F","sigma_F","P_D",
-                "mu_tau_M","sigma_tau_M","mu_tau_S","sigma_tau_S"),
-      group = c("psi","Mmax","eta_year_M","eta_year_MS","mu_pop_alr_p"),
+                "mu_F","sigma_pop_F","sigma_F","P_D","mu_tau_S","sigma_tau_S"),
+      group = c("psi","psi_W","psi_H","delta_psi","Mmax","Mmax_W","Mmax_H","delta_Mmax",
+                "eta_year_M","eta_year_MS","mu_pop_alr_p"),
       states = c("M","tau_M","s_MS","p","p_F","S","tau_S","q","q_F","q_O","p_HOS")
     ),
     

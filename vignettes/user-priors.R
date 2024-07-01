@@ -98,7 +98,7 @@ fit1a <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                   seed = 123)
 
 print(fit1a, pars = c("p","R_p","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+      include = FALSE, prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------
@@ -186,7 +186,7 @@ fit1b <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH",
                    seed = 123)
 
 print(fit1b, pars = c("p","R_p","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+      include = FALSE, prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------
@@ -323,7 +323,7 @@ fit2a <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                    seed = 123)
 
 print(fit2a, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+      include = FALSE, prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------
@@ -414,7 +414,7 @@ fit2b <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                    seed = 123)
 
 print(fit2b, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(c(0.025, 0.5, 0.975)))
+      include = FALSE, prob = c(0.025, 0.5, 0.975))
 ## @knitr
 
 #-----------------------------------------------------------

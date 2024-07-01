@@ -2,14 +2,13 @@
 % Please edit documentation in R/stan_data.R
 \name{stan_data}
 \alias{stan_data}
-\title{Prepare input data for integrated or run-reconstruction spawner-recruit
-models.}
+\title{Prepare input data for IPMs or run-reconstruction models}
 \usage{
 stan_data(
   stan_model = c("IPM_SS_np", "IPM_SSiter_np", "IPM_SS_pp", "IPM_SSiter_pp",
-    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "IPM_ICchinook_pp",
-    "RR_SS_np", "RR_SS_pp"),
+    "IPM_SMS_np", "IPM_SMS_pp", "IPM_SMaS_np", "IPM_LCRchum_pp", "RR_SS_np", "RR_SS_pp"),
   SR_fun = "BH",
+  RRS = "none",
   ages = NULL,
   par_models = NULL,
   center = TRUE,
@@ -22,7 +21,6 @@ stan_data(
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
   fecundity_data = NULL,
-  fish_data_fwd = NULL,
   prior_data = NULL
 )
 }
@@ -32,6 +30,14 @@ stan_data(
 \item{SR_fun}{One of \code{"exp"} (density-independent discrete exponential),
 \code{"BH"} (Beverton-Holt, the default), or \code{"Ricker"}, indicating which spawner-recruit
 function to fit. Synonyms \code{"DI"}, \code{"B-H"}, \code{"bh"}, \code{"b-h"} and \code{"ricker"} are accepted.}
+
+\item{RRS}{A character string or vector of strings naming parameters of the function specified by
+\code{SR_fun} that differ between wild- and hatchery-origin spawners, such that the
+relative reproductive success of hatchery spawners is not equal to 1. If \code{pool_pops == TRUE},
+these should be the names of the population-specific parameters, not their hyper-means.
+For example, if \code{life_cycle \%in\% c("SS","SSiter")}, the options are
+\code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
+Currently \code{RRS} is only implemented for \code{pool_pops == FALSE}.}
 
 \item{ages}{For multi-stage models, a named list giving the ages in
 years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
@@ -208,38 +214,6 @@ row corresponding to a female:
 \itemize{
 \item \code{age_E}  Female age in years.
 \item \code{E_obs}  Observed fecundity.
-}}
-
-\item{fish_data_fwd}{Deprecated. Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future" simulations:
-\itemize{
-\item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
-\item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
-For each population in \code{fish_data_fwd$pop}, the first year appearing in
-\code{fish_data_fwd$year} must be one greater than the last year appearing in
-\code{fish_data$year}, i.e.,
-\code{min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1}.
-\item \code{A}  Spawning habitat size (either stream length or area).
-Will usually be time-invariant within a population, but need not be.
-\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
-\item \code{B_rate}  Total broodstock removal rate (proportion) of natural-origin fish.
-\item \code{p_HOS}  Proportion of hatchery-origin spawners.
-}
-
-Unlike \code{fish_data}, a given combination of population and
-year may occur multiple times, perhaps to facilitate comparisons across
-scenarios or "branches" with different inputs (e.g., harvest rate). In this
-case, all branches are subjected to the same sequence of process errors in
-recruitment and age structure.}
-
-\item{prior_data}{Deprecated; will be merged into \code{fish_data} in a future release.
-If \code{stan_model == "IPM_ICchinook_pp"}, named list
-with the following elements:
-\itemize{
-\item \code{s}  Data frame with columns \code{year}, \code{mu_prior_D}, \code{sigma_prior_D},
-\code{mu_prior_SAR}, \code{sigma_prior_SAR}, \code{mu_prior_U}, \code{sigma_prior_U},
-giving the annual prior means and SDs of logit survival downstream, at sea,
-and upstream, respectively.
 }}
 }
 \value{
