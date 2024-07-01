@@ -1,6 +1,6 @@
 Package: salmonIPM
 Title: Integrated Population Models for Pacific Salmonids
-Version: 1.5.0.9000
+Version: 1.5.1.9000
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"
@@ -19,12 +19,8 @@ Imports:
     methods,
     Rcpp (>= 0.12.0),
     RcppParallel,
-    rstantools (>= 2.4.0),
     parallel,
-    shinystan,
     posterior,
-    loo,
-    lifecycle,
     mvtnorm
 LinkingTo: 
     BH (>= 1.84.0),
@@ -38,9 +34,12 @@ Encoding: UTF-8
 LazyData: true
 Biarch: true
 Suggests:
+    rstantools (>= 2.4.0),
+    loo,
+    shinystan,
+    lifecycle,
     knitr,
-    rmarkdown,
-    lifecycle
+    rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
 Roxygen: list(markdown = TRUE)

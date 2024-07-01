@@ -40,7 +40,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                       par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL, 
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE, 
-                      fecundity_data = NULL, prior_data = NULL)
+                      fecundity_data = NULL)
 {
   stan_model <- match.arg(stan_model)
   
