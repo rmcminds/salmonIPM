@@ -21,7 +21,6 @@ stan_data(
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
   fecundity_data = NULL,
-  fish_data_fwd = NULL,
   prior_data = NULL
 )
 }
@@ -216,28 +215,6 @@ row corresponding to a female:
 \item \code{age_E}  Female age in years.
 \item \code{E_obs}  Observed fecundity.
 }}
-
-\item{fish_data_fwd}{Deprecated. Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future" simulations:
-\itemize{
-\item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
-\item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
-For each population in \code{fish_data_fwd$pop}, the first year appearing in
-\code{fish_data_fwd$year} must be one greater than the last year appearing in
-\code{fish_data$year}, i.e.,
-\code{min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1}.
-\item \code{A}  Spawning habitat size (either stream length or area).
-Will usually be time-invariant within a population, but need not be.
-\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
-\item \code{B_rate}  Total broodstock removal rate (proportion) of natural-origin fish.
-\item \code{p_HOS}  Proportion of hatchery-origin spawners.
-}
-
-Unlike \code{fish_data}, a given combination of population and
-year may occur multiple times, perhaps to facilitate comparisons across
-scenarios or "branches" with different inputs (e.g., harvest rate). In this
-case, all branches are subjected to the same sequence of process errors in
-recruitment and age structure.}
 }
 \value{
 A named list that is passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} as the \code{data}

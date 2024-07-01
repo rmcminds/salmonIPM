@@ -24,11 +24,10 @@ salmonIPM(
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
   fecundity_data = NULL,
-  fish_data_fwd = NULL,
-  init = NULL,
   pars = "all",
   include = TRUE,
   log_lik = FALSE,
+  init = NULL,
   chains = 4,
   iter = 2000,
   warmup = floor(iter/2),
@@ -254,32 +253,6 @@ row corresponding to a female:
 \item \code{E_obs}  Observed fecundity.
 }}
 
-\item{fish_data_fwd}{Deprecated. Only if \code{stan_model == "IPM_SS_pp"}, optional data frame
-with the following columns, representing "forward" or "future" simulations:
-\itemize{
-\item \code{pop}  Numeric or character population ID. All values must also appear in \code{fish_data$pop}.
-\item \code{year}  Integer variable giving the year the fish spawned (i.e., the brood year).
-For each population in \code{fish_data_fwd$pop}, the first year appearing in
-\code{fish_data_fwd$year} must be one greater than the last year appearing in
-\code{fish_data$year}, i.e.,
-\code{min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1}.
-\item \code{A}  Spawning habitat size (either stream length or area).
-Will usually be time-invariant within a population, but need not be.
-\item \code{F_rate}  Total harvest rate (proportion) of natural-origin fish.
-\item \code{B_rate}  Total broodstock removal rate (proportion) of natural-origin fish.
-\item \code{p_HOS}  Proportion of hatchery-origin spawners.
-}
-
-Unlike \code{fish_data}, a given combination of population and
-year may occur multiple times, perhaps to facilitate comparisons across
-scenarios or "branches" with different inputs (e.g., harvest rate). In this
-case, all branches are subjected to the same sequence of process errors in
-recruitment and age structure.}
-
-\item{init}{A list of named lists of initial values to be passed to
-\code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. If \code{NULL}, initial values will be automatically
-generated from the supplied data using \code{\link[=stan_init]{stan_init()}}.}
-
 \item{pars}{A character vector specifying (hyper)parameters, states,
 and/or quantities of interest ("parameters") to be saved.
 The default is to save all parameters. Parameters can be explicitly named or
@@ -293,6 +266,10 @@ multidimensional parameters can be excluded, rather than particular elements of 
 
 \item{log_lik}{Logical scalar indicating whether the pointwise log-likelihood
 should be saved, e.g. for later use with \code{\link[loo:loo]{loo::loo()}}.}
+
+\item{init}{A list of named lists of initial values to be passed to
+\code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}. The default (and recommended) \code{NULL} randomly generates
+initial values for each chain given the data and model using \code{\link[=stan_init]{stan_init()}}.}
 
 \item{chains}{Positive integer specifying the number of HMC chains;
 see \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}

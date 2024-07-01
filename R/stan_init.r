@@ -223,7 +223,7 @@ stan_init <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
         beta_R = array(rnorm(K_R, 0, 0.5/apply(abs(X_R), 2, max))),
         rho_R = runif(1, 0.1, 0.7),
         sigma_year_R = runif(1, 0.1, 0.5),
-        zeta_year_R = array(rnorm(max(year, year_fwd), 0, 0.1)),
+        zeta_year_R = array(rnorm(max(year), 0, 0.1)),
         sigma_R = runif(1, 0.5, 1),
         zeta_R = array(scale(log(R_obs)))*0.1,
         # (maiden) spawner age structure

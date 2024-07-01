@@ -191,28 +191,6 @@
 #' row corresponding to a female:
 #' * `age_E`  Female age in years.   
 #' * `E_obs`  Observed fecundity.  
-#' @param fish_data_fwd Deprecated. Only if `stan_model == "IPM_SS_pp"`, optional data frame
-#'   with the following columns, representing "forward" or "future" simulations: 
-#'   * `pop`  Numeric or character population ID. All values must also appear in `fish_data$pop`.   
-#'   * `year`  Integer variable giving the year the fish spawned (i.e., the brood year). 
-#'   For each population in `fish_data_fwd$pop`, the first year appearing in 
-#'   `fish_data_fwd$year` must be one greater than the last year appearing in 
-#'   `fish_data$year`, i.e., 
-#'   `min(fish_data_fwd$year[fish_data_fwd$pop == j]) == max(fish_data$year[fish_data$pop == j]) + 1`.
-#'   * `A`  Spawning habitat size (either stream length or area). 
-#'   Will usually be time-invariant within a population, but need not be.   
-#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.   
-#'   * `B_rate`  Total broodstock removal rate (proportion) of natural-origin fish.  
-#'   * `p_HOS`  Proportion of hatchery-origin spawners.
-#'   
-#'   Unlike `fish_data`, a given combination of population and
-#'   year may occur multiple times, perhaps to facilitate comparisons across
-#'   scenarios or "branches" with different inputs (e.g., harvest rate). In this
-#'   case, all branches are subjected to the same sequence of process errors in
-#'   recruitment and age structure. 
-#' @param init A list of named lists of initial values to be passed to
-#'   [rstan::sampling()]. If `NULL`, initial values will be automatically
-#'   generated from the supplied data using [stan_init()].
 #' @param pars A character vector specifying (hyper)parameters, states, 
 #' and/or quantities of interest ("parameters") to be saved. 
 #' The default is to save all parameters. Parameters can be explicitly named or 
@@ -224,6 +202,9 @@
 #'  multidimensional parameters can be excluded, rather than particular elements of them. 
 #' @param log_lik Logical scalar indicating whether the pointwise log-likelihood
 #'   should be saved, e.g. for later use with [loo::loo()].
+#' @param init A list of named lists of initial values to be passed to
+#'   [rstan::sampling()]. The default (and recommended) `NULL` randomly generates
+#'   initial values for each chain given the data and model using [stan_init()].
 #' @param chains Positive integer specifying the number of HMC chains; 
 #'   see [rstan::sampling()].
 #' @param iter Positive integer specifying the number of iterations for each
@@ -286,9 +267,8 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       ages = NULL, par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL,
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fecundity_data = NULL, fish_data_fwd = NULL, 
-                      init = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
-                      chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
+                      fecundity_data = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
+                      init = NULL, chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
                       cores = parallel::detectCores(logical = FALSE), 
                       control = NULL, ...)
 {
@@ -310,8 +290,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                    par_models = par_models, center = center, scale = scale, prior = prior, 
                    fish_data = fish_data, age_F = age_F, age_B = age_B, 
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                   conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data, 
-                   fish_data_fwd = fish_data_fwd)
+                   conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data)
   
   if(is.null(init))
     init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)

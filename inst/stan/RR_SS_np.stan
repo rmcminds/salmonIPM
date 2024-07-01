@@ -22,7 +22,7 @@ data {
 
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
-  int<lower=1,upper=N> N_year = max(year); // number of years, not incl fwd simulations
+  int<lower=1,upper=N> N_year = max(year); // number of years
   int<lower=2> ages[N_age];                // adult ages
   real mu_Rmax = max(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-mean of Rmax
   real sigma_Rmax = sd(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-SD of Rmax

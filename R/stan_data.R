@@ -40,7 +40,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                       par_models = NULL, center = TRUE, scale = TRUE, 
                       prior = NULL, fish_data, age_F = NULL, age_B = NULL, 
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE, 
-                      fecundity_data = NULL, fish_data_fwd = NULL, prior_data = NULL)
+                      fecundity_data = NULL, prior_data = NULL)
 {
   stan_model <- match.arg(stan_model)
   
@@ -181,32 +181,6 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     if(is.null(age_S_eff)) 
       age_S_eff <- rep(1, switch(life_cycle, SSiter = N_age + 1, N_age))
     age_S_eff <- as.numeric(age_S_eff)
-  }
-  
-  # Future simulation data
-  if(is.null(fish_data_fwd)) {
-    N_fwd <- 0
-    fish_data_fwd <- data.frame(pop = 1, year = 1, A = 0, F_rate = 0, B_rate = 0, p_HOS = 0)
-    fish_data_fwd <- fish_data_fwd[c(),]
-  } else {
-    if(stan_model != "IPM_SS_pp")
-      warning("Argument fish_data_fwd is ignored unless stan_model == 'IPM_SS_pp'")
-    if(any(is.na(fish_data_fwd)))
-      stop("Missing values not allowed in fish_data_fwd")
-    N_fwd <- nrow(fish_data_fwd)
-    fish_data_fwd <- as.data.frame(fish_data_fwd)
-    fish_data_fwd$pop <- factor(fish_data_fwd$pop, levels = levels(factor(fish_data$pop)))
-    if(any(!fish_data_fwd$pop %in% fish_data$pop))
-      stop("All populations in fish_data_fwd must appear in fish_data")
-    year_check <- tapply(fish_data$year, fish_data$pop, max)
-    year_check <- year_check[names(year_check) %in% fish_data_fwd$pop]
-    year_fwd_check <- tapply(fish_data_fwd$year, fish_data_fwd$pop, min)
-    year_fwd_check <- year_fwd_check[names(year_fwd_check) %in% fish_data_fwd$pop]
-    if(any(year_fwd_check != year_check + 1))
-      stop("First year in fish_data_fwd must equal 1 + last year in fish_data for each population")
-    fish_data_fwd$pop <- as.numeric(fish_data_fwd$pop)
-    fish_data_fwd$year <- as.numeric(factor(fish_data_fwd$year, 
-                                            levels = levels(factor(c(fish_data$year, fish_data_fwd$year)))))
   }
   
   # Priors
@@ -369,14 +343,6 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   N = N,
                   pop = pop, 
                   year = year,
-                  # info for forward simulations
-                  N_fwd = N_fwd,
-                  pop_fwd = as.vector(fish_data_fwd$pop),
-                  year_fwd = as.vector(fish_data_fwd$year),
-                  A_fwd = as.vector(fish_data_fwd$A),
-                  B_rate_fwd = as.vector(fish_data_fwd$B_rate),
-                  F_rate_fwd = as.vector(fish_data_fwd$F_rate),
-                  p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
                   # recruitment
                   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
                   RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Rmax", RRS)))),
