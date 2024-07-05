@@ -82,11 +82,8 @@ model {
   // Priors
   alpha ~ lognormal(2.0,2.0);
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
-  for(i in 1:N_pop)
-  {
-    rho_R[i] ~ gnormal(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
-    sigma_R[i] ~ normal(0,3);
-  }
+  rho_R ~ gnormal(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
+  sigma_R ~ normal(0,3);
 
   // Likelihood
   R_obs[which_fit] ~ lognormal(log(R_ar1[which_fit]), sigma_ar1[which_fit]);
