@@ -9,10 +9,10 @@ salmonIPM(
   stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"),
   model = c("IPM", "RR"),
   life_cycle = c("SS", "SSiter", "SMS", "SMaS", "LCRchum"),
+  ages = NULL,
   pool_pops = TRUE,
   SR_fun = c("BH", "B-H", "bh", "b-h", "Ricker", "ricker", "exp"),
   RRS = "none",
-  ages = NULL,
   par_models = NULL,
   center = TRUE,
   scale = TRUE,
@@ -58,6 +58,10 @@ available for \code{pool_pops == FALSE})
 (\code{pool_pops == TRUE})
 }}
 
+\item{ages}{For multi-stage models, a named list giving the ages in
+years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
+because in that case smolt age structure is provided in \code{fish_data}.}
+
 \item{pool_pops}{Logical defaulting to \code{TRUE}, indicating whether
 to model multiple populations hierarchically rather than as independent "fixed effects".
 It is possible to fit a model to multiple populations simultaneously even though they
@@ -75,10 +79,6 @@ these should be the names of the population-specific parameters, not their hyper
 For example, if \code{life_cycle \%in\% c("SS","SSiter")}, the options are
 \code{"none"} (the default), \code{"alpha"}, \code{"Rmax"}, or \code{c("alpha","Rmax")}.
 Currently \code{RRS} is only implemented for \code{pool_pops == FALSE}.}
-
-\item{ages}{For multi-stage models, a named list giving the ages in
-years of all fixed-age subadult life stages. This is not needed for \code{IPM_SMaS_np}
-because in that case smolt age structure is provided in \code{fish_data}.}
 
 \item{par_models}{Optional list of two-sided formulas of the form
 \code{theta ~ x1 + ... + xK}, where \code{theta} is a (hyper)parameter or state in the model

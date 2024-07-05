@@ -9,11 +9,14 @@ if(.Platform$OS.type == "windows") options(device = "windows")
 library(salmonIPM)
 library(dplyr)           # data wrangling
 library(tidyr)
-library(distributional)  # plotting priors
 library(posterior)       # working with posterior samples
-library(ggplot2)         # alpha function
+library(ggplot2)         # plotting
+library(distributional)  # plotting priors
+library(ggdist)
+library(ggh4x)
 library(vioplot)         # posterior violin plots
 library(rgl)             # 3-D graphics
+library(shinystan)       # interactive exploration of posterior
 library(here)            # file system paths
 
 ## @knitr unused
@@ -108,38 +111,49 @@ print(fit1pop, pars = stan_pars("IPM_SS_np", "hyper", RRS = c("alpha","Rmax")),
 ## @knitr singlepop_posteriors
 par_names <- c("log(alpha_W)","log(alpha_H)","log(Rmax_W)","log(Rmax_H)")
 
+# extract and transform draws using posterior package
+post1pop <- as_draws_rvars(fit1pop) %>% 
+  mutate_variables(`log(alpha_W)` = log(alpha_W), `log(alpha_H)` = log(alpha_H), 
+                   `log(Rmax_W)` = log(Rmax_W), `log(Rmax_H)` = log(Rmax_H)) %>% 
+  .[par_names]
+
+postdf1pop <- post1pop %>% as_draws_df() %>% as.data.frame() %>% 
+  pivot_longer(cols = !starts_with("."), names_to = "param_indx", values_to = "value") %>% 
+  mutate(param_indx = factor(param_indx, levels = unique(param_indx)))
+
 # specify priors using distributional package
 prior_Rmax <- stan_data("IPM_SS_np", fish_data = sim1pop$sim_dat)$prior_Rmax
 prior1pop <- list(`log(alpha_W)` = dist_normal(2,2), `log(alpha_H)` = dist_normal(2,2),
                   `log(Rmax_W)` = dist_normal(prior_Rmax[1], prior_Rmax[2]),
                   `log(Rmax_H)` = dist_normal(prior_Rmax[1], prior_Rmax[2]))
 
+priordf1pop <- data.frame(param_indx = unique(postdf1pop$param_indx)) %>% 
+  mutate(param = gsub("\\[.\\]", "", param_indx), prior = prior1pop[param])
+
 # true parameter values
 true1pop <- sim1pop$pars_out %>% 
   c(`log(alpha_W)` = log(.$alpha_W), `log(alpha_H)` = log(.$alpha_H), 
     `log(Rmax_W)` = log(.$Rmax_W), `log(Rmax_H)` = log(.$Rmax_H)) %>% 
-  .[par_names] %>% unlist()
-
-# extract and transform draws using posterior package
-post1pop <- as_draws_rvars(fit1pop) %>% 
-  mutate_variables(`log(alpha_W)` = log(alpha_W), `log(alpha_H)` = log(alpha_H), 
-                   `log(Rmax_W)` = log(Rmax_W), `log(Rmax_H)` = log(Rmax_H)) %>% 
-  .[par_names] %>% as_draws_matrix()
+  .[par_names] %>% unlist() %>% 
+  data.frame(param_indx = factor(names(.), levels = names(.)), value = .)
 
 # plot
-par(mfcol = c(2,2), mar = c(5,1,1,1))
-for(j in names(true1pop)) {
-  hist(post1pop[,j], 20, prob = TRUE, col = alpha("slategray4", 0.5), border = "white",
-       xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.4)
-  curve(density(prior1pop[[j]], at = x)[[1]], lwd = 0.5, add = TRUE)
-  abline(v = true1pop[[j]], lwd = 2, lty = 3)
-}
-legend("right", c("true","prior","posterior"), cex = 1.4, text.col = "white", 
-       fill = c(NA, NA, alpha("slategray4", 0.5)), border = NA,
-       inset = c(-1,0), xpd = NA, bty = "n")
-legend("right", c("true","prior","posterior"), cex = 1.4, 
-       lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
-       inset = c(-1,0), xpd = NA, bty = "n")
+scales <- post1pop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
+  lapply(FUN = function(x) scale_x_continuous(limits = range(x)))
+
+postdf1pop %>%   
+  ggplot(aes(x = value)) + 
+  geom_histogram(aes(y = after_stat(density)), color = "white", fill = "slategray4", alpha = 0.5) +
+  stat_slab(data = priordf1pop, aes(xdist = prior), inherit.aes = FALSE,
+            normalize = "none", col = "black", lwd = 0.8, fill = NA) +
+  geom_vline(data = true1pop, aes(xintercept = value), lwd = 0.8, lty = 2) +
+  facet_wrap(~ param_indx, scales = "free", strip.position = "bottom") + 
+  facetted_pos_scales(x = scales) + theme_classic() + 
+  theme(strip.placement = "outside", strip.background = element_blank(), 
+        strip.text = element_text(size = 11, margin = margin(b = 3, t = 0)), 
+        axis.line.y = element_blank(), axis.ticks.y = element_blank(),
+        axis.text = element_text(size = 10), axis.text.y = element_blank()) +
+  labs(x = "", y = "")
 ## @knitr
 
 #-----------------------------------------------------

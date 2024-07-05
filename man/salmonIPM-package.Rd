@@ -5,7 +5,7 @@
 \alias{salmonIPM-package}
 \title{The 'salmonIPM' package.}
 \description{
-Fits IPMs or run-reconstruction regressions for anadromous Pacific salmonid population dynamics using a hierarchical Bayesian framework implemented in Stan. Various models are available, representing alternative life-history structures and independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
+Fits integrated population models (IPMs) or run-reconstruction regressions for anadromous Pacific salmonid population dynamics using a hierarchical Bayesian framework implemented in Stan. Various models are available, representing alternative life-history structures and independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 }
 \references{
 Stan Development Team (2020). RStan: the R interface to Stan. R package version 2.19.3. https://mc-stan.org

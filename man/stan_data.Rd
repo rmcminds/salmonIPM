@@ -20,8 +20,7 @@ stan_data(
   age_S_obs = NULL,
   age_S_eff = NULL,
   conditionGRonMS = FALSE,
-  fecundity_data = NULL,
-  prior_data = NULL
+  fecundity_data = NULL
 )
 }
 \arguments{
