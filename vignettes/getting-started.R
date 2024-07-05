@@ -146,12 +146,13 @@ priordf1pop <- data.frame(param_indx = unique(postdf1pop$param_indx)) %>%
 # true parameter values
 true1pop <- sim1pop$pars_out %>% replace("sigma_R", .$sigma_year_R) %>% 
   c(`log(alpha)` = log(.$alpha), `log(Rmax)` = log(.$Rmax), rho_p = .$R_p[2,1]) %>% 
-  .[par_names] %>% unlist() %>% setNames(gsub("(\\d)", "[\\1]", names(.))) %>% 
-  data.frame(param_indx = factor(names(.), levels = names(.)), value = .)
+  .[par_names] %>% unlist() %>% 
+  data.frame(param_indx = gsub("(\\d)", "[\\1]", names(.)), value = ., row.names = NULL) %>% 
+  mutate(param_indx = factor(param_indx, levels = levels(postdf1pop$param_indx)))
 
 # plot
 scales <- post1pop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
-  lapply(FUN = function(x) scale_x_continuous(limits = range(x)))
+  lapply(function(x) scale_x_continuous(limits = range(x)))
 
 postdf1pop %>%   
   ggplot(aes(x = value)) + 
@@ -510,12 +511,13 @@ priordfNpop <- data.frame(param_indx = unique(postdfNpop$param_indx)) %>%
 # true parameter values
 trueNpop <- simNpop$pars_out %>%
   c(rho_pop_p = .$R_pop_p[2,1], rho_p = .$R_p[2,1]) %>%
-  .[par_names] %>% unlist() %>% setNames(gsub("(\\d)", "[\\1]", names(.))) %>% 
-  data.frame(param_indx = factor(names(.), levels = names(.)), value = .)
+  .[par_names] %>% unlist() %>% 
+  data.frame(param_indx = gsub("(\\d)", "[\\1]", names(.)), value = ., row.names = NULL) %>% 
+  mutate(param_indx = factor(param_indx, levels = levels(postdfNpop$param_indx)))
 
 # plot
 scales <- postNpop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
-  lapply(FUN = function(x) scale_x_continuous(limits = range(x)))
+  lapply(function(x) scale_x_continuous(limits = range(x)))
 
 postdfNpop %>%   
   ggplot(aes(x = value)) + 

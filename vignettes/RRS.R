@@ -135,11 +135,12 @@ true1pop <- sim1pop$pars_out %>%
   c(`log(alpha_W)` = log(.$alpha_W), `log(alpha_H)` = log(.$alpha_H), 
     `log(Rmax_W)` = log(.$Rmax_W), `log(Rmax_H)` = log(.$Rmax_H)) %>% 
   .[par_names] %>% unlist() %>% 
-  data.frame(param_indx = factor(names(.), levels = names(.)), value = .)
+  data.frame(param_indx = gsub("(\\d)", "[\\1]", names(.)), value = ., row.names = NULL) %>% 
+  mutate(param_indx = factor(param_indx, levels = levels(postdf1pop$param_indx)))
 
 # plot
 scales <- post1pop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
-  lapply(FUN = function(x) scale_x_continuous(limits = range(x)))
+  lapply(function(x) scale_x_continuous(limits = range(x)))
 
 postdf1pop %>%   
   ggplot(aes(x = value)) + 
