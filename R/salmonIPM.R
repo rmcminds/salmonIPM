@@ -252,8 +252,8 @@
 #' | `IPM_SMaS_np`      | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' | `IPM_LCRchum_pp`   | &#x2610;                | &#x2611;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
 #' 
-#' @return An object of class `stanfit` representing the fitted model. See
-#'   [rstan::stanfit] for details.
+#' @return An object of class `salmonIPMfit` representing the fitted model. See
+#'   [`salmonIPMfit-class`] for details.
 #'
 #' @importFrom rstan sampling
 #' @export
@@ -272,9 +272,10 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       cores = parallel::detectCores(logical = FALSE), 
                       control = NULL, ...)
 {
-  model <- match.arg(model)
-  life_cycle <- match.arg(life_cycle)
-  pool_pops <- grepl("_pp", stan_model)     # override if stan_model is specified
+  if(!is.null(stan_model)) mlp <- strsplit(stan_model, "_")[[1]]
+  model <- if(is.null(model)) mlp[1] else match.arg(model) 
+  life_cycle <- if(is.null(life_cycle)) mlp[2] else match.arg(life_cycle)
+  pool_pops <- mlp[3] == "pp"               # override if stan_model is specified
   stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   SR_fun <- match.arg(SR_fun)
   if(SR_fun == "DI") SR_fun <- "exp"
@@ -302,9 +303,18 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95
   
-  fit <- rstan::sampling(stanmodels[[stanmodel]], 
-                         data = dat, init = init, pars = pars,
-                         chains = chains, cores = cores, 
-                         iter = iter, warmup = warmup, thin = thin, 
-                         control = control, ...)
+  stanfit <- rstan::sampling(stanmodels[[stanmodel]], 
+                             data = dat, init = init, pars = pars,
+                             chains = chains, cores = cores, 
+                             iter = iter, warmup = warmup, thin = thin, 
+                             control = control, ...)
+  
+  out <- salmonIPMfit(stanfit = stanfit, call = match.call(), 
+                      model = model, life_cycle = life_cycle, pool_pops = pool_pops, 
+                      SR_fun = SR_fun, RRS = RRS, par_models = par_models, 
+                      center = center, scale = scale, prior = prior, 
+                      age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+                      conditionGRonMS = conditionGRonMS)
+  
+  return(out)
 }
