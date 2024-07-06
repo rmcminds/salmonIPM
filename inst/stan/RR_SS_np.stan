@@ -1,6 +1,6 @@
 functions {
   #include /include/SR.stan
-  #include /include/gnormal_lpdf.stan
+  #include /include/gnormal_lpdf_vec.stan
 }
 
 data {
