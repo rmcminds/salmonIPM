@@ -298,8 +298,8 @@ necessary to minimize divergences in most cases.}
 \item{...}{Additional arguments to pass to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.}
 }
 \value{
-An object of class \code{stanfit} representing the fitted model. See
-\link[rstan:stanfit-class]{rstan::stanfit} for details.
+An object of class \code{salmonIPMfit} representing the fitted model. See
+\code{\linkS4class{salmonIPMfit}} for details.
 }
 \description{
 Fit an IPM or run-reconstruction regression model
