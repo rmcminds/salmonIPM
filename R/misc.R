@@ -11,8 +11,7 @@
 #' @importFrom rstan get_posterior_mean
 #'
 #' @export
-stan_mean <- function(object, pars)
-{
+stan_mean <- function(object, pars) {
   mm <- get_posterior_mean(object$stanfit, pars)
   return(mm[,ncol(mm)])
 }
@@ -31,7 +30,6 @@ stan_mean <- function(object, pars)
 #' @importFrom rstan extract
 #'
 #' @export
-extract1 <- function(object, par)
-{
-  rstan::extract(object, par)[[1]]
+extract1 <- function(object, par) {
+  extract(object$stanfit, par)[[1]]
 }
