@@ -15,9 +15,9 @@
 #' @name as.array.salmonIPMfit
 #' 
 #' @details
+#' 
 #' methods(class = 'stanfit')
 #' 
-#' extract, get_posterior_mean (S4 generics: rstan -> use extract1, stan_mean instead)    
 #' loo, loo_moment_match (S4 generics: rstan -> use S3 generics from rstanarm instead)
 #' print
 #' summary          

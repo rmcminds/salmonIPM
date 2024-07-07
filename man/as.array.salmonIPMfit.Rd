@@ -24,13 +24,12 @@ the specified quantities.
 }
 \description{
 Post-warmup samples from a \link{salmonIPMfit} object are converted into standard formats.
-These S3 methods are wrappers for \code{as.*(object$stanfit)}; see \code{\link[=as.array.stanfit]{as.array.stanfit()}}
+These S3 methods are wrappers for \code{as.*.stanfit(object$stanfit)}; see \code{\link[=as.array.stanfit]{as.array.stanfit()}}
 for details.
 }
 \details{
 methods(class = 'stanfit')
 
-as.array, as.data.frame, as.matrix (S3 generics: base)
 extract, get_posterior_mean (S4 generics: rstan -> use extract1, stan_mean instead)
 loo, loo_moment_match (S4 generics: rstan -> use S3 generics from rstanarm instead)
 print
