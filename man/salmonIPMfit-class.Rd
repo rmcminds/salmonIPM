@@ -3,8 +3,7 @@
 \name{salmonIPMfit-class}
 \alias{salmonIPMfit-class}
 \alias{salmonIPMfit}
-\alias{is.salmonIPMfit}
-\title{Create a salmonIPMfit object}
+\title{Fitted model objects: the \code{salmonIPMfit} class}
 \usage{
 salmonIPMfit(
   stanfit,
@@ -22,13 +21,11 @@ salmonIPMfit(
   age_S_eff,
   conditionGRonMS
 )
-
-is.salmonIPMfit(x)
 }
 \arguments{
-\item{stanfit}{An object of class \code{stanfit}.}
+\item{stanfit}{An object of class \linkS4class{stanfit}.}
 
-\item{call}{An object of class \link[methods:LanguageClasses]{methods::call} containing the call to \code{\link[=salmonIPM]{salmonIPM()}}.}
+\item{call}{An object of class \linkS4class{call} containing the call to \code{\link[=salmonIPM]{salmonIPM()}}.}
 
 \item{model}{Either \code{"IPM"} or \code{"RR"}, indicating whether to fit an IPM
 or run-reconstruction regression model.}
@@ -110,14 +107,17 @@ from the population. If \code{TRUE}, it is assumed that the number of spawners o
 age (e.g., jacks vs 1-ocean) is arbitrary, but smolt (FW) age is randomly sampled within
 each ocean age; i.e., in a \verb{smolt age x ocean age} contingency table, the cell frequencies
 are conditioned on the column totals.}
-
-\item{x}{An \R object}
 }
 \value{
-A salmonIPMfit object.
+A \code{salmonIPMfit} object.
 }
 \description{
-Create a salmonIPMfit object
-
-Checks if argument is a \code{salmonIPMfit} object
+Models fitted with \link{salmonIPM-package} are objects of S3 class \code{salmonIPMfit}. Elements
+generally mirror the named arguments passed to the constructor function by \code{\link[=salmonIPM]{salmonIPM()}}
+and are mostly self-explanatory, except \code{prior.info} is a named list whose elements are
+lists returned by \link{priors} functions for all hyperparameters in the model, whether
+modifiable (user-specified or default) or hard-coded.
+}
+\seealso{
+\code{\link[=salmonIPM]{salmonIPM()}}, \link{priors}
 }

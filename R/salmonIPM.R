@@ -272,10 +272,13 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       cores = parallel::detectCores(logical = FALSE), 
                       control = NULL, ...)
 {
-  if(!is.null(stan_model)) mlp <- strsplit(stan_model, "_")[[1]]
-  model <- if(is.null(model)) mlp[1] else match.arg(model) 
-  life_cycle <- if(is.null(life_cycle)) mlp[2] else match.arg(life_cycle)
-  pool_pops <- mlp[3] == "pp"               # override if stan_model is specified
+  model <- match.arg(model)
+  life_cycle <- match.arg(life_cycle)
+  force(stan_model)
+  mlp <- strsplit(stan_model, "_")[[1]]
+  model <- mlp[1]                           # override args if stan_model is specified
+  life_cycle <- mlp[2]
+  pool_pops <- mlp[3] == "pp"
   stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
   SR_fun <- match.arg(SR_fun)
   if(SR_fun == "DI") SR_fun <- "exp"
