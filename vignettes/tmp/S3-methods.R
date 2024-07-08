@@ -6,8 +6,7 @@
 #'
 #' methods(class = 'stanreg')
 #' 
-#' log_lik
-#' loo, loo_compare (S3 generics: loo)
+#' loo, loo_compare, loo_moment_match (S3 generics: loo)
 #' posterior_predict (S3 generic: rstantools)   
 #' prior_summary (S3 generic: rstantools)
 #' print                  

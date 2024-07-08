@@ -14,24 +14,23 @@
 #' the specified quantities.
 #' 
 #' @seealso [salmonIPM()], [salmonIPMfit], [as.array.stanfit()]
-#' 
 
-#' @method as.matrix salmonIPMfit
 #' @rdname as.array.salmonIPMfit
+#' @method as.matrix salmonIPMfit
 #' @export
 as.matrix.salmonIPMfit <- function(object, ...) {
   rstan:::as.matrix.stanfit(object$stanfit, ...)
 }
 
-#' @method as.array salmonIPMfit
 #' @rdname as.array.salmonIPMfit
+#' @method as.array salmonIPMfit
 #' @export
 as.array.salmonIPMfit <- function(object, ...) {
   rstan:::as.array.stanfit(object$stanfit, ...)
 }
 
-#' @method as.data.frame salmonIPMfit
 #' @rdname as.array.salmonIPMfit
+#' @method as.data.frame salmonIPMfit
 #' @export
 as.data.frame.salmonIPMfit <- function(object, ...) {
   rstan:::as.data.frame.stanfit(object$stanfit, ...)
