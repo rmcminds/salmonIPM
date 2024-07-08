@@ -96,7 +96,7 @@ fit1pop <- salmonIPM(life_cycle = "SMS", pool_pops = FALSE,
                      fish_data = sim1pop$sim_dat,
                      seed = 123)
 
-print(fit1pop, pars = stan_pars("IPM_SMS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fit1pop)
 ## @knitr
 
 
@@ -171,7 +171,7 @@ fitNnp <- salmonIPM(life_cycle = "SMS", pool_pops = FALSE, SR_fun = "BH",
                     ages = list(M = 2), fish_data = simNpop$sim_dat,
                     seed = 321)
 
-print(fitNnp, pars = stan_pars("IPM_SMS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNnp)
 ## @knitr
 
 #-----------------------------------------------------
@@ -183,7 +183,7 @@ fitNpp <- salmonIPM(life_cycle = "SMS", pool_pops = TRUE, SR_fun = "BH",
                     ages = list(M = 2), fish_data = simNpop$sim_dat,
                     seed = 321)
 
-print(fitNpp, pars = stan_pars("IPM_SMS_pp", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNpp)
 ## @knitr
 
 #----------------------------------------------------------

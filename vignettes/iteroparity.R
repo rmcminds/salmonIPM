@@ -104,7 +104,7 @@ fit1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                      chains = 4, iter = 2000, warmup = 1000, 
                      seed = 123)
 
-print(fit1pop, pars = stan_pars("IPM_SSiter_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fit1pop)
 ## @knitr
 
 #-----------------------------------------------------
@@ -349,7 +349,7 @@ fitX1pop <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                       chains = 4, iter = 2000, warmup = 1000, 
                       seed = 123)
 
-print(fitX1pop, pars = "beta_SS", prob = c(0.025, 0.5, 0.975))
+print(fitX1pop, pars = "beta_SS")
 ## @knitr
 
 
@@ -425,7 +425,7 @@ fitNnp <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH",
                     chains = 4, iter = 2000, warmup = 1000, 
                     seed = 321)
 
-print(fitNnp, pars = stan_pars("IPM_SSiter_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNnp)
 ## @knitr
 
 #-----------------------------------------------------
@@ -439,7 +439,7 @@ fitNpp <- salmonIPM(life_cycle = "SSiter", pool_pops = TRUE, SR_fun = "BH",
                     control = list(adapt_delta = 0.95, max_treedepth = 12),
                     seed = 321)
 
-print(fitNpp, pars = stan_pars("IPM_SSiter_pp", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNpp)
 ## @knitr
 
 #----------------------------------------------------------

@@ -100,8 +100,7 @@ fit1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE,
                      fish_data = sim1pop$sim_dat, 
                      seed = 123)
 
-print(fit1pop, pars = stan_pars("IPM_SS_np", "hyper", RRS = c("alpha","Rmax")), 
-      probs = c(0.025, 0.5, 0.975))
+print(fit1pop)
 ## @knitr
 
 #-----------------------------------------------------
@@ -327,10 +326,7 @@ fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE,
                     control = list(max_treedepth = 13),
                     seed = 321)
 
-print(fitNnp, 
-      pars = c("alpha_W","alpha_H","delta_alpha",
-               "Rmax_W","Rmax_H","delta_Rmax"), 
-      probs = c(0.025, 0.5, 0.975))
+print(fitNnp, pars = c("alpha_W","alpha_H","delta_alpha","Rmax_W","Rmax_H","delta_Rmax"))
 ## @knitr
 
 #-----------------------------------------------------
@@ -345,8 +341,7 @@ fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE,
 
 print(fitNpp, 
       pars = c("mu_alpha_W","mu_alpha_H","delta_mu_alpha",
-               "mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax"), 
-      probs = c(0.025, 0.5, 0.975))
+               "mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax"))
 ## @knitr
 
 #----------------------------------------------------------

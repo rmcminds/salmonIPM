@@ -345,11 +345,9 @@ format(head(simX1pop$sim_dat, 10), digits = 2)
 ## @knitr singlepop_covariate_fit
 fitX1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
                       par_models = list(Rmax ~ X1, R ~ X2),
-                      fish_data = simX1pop$sim_dat, 
-                      chains = 4, iter = 2000, warmup = 1000, 
-                      seed = 123)
+                      fish_data = simX1pop$sim_dat, seed = 123)
 
-print(fitX1pop, pars = c("beta_Rmax","beta_R"), prob = c(0.025, 0.5, 0.975))
+print(fitX1pop, pars = c("beta_Rmax","beta_R"))
 ## @knitr
 
 
@@ -421,11 +419,9 @@ format(head(simNpop$sim_dat, 10), digits = 2)
 
 ## @knitr fit_np
 fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
-                    fish_data = simNpop$sim_dat,
-                    chains = 4, iter = 2000, warmup = 1000, 
-                    seed = 321)
+                    fish_data = simNpop$sim_dat, seed = 321)
 
-print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNnp)
 ## @knitr
 
 #-----------------------------------------------------
@@ -434,11 +430,9 @@ print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975
 
 ## @knitr fit_pp
 fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH",
-                    fish_data = simNpop$sim_dat,
-                    chains = 4, iter = 2000, warmup = 1000, 
-                    seed = 321)
+                    fish_data = simNpop$sim_dat, seed = 321)
 
-print(fitNpp, pars = stan_pars("IPM_SS_pp", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNpp)
 ## @knitr
 
 #----------------------------------------------------------
