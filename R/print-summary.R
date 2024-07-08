@@ -7,6 +7,7 @@
 #' `print.stanfit(object$stanfit)`.
 #'
 #' @name print.salmonIPMfit
+#' @method print salmonIPMfit
 #'
 #' @param object An object of class [salmonIPMfit].
 #' @param pars A character vector specifying (hyper)parameters, states, and/or
@@ -27,10 +28,8 @@
 #' @param ... Additional arguments passed to [summary.stanfit()].
 #'
 #' @seealso [print.stanfit()], [salmonIPMfit]
-
-#' @rdname print.salmonIPMfit
-#' @method print salmonIPMfit
 #' @export
+
 print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE, 
                                probs = c(0.05, 0.5, 0.95), digits_summary = 2, ...) 
 {
@@ -61,5 +60,33 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
 }
 
 
+#' Summary method for `salmonIPMfit` objects
+#'
+#' Summarize the distributions of estimated parameters and derived quantities
+#' using the posterior draws in a [salmonIPMfit] object. This is a wrapper for
+#' `rstan::summary(object$stanfit)`.
+#'
+#' @name summary.salmonIPMfit
+#' @method summary salmonIPMfit
+#'
+#' @param object An object of class [salmonIPMfit].
+#' @param pars A character vector of parameter names. Defaults to all monitored
+#'   parameters as well as the log-posterior (`lp__`).
+#' @param probs A numeric vector of posterior quantiles. The default is
+#'   `c(0.025,0.25,0.5,0.75,0.975)`.
+#' @param use_cache Logical, defaulting to `TRUE`. When `use_cache = TRUE` the summary
+#'   quantities for all parameters are computed and cached for future use.
+#'   Setting `use_cache = FALSE` can be used to avoid performing the summary
+#'   computations for all parameters if `pars` is given as some specific
+#'   parameters.
+#'   
+#' @seealso [rstan::summary,stanfit-method], [salmonIPMfit]
+#' @importFrom rstan summary
+#' @export
 
+summary.salmonIPMfit <- function(object, pars, probs = c(0.025, 0.25, 0.50, 0.75, 0.975), 
+                                 use_cache = TRUE) 
+{
+  summary(object$stanfit, pars = pars, probs = probs, use_cache = use_cache)
+}
 
