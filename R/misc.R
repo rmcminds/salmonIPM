@@ -5,11 +5,8 @@
 #' 
 #' @param object A fitted [salmonIPMfit] object.
 #' @param pars Character vector with the names of parameters to summarize.
-#' 
 #' @return A scalar or vector of means of the posterior distribution of `pars`.
-#' 
 #' @importFrom rstan get_posterior_mean
-#'
 #' @export
 stan_mean <- function(object, pars) {
   mm <- get_posterior_mean(object$stanfit, pars)
@@ -26,9 +23,7 @@ stan_mean <- function(object, pars) {
 #' 
 #' @param object An object of class [salmonIPMfit].
 #' @param par Character string giving quantity to return.
-#' 
 #' @importFrom rstan extract
-#'
 #' @export
 extract1 <- function(object, par) {
   extract(object$stanfit, par)[[1]]

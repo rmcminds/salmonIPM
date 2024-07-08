@@ -260,6 +260,7 @@
 #'   [`salmonIPMfit-class`] for details.
 #'
 #' @importFrom rstan sampling
+#' @importFrom rstan get_elapsed_time
 #' @export
 #' @encoding UTF-8
 
@@ -325,7 +326,8 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       conditionGRonMS = conditionGRonMS,
                       dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
                       pops = levels(factor(fish_data$pop)),
-                      stan_data = if(save_data) dat else NULL)
+                      stan_data = if(save_data) dat else NULL,
+                      elapsed_time = get_elapsed_time(stanfit))
   
   return(out)
 }
