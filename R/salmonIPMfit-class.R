@@ -17,14 +17,14 @@
 
 salmonIPMfit <- function(stanfit, call, stan_model, model, life_cycle, pool_pops, 
                          SR_fun, RRS, par_models, center, scale, age_S_obs, age_S_eff,
-                         conditionGRonMS, prior, dims, pops, stan_data, elapsed_time)
+                         conditionGRonMS, prior.info, dims, pops, stan_data, elapsed_time)
 {
   out <- list(stanfit = stanfit, call = call, 
               stan_model = stan_model, model = model, life_cycle = life_cycle,
               pool_pops = pool_pops, SR_fun = SR_fun, RRS = RRS,
               par_models = par_models, center = center, scale = scale,
               age_S_obs = age_S_obs, age_S_eff = age_S_eff,
-              conditionGRonMS = conditionGRonMS, prior = prior, 
+              conditionGRonMS = conditionGRonMS, prior.info = prior.info, 
               dims = dims, pops = pops, stan_data = stan_data, elapsed_time = elapsed_time)
   
   structure(out, class = c("salmonIPMfit", "list"))

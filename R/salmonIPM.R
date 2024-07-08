@@ -345,7 +345,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   out <- salmonIPMfit(stanfit = stanfit, call = match.call(), stan_model = stan_model,
                       model = model, life_cycle = life_cycle, pool_pops = pool_pops, 
                       SR_fun = SR_fun, RRS = RRS, par_models = par_models, 
-                      center = center, scale = scale, prior = prior, 
+                      center = center, scale = scale, prior.info = prior, 
                       age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                       conditionGRonMS = conditionGRonMS,
                       dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
