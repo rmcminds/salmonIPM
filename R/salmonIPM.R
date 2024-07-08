@@ -223,6 +223,10 @@
 #' for details and available options. In contrast to **rstan**, the default value of 
 #' `adapt_delta` in **salmonIPM** is increased to 0.95 as we have found this 
 #' necessary to minimize divergences in most cases. 
+#' @param save_data Logical scalar defaulting to `FALSE` indicating whether to save the
+#'   data passed to Stan by [stan_data()] in the [salmonIPMfit] object. Can be useful
+#'   for posterior predictive checking and reproducibility, at the cost of increased
+#'   object size.
 #' @param ... Additional arguments to pass to [rstan::sampling()].
 #'   
 #' @details 
@@ -265,12 +269,13 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       ages = NULL, pool_pops = TRUE, 
                       SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
                       par_models = NULL, center = TRUE, scale = TRUE, 
-                      prior = NULL, fish_data, age_F = NULL, age_B = NULL,
-                      age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE,
-                      fecundity_data = NULL, pars = "all", include = TRUE, log_lik = FALSE, 
+                      age_F = NULL, age_B = NULL, age_S_obs = NULL, age_S_eff = NULL, 
+                      conditionGRonMS = FALSE, prior = NULL, 
+                      fish_data, fecundity_data = NULL, 
+                      pars = "all", include = TRUE, log_lik = FALSE, 
                       init = NULL, chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
                       cores = parallel::detectCores(logical = FALSE), 
-                      control = NULL, ...)
+                      control = NULL, save_data = FALSE, ...)
 {
   model <- match.arg(model)
   life_cycle <- match.arg(life_cycle)
@@ -299,7 +304,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   if(is.null(init))
     init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   
-  if(all(pars %in% c("all","hyper","shared","states","ppd")))
+  if(all(pars %in% c("all","hyper","group","states","ppd")))
     pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS)
   if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, RRS = RRS), pars)
   if(log_lik) pars <- c(pars, "LL")
@@ -312,12 +317,15 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                              iter = iter, warmup = warmup, thin = thin, 
                              control = control, ...)
   
-  out <- salmonIPMfit(stanfit = stanfit, call = match.call(), 
+  out <- salmonIPMfit(stanfit = stanfit, call = match.call(), stan_model = stan_model,
                       model = model, life_cycle = life_cycle, pool_pops = pool_pops, 
                       SR_fun = SR_fun, RRS = RRS, par_models = par_models, 
                       center = center, scale = scale, prior = prior, 
                       age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                      conditionGRonMS = conditionGRonMS)
+                      conditionGRonMS = conditionGRonMS,
+                      dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
+                      pops = levels(factor(fish_data$pop)),
+                      stan_data = if(save_data) dat else NULL)
   
   return(out)
 }

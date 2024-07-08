@@ -15,15 +15,17 @@
 #' @name salmonIPMfit-class
 #' @seealso [salmonIPM()], [priors]
 
-salmonIPMfit <- function(stanfit, call, model, life_cycle, pool_pops, SR_fun, RRS, 
-                         par_models, center, scale, prior, age_S_obs, age_S_eff,
-                         conditionGRonMS)
+salmonIPMfit <- function(stanfit, call, stan_model, model, life_cycle, pool_pops, 
+                         SR_fun, RRS, par_models, center, scale, age_S_obs, age_S_eff,
+                         conditionGRonMS, prior, dims, pops, stan_data)
 {
-  out <- list(stanfit = stanfit, call = call, model = model, life_cycle = life_cycle,
+  out <- list(stanfit = stanfit, call = call, 
+              stan_model = stan_model, model = model, life_cycle = life_cycle,
               pool_pops = pool_pops, SR_fun = SR_fun, RRS = RRS,
               par_models = par_models, center = center, scale = scale,
-              prior = prior, age_S_obs = age_S_obs, age_S_eff = age_S_eff,
-              conditionGRonMS = conditionGRonMS)
+              age_S_obs = age_S_obs, age_S_eff = age_S_eff,
+              conditionGRonMS = conditionGRonMS, prior = prior, 
+              dims = dims, pops = pops, stan_data = stan_data)
   
   structure(out, class = c("salmonIPMfit", "list"))
 }

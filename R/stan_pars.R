@@ -1,17 +1,18 @@
 #' Return the (hyper)parameters and states in a specified **salmonIPM** model
 #'
-#' @param stan_model Character string giving the name of the model.
-#'  See [salmonIPM()] for details.
-#' @param pars An optional character vector specifying one or more hierarchical levels 
-#' of parameters. Options are `"all"` (the default), `"hyper"` (top-level parameters that
-#' are given priors), `"group"` (`pop`- or `year`-level parameters shared by multiple states),
-#' `"states"` (the lowest level, corresponding to unique rows in `fish_data`), and
-#' `"ppd"` (only if `model == "RR"`, observation-level predictions drawn from the posterior
-#' predictive distribution).
+#' @param stan_model Character string giving the name of the model. See
+#'   [salmonIPM()] for details.
+#' @param pars An optional character vector specifying one or more hierarchical
+#'   levels of parameters. Options are `"all"` (the default), `"hyper"`
+#'   (top-level hyperparameters that are given priors), `"group"` (`pop`- or
+#'   `year`-level parameters shared by multiple states), `"states"` (the lowest
+#'   level, corresponding to unique rows in `fish_data`), and `"ppd"` (only if
+#'   `model == "RR"`, observation-level predictions drawn from the posterior
+#'   predictive distribution).
 #' @inheritParams salmonIPM
-#' 
+#'
 #' @return Character vector with names of selected parameters and states
-#' 
+#'
 #' @export
 
 stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
