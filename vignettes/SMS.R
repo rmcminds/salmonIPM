@@ -91,10 +91,8 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 #-----------------------------------------------------
 
 ## @knitr singlepop_fit
-fit1pop <- salmonIPM(life_cycle = "SMS", pool_pops = FALSE, 
-                     SR_fun = "BH", ages = list(M = 2), 
-                     fish_data = sim1pop$sim_dat,
-                     seed = 123)
+fit1pop <- salmonIPM(life_cycle = "SMS", SR_fun = "BH", ages = list(M = 2), 
+                     fish_data = sim1pop$sim_dat, seed = 123)
 
 print(fit1pop)
 ## @knitr
@@ -179,9 +177,8 @@ print(fitNnp)
 #-----------------------------------------------------
 
 ## @knitr fit_pp
-fitNpp <- salmonIPM(life_cycle = "SMS", pool_pops = TRUE, SR_fun = "BH",
-                    ages = list(M = 2), fish_data = simNpop$sim_dat,
-                    seed = 321)
+fitNpp <- salmonIPM(life_cycle = "SMS", SR_fun = "BH", ages = list(M = 2), 
+                    fish_data = simNpop$sim_dat, seed = 321)
 
 print(fitNpp)
 ## @knitr

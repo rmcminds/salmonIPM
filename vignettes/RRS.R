@@ -95,10 +95,8 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 #-----------------------------------------------------
 
 ## @knitr singlepop_fit
-fit1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, 
-                     SR_fun = "Ricker", RRS = c("alpha","Rmax"),
-                     fish_data = sim1pop$sim_dat, 
-                     seed = 123)
+fit1pop <- salmonIPM(life_cycle = "SS", SR_fun = "Ricker", RRS = c("alpha","Rmax"),
+                     fish_data = sim1pop$sim_dat, seed = 123)
 
 print(fit1pop)
 ## @knitr
@@ -334,10 +332,8 @@ print(fitNnp, pars = c("alpha_W","alpha_H","delta_alpha","Rmax_W","Rmax_H","delt
 #-----------------------------------------------------
 
 ## @knitr fit_pp
-fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE, 
-                    SR_fun = "BH", RRS = c("mu_alpha", "mu_Rmax"),
-                    fish_data = simNpop$sim_dat,
-                    seed = 321)
+fitNpp <- salmonIPM(life_cycle = "SS", SR_fun = "BH", RRS = c("mu_alpha", "mu_Rmax"),
+                    fish_data = simNpop$sim_dat, seed = 321)
 
 print(fitNpp, 
       pars = c("mu_alpha_W","mu_alpha_H","delta_mu_alpha",
