@@ -14,14 +14,14 @@ data {
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
-  real prior_alpha[!RRS[1]*2];         // prior meanlog, sdlog for intrinsic productivity
-  real prior_alpha_W[RRS[1]*2];        // prior meanlog, sdlog for W intrinsic productivity
-  real prior_alpha_H[RRS[1]*2];        // prior meanlog, sdlog for H intrinsic productivity
+  real prior_alpha[2];                 // prior meanlog, sdlog for intrinsic productivity
+  real prior_alpha_W[2];               // prior meanlog, sdlog for W intrinsic productivity
+  real prior_alpha_H[2];               // prior meanlog, sdlog for H intrinsic productivity
   int<lower=0> K_Rmax;                 // number of maximum recruitment covariates
   matrix[N,K_Rmax] X_Rmax;             // maximum recruitment covariates
-  real prior_Rmax[!RRS[2]*2];          // prior meanlog, sdlog for maximum recruitment
-  real prior_Rmax_W[RRS[2]*2];         // prior meanlog, sdlog for W maximum recruitment
-  real prior_Rmax_H[RRS[2]*2];         // prior meanlog, sdlog for H maximum recruitment
+  real prior_Rmax[2];                  // prior meanlog, sdlog for maximum recruitment
+  real prior_Rmax_W[2];                // prior meanlog, sdlog for W maximum recruitment
+  real prior_Rmax_H[2];                // prior meanlog, sdlog for H maximum recruitment
   int<lower=0> K_R;                    // number of recruitment covariates
   row_vector[K_R] X_R[N];              // brood-year productivity covariates
   // kelt survival

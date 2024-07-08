@@ -202,18 +202,12 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","mu_p","mu_SS","tau"), several.ok = TRUE)
-      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(2,2)), 
-                           dim = ifelse("alpha" %in% RRS, 0, 2))
-      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(2,2)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(2,2)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_Rmax <- array(stan_prior(pdfs$Rmax, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
-                          dim = ifelse("Rmax" %in% RRS, 0, 2))
-      prior_Rmax_W <- array(stan_prior(pdfs$Rmax_W, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
-                            dim = ifelse("Rmax" %in% RRS, 2, 0))
-      prior_Rmax_H <- array(stan_prior(pdfs$Rmax_H, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
-                            dim = ifelse("Rmax" %in% RRS, 2, 0))
+      prior_alpha <- stan_prior(pdfs$alpha, lognormal(2,2))
+      prior_alpha_W <- stan_prior(pdfs$alpha_W, lognormal(2,2)) 
+      prior_alpha_H <- stan_prior(pdfs$alpha_H, lognormal(2,2))
+      prior_Rmax <- stan_prior(pdfs$Rmax, lognormal(prior_Rmax_mean, prior_Rmax_sd))
+      prior_Rmax_W <- stan_prior(pdfs$Rmax_W, lognormal(prior_Rmax_mean, prior_Rmax_sd))
+      prior_Rmax_H <- stan_prior(pdfs$Rmax_H, lognormal(prior_Rmax_mean, prior_Rmax_sd))
       prior_tau <- stan_prior(pdfs$tau, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
     }
     
@@ -247,18 +241,12 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","Mmax","mu_MS","mu_p","tau_M","tau_S"), several.ok = TRUE)
-      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(5,5)), 
-                           dim = ifelse("alpha" %in% RRS, 0, 2))
-      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(5,5)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(5,5)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_Mmax <- array(stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
-                          dim = ifelse("Mmax" %in% RRS, 0, 2))
-      prior_Mmax_W <- array(stan_prior(pdfs$Mmax_W, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
-                            dim = ifelse("Mmax" %in% RRS, 2, 0))
-      prior_Mmax_H <- array(stan_prior(pdfs$Mmax_H, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
-                            dim = ifelse("Mmax" %in% RRS, 2, 0))
+      prior_alpha <- stan_prior(pdfs$alpha, lognormal(5,5))
+      prior_alpha_W <- stan_prior(pdfs$alpha_W, lognormal(5,5))
+      prior_alpha_H <- stan_prior(pdfs$alpha_H, lognormal(5,5))
+      prior_Mmax <- stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_Mmax_W <- stan_prior(pdfs$Mmax_W, lognormal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_Mmax_H <- stan_prior(pdfs$Mmax_H, lognormal(prior_Mmax_mean, prior_Mmax_sd))
       prior_tau_M <- stan_prior(pdfs$tau_M, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
       prior_tau_S <- stan_prior(pdfs$tau_S, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
     }

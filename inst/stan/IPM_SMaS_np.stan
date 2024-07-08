@@ -18,14 +18,14 @@ data {
   vector[N] A;                          // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                 // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;            // intrinsic productivity covariates
-  real prior_alpha[!RRS[1]*2];          // prior meanlog, sdlog for intrinsic productivity
-  real prior_alpha_W[RRS[1]*2];         // prior meanlog, sdlog for W intrinsic productivity
-  real prior_alpha_H[RRS[1]*2];         // prior meanlog, sdlog for H intrinsic productivity
+  real prior_alpha[2];                  // prior meanlog, sdlog for intrinsic productivity
+  real prior_alpha_W[2];                // prior meanlog, sdlog for W intrinsic productivity
+  real prior_alpha_H[2];                // prior meanlog, sdlog for H intrinsic productivity
   int<lower=0> K_Mmax;                  // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;              // maximum smolt recruitment covariates
-  real prior_Mmax[!RRS[2]*2];           // prior meanlog, sdlog for maximum smolt recruitment
-  real prior_Mmax_W[RRS[2]*2];          // prior meanlog, sdlog for W maximum smolt recruitment
-  real prior_Mmax_H[RRS[2]*2];          // prior meanlog, sdlog for H maximum smolt recruitment
+  real prior_Mmax[2];                   // prior meanlog, sdlog for maximum smolt recruitment
+  real prior_Mmax_W[2];                 // prior meanlog, sdlog for W maximum smolt recruitment
+  real prior_Mmax_H[2];                 // prior meanlog, sdlog for H maximum smolt recruitment
   int<lower=0> K_M;                     // number of smolt recruitment covariates
   row_vector[K_M] X_M[N];               // smolt recruitment covariates
   // smolt abundance
