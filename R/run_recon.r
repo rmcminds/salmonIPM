@@ -59,10 +59,10 @@ run_recon <- function(fish_data, age_F = NULL, age_B = NULL)
   age_F <- as.numeric(age_F)
   
   if(is.null(age_B)) age_B <- rep(1, N_age)
-    age_B <- as.numeric(age_B)
+  age_B <- as.numeric(age_B)
   
   B_rate <- B_take_obs / (S_obs * (1 - p_HOS_obs) * (as.matrix(q_obs) %*% age_B) + B_take_obs)
-
+  
   # Reconstruct recruits and age structure by brood year and return results
   R_a <- matrix(NA, N, length(ages))
   for(i in 1:N)
@@ -74,7 +74,7 @@ run_recon <- function(fish_data, age_F = NULL, age_B = NULL)
         R_a[i,j] <- S_obs[i+a] * (1 - p_HOS_obs[i+a]) * q_obs[i+a,j] / ((1 - F_eff) * (1 - B_eff))
       }
     }
-
+  
   R_obs <- rowSums(R_a)
   p_obs <- sweep(R_a, 1, R_obs, "/")
   colnames(p_obs) <- gsub("q", "p", names(q_obs))

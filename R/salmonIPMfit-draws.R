@@ -5,6 +5,7 @@
 #' for `as_draws_*(as.array(object))`.
 #'
 #' @name salmonIPMfit-draws
+#' @aliases as_draws
 #'
 #' @param object An object of class [salmonIPMfit].
 #' @param ... Additional arguments passed to [as.array.stanfit()]. Currently
@@ -20,55 +21,49 @@
 #' @seealso [salmonIPM()], [salmonIPMfit], [draws]
 
 #' @rdname salmonIPMfit-draws
-#' @method as_draws salmonIPMfit
 #' @importFrom posterior as_draws
 #' @exportS3Method posterior::as_draws
-#' @export
+#' @export as_draws
 as_draws.salmonIPMfit <- function(object, ...) {
   as_draws(as.array(object, ...))
 }
 
 #' @rdname salmonIPMfit-draws
-#' @method as_draws_matrix salmonIPMfit
 #' @importFrom posterior as_draws_matrix
 #' @exportS3Method posterior::as_draws_matrix
-#' @export
+#' @export as_draws_matrix
 as_draws_matrix.salmonIPMfit <- function(object, ...) {
   as_draws_matrix(as.array(object, ...))
 }
 
 #' @rdname salmonIPMfit-draws
-#' @method as_draws_array salmonIPMfit
 #' @importFrom posterior as_draws_array
 #' @exportS3Method posterior::as_draws_array
-#' @export
+#' @export as_draws_array
 as_draws_array.salmonIPMfit <- function(object, ...) {
   as_draws_array(as.array(object, ...))
 }
 
 #' @rdname salmonIPMfit-draws
-#' @method as_draws_df salmonIPMfit
 #' @importFrom posterior as_draws_df
 #' @exportS3Method posterior::as_draws_df
-#' @export
+#' @export as_draws_df
 as_draws_df.salmonIPMfit <- function(object, ...) {
   as_draws_df(as.array(object$stanfit, ...))
 }
 
 #' @rdname salmonIPMfit-draws
-#' @method as_draws_list salmonIPMfit
 #' @importFrom posterior as_draws_list
 #' @exportS3Method posterior::as_draws_list
-#' @export
+#' @export as_draws_list
 as_draws_list.salmonIPMfit <- function(object, ...) {
   as_draws_list(as.array(object$stanfit, ...))
 }
 
 #' @rdname salmonIPMfit-draws
-#' @method as_draws_rvars salmonIPMfit
 #' @importFrom posterior as_draws_rvars
 #' @exportS3Method posterior::as_draws_rvars
-#' @export
+#' @export as_draws_rvars
 as_draws_rvars.salmonIPMfit <- function(object, ...) {
   as_draws_rvars(as.array(object$stanfit, ...))
 }
