@@ -86,7 +86,7 @@
 #'   arbitrary, but smolt (FW) age is randomly sampled within each ocean age;
 #'   i.e., in a `smolt age x ocean age` contingency table, the cell frequencies
 #'   are conditioned on the column totals.
-#' @param prior Optional list of two-sided formulas of the form `theta ~
+#' @param priors Optional list of two-sided formulas of the form `theta ~
 #'   distribution(params)`, where `theta` is a hyperparameter that can take a
 #'   user-specified prior and `distribution()` is its canonical prior family.
 #'   See [`priors`] for details on the available parameters in each model and
@@ -295,7 +295,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
                       par_models = NULL, center = TRUE, scale = TRUE, 
                       age_F = NULL, age_B = NULL, age_S_obs = NULL, age_S_eff = NULL, 
-                      conditionGRonMS = FALSE, prior = NULL, 
+                      conditionGRonMS = FALSE, priors = NULL, 
                       fish_data, fecundity_data = NULL, 
                       pars = "all", include = TRUE, log_lik = FALSE, 
                       init = NULL, chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
@@ -321,19 +321,21 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
          ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages, 
-                   par_models = par_models, center = center, scale = scale, prior = prior, 
+                   par_models = par_models, center = center, scale = scale, priors = priors, 
                    fish_data = fish_data, age_F = age_F, age_B = age_B, 
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data)
-  
-  if(is.null(init))
-    init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   
   if(all(pars %in% c("all","hyper","group","states","ppd")))
     pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS)
   if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, RRS = RRS), pars)
   if(log_lik) pars <- c(pars, "LL")
   
+  hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun, RRS = RRS)
+  prior.info <- get_prior_info(stan_data = dat, stanmodel = stanmodels[[stanmodel]], pars = hyper)
+  
+  if(is.null(init))
+    init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95
   
   stanfit <- rstan::sampling(stanmodels[[stanmodel]], 
@@ -345,7 +347,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   out <- salmonIPMfit(stanfit = stanfit, call = match.call(), stan_model = stan_model,
                       model = model, life_cycle = life_cycle, pool_pops = pool_pops, 
                       SR_fun = SR_fun, RRS = RRS, par_models = par_models, 
-                      center = center, scale = scale, prior.info = prior, 
+                      center = center, scale = scale, prior.info = prior.info, 
                       age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                       conditionGRonMS = conditionGRonMS,
                       dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
