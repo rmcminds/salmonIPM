@@ -43,7 +43,7 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     IPM_SS_pp = list(
       hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
                 "mu_Rmax","mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax","beta_Rmax","sigma_Rmax",
-                "rho_alphaRmax", "R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
+                "rho_alphaRmax","R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau"),
       group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
                 "eta_year_R","mu_pop_alr_p"),
@@ -53,7 +53,7 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     IPM_SSiter_pp = list(
       hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
                 "mu_Rmax","mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax","beta_Rmax","sigma_Rmax",
-                "rho_alphaRmax", "R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
+                "rho_alphaRmax","R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p",
                 "mu_SS","beta_SS","rho_SS","sigma_year_SS","sigma_SS","tau"),
       group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
@@ -72,7 +72,7 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     IPM_SMS_pp = list(
       hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
                 "mu_Mmax","mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax","beta_Mmax","sigma_Mmax",
-                "rho_alphaMmax", "R_alphaMmax","beta_M","rho_M","sigma_year_M","sigma_M","tau_M",
+                "rho_alphaMmax","R_alphaMmax","beta_M","rho_M","sigma_year_M","sigma_M","tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_year_MS","sigma_MS",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau_S"),
       group = c("alpha","alpha_W","alpha_H","delta_alpha","Mmax","Mmax_W","Mmax_H","delta_Mmax",
@@ -131,24 +131,32 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   )
   
   pars_out <- if(identical(pars, "all")) {
-    unlist(par_list[[stan_model]] )
+    unlist(par_list[[stan_model]])
   } else {
     unlist(par_list[[stan_model]][pars])
   }
   
   # drop unused pars based on RRS
-  RRS_pars <- unique(gsub('(.+)_[WH]$', '\\1', grep('_[WH]$', pars_out, value = TRUE)))
-  not_RRS <- setdiff(RRS_pars, RRS)
-  drop_pars <- c(RRS, paste0(not_RRS, "_W"), paste0(not_RRS, "_H"), paste0("delta_", not_RRS),
+  RRS_opts <- unique(gsub('(.+)_[WH]$', '\\1', grep('_[WH]$', pars_out, value = TRUE)))
+  not_RRS <- RRS_opts[!grepl(RRS, RRS_opts)]
+  RRS_hyper_opts <- intersect(RRS_opts, par_list[[stan_model]]$hyper)
+  RRS_hyper <- grep(RRS, RRS_hyper_opts, value = TRUE)
+  drop_pars <- c(RRS, RRS_hyper,
+                 paste0(not_RRS, "_W"), paste0(not_RRS, "_H"), paste0("delta_", not_RRS),
                  paste0(ifelse(identical(RRS, "none"), "R_", "rho_"), 
-                        paste(gsub("mu_", "", RRS_pars), collapse = "")))
-  pars_out <- setdiff(pars_out, drop_pars)
+                        paste(gsub("mu_", "", RRS_hyper_opts), collapse = "")))
+
+  # drop maximum recruitment for density-independent S-R function
+  if(SR_fun %in% c("exp","DI")) {
+    drop_pars <- grep("max", pars_out, value = TRUE)
+    pars_out <- c(drop_pars, setdiff(pars_out, drop_pars))
+  }
   
   # drop unused betas based on par_models 
   betas <- grep("beta_", pars_out, value = TRUE)
   modeled_pars <- sapply(par_models, function(f) all.vars(f)[1])
-  drop_pars <- setdiff(betas, paste0("beta_", modeled_pars))
-  pars_out <- setdiff(pars_out, drop_pars)
+  drop_pars <- c(drop_pars, setdiff(betas, paste0("beta_", modeled_pars)))
   
+  pars_out <- setdiff(pars_out, drop_pars)
   return(pars_out)
 }
