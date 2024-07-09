@@ -367,12 +367,14 @@ model {
   } else {
     alpha ~ lognormal(prior_alpha[1], prior_alpha[2]);
   }
+  to_vector(beta_alpha) ~ normal(0,5);
   if(RRS[2]) {
     Mmax_W ~ lognormal(prior_Mmax_W[1], prior_Mmax_W[2]);
     Mmax_H ~ lognormal(prior_Mmax_H[1], prior_Mmax_H[2]);
   } else {
     Mmax ~ lognormal(prior_Mmax[1], prior_Mmax[2]);
   }
+  to_vector(beta_Mmax) ~ normal(0,5);
   to_vector(beta_M) ~ normal(0,5);
   rho_M ~ gnormal(0,0.85,20); // mildly regularize rho to ensure stationarity
   sigma_M ~ normal(0,3);
