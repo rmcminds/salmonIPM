@@ -257,15 +257,15 @@
 #' covariates using the argument `par_models`. The response distribution
 #' families and link functions are automatically implemented so there is no need
 #' to `log()`- or `qlogis()`-transform the left-hand side of the formula,
-#' although such syntax will also work. (This is because the LHS is not found in
-#' `fish_data` and is just syntactic sugar to determine the parameter name.) The
+#' although such syntax will also work (because the LHS is not found in
+#' `fish_data` and is just syntactic sugar to determine the parameter name). The
 #' design matrices passed to the Stan model cannot include an intercept, but it
 #' is not necessary to manually remove it in the RHS; if present by default,
 #' [par_model_matrix()] will automatically remove it.
 #'
 #' As with any regression model, the user must ensure the effects specified are
 #' estimable given the design matrix. For example, the effect of a spatially
-#' varying but time-invariant predictor would not be identifiable in a `_np`
+#' varying but time-invariant predictor would not be identifiable in a `np`
 #' model because populations are modeled independently.
 #'
 #' |                    |                         |                             |                        | **Response (family)**  |                    |                     |                              |                              |
