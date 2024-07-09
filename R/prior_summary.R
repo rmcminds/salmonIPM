@@ -67,12 +67,13 @@ prior_summary.salmonIPMfit <- function(object, digits = 3) {
 #'   specified.
 #'
 #' @return A named list of priors on `pars`. Each element is itself a named list
-#'   representing the prior in the format returned by the functions in [priors].
+#'   representing the prior in the format returned by the functions in [priors]
+#'   with an additional attribute `"type"`.
 #'
-#' @details Priors include: 1. Those that are user-specifiable through the
+#' @details Priors include (1) Those that are user-specifiable through the
 #'   `salmonIPM(priors)` argument (whether modified or defaults) and returned in
-#'   Stan format by `stan_data()` 2. Those that are explicitly hard-coded in the
-#'   `model` block of `stanmodel` 3. Those that are implicitly defined by bounds
+#'   Stan format by [stan_data()],  (2) those that are explicitly hard-coded in the
+#'   `model` block of `stanmodel`, and (3) those that are implicitly defined by bounds
 #'   on `parameter` declarations
 #'
 #'   To extract type (1), `get_prior_info()` calls the [priors] functions using the
@@ -95,9 +96,10 @@ prior_summary.salmonIPMfit <- function(object, digits = 3) {
 #'   
 #'   A similar procedure is used to extract type (3). Regex translation:
 #'   * `.*` any character, 0 or more (e.g. indent spaces, variable type
-#'   * `<lower=` beginning of bounds
-#'   * `(\\d+)` capture group: 1 or more digits 
-#'   * `, *upper=` comma separating bounds followed by 0 or more spaces
+#'   * `<lower *= *` beginning of bounds (may or may not be spaces around "="
+#'   * `(.+)` capture group: 1 or more characters 
+#'   * `, *` comma separating bounds followed by 0 or more spaces
+#'   * `(.+)>.*` upper bound declaration followed by 0 or more characters
 #'   * `.par` hyperparameter name
 #'   * `;.*` end of declaration followed by 0 or more characters (e.g. comment)
 
@@ -118,21 +120,25 @@ get_prior_info <- function(stan_data, stanmodel, pars) {
     regex <- paste0(".*", .par, ".*~ *([^;]+);.*")
     prtext <- gsub(regex, "\\1", grep(regex, smtext, value = TRUE))
     prtext <- gsub("_cholesky", "", prtext)  # Cholesky factors -> correlation matrices
-    structure(eval(parse(text = prtext)), type = "hard")
+    if(length(prtext)) structure(as.list(eval(parse(text = prtext))), type = "hard")
   })
   names(hard_priors) <- hard_pars
-  hard_priors <- hard_priors[!sapply(hard_priors, is.null)]
-  
+  hard_priors <- hard_priors[sapply(hard_priors, length) > 0]
+
   # Implicit priors declared by bounds in stanmodel
-  bound_pars <- setdiff(pars, c(names(user_priors), names(hard_priors)))
-  bound_priors <- lapply(bound_pars, function(.par) {
-    regex <- paste0(".*<lower=(\\d+), *upper=(\\d+).*", .par, ";.*") 
-    bounds <- gsub(regex, "\\1 \\2", grep(regex, smtext, value = TRUE))
-    bounds <- as.numeric(strsplit(bounds, " ")[[1]])
-    structure(do.call(uniform, as.list(bounds)), type = "bound")
+  bounded_pars <- setdiff(pars, c(names(user_priors), names(hard_priors)))
+  bounded_priors <- lapply(bounded_pars, function(.par) {
+    if(grepl("rho_alpha.max", .par)) {  # hack b/c declared parameter is L_alpha[R/M]max
+      structure(uniform(-1,1), type = "bounded")
+    } else {
+      regex <- paste0(".*<lower *= *(.+), *upper *= *(.+)>.*", .par, ";.*") 
+      bounds <- gsub(regex, "\\1 \\2", grep(regex, smtext, value = TRUE))
+      bounds <- as.numeric(unlist(strsplit(bounds, " ")))
+      if(length(bounds)) structure(do.call(uniform, as.list(bounds)), type = "bounded")
+    }
   })
-  names(bound_priors) <- bound_pars
-  bound_priors <- bound_priors[!sapply(bound_priors, is.null)]
+  names(bounded_priors) <- bounded_pars
+  bounded_priors <- bounded_priors[sapply(bounded_priors, length) > 0]
   
-  return(c(user_priors, hard_priors, bound_priors))
+  return(c(user_priors, hard_priors, bounded_priors))
 }
