@@ -106,7 +106,11 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 fit1pop <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
                      fish_data = sim1pop$sim_dat, seed = 123)
 
+## @knitr singlepop_print
 print(fit1pop)
+
+## @knitr singlepop_prior_summary
+prior_summary(fit1pop)
 ## @knitr
 
 #-----------------------------------------------------
