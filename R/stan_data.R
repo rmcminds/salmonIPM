@@ -68,12 +68,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
                             gsub("iter", "", life_cycle), # same Stan code for iteroparity
                             sep = "_")
-  RRS_check <- RRS %in% c("none", stan_pars(stan_model, pars = "hyper"))
-  if(!all(RRS_check))
-    stop("Error in RRS: ", paste(RRS[!RRS_check], collapse = " "), 
-         " is not a SR_fun parameter in ", stan_model, ".\n  See stan_pars('", 
-         stan_model, "', ", ifelse(pool_pops, "'group'", "'hyper'"), 
-         ") for pars that can take 'W' and 'H' subscripts.")
+  validate_RRS(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS)
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
   

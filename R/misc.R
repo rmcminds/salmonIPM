@@ -28,3 +28,35 @@ stan_mean <- function(object, pars) {
 extract1 <- function(object, par) {
   extract(object$stanfit, par)[[1]]
 }
+
+#' Validate RRS specification
+#'
+#' Check whether an RRS specification is consistent with a stan_model.
+#'
+#' @inheritParams salmonIPM
+#' @return Nothing is returned; the function throws an error if the requested
+#'   `RRS` is not found in the hyperparameters of `stan_model`.
+validate_RRS <- function(stan_model, SR_fun = "BH", RRS) {
+  pool_pops <- switch(strsplit(stan_model, "_")[[1]][3], np = FALSE, pp = TRUE)
+  stanmodel <- gsub("iter", "", stan_model) # same Stan code for iteroparity
+  smtext <- strsplit(stanmodels[[stanmodel]]@model_code, "\\n")[[1]]
+  
+  pars <- stan_pars(stan_model = stan_model, 
+                    pars = ifelse(pool_pops, "group", "hyper"), 
+                    SR_fun = SR_fun)
+  
+  RRS_opts <- sapply(pars, function(.par) {
+    regex <- paste0(.par, "_[HW];")  # finds H/W parameter declaration 
+    return(ifelse(any(grepl(regex, smtext)), .par, NA))
+  })
+  
+  RRS_opts <- c("none", unique((RRS_opts)))
+  RRS_check <- RRS %in% RRS_opts
+  
+  if(!all(RRS_check))
+    stop(paste(RRS[!RRS_check], collapse = ", "), 
+         " is not a valid RRS specification in ", stan_model, ".\n",
+         "  Available options are: ", paste(na.omit(RRS_opts), collapse = ", "), ".")
+}
+
+
