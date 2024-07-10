@@ -35,7 +35,7 @@
 #'   function specified by `SR_fun` that differ between wild- and
 #'   hatchery-origin spawners, such that the relative reproductive success of
 #'   hatchery spawners is not equal to 1. If `pool_pops == TRUE`, these should
-#'   be the names of the population-specific parameters, not their hyper-means.
+#'   be the names of the population-specific parameters, **not** their hyper-means.
 #'   For example, if `life_cycle %in% c("SS","SSiter")`, the options are
 #'   `"none"` (the default), `"alpha"`, `"Rmax"`, or `c("alpha","Rmax")`.
 #'   Currently `RRS` is only implemented for `pool_pops == FALSE`.
@@ -327,11 +327,16 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                    conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data)
   
   if(all(pars %in% c("all","hyper","group","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS)
-  if(!include) pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, RRS = RRS), pars)
+    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, 
+                      RRS = RRS, par_models = par_models)
+  if(!include) 
+    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, 
+                              RRS = RRS, par_models = par_models), 
+                    pars)
   if(log_lik) pars <- c(pars, "LL")
   
-  hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun, RRS = RRS)
+  hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun, 
+                     RRS = RRS, par_models = par_models)
   prior.info <- get_prior_info(stan_data = dat, stanmodel = stanmodels[[stanmodel]], pars = hyper)
   
   if(is.null(init))
