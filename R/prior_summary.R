@@ -8,15 +8,15 @@
 #'
 #' @param object An object of class [salmonIPMfit] with prior information stored
 #'   in `prior.info`.
-#' @param digits Number of significant digits to print.
+#' @param digits Number of decimal places to print.
 #'
 #' @return A character vector containing the prior summary information.
 #'
 #' @details This function is called mainly for its side effect of printing the
 #'   prior summary. The character vector to be printed is returned invisibly,
 #'   but the same information can be found in more usable form in
-#'   `object$prior.info`. Priors are grouped into user-specifiable and
-#'   hard-coded categories in the printed output.
+#'   `object$prior.info`. Priors are identified as user-specifiable or
+#'   hard-coded in the printed output.
 #'
 #'   Note that correlation matrices are given [LKJ
 #'   priors](https://mc-stan.org/docs/functions-reference/correlation_matrix_distributions.html)
@@ -29,25 +29,30 @@
 #' @exportS3Method rstantools::prior_summary
 #' @export prior_summary
 
-prior_summary.salmonIPMfit <- function(object, digits = 3) {
+prior_summary.salmonIPMfit <- function(object, digits = 2) {
   prior.info <- object$prior.info
   pars <- names(prior.info)
+  types <- sapply(prior.info, attr, "type")
+  user_priors <- as.list(object$call)$priors
+  user_pars <- pars %in% sapply(user_priors, function(f) all.vars(f)[1])
+  user <- ifelse(types == "user", paste0("[", ifelse(user_pars, "x", " "), "]  "), "     ")
+  names(user) <- pars
   pad <- sapply(max(nchar(pars)) - nchar(pars), function(n) paste(rep(" ", n), collapse = ""))
   names(pad) <- pars
-  types <- sapply(prior.info, attr, "type")
   
   prsum <- sapply(pars, function(.par) {
     prinfo <- prior.info[[.par]]
     dist <- prinfo$dist
-    args <- lapply(prinfo[setdiff(names(prinfo), "dist")], signif, digits = digits)
+    args <- lapply(prinfo[setdiff(names(prinfo), "dist")], round, digits = digits)
     args <- paste(paste0(names(args), " = ", args), collapse = ", ")
-    paste0(pad[[.par]], .par, " ~ ", dist, "(", args, ")\n") 
+    paste0(user[.par], pad[.par], .par, " ~ ", dist, "(", args, ")\n") 
   })
   
   prsum <- unlist(prsum)
-  cat("Priors for model ", object$stan_model, "\n\n", 
-      "user-specifiable:\n\n", prsum[types == "user"], "\n",
-      "hard-coded:\n\n", prsum[types != "user"],
+  cat("Priors for model ", object$stan_model, "\n", 
+      "[ ] user-specifiable (default) \n",
+      "[x] set by user \n\n",
+      prsum,
       sep = "")
   invisible(prsum)
 }
@@ -140,5 +145,6 @@ get_prior_info <- function(stan_data, stanmodel, pars) {
   names(bounded_priors) <- bounded_pars
   bounded_priors <- bounded_priors[sapply(bounded_priors, length) > 0]
   
-  return(c(user_priors, hard_priors, bounded_priors))
+  all_priors <- c(user_priors, hard_priors, bounded_priors)
+  return(all_priors[match(pars, names(all_priors))])
 }
