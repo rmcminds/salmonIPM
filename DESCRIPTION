@@ -20,6 +20,8 @@ Imports:
     rstan (>= 2.32.0),
     rstantools (>= 2.4.0),
     posterior,
+    loo,
+    shinystan,
     stats,
     gnorm,
     mvtnorm
@@ -35,9 +37,7 @@ Encoding: UTF-8
 LazyData: true
 Biarch: true
 Suggests:
-    loo,
     bayesplot,
-    shinystan,
     lifecycle,
     knitr,
     rmarkdown

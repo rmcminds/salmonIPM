@@ -5,12 +5,11 @@
 #'
 #' @aliases launch_shinystan
 #' @param object A [salmonIPMfit] object.
-#' @param ... Additional arguments to pass to [launch_shinystan.default].
+#' @param ... Additional arguments passed to [launch_shinystan.default].
 #' @seealso [shinystan::launch_shinystan()], [salmonIPM()]
 #' @importFrom shinystan launch_shinystan
 #' @exportS3Method shinystan::launch_shinystan
 #' @export launch_shinystan
-
 launch_shinystan.salmonIPMfit <- function(object, ...) {
   launch_shinystan(object$stanfit, ...)
 }

@@ -9,7 +9,7 @@
 #' @name print.salmonIPMfit
 #' @method print salmonIPMfit
 #'
-#' @param object An object of class [salmonIPMfit].
+#' @param x An object of class [salmonIPMfit].
 #' @param pars A character vector specifying (hyper)parameters, states, and/or
 #'   quantities of interest ("parameters") to summarize. Parameters can be
 #'   explicitly named or one or more shortcuts can be used to specify
@@ -25,21 +25,21 @@
 #' @param digits Number of decimal places to print, defaulting to 2.
 #'   Applies to quantities other than the effective sample size, which is always
 #'   rounded to the nearest integer.
-#' @param ... Additional arguments passed to [summary.stanfit()].
+#' @param ... Additional arguments passed to `rstan::summary()`.
 #'
 #' @seealso [print.stanfit()], [salmonIPMfit]
 #' @export
 
-print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE, 
+print.salmonIPMfit <- function(x, pars = "hyper", include = TRUE, 
                                probs = c(0.05, 0.5, 0.95), digits = 2, ...) 
 {
-  stan_model <- object$stan_model
-  SR_fun <- object$SR_fun
-  RRS <- object$RRS
+  stan_model <- x$stan_model
+  SR_fun <- x$SR_fun
+  RRS <- x$RRS
   RRS_out <- paste(RRS, collapse = ", ")
-  N_pop <- object$dims$N_pop
-  ages <- paste(paste(names(object$ages), object$ages, sep = " = "), collapse = ", ")
-  par_models <- object$par_models
+  N_pop <- x$dims$N_pop
+  ages <- paste(paste(names(x$ages), x$ages, sep = " = "), collapse = ", ")
+  par_models <- x$par_models
   par_models_out <- paste(par_models, collapse = ", ")
   
   pars <- include_pars(pars = pars, stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, 
@@ -48,19 +48,19 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
   cat(
     paste0(
       "salmonIPMfit\n",
-      " model type: ", object$model, "\n",
-      " life cycle: ", object$life_cycle, 
+      " model type: ", x$model, "\n",
+      " life cycle: ", x$life_cycle, 
       if(nchar(ages)) paste0(" (ages: ", ages, ")"),
-      "\n SR_fun: ", object$SR_fun, " (RRS: ", RRS_out, ")\n",
+      "\n SR_fun: ", x$SR_fun, " (RRS: ", RRS_out, ")\n",
       if(nchar(par_models_out)) paste0(" parameter models: ", par_models_out, "\n"),
-      " N = ", object$dims$N, " cases in fish_data\n",
+      " N = ", x$dims$N, " cases in fish_data\n",
       " N_pop = ", N_pop, 
-      if(N_pop > 1) paste0(" (", ifelse(object$pool_pops, "partial", "no"), " pooling)"),
-      "\n N_year = ", object$dims$N_year, "\n\n"
+      if(N_pop > 1) paste0(" (", ifelse(x$pool_pops, "partial", "no"), " pooling)"),
+      "\n N_year = ", x$dims$N_year, "\n\n"
     )
   )
   
-  print(object$stanfit, pars = pars, probs = probs, digits_summary = digits, ...)
+  print(x$stanfit, pars = pars, probs = probs, digits_summary = digits, ...)
 }
 
 
@@ -76,21 +76,21 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
 #' @param object An object of class [salmonIPMfit].
 #' @param pars A character vector of parameter names. Defaults to all monitored
 #'   parameters as well as the log-posterior (`lp__`).
-#' @param probs A numeric vector of posterior quantiles. The default is
-#'   `c(0.025,0.25,0.5,0.75,0.975)`.
+#' @param probs A numeric vector of posterior quantiles. Unlike
+#'   [print.stanfit()], the default is `c(0.05, 0.5, 0.95)`, i.e. the median and
+#'   90% credible interval.
 #' @param use_cache Logical, defaulting to `TRUE`. When `use_cache = TRUE` the summary
 #'   quantities for all parameters are computed and cached for future use.
 #'   Setting `use_cache = FALSE` can be used to avoid performing the summary
 #'   computations for all parameters if `pars` is given as some specific
 #'   parameters.
+#' @param ... Currently ignored.
 #'   
 #' @seealso [rstan::summary,stanfit-method], [salmonIPMfit]
 #' @importFrom rstan summary
 #' @export
-
-summary.salmonIPMfit <- function(object, pars, probs = c(0.025, 0.25, 0.50, 0.75, 0.975), 
-                                 use_cache = TRUE) 
-{
-  summary(object$stanfit, pars = pars, probs = probs, use_cache = use_cache)
+summary.salmonIPMfit <- function(object, pars, probs = c(0.05, 0.50, 0.95), 
+                                 use_cache = TRUE, ...) {
+  summary(object$stanfit, pars = pars, probs = probs, use_cache = use_cache, ...)
 }
 

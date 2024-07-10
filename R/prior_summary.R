@@ -9,6 +9,7 @@
 #' @param object An object of class [salmonIPMfit] with prior information stored
 #'   in `prior.info`.
 #' @param digits Number of decimal places to print.
+#' @param ... Currently ignored.
 #'
 #' @return A character vector containing the prior summary information.
 #'
@@ -28,8 +29,8 @@
 #' @importFrom rstantools prior_summary
 #' @exportS3Method rstantools::prior_summary
 #' @export prior_summary
-#' 
-prior_summary.salmonIPMfit <- function(object, digits = 2) {
+
+prior_summary.salmonIPMfit <- function(object, digits = 2, ...) {
   prior.info <- object$prior.info
   pars <- names(prior.info)
   types <- sapply(prior.info, attr, "type")
@@ -89,6 +90,8 @@ prior_summary.salmonIPMfit <- function(object, digits = 2) {
 #'   and then uses regex to pull out the sampling statement for each parameter
 #'   as a string, which corresponds directly to a [priors] function call. 
 #'   
+#' @importFrom utils relist
+
 get_prior_info <- function(stan_data, stanmodel, pars) 
 {
   # User-specifiable priors from stan_data
@@ -103,9 +106,8 @@ get_prior_info <- function(stan_data, stanmodel, pars)
   #
   # .*      any character, 0 or more (e.g. indent spaces, any transformation function)
   # .par    hyperparameter name
-  # .*~     any character, 0 or more (e.g. closing paren of transformation, space) 
-  #           followed by "~" (i.e. this line contains a sampling statement)
-  #  *      1 or more spaces
+  # .*      any character, 0 or more (e.g. closing paren of transformation, space) 
+  # ~ *     this line contains a sampling statement (may be 0 or more spaces after "~")
   # ([^;]+) pdf capture group: any character except ";", 1 or more
   # ;       end of sampling statement
   # .*      any character, 0 or more (e.g. comment)

@@ -39,7 +39,8 @@ theme_update(panel.grid = element_blank(),
 library(bayesplot)      # Bayesian graphics
 
 ## @knitr multicore 
-options(mc.cores = parallel::detectCores(logical = FALSE))
+# not needed b/c it is the default
+# options(mc.cores = parallel::detectCores(logical = FALSE))
 ## @knitr
 
 #===========================================================================

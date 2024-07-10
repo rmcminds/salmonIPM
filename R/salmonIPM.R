@@ -1,6 +1,6 @@
 #' Fit an IPM or run-reconstruction regression model
 #' 
-#' <add description>
+#' Add description...
 #'
 #' @param stan_model Character string specifying the **salmonIPM** model to be
 #'   fit. A more concise alternative to specifying `model`, `life_cycle`, and
@@ -283,8 +283,8 @@
 #' @return An object of class `salmonIPMfit` representing the fitted model. See
 #'   [`salmonIPMfit-class`] for details.
 #'
-#' @importFrom rstan sampling
-#' @importFrom rstan get_elapsed_time
+#' @importFrom rstan sampling get_elapsed_time
+#' @importFrom utils packageVersion 
 #' @export
 #' @encoding UTF-8
 
@@ -343,15 +343,16 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                              control = control, ...)
   
   out <- salmonIPMfit(stanfit = stanfit, call = match.call(), stan_model = stan_model,
-                      model = model, life_cycle = life_cycle, pool_pops = pool_pops, 
-                      SR_fun = SR_fun, RRS = RRS, par_models = par_models, 
-                      center = center, scale = scale, prior.info = prior.info, 
-                      age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
-                      conditionGRonMS = conditionGRonMS,
+                      model = model, life_cycle = life_cycle, ages = ages, 
+                      pool_pops = pool_pops, SR_fun = SR_fun, RRS = RRS, 
+                      par_models = par_models, center = center, scale = scale, 
+                      prior.info = prior.info, age_S_obs = age_S_obs, 
+                      age_S_eff = age_S_eff, conditionGRonMS = conditionGRonMS,
                       stan_data = if(save_data) dat else NULL,
                       dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
                       pops = levels(factor(fish_data$pop)),
-                      elapsed_time = get_elapsed_time(stanfit))
+                      elapsed_time = get_elapsed_time(stanfit),
+                      salmonIPM_version = packageVersion("salmonIPM"))
   
   return(out)
 }

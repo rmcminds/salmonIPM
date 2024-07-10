@@ -9,6 +9,7 @@
 #' @param object An object of class [salmonIPMfit] that includes samples of the
 #'   pointwise log-likelihood `LL`, e.g. `log_lik` was set to `TRUE` when
 #'   calling [salmonIPM()].
+#' @param ... Currently ignored.
 #'
 #' @return A `N_samples` by `N` matrix containing the pointwise log-likelihood,
 #'   where `N_samples` is the number of post-warmup posterior draws and `N` is
@@ -20,12 +21,10 @@
 #'   [salmonIPM()].
 #'
 #' @seealso [salmonIPM()]
-
-#' @rdname log_lik.salmonIPMfit
 #' @importFrom rstantools log_lik
 #' @exportS3Method rstantools::log_lik
 #' @export log_lik
-log_lik.salmonIPMfit <- function(object) {
+log_lik.salmonIPMfit <- function(object, ...) {
   as.matrix(object, pars = "LL")
 }
 
@@ -33,6 +32,6 @@ log_lik.salmonIPMfit <- function(object) {
 #' @importFrom rstantools nsamples
 #' @exportS3Method rstantools::nsamples
 #' @export nsamples
-nsamples.salmonIPMfit <- function(object) {
+nsamples.salmonIPMfit <- function(object, ...) {
   sum(object$stanfit@sim$n_save - object$stanfit@sim$warmup2)
 }
