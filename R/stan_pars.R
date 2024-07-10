@@ -22,17 +22,11 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                       SR_fun = "BH", RRS = "none", par_models = NULL)
 {
   stan_model <- match.arg(stan_model)
+  stanmodel <- gsub("iter", "", stan_model)  # same Stan code for iteroparity
   pars <- match.arg(pars, several.ok = TRUE)
-  
+
   par_list <- list( 
     IPM_SS_np = list(
-      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
-                "Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax",
-                "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p","tau"),
-      states = c("R","p","S","q","p_HOS")
-    ),
-    
-    IPM_SSiter_np = list(
       hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
                 "Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax",
                 "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p",
@@ -41,16 +35,6 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     ),
     
     IPM_SS_pp = list(
-      hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
-                "mu_Rmax","mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax","beta_Rmax","sigma_Rmax",
-                "rho_alphaRmax","R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
-                "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau"),
-      group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
-                "eta_year_R","mu_pop_alr_p"),
-      states = c("R","p","S","q","p_HOS")
-    ),
-    
-    IPM_SSiter_pp = list(
       hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
                 "mu_Rmax","mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax","beta_Rmax","sigma_Rmax",
                 "rho_alphaRmax","R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
@@ -131,30 +115,33 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   )
   
   pars_out <- if(identical(pars, "all")) {
-    unlist(par_list[[stan_model]])
+    unlist(par_list[[stanmodel]])
   } else {
-    unlist(par_list[[stan_model]][pars])
+    unlist(par_list[[stanmodel]][pars])
   }
   
   # drop unused pars based on RRS
   RRS_opts <- unique(gsub('(.+)_[WH]$', '\\1', grep('_[WH]$', pars_out, value = TRUE)))
-  not_RRS <- RRS_opts[!grepl(RRS, RRS_opts)]
+  not_RRS <- RRS_opts[!grepl(paste(RRS, collapse = "|"), RRS_opts)]
   RRS_hyper_opts <- intersect(RRS_opts, par_list[[stan_model]]$hyper)
-  RRS_hyper <- grep(RRS, RRS_hyper_opts, value = TRUE)
-  drop_pars <- c(RRS, RRS_hyper,
+  RRS_hyper <- grep(paste(RRS, collapse = "|"), RRS_hyper_opts, value = TRUE)
+  drop_pars <- c(RRS, RRS_hyper, # if base param is in RRS, drop it and keep H/W versions
                  paste0(not_RRS, "_W"), paste0(not_RRS, "_H"), paste0("delta_", not_RRS),
                  paste0(ifelse(identical(RRS, "none"), "R_", "rho_"), 
                         paste(gsub("mu_", "", RRS_hyper_opts), collapse = "")))
 
   # drop maximum recruitment for density-independent S-R function
-  if(SR_fun %in% c("exp","DI")) {
-    drop_pars <- grep("max", pars_out, value = TRUE)
-    pars_out <- c(drop_pars, setdiff(pars_out, drop_pars))
-  }
+  if(SR_fun %in% c("exp","DI")) 
+    drop_pars <- c(drop_pars, grep("max", pars_out, value = TRUE))
+  
+  # drop unused iteroparity pars
+  if(!grepl("iter", stan_model))
+    drop_pars <- c(drop_pars, grep("_SS", pars_out, value = TRUE))
   
   # drop unused betas based on par_models 
   betas <- grep("beta_", pars_out, value = TRUE)
   modeled_pars <- sapply(par_models, function(f) all.vars(f)[1])
+  modeled_pars <- gsub("s_", "", modeled_pars)  # hack to deal with s_SS, s_MS
   drop_pars <- c(drop_pars, setdiff(betas, paste0("beta_", modeled_pars)))
   
   pars_out <- setdiff(pars_out, drop_pars)
