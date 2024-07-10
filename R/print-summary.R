@@ -41,15 +41,10 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
   ages <- paste(paste(names(object$ages), object$ages, sep = " = "), collapse = ", ")
   par_models <- object$par_models
   par_models_out <- paste(par_models, collapse = ", ")
-
-  if(all(pars %in% c("all","hyper","group","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, 
-                      RRS = RRS, par_models = par_models)
-  if(!include) 
-    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, 
-                              RRS = RRS, par_models = par_models), 
-                    pars)
   
+  pars <- include_pars(pars = pars, stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, 
+                       par_models = par_models, include = include)
+
   cat(
     paste0(
       "salmonIPMfit\n",

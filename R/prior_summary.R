@@ -28,7 +28,7 @@
 #' @importFrom rstantools prior_summary
 #' @exportS3Method rstantools::prior_summary
 #' @export prior_summary
-
+#' 
 prior_summary.salmonIPMfit <- function(object, digits = 2) {
   prior.info <- object$prior.info
   pars <- names(prior.info)
@@ -88,7 +88,7 @@ prior_summary.salmonIPMfit <- function(object, digits = 2) {
 #'   To extract type (2), `get_prior_info()` parses `stanmodel` into lines of text
 #'   and then uses regex to pull out the sampling statement for each parameter
 #'   as a string, which corresponds directly to a [priors] function call. 
-
+#'   
 get_prior_info <- function(stan_data, stanmodel, pars) 
 {
   # User-specifiable priors from stan_data

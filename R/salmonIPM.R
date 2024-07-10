@@ -326,15 +326,8 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                    age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                    conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data)
   
-  if(all(pars %in% c("all","hyper","group","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, 
-                      RRS = RRS, par_models = par_models)
-  if(!include) 
-    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, 
-                              RRS = RRS, par_models = par_models), 
-                    pars)
-  if(log_lik) pars <- c(pars, "LL")
-  
+  pars <- include_pars(pars = pars, stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, 
+                       par_models = par_models, include = include, log_lik = log_lik)
   hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun, 
                      RRS = RRS, par_models = par_models)
   prior.info <- get_prior_info(stan_data = dat, stanmodel = stanmodels[[stanmodel]], pars = hyper)
