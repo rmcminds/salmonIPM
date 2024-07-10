@@ -36,14 +36,19 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
   stan_model <- object$stan_model
   SR_fun <- object$SR_fun
   RRS <- object$RRS
+  RRS_out <- paste(RRS, collapse = ", ")
   N_pop <- object$dims$N_pop
   ages <- paste(paste(names(object$ages), object$ages, sep = " = "), collapse = ", ")
-  par_models <- paste(object$par_models, collapse = ", ")
+  par_models <- object$par_models
+  par_models_out <- paste(par_models, collapse = ", ")
 
   if(all(pars %in% c("all","hyper","group","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS)
+    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, 
+                      RRS = RRS, par_models = par_models)
   if(!include) 
-    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, RRS = RRS), pars)
+    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, 
+                              RRS = RRS, par_models = par_models), 
+                    pars)
   
   cat(
     paste0(
@@ -51,8 +56,8 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
       " model type: ", object$model, "\n",
       " life cycle: ", object$life_cycle, 
       if(nchar(ages)) paste0(" (ages: ", ages, ")"),
-      "\n SR_fun: ", object$SR_fun, " (RRS: ", RRS, ")\n",
-      if(nchar(par_models)) paste0(" parameter models: ", par_models, "\n"),
+      "\n SR_fun: ", object$SR_fun, " (RRS: ", RRS_out, ")\n",
+      if(nchar(par_models_out)) paste0(" parameter models: ", par_models_out, "\n"),
       " N = ", object$dims$N, " cases in fish_data\n",
       " N_pop = ", N_pop, 
       if(N_pop > 1) paste0(" (", ifelse(object$pool_pops, "partial", "no"), " pooling)"),
