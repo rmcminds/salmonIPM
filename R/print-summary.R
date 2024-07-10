@@ -20,9 +20,9 @@
 #'   multidimensional parameters can be excluded, rather than particular
 #'   elements of them.
 #' @param probs A numeric vector of posterior quantiles to print. Unlike
-#'   [print.stanfit()], the default is `c(0.05,0.5,0.95)`, i.e. the median and
+#'   [print.stanfit()], the default is `c(0.05, 0.5, 0.95)`, i.e. the median and
 #'   90% credible interval.
-#' @param digits_summary Number of significant digits to print, defaulting to 2.
+#' @param digits Number of decimal places to print, defaulting to 2.
 #'   Applies to quantities other than the effective sample size, which is always
 #'   rounded to the nearest integer.
 #' @param ... Additional arguments passed to [summary.stanfit()].
@@ -31,7 +31,7 @@
 #' @export
 
 print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE, 
-                               probs = c(0.05, 0.5, 0.95), digits_summary = 2, ...) 
+                               probs = c(0.05, 0.5, 0.95), digits = 2, ...) 
 {
   stan_model <- object$stan_model
   SR_fun <- object$SR_fun
@@ -65,7 +65,7 @@ print.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
     )
   )
   
-  print(object$stanfit, pars = pars, probs = probs, digits_summary = digits_summary, ...)
+  print(object$stanfit, pars = pars, probs = probs, digits_summary = digits, ...)
 }
 
 

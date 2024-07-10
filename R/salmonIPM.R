@@ -355,9 +355,9 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                       center = center, scale = scale, prior.info = prior.info, 
                       age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
                       conditionGRonMS = conditionGRonMS,
+                      stan_data = if(save_data) dat else NULL,
                       dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
                       pops = levels(factor(fish_data$pop)),
-                      stan_data = if(save_data) dat else NULL,
                       elapsed_time = get_elapsed_time(stanfit))
   
   return(out)

@@ -18,10 +18,10 @@
 #'   `object$prior.info`. Priors are identified as user-specifiable or
 #'   hard-coded in the printed output.
 #'
-#'   Note that correlation matrices are given [LKJ
-#'   priors](https://mc-stan.org/docs/functions-reference/correlation_matrix_distributions.html)
-#'   but the actual Stan implementation uses the more efficient lower Cholesky
-#'   factor version of the LKJ distribution.
+#'   Note that correlation matrices are given
+#'   [`lkj_corr`](https://mc-stan.org/docs/functions-reference/correlation_matrix_distributions.html)
+#'   priors, but the actual Stan implementation uses the more efficient lower
+#'   Cholesky factor version of the LKJ distribution.
 #'
 #' @seealso [prior_summary()], [priors], [salmonIPM()], [salmonIPMfit]
 #'
@@ -47,13 +47,14 @@ prior_summary.salmonIPMfit <- function(object, digits = 2) {
     args <- paste(paste0(names(args), " = ", args), collapse = ", ")
     paste0(user[.par], pad[.par], .par, " ~ ", dist, "(", args, ")\n") 
   })
-  
   prsum <- unlist(prsum)
+  
   cat("Priors for model ", object$stan_model, "\n", 
       "[ ] user-specifiable (default) \n",
       "[x] set by user \n\n",
       prsum,
       sep = "")
+  
   invisible(prsum)
 }
 
@@ -77,38 +78,19 @@ prior_summary.salmonIPMfit <- function(object, digits = 2) {
 #'
 #' @details Priors include (1) Those that are user-specifiable through the
 #'   `salmonIPM(priors)` argument (whether modified or defaults) and returned in
-#'   Stan format by [stan_data()],  (2) those that are explicitly hard-coded in the
+#'   Stan format by [stan_data()], (2) those that are explicitly hard-coded in the
 #'   `model` block of `stanmodel`, and (3) those that are implicitly defined by bounds
-#'   on `parameter` declarations
+#'   on `parameter` declarations.
 #'
 #'   To extract type (1), `get_prior_info()` calls the [priors] functions using the
 #'   contents of `stan_data`.
 #'
 #'   To extract type (2), `get_prior_info()` parses `stanmodel` into lines of text
 #'   and then uses regex to pull out the sampling statement for each parameter
-#'   as a string, which corresponds directly to a [priors] function call. Regex
-#'   translation:
-#'
-#'   * `.*` any character, 0 or more (e.g. indent spaces, any transformation
-#'   function)
-#'   * `.par` hyperparameter name
-#'   * `.*~` any character, 0 or more (e.g. closing paren of transformation,
-#'   space), followed by "~" (i.e. this line contains a sampling statement)
-#'   * ` *` 1 or more spaces
-#'   * `([^;]+)` capture group: any character except ";", 1 or more
-#'   * `;` end of sampling statement
-#'   * `.*` any character, 0 or more (e.g. comment)
-#'   
-#'   A similar procedure is used to extract type (3). Regex translation:
-#'   * `.*` any character, 0 or more (e.g. indent spaces, variable type
-#'   * `<lower *= *` beginning of bounds (may or may not be spaces around "="
-#'   * `(.+)` capture group: 1 or more characters 
-#'   * `, *` comma separating bounds followed by 0 or more spaces
-#'   * `(.+)>.*` upper bound declaration followed by 0 or more characters
-#'   * `.par` hyperparameter name
-#'   * `;.*` end of declaration followed by 0 or more characters (e.g. comment)
+#'   as a string, which corresponds directly to a [priors] function call. 
 
-get_prior_info <- function(stan_data, stanmodel, pars) {
+get_prior_info <- function(stan_data, stanmodel, pars) 
+{
   # User-specifiable priors from stan_data
   prior_data <- stan_data[paste0("prior_", pars)]
   prior_data <- prior_data[!sapply(prior_data, is.null)]
@@ -118,6 +100,15 @@ get_prior_info <- function(stan_data, stanmodel, pars) {
   })
   
   # Hard-coded priors from stanmodel
+  #
+  # .*      any character, 0 or more (e.g. indent spaces, any transformation function)
+  # .par    hyperparameter name
+  # .*~     any character, 0 or more (e.g. closing paren of transformation, space) 
+  #           followed by "~" (i.e. this line contains a sampling statement)
+  #  *      1 or more spaces
+  # ([^;]+) pdf capture group: any character except ";", 1 or more
+  # ;       end of sampling statement
+  # .*      any character, 0 or more (e.g. comment)
   hard_pars <- setdiff(pars, names(user_priors)) 
   code_pars <- gsub("R_", "L_", hard_pars)   # correlation matrices -> Cholesky factors
   smtext <- strsplit(stanmodel@model_code, "\\n")[[1]]
@@ -131,6 +122,16 @@ get_prior_info <- function(stan_data, stanmodel, pars) {
   hard_priors <- hard_priors[sapply(hard_priors, length) > 0]
 
   # Implicit priors declared by bounds in stanmodel
+  #
+  # .*          any character, 0 or more (e.g. indent spaces, variable type)
+  # <lower *= * beginning of bounds (may or may not be spaces around "=")
+  # (.+)        lb capture group: 1 or more characters 
+  # , *         comma separating bounds followed by 0 or more spaces
+  # upper *= *  upper bound declaration
+  # (.+)        ub capture group 
+  # >.*         end of bounds followed by 0 or more characters (e.g. dims, spaces)
+  # .par        hyperparameter name
+  # ;.*         end of declaration followed by 0 or more characters (e.g. comment)
   bounded_pars <- setdiff(pars, c(names(user_priors), names(hard_priors)))
   bounded_priors <- lapply(bounded_pars, function(.par) {
     if(grepl("rho_alpha.max", .par)) {  # hack b/c declared parameter is L_alpha[R/M]max
