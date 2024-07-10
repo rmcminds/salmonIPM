@@ -32,7 +32,8 @@
 #' @seealso [salmonIPM()], [priors]
 salmonIPMfit <- function(stanfit, call, stan_model, model, life_cycle, ages, pool_pops, 
                          SR_fun, RRS, par_models, center, scale, age_S_obs, age_S_eff,
-                         conditionGRonMS, prior.info, stan_data, dims, pops, elapsed_time)
+                         conditionGRonMS, prior.info, stan_data, dims, pops, 
+                         elapsed_time, salmonIPM_version)
 {
   out <- list(stanfit = stanfit, call = call, 
               stan_model = stan_model, model = model, life_cycle = life_cycle,
@@ -40,7 +41,8 @@ salmonIPMfit <- function(stanfit, call, stan_model, model, life_cycle, ages, poo
               par_models = par_models, center = center, scale = scale,
               age_S_obs = age_S_obs, age_S_eff = age_S_eff,
               conditionGRonMS = conditionGRonMS, prior.info = prior.info, 
-              stan_data = stan_data, dims = dims, pops = pops, elapsed_time = elapsed_time)
+              stan_data = stan_data, dims = dims, pops = pops, 
+              elapsed_time = elapsed_time, salmonIPM_version = salmonIPM_version)
   
   structure(out, class = c("salmonIPMfit", "list"))
 }
