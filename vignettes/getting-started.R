@@ -319,7 +319,7 @@ df1pop$X2 <- rnorm(N,0,1)
 #------------------------------
 
 ## @knitr singlepop_covariate_pars
-pars1pop$beta_Rmax <- 0.5
+pars1pop$beta_Rmax <- 1
 pars1pop$beta_R <- -0.5
 ## @knitr
 

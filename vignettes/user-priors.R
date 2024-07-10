@@ -93,12 +93,10 @@ sim1$pars_out[c("alpha","Rmax")]
 #-----------------------------------------------------
 
 ## @knitr SR_default_fit
-fit1a <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
-                  fish_data = sim1$sim_dat, 
-                  seed = 123)
+fit1a <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
+                  fish_data = sim1$sim_dat, seed = 123)
 
-print(fit1a, pars = c("p","R_p","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(0.025, 0.5, 0.975))
+print(fit1a)
 ## @knitr
 
 #-----------------------------------------------------
@@ -180,13 +178,11 @@ legend("topleft", c("true","obs","states","fit"), cex = 1.2, bty = "n",
 #-----------------------------------------------------
 
 ## @knitr SR_user_fit
-fit1b <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
-                   prior = list(alpha ~ lognormal(2, 0.5)),
-                   fish_data = sim1$sim_dat, 
-                   seed = 123)
+fit1b <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
+                   priors = list(alpha ~ lognormal(2, 0.5)),
+                   fish_data = sim1$sim_dat, seed = 123)
 
-print(fit1b, pars = c("p","R_p","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(0.025, 0.5, 0.975))
+print(fit1b)
 ## @knitr
 
 #-----------------------------------------------------
@@ -318,12 +314,10 @@ sim2 <- simIPM(life_cycle = "SSiter", SR_fun = "BH", pars = pars2,
 #-----------------------------------------------------
 
 ## @knitr age_default_fit
-fit2a <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
-                   fish_data = sim2$sim_dat, 
-                   seed = 123)
+fit2a <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH", 
+                   fish_data = sim2$sim_dat, seed = 123)
 
-print(fit2a, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(0.025, 0.5, 0.975))
+print(fit2a)
 ## @knitr
 
 #-----------------------------------------------------
@@ -407,14 +401,12 @@ show(gg)
 #-----------------------------------------------------
 
 ## @knitr age_default_fit
-fit2b <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
-                   prior = list(mu_p ~ dirichlet(sim2$pars_out$mu_p * 100),
+fit2b <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH", 
+                   priors = list(mu_p ~ dirichlet(sim2$pars_out$mu_p * 100),
                                 mu_SS ~ beta(10,90)),
-                   fish_data = sim2$sim_dat, 
-                   seed = 123)
+                   fish_data = sim2$sim_dat, seed = 123)
 
-print(fit2b, pars = c("p","R_p","s_SS","p_HOS","S","R","q","LL"), 
-      include = FALSE, prob = c(0.025, 0.5, 0.975))
+print(fit2b)
 ## @knitr
 
 #-----------------------------------------------------------

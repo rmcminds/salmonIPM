@@ -332,7 +332,7 @@ print(fitNnp, pars = c("alpha_W","alpha_H","delta_alpha","Rmax_W","Rmax_H","delt
 #-----------------------------------------------------
 
 ## @knitr fit_pp
-fitNpp <- salmonIPM(life_cycle = "SS", SR_fun = "BH", RRS = c("mu_alpha", "mu_Rmax"),
+fitNpp <- salmonIPM(life_cycle = "SS", SR_fun = "BH", RRS = c("alpha", "Rmax"),
                     fish_data = simNpop$sim_dat, seed = 321)
 
 print(fitNpp, 

@@ -100,9 +100,7 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 
 ## @knitr singlepop_fit
 fit1pop <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH", 
-                     fish_data = sim1pop$sim_dat, 
-                     chains = 4, iter = 2000, warmup = 1000, 
-                     seed = 123)
+                     fish_data = sim1pop$sim_dat, seed = 123)
 
 print(fit1pop)
 ## @knitr
@@ -346,7 +344,6 @@ format(head(simX1pop$sim_dat, 10), digits = 2)
 fitX1pop <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH", 
                       par_models = list(s_SS ~ X),
                       fish_data = simX1pop$sim_dat, 
-                      chains = 4, iter = 2000, warmup = 1000, 
                       seed = 123)
 
 print(fitX1pop, pars = "beta_SS")
@@ -421,9 +418,7 @@ format(head(simNpop$sim_dat, 10), digits = 2)
 
 ## @knitr fit_np
 fitNnp <- salmonIPM(life_cycle = "SSiter", pool_pops = FALSE, SR_fun = "BH", 
-                    fish_data = simNpop$sim_dat,
-                    chains = 4, iter = 2000, warmup = 1000, 
-                    seed = 321)
+                    fish_data = simNpop$sim_dat, seed = 321)
 
 print(fitNnp)
 ## @knitr
@@ -435,8 +430,7 @@ print(fitNnp)
 ## @knitr fit_pp
 fitNpp <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH",
                     fish_data = simNpop$sim_dat,
-                    chains = 4, iter = 2000, warmup = 1000, 
-                    control = list(adapt_delta = 0.95, max_treedepth = 12),
+                    control = list(max_treedepth = 12),
                     seed = 321)
 
 print(fitNpp)
