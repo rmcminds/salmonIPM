@@ -25,7 +25,7 @@ Imports:
     stats,
     gnorm,
     mvtnorm,
-    magrittr
+    dplyr
 LinkingTo: 
     BH (>= 1.84.0),
     Rcpp (>= 1.0.0),
