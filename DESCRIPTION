@@ -24,7 +24,8 @@ Imports:
     shinystan,
     stats,
     gnorm,
-    mvtnorm
+    mvtnorm,
+    magrittr
 LinkingTo: 
     BH (>= 1.84.0),
     Rcpp (>= 1.0.0),
