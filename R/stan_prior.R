@@ -4,22 +4,22 @@
 #' prior parameters for the given `stan_model`. This function is for internal use. 
 #' 
 #' @param default The default prior function as described in [`priors`].
-#' @param value A user-specified prior function as described in [`priors`].
+#' @param user A user-specified prior function as described in [`priors`].
 #'
 #' @return A named array of user-specifiable prior parameters whose elements are part of the
 #' `data` argument passed to [rstan::sampling()] when fitting **salmonIPM** models.
 #' The `dist` attribute is a character string giving the name of the distribution.
 #' 
 #' @importFrom utils as.relistable
-stan_prior <- function(default, value = NULL)
+stan_prior <- function(user, default)
 {
   pd <- eval(default)
-  if(is.null(value)) {
+  if(is.null(user)) {
     p <- pd
   } else {
-    p <- eval(value)
+    p <- eval(user)
     stopifnot(all(names(p) == names(pd)))
-    stopifnot(value$dist == pd$dist)
+    stopifnot(user$dist == pd$dist)
   }
   
   pdist <- p$dist
