@@ -4,7 +4,7 @@
 #' supported by the [posterior-package]. These S3 methods are wrappers
 #' for `as_draws_*(as.array(object))`.
 #'
-#' @name as_draws
+#' @name draws
 #' @aliases salmonIPMfit-draws
 #'
 #' @param x An object of class [salmonIPMfit].
@@ -34,7 +34,7 @@ as_draws.salmonIPMfit <- function(x, pars = "all", include = TRUE, ...) {
   as_draws(as.array(x, pars))
 }
 
-#' @rdname as_draws
+#' @rdname draws
 #' @importFrom posterior as_draws_matrix
 #' @exportS3Method posterior::as_draws_matrix
 #' @export as_draws_matrix
@@ -45,7 +45,7 @@ as_draws_matrix.salmonIPMfit <- function(x, pars = "all", include = TRUE, ...) {
   as_draws_matrix(as.array(x, pars))
 }
 
-#' @rdname as_draws
+#' @rdname draws
 #' @importFrom posterior as_draws_array
 #' @exportS3Method posterior::as_draws_array
 #' @export as_draws_array
@@ -56,7 +56,7 @@ as_draws_array.salmonIPMfit <- function(x, pars = "all", include = TRUE, ...) {
   as_draws_array(as.array(x, pars))
 }
 
-#' @rdname as_draws
+#' @rdname draws
 #' @importFrom posterior as_draws_df
 #' @exportS3Method posterior::as_draws_df
 #' @export as_draws_df
@@ -67,7 +67,7 @@ as_draws_df.salmonIPMfit <- function(x, pars = "all", include = TRUE, ...) {
   as_draws_df(as.array(x, pars))
 }
 
-#' @rdname as_draws
+#' @rdname draws
 #' @importFrom posterior as_draws_list
 #' @exportS3Method posterior::as_draws_list
 #' @export as_draws_list
@@ -78,7 +78,7 @@ as_draws_list.salmonIPMfit <- function(x, pars = "all", include = TRUE, ...) {
   as_draws_list(as.array(x, pars))
 }
 
-#' @rdname as_draws
+#' @rdname draws
 #' @importFrom posterior as_draws_rvars
 #' @exportS3Method posterior::as_draws_rvars
 #' @export as_draws_rvars
@@ -89,28 +89,3 @@ as_draws_rvars.salmonIPMfit <- function(x, pars = "all", include = TRUE, ...) {
   as_draws_rvars(as.array(x, pars))
 }
 
-#' Select parameters to include
-#'
-#' Helper function to amend a vector of parameter names or hierarchical level
-#' shortcuts.
-#'
-#' @param pars A character vector specifying (hyper)parameters, states, and/or
-#'   quantities of interest ("parameters"). Parameters can be explicitly named
-#'   or one or more shortcuts can be used to specify hierarchical levels of
-#'   parameters; see [stan_pars()] for details. 
-#' @param include Logical scalar defaulting to `TRUE` indicating whether to
-#'   include or exclude the parameters given by `pars`. 
-#' @inheritParams salmonIPM
-#' @return A character vector of amended pars.
-include_pars <- function(pars, stan_model, SR_fun, RRS, par_models, 
-                         include, log_lik = FALSE) {
-  if(all(pars %in% c("all","hyper","group","states","ppd")))
-    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, 
-                      RRS = RRS, par_models = par_models)
-  if(!include) 
-    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, 
-                              RRS = RRS, par_models = par_models), 
-                    pars)
-  if(log_lik) pars <- c(pars, "LL")
-  return(pars)
-}

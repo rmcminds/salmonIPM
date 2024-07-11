@@ -59,4 +59,29 @@ validate_RRS <- function(stan_model, SR_fun = "BH", RRS) {
          "  Available options are: ", paste(na.omit(RRS_opts), collapse = ", "), ".")
 }
 
+#' Select parameters to include
+#'
+#' Helper function to amend a vector of parameter names or hierarchical level
+#' shortcuts.
+#'
+#' @param pars A character vector specifying (hyper)parameters, states, and/or
+#'   quantities of interest ("parameters"). Parameters can be explicitly named
+#'   or one or more shortcuts can be used to specify hierarchical levels of
+#'   parameters; see [stan_pars()] for details. 
+#' @param include Logical scalar defaulting to `TRUE` indicating whether to
+#'   include or exclude the parameters given by `pars`. 
+#' @inheritParams salmonIPM
+#' @return A character vector of amended pars.
+include_pars <- function(pars, stan_model, SR_fun, RRS, par_models, 
+                         include, log_lik = FALSE) {
+  if(all(pars %in% c("all","hyper","group","states","ppd")))
+    pars <- stan_pars(stan_model, pars = pars, SR_fun = SR_fun, 
+                      RRS = RRS, par_models = par_models)
+  if(!include) 
+    pars <- setdiff(stan_pars(stan_model, pars = "all", SR_fun = SR_fun, 
+                              RRS = RRS, par_models = par_models), 
+                    pars)
+  if(log_lik) pars <- c(pars, "LL")
+  return(pars)
+}
 

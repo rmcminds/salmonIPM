@@ -22,7 +22,7 @@
 #'   number of years `N_year`, and any other model-specific elements.
 #' @param pops Character vector giving the unique elements of `fish_data$pop`.
 #' @param elapsed_time Wall time (s) to fit the model, as returned by
-#'   [get_elapsed_time(stanfit)].
+#'   [get_elapsed_time()].
 #' @param salmonIPM_version The version of **salmonIPM** used to fit the model.
 #' @inheritParams salmonIPM
 #'

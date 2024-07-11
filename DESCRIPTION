@@ -1,6 +1,6 @@
 Package: salmonIPM
 Title: Integrated Population Models for Pacific Salmonids
-Version: 1.5.1.9200
+Version: 1.5.1.9201
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"
@@ -25,7 +25,7 @@ Imports:
     stats,
     gnorm,
     mvtnorm,
-    dplyr
+    dplyr (>= 1.0.0)
 LinkingTo: 
     BH (>= 1.84.0),
     Rcpp (>= 1.0.0),
