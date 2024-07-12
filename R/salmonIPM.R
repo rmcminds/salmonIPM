@@ -1,5 +1,5 @@
 #' Fit an IPM or run-reconstruction regression model
-#' 
+#'
 #' Add description...
 #'
 #' @param stan_model Character string specifying the **salmonIPM** model to be
@@ -35,10 +35,11 @@
 #'   function specified by `SR_fun` that differ between wild- and
 #'   hatchery-origin spawners, such that the relative reproductive success of
 #'   hatchery spawners is not equal to 1. If `pool_pops == TRUE`, these should
-#'   be the names of the population-specific parameters, **not** their hyper-means.
-#'   For example, if `life_cycle %in% c("SS","SSiter")`, the options are
-#'   `"none"` (the default), `"alpha"`, `"Rmax"`, or `c("alpha","Rmax")`.
-#'   Currently `RRS` is only implemented for `pool_pops == FALSE`.
+#'   be the names of the population-specific parameters, **not** their
+#'   hyper-means. For example, if `life_cycle %in% c("SS","SSiter")`, the
+#'   options are `"none"` (the default), `"alpha"`, `"Rmax"`, or
+#'   `c("alpha","Rmax")`. Currently `RRS` is only implemented for `pool_pops ==
+#'   FALSE`.
 #' @param par_models  Optional list of two-sided formulas of the form `theta ~
 #'   x1 + ... + xK`, where `theta` is a (hyper)parameter or state in the model
 #'   specified by `stan_model` that accepts covariates (see **Details** for
@@ -94,16 +95,16 @@
 #'   will use the default values of the prior `params`.
 #' @param fish_data Data frame where each row corresponds to a unique population
 #'   `x` year, that includes the following `colnames` in no particular order
-#'   except where noted:
-#'   * `pop`  Factor, numeric, or character population name or ID. Will be coerced to a
+#'   except where noted (namely age- and origin-composition data):
+#'   * `pop`  Required factor, numeric, or character population name or ID. Will be coerced to a
 #'   factor, but it is recommended that this be a factor with concise,
 #'   informative levels, e.g. `"Johnson Cr"`. This is especially true if there
 #'   are multiple populations, in which case `levels(factor(pop))` can be used
 #'   in interpreting and plotting the posterior draws.
-#'   * `year`  Numeric or integer giving the calendar year corresponding to each
+#'   * `year`  Required numeric or integer giving the calendar year corresponding to each
 #'   observation. Note that `fish_data` is not indexed by brood year. For a
 #'   brood table run reconstruction, see [run_recon()].
-#'   * `A`  Spawning habitat size (either stream length or area). Will often be
+#'   * `A`  Required spawning habitat size (either stream length or area). Will often be
 #'   time-invariant within a population, but need not be. Habitat size is used
 #'   internally to convert population size scaling parameters (e.g., `Rmax`)
 #'   from density to abundance, so if `A == 1` no rescaling is done and these
@@ -124,20 +125,20 @@
 #'   then `M_downstream[j] = M[j] + M[i]`. If `is.na(downstream_trap[i])` then
 #'   `M[i]` is not double-counted.
 #'   * `n_Mage[min_Mage]_obs...n_Mage[max_Mage]_obs`  If `life_cycle == "SMaS"`,
-#'   multiple columns of observed smolt age frequencies (i.e., counts), where
+#'   multiple columns of observed smolt age sample frequencies (counts), where
 #'   `[min_Mage]` and `[max_Mage]` are the numeral age in years of the youngest
 #'   and oldest smolts, respectively. Note that age is measured in calendar
 #'   years from the brood year (i.e., the Gilbert-Rich system).
-#'   * `S_obs`  Observed total number of all wild and hatchery-origin spawners
+#'   * `S_obs`  Required observed total escapement of all wild and hatchery-origin spawners
 #'   (`integer` or `numeric`). Missing / unknown observations are coded as `NA`.
 #'   * `tau_S_obs`  If `life_cycle == "LCRchum"`, known lognormal observation error SDs
 #'   for spawner abundance. Missing values (`NA`) will be imputed.
 #'   * `n_age[min_age]_obs ... n_age[max_age]_obs`  Integer columns of
-#'   observed spawner age frequencies (counts), where `[min_age]` and
+#'   observed spawner age sample frequencies (counts), where `[min_age]` and
 #'   `[max_age]` are the numeral age in years (total, not ocean age) of the
-#'   youngest and oldest spawners. This is ignored if `life_cycle %in%
-#'   c("SSiter","SMaS")`Note that `n_age_obs` and all other compositional data
-#'   types should not contain `NA`. If the sample included no individuals of a
+#'   youngest and oldest spawners. Required unless `life_cycle %in% c("SSiter","SMaS")`, 
+#'   in which case it is ignored. Note that `n_age_obs` and all other compositional 
+#'   data types must not contain `NA`. If the sample included no individuals of a 
 #'   given category or if no samples were collected, the observed frequency is 0.
 #'   * `n_age[min_age]M_obs ... n_age[max_age]M_obs n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs`,
 #'   If `life_cycle == "SSiter"`, integer columns of observed first-time
@@ -149,7 +150,7 @@
 #'   corresponding maiden age. The maximum repeat age class is a plus-group,
 #'   i.e. it includes all repeat spawners age `max_age + 1` or older.
 #'   * `n_MSage[min_MSage]_obs ... n_MSage[max_MSage]_obs`  If `life_cycle == "SMaS"`,
-#'   integer columns of observed spawner ocean age frequencies, where
+#'   integer columns of observed spawner ocean age sample frequencies, where
 #'   `[min_MSage]` and `[max_MSage]` are the youngest and oldest ocean age in
 #'   years, respectively. Nonzero ocean age frequencies are only required if
 #'   `conditionGRonMS == TRUE` (the columns must be present in any case). If
@@ -157,18 +158,18 @@
 #'   samples, not simply the (implicit) ocean-age marginal totals of
 #'   `n_GRage_obs`.
 #'   * `n_GRage[min_age]_[min_Mage]_obs ... n_GRage[max_age]_[max_Mage]_obs`  If
-#'   `life_cycle == "SMaS"`, integer columns of observed Gilbert-Rich age
+#'   `life_cycle == "SMaS"`, integer columns of observed Gilbert-Rich age sample
 #'   frequencies, varying fastest by smolt age (`min_Mage:max_Mage`) and then by
 #'   total age (`min_age:max_age`). For example, a life history with subyearling
 #'   or yearling smolts and ocean ages 2:3 would have column names
 #'   `c("n_GRage_3_1_obs", "n_GRage_4_1_obs", "n_GRage_4_2_obs",
 #'   "n_GRage_5_2_obs")`. All combinations of smolt age and (implicitly) ocean
 #'   age must be represented, even if some were never observed.
-#'   * `n_W_obs`  Integer observed frequencies of natural-origin spawners.
-#'   * `n_H_obs`  Integer observed frequencies of hatchery-origin spawners.
+#'   * `n_W_obs`  Required integer observed sample frequencies of natural-origin spawners.
+#'   * `n_H_obs`  Required integer observed sample frequencies of hatchery-origin spawners.
 #'   * `fit_p_HOS`  Logical or 0/1 indicating for each row `i` in `fish_data` whether the
-#'   model should estimate `p_HOS[i] > 0`. Required if `model == "IPM"` and
-#'   `life_cycle != "LCRchum"`. [stan_data()] will give a warning if any row `i`
+#'   model should estimate `p_HOS[i] > 0`. Required if `model == "IPM"` unless
+#'   `life_cycle == "LCRchum"`. [stan_data()] will give a warning if any row `i`
 #'   meets either of two conditions: `as.logical(fit_p_HOS[i]) == FALSE` but
 #'   `n_W_obs[i] + n_H_obs[i] > 0`, or `as.logical(fit_p_HOS[i]) == TRUE` but
 #'   `n_W_obs[i] + n_H_obs[i] == 0`. The first means HOR were observed, so not
@@ -176,11 +177,11 @@
 #'   "masking"). The second means the model is being asked to estimate
 #'   `p_HOS[i]` with no case-specific hatchery / wild origin-frequency data.
 #'   Because `p_HOS[i]` is an *a priori* independent parameter (a "fixed
-#'   effect"), this is a challenging task. There may be some shared information
-#'   via the process model to indirectly inform it, but in our experience this
-#'   is likely to lead to poor estimates and sampling problems.
+#'   effect"), this is a difficult task. There may be some shared information
+#'   via the process model to indirectly inform it, but this is likely to lead
+#'   to poor estimates and sampling problems.
 #'   * `n_O0_obs n_O[which_O_pop[1]]_obs ... n_O[which_O_pop[N_O_pop]]_obs`
-#'   If `life_cycle = "LCRchum"`, multiple columns of observed origin
+#'   If `life_cycle = "LCRchum"`, multiple columns of observed origin sample
 #'   frequencies. The first column, named "O" for origin and "0" for null /
 #'   naught, refers to unknown natural origin, i.e. unmarked spawners presumed
 #'   to be NOR. The next `N_O_pop` columns are numbered by the levels of
@@ -199,8 +200,10 @@
 #'   female spawners.
 #'   * `p_G_obs`  If `life_cycle == "LCRchum"`, observed proportion (assumed known
 #'   without error) of female spawners that are "green", i.e. fully fecund.
-#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish.
-#'   * `B_take_obs`  Number of adults taken for hatchery broodstock.
+#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish. Required for 
+#'   all models, even if all values are 0.
+#'   * `B_take_obs`  Number of adults taken for hatchery broodstock. Required
+#'   for all models, even if all values are 0.
 #'   * `S_add_obs`  If `stan_model == "IPM_LCRchum_pp"`, number of adults translocated into
 #'   population.
 #'   * `...`  Additional variables to be used as covariates. These can vary spatially and/or
@@ -230,18 +233,16 @@
 #'   [rstan::sampling()].
 #' @param iter Positive integer specifying the number of iterations for each
 #'   chain (including warmup); see [rstan::sampling()].
-#' @param warmup Positive integer specifying the number of warmup
-#'   iterations per chain. If step-size adaptation is enabled (the
-#'   default), this also controls the number of iterations for which adaptation
-#'   is run; hence these warmup samples should not be used for inference.
-#'   The number of warmup iterations should not be larger than `iter`. See
-#'   [rstan::sampling()].
+#' @param warmup Positive integer specifying the number of warmup iterations per
+#'   chain. If step-size adaptation is enabled (the default), this also controls
+#'   the number of iterations for which adaptation is run; hence these warmup
+#'   samples should not be used for inference. The number of warmup iterations
+#'   should not be larger than `iter`. See [rstan::sampling()].
 #' @param thin Positive integer specifying the period for saving samples. The
 #'   default is 1, which is usually the recommended value. See
 #'   [rstan::sampling()].
-#' @param cores Number of cores to use when running chains in parallel.
-#'   Defaults to the number of physical cores available. See
-#'   [rstan::sampling()]. 
+#' @param cores Number of cores to use when running chains in parallel. Defaults
+#'   to the number of physical cores available. See [rstan::sampling()].
 #' @param control A named list of options to control sampler behavior. See
 #'   [rstan::stan()] for details and available options. In contrast to
 #'   **rstan**, the default value of `adapt_delta` in **salmonIPM** is increased
@@ -254,20 +255,20 @@
 #' @param ... Additional arguments to pass to [rstan::sampling()].
 #'
 #' @details The following parameters and states can be modeled as functions of
-#' covariates using the argument `par_models`. The response distribution
-#' families and link functions are automatically implemented so there is no need
-#' to `log()`- or `qlogis()`-transform the left-hand side of the formula,
-#' although such syntax will also work (because the LHS is not found in
-#' `fish_data` and is just syntactic sugar to determine the parameter name). The
-#' design matrices passed to the Stan model cannot include an intercept, but it
-#' is not necessary to manually remove it in the RHS; if present by default,
-#' [par_model_matrix()] will automatically remove it.
+#'   covariates using the argument `par_models`. The response distribution
+#'   families and link functions are automatically implemented so there is no
+#'   need to `log()`- or `qlogis()`-transform the left-hand side of the formula,
+#'   although such syntax will also work (because the LHS is not found in
+#'   `fish_data` and is just syntactic sugar to determine the parameter name).
+#'   The design matrices passed to the Stan model cannot include an intercept,
+#'   but it is not necessary to manually remove it in the RHS; if present by
+#'   default, [par_model_matrix()] will automatically remove it.
 #'
-#' As with any regression model, the user must ensure the effects specified are
-#' estimable given the design matrix. For example, the effect of a spatially
-#' varying but time-invariant predictor would not be identifiable in a `np`
-#' model because populations are modeled independently.
-#'
+#'   As with any regression model, the user must ensure the effects specified
+#'   are estimable given the design matrix. For example, the effect of a
+#'   spatially varying but time-invariant predictor would not be identifiable in
+#'   a `np` model because populations are modeled independently.
+#' 
 #' |                    |                         |                             |                        | **Response (family)**  |                    |                     |                              |                              |
 #' |:-------------------|:-----------------------:|:---------------------------:|:----------------------:|:----------------------:|:------------------:|:-------------------:|:----------------------------:|:----------------------------:|    
 #' | Model              | `alpha` \cr (lognormal) | `psi` \cr (logistic normal) | `Rmax` \cr (lognormal) | `Mmax` \cr (lognormal) | `R` \cr (lognormal)| `M` \cr (lognormal) | `s_MS` \cr (logistic normal) | `s_SS` \cr (logistic normal) |
