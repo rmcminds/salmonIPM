@@ -330,6 +330,7 @@ model {
   beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   append_row(zeta_Mmax, append_row(zeta_Mmax_W, zeta_Mmax_H)) ~ std_normal();
+  L_alphaMmax ~ lkj_corr_cholesky(1);
   beta_M ~ normal(0,5);
   rho_M ~ gnormal(0,0.85,30);  // mildly regularize to ensure stationarity
   sigma_year_M ~ normal(0,3);

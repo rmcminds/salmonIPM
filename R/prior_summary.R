@@ -94,6 +94,8 @@ prior_summary.salmonIPMfit <- function(object, digits = 2, ...) {
 
 get_prior_info <- function(stan_data, stanmodel, pars) 
 {
+  pars <- pars[!grepl("delta_.*alpha|delta_.*max", pars)] # H/W discounts don't have priors
+  
   # User-specifiable priors from stan_data
   prior_data <- stan_data[paste0("prior_", pars)]
   prior_data <- prior_data[!sapply(prior_data, is.null)]

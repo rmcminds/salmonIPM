@@ -379,6 +379,7 @@ model {
   beta_Rmax ~ normal(0,5);
   sigma_Rmax ~ normal(0,3);
   append_row(zeta_Rmax, append_row(zeta_Rmax_W, zeta_Rmax_H)) ~ std_normal();
+  L_alphaRmax ~ lkj_corr_cholesky(1);
   beta_R ~ normal(0,5);
   rho_R ~ gnormal(0,0.85,30); // mildly regularize to ensure stationarity
   sigma_year_R ~ normal(0,3);
