@@ -51,7 +51,7 @@
 #' # <under construction>
 #'
 #' @seealso [draws], [draws_summary()], [diagnostics], [salmonIPMfit]
-#' @importFrom posterior summarize_draws
+#' @importFrom posterior summarize_draws ess_bulk rhat
 #' @export
 
 summary.salmonIPMfit <- function(object, pars = "hyper", include = TRUE, 
