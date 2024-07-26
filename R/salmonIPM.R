@@ -321,6 +321,10 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
          ".\n  See pars in stan_pars('", stan_model, "', ", 
          ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
   
+  .call <- as.list(match.call(expand.dots = TRUE))
+  for(n in names(.call)[!grepl("_data", names(.call))]) .call[[n]] <- eval(.call[[n]])
+  .call <- as.call(.call)
+  
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages, 
                    par_models = par_models, center = center, scale = scale, priors = priors, 
                    fish_data = fish_data, age_F = age_F, age_B = age_B, 
@@ -343,7 +347,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
                              iter = iter, warmup = warmup, thin = thin, 
                              control = control, ...)
   
-  out <- salmonIPMfit(stanfit = stanfit, call = match.call(), stan_model = stan_model,
+  out <- salmonIPMfit(stanfit = stanfit, call = .call, stan_model = stan_model,
                       model = model, life_cycle = life_cycle, ages = ages, 
                       pool_pops = pool_pops, SR_fun = SR_fun, RRS = RRS, 
                       par_models = par_models, center = center, scale = scale, 
