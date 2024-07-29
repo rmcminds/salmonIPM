@@ -62,17 +62,7 @@ summary.salmonIPMfit <- function(object, pars = "hyper", include = TRUE,
                        ess_bulk = ess_bulk, rhat = rhat)
   funs <- if(length(funs)) funs else default_funs
   drf <- as_draws_df(object, pars = pars, include = include)
-  
-  # Lower triangle of corr matrices
-  is_corr <- grepl("R_", names(drf))
-  row_col <- gsub("R_.+\\[.*(\\d+),(\\d+)\\]", "\\1 \\2", names(drf))
-  row_col[!is_corr] <- NA
-  lower_tri <- sapply(row_col, function(x) {
-    rc <- as.numeric(unlist(strsplit(x, " ")))
-    rc[1] > rc[2] | all(is.na(rc))
-  })
-  drf <- drf[,lower_tri]
-  
+  drf <- draws_df_lower_tri(drf)  # only lower triangle of correlation matrices
   sdf <- do.call(summarize_draws, list(.x = drf, funs, .cores = .cores))
   return(as.data.frame(sdf))
 }
