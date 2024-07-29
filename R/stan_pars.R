@@ -9,6 +9,9 @@
 #'   level, corresponding to unique rows in `fish_data`), and `"ppd"` (only if
 #'   `model == "RR"`, observation-level predictions drawn from the posterior
 #'   predictive distribution).
+#' @param object A [salmonIPMfit] object. If this is provided then `SR_fun`,
+#'   `RRS` and `par_models` are not needed and will be ignored; their values
+#'   are extracted from `object`.
 #' @inheritParams salmonIPM
 #'
 #' @return Character vector with names of selected parameters and states
@@ -19,9 +22,17 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                                      "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
                                      "IPM_LCRchum_pp","RR_SS_np","RR_SS_pp"), 
                       pars = c("all","hyper","group","states","ppd"), 
-                      SR_fun = "BH", RRS = "none", par_models = NULL)
+                      SR_fun = "BH", RRS = "none", par_models = NULL, object = NULL)
 {
-  stan_model <- match.arg(stan_model)
+  if(!is.null(object)) {
+    stopifnot("salmonIPMfit" %in% class(object))
+    stan_model <- object$stan_model
+    SR_fun <- object$SR_fun
+    RRS <- object$RRS
+    par_models <- object$par_models
+  } else {
+    stan_model <- match.arg(stan_model)
+  }
   stanmodel <- gsub("iter", "", stan_model)  # same Stan code for iteroparity
   pars <- match.arg(pars, several.ok = TRUE)
 
