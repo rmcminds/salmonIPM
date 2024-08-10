@@ -134,7 +134,7 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   # drop unused pars based on RRS
   RRS_opts <- unique(gsub('(.+)_[WH]$', '\\1', grep('_[WH]$', pars_out, value = TRUE)))
   not_RRS <- RRS_opts[!grepl(paste(RRS, collapse = "|"), RRS_opts)]
-  RRS_hyper_opts <- intersect(RRS_opts, par_list[[stan_model]]$hyper)
+  RRS_hyper_opts <- intersect(RRS_opts, par_list[[stanmodel]]$hyper)
   RRS_hyper <- grep(paste(RRS, collapse = "|"), RRS_hyper_opts, value = TRUE)
   drop_pars <- c(RRS, RRS_hyper, # if base param is in RRS, drop it and keep H/W versions
                  paste0(not_RRS, "_W"), paste0(not_RRS, "_H"), paste0("delta_", not_RRS),

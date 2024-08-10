@@ -30,9 +30,6 @@ theme_update(panel.grid = element_blank(),
              strip.text = element_text(margin = margin(b = 3, t = 3)),
              legend.background = element_blank())
 library(bayesplot)      # Bayesian graphics
-
-## @knitr multicore 
-options(mc.cores = parallel::detectCores(logical = FALSE))
 ## @knitr
 
 #===========================================================================
@@ -94,9 +91,15 @@ sim1$pars_out[c("alpha","Rmax")]
 
 ## @knitr SR_default_fit
 fit1a <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
-                  fish_data = sim1$sim_dat, seed = 123)
+                  fish_data = sim1$sim_dat, 
+                  control = list(adapt_delta = 0.99),
+                  seed = 123)
 
+## @knitr SR_default_print
 print(fit1a)
+
+## @knitr SR_default_prior_summary
+prior_summary(fit1a)
 ## @knitr
 
 #-----------------------------------------------------
@@ -104,34 +107,7 @@ print(fit1a)
 #-----------------------------------------------------
 
 ## @knitr SR_default_posteriors
-# specify priors using distributional package
-log_R_obs <- log(sim1$sim_dat$S_obs / (1 - sim1$sim_dat$F_rate))
-prior1a <- c(`log(alpha)` = dist_normal(2,2),
-             `log(Rmax)` = dist_normal(quantile(log_R_obs, 0.8, names = FALSE), 
-                                       sd(log_R_obs)))
-
-# true parameter values
-true1 <- with(sim1$pars_out, c(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax)))
-
-# extract and transform draws using posterior package
-post1a <- as.data.frame(fit1a, pars = c("alpha","Rmax")) %>% 
-  transmute(`log(alpha)` = log(`alpha[1]`), `log(Rmax)` = log(`Rmax[1]`))
-
-# plot
-par(mfcol = c(2,2), mar = c(3,3,2,1))
-for(i in names(true1)) 
-  for(j in names(true1)) {
-    if(i == j) {
-      hist(post1a[,i], 20, prob = TRUE, col = alpha("slategray4", 0.5), 
-           border = "white", xlab = "", ylab = "", yaxt = "n", main = i,
-           cex.axis = 1.2, cex.lab = 1.5, cex.main = 1.5, xpd = NA)
-      curve(density(prior1a[i], at = x)[[1]], lwd = 0.5, add = TRUE)
-      abline(v = true1[i], lwd = 2, lty = 3)
-    } else {
-      plot(post1a[,i], post1a[,j], pch = 16, col = alpha("slategray4", 0.3),
-           xlab = "", ylab = "", las = 1, cex.axis = 1.2, cex.lab = 1.5, xpd = NA)
-    }
-  }
+plot_prior_posterior(fit1a, pars = c("alpha", "Rmax"), true = sim1$pars_out)
 ## @knitr
 
 #-----------------------------------------------------
@@ -180,9 +156,15 @@ legend("topleft", c("true","obs","states","fit"), cex = 1.2, bty = "n",
 ## @knitr SR_user_fit
 fit1b <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
                    priors = list(alpha ~ lognormal(2, 0.5)),
-                   fish_data = sim1$sim_dat, seed = 123)
+                   fish_data = sim1$sim_dat, 
+                   control = list(adapt_delta = 0.99),
+                   seed = 123)
 
+## @knitr SR_user_print
 print(fit1b)
+
+## @knitr SR_user_prior_summary
+prior_summary(fit1b)
 ## @knitr
 
 #-----------------------------------------------------
@@ -190,30 +172,7 @@ print(fit1b)
 #-----------------------------------------------------
 
 ## @knitr SR_user_posteriors
-log_R_obs <- log(sim1$sim_dat$S_obs / (1 - sim1$sim_dat$F_rate))
-prior1b <- c(`log(alpha)` = dist_normal(2, 0.5),
-             `log(Rmax)` = dist_normal(quantile(log_R_obs, 0.8, names = FALSE), 
-                                       sd(log_R_obs)))
-
-# extract and transform draws using posterior package
-post1b <- as.data.frame(fit1b, pars = c("alpha","Rmax")) %>% 
-  transmute(`log(alpha)` = log(`alpha[1]`), `log(Rmax)` = log(`Rmax[1]`))
-
-# plot
-par(mfcol = c(2,2), mar = c(3,3,2,1))
-for(i in names(true1)) 
-  for(j in names(true1)) {
-    if(i == j) {
-      hist(post1b[,i], 20, prob = TRUE, col = alpha("slategray4", 0.5), 
-           border = "white", xlab = "", ylab = "", yaxt = "n", main = i,
-           cex.axis = 1.2, cex.lab = 1.5, cex.main = 1.5, xpd = NA)
-      curve(density(prior1b[i], at = x)[[1]], lwd = 0.5, add = TRUE)
-      abline(v = true1[i], lwd = 2, lty = 3)
-    } else {
-      plot(post1b[,i], post1b[,j], pch = 16, col = alpha("slategray4", 0.3),
-           xlab = "", ylab = "", las = 1, cex.axis = 1.2, cex.lab = 1.5, xpd = NA)
-    }
-  }
+plot_prior_posterior(fit1b, pars = c("alpha", "Rmax"), true = sim1$pars_out)
 ## @knitr
 
 #-----------------------------------------------------
@@ -317,47 +276,19 @@ sim2 <- simIPM(life_cycle = "SSiter", SR_fun = "BH", pars = pars2,
 fit2a <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH", 
                    fish_data = sim2$sim_dat, seed = 123)
 
+## @knitr age_default_print
 print(fit2a)
+
+## @knitr age_default_prior_summary
+prior_summary(fit2a)
 ## @knitr
 
 #-----------------------------------------------------
-# Plot posteriors, modified priors, and true values
+# Plot posteriors, default priors, and true values
 #-----------------------------------------------------
 
 ## @knitr age_default_posteriors
-prior2a <- c(mu_p = dist_beta(1, N_age - 1),
-             sigma_p = dist_normal(0,5),
-             rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
-             mu_SS = dist_uniform(0,1),
-             rho_SS = dist_wrap("gnorm", 0, 0.85, 20),
-             sigma_SS = dist_normal(0,3))
-
-# true parameter values
-true2 <- sim2$pars_out %>% 
-  replace("sigma_SS", .$sigma_year_SS) %>%
-  c(rho_p = list(.$R_p[lower.tri(diag(N_age - 1))])) %>%
-  .[names(prior2a)] %>% unlist() %>% setNames(gsub("(\\d)", "[\\1]", names(.)))
-
-# extract and transform draws using posterior package
-post2a <- as_draws_rvars(fit2a) %>%
-  mutate_variables(mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p),
-                   rho_p = R_p[1,,][lower.tri(diag(N_age - 1))]) %>%
-  .[names(prior2a)] %>% as_draws_matrix()
-
-# plot
-par(mfrow = c(5,4), mar = c(5,1,1,1))
-for(j in names(true2)) {
-  hist(post2a[,j], 20, prob = TRUE, col = alpha("slategray4", 0.5), border = "white",
-       xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.4)
-  curve(density(prior2a[gsub("\\[.\\]", "", j)], at = x)[[1]], lwd = 0.5, add = TRUE)
-  abline(v = true2[[j]], lwd = 2, lty = 3)
-}
-legend("right", c("true","prior","posterior"), cex = 1.4, text.col = "white",
-       fill = c(NA, NA, alpha("slategray4", 0.5)), border = NA,
-       inset = c(-1,0), xpd = NA, bty = "n")
-legend("right", c("true","prior","posterior"), cex = 1.4,
-       lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
-       inset = c(-1,0), xpd = NA, bty = "n")
+plot_prior_posterior(fit2a, true = sim2$pars_out)
 ## @knitr
 
 #-----------------------------------------------------------
@@ -400,13 +331,25 @@ show(gg)
 # Fit IPM with modified prior on mu_p
 #-----------------------------------------------------
 
-## @knitr age_default_fit
+## @knitr age_user_fit
 fit2b <- salmonIPM(life_cycle = "SSiter", SR_fun = "BH", 
                    priors = list(mu_p ~ dirichlet(sim2$pars_out$mu_p * 100),
-                                mu_SS ~ beta(10,90)),
+                                 mu_SS ~ beta(10, 90)),
                    fish_data = sim2$sim_dat, seed = 123)
 
+## @knitr age_user_print
 print(fit2b)
+
+## @knitr age_user_prior_summary
+prior_summary(fit2b)
+## @knitr
+
+#-----------------------------------------------------
+# Plot posteriors, modified priors, and true values
+#-----------------------------------------------------
+
+## @knitr age_user_posteriors
+plot_prior_posterior(fit2b, true = sim2$pars_out)
 ## @knitr
 
 #-----------------------------------------------------------
@@ -443,58 +386,3 @@ gg <- sim2$sim_dat %>%
 
 show(gg)  
 ## @knitr
-
-
-
-
-
-####################
-par_names <- c("log(alpha)","log(Rmax)","rho_R","sigma_R",
-               "mu_p","sigma_p","rho_p", "mu_SS","rho_SS","sigma_SS","tau")
-
-# specify priors using distributional package
-log_S_obs <- log(sim2$sim_dat$S_obs)
-concentration <- sim2$pars_out$mu_p * 100
-prior2 <- c(`log(alpha)` = dist_normal(2,2),
-            `log(Rmax)` = dist_normal(max(log_S_obs), sd(log_S_obs)),
-            rho_R = dist_wrap("gnorm", 0, 0.85, 20),
-            sigma_R = dist_normal(0,5),
-            # mu_p = dist_beta(1,4),
-            setNames(dist_beta(concentration, 100 - concentration), paste0("mu_p[", 1:5, "]")),
-            # sigma_p = dist_normal(0,5),
-            setNames(rep(dist_normal(0,5), 4), paste0("sigma_p[", 1:4, "]")),
-            rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ  
-            mu_SS = dist_beta(10,90), #dist_uniform(0,1),
-            rho_SS = dist_wrap("gnorm", 0, 0.85, 20),
-            sigma_SS = dist_normal(0,3),
-            tau = dist_wrap("gnorm", 1, 0.85, 30))
-
-# true parameter values
-true2 <- sim2$pars_out %>% 
-  replace(c("sigma_R", "sigma_SS"), c(.$sigma_year_R, .$sigma_year_SS)) %>%
-  c(`log(alpha)` = log(.$alpha), `log(Rmax)` = log(.$Rmax), rho_p = .$R_p[2,1]) %>%
-  .[par_names] %>% unlist() %>% setNames(gsub("(\\d)", "[\\1]", names(.)))
-
-# extract and transform draws using posterior package
-post2 <- as_draws_rvars(fit2b) %>%
-  mutate_variables(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax),
-                   mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p),
-                   rho_p = as.vector(R_p[1,2,1])) %>%
-  .[par_names] %>% as_draws_matrix()
-
-# plot
-par(mfrow = c(5,4), mar = c(5,1,1,1))
-for(j in names(true2)) {
-  hist(post2[,j], 20, prob = TRUE, col = alpha("slategray4", 0.5), border = "white",
-       xlab = j, ylab = "", yaxt = "n", main = "", cex.axis = 1.2, cex.lab = 1.4)
-  # curve(density(prior2[gsub("\\[.\\]", "", j)], at = x)[[1]], lwd = 0.5, add = TRUE)
-  curve(density(prior2[j], at = x)[[1]], lwd = 0.5, add = TRUE)
-  abline(v = true2[[j]], lwd = 2, lty = 3)
-}
-legend("right", c("true","prior","posterior"), cex = 1.4, text.col = "white",
-       fill = c(NA, NA, alpha("slategray4", 0.5)), border = NA,
-       inset = c(-1,0), xpd = NA, bty = "n")
-legend("right", c("true","prior","posterior"), cex = 1.4,
-       lty = c(3,1,NA), lwd = c(2,1,NA), col = c(rep("black",2), "slategray4"),
-       inset = c(-1,0), xpd = NA, bty = "n")
-####################

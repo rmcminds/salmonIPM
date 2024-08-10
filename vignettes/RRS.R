@@ -13,7 +13,6 @@ library(posterior)       # working with posterior samples
 library(ggplot2)         # plotting
 library(distributional)  # plotting priors
 library(ggdist)
-library(ggh4x)
 library(vioplot)         # posterior violin plots
 library(rgl)             # 3-D graphics
 library(shinystan)       # interactive exploration of posterior
@@ -26,9 +25,6 @@ theme_update(panel.grid = element_blank(),
              strip.text = element_text(margin = margin(b = 3, t = 3)),
              legend.background = element_blank())
 library(bayesplot)      # Bayesian graphics
-
-## @knitr multicore 
-options(mc.cores = parallel::detectCores(logical = FALSE))
 ## @knitr
 
 #===========================================================================
@@ -106,52 +102,7 @@ print(fit1pop)
 #-----------------------------------------------------
 
 ## @knitr singlepop_posteriors
-par_names <- c("log(alpha_W)","log(alpha_H)","log(Rmax_W)","log(Rmax_H)")
-
-# extract and transform draws using posterior package
-post1pop <- as_draws_rvars(fit1pop) %>% 
-  mutate_variables(`log(alpha_W)` = log(alpha_W), `log(alpha_H)` = log(alpha_H), 
-                   `log(Rmax_W)` = log(Rmax_W), `log(Rmax_H)` = log(Rmax_H)) %>% 
-  .[par_names]
-
-postdf1pop <- post1pop %>% as_draws_df() %>% as.data.frame() %>% 
-  pivot_longer(cols = !starts_with("."), names_to = "param_indx", values_to = "value") %>% 
-  mutate(param_indx = factor(param_indx, levels = unique(param_indx)))
-
-# specify priors using distributional package
-prior_Rmax <- stan_data("IPM_SS_np", fish_data = sim1pop$sim_dat)$prior_Rmax
-prior1pop <- list(`log(alpha_W)` = dist_normal(2,2), `log(alpha_H)` = dist_normal(2,2),
-                  `log(Rmax_W)` = dist_normal(prior_Rmax[1], prior_Rmax[2]),
-                  `log(Rmax_H)` = dist_normal(prior_Rmax[1], prior_Rmax[2]))
-
-priordf1pop <- data.frame(param_indx = unique(postdf1pop$param_indx)) %>% 
-  mutate(param = gsub("\\[.\\]", "", param_indx), prior = prior1pop[param])
-
-# true parameter values
-true1pop <- sim1pop$pars_out %>% 
-  c(`log(alpha_W)` = log(.$alpha_W), `log(alpha_H)` = log(.$alpha_H), 
-    `log(Rmax_W)` = log(.$Rmax_W), `log(Rmax_H)` = log(.$Rmax_H)) %>% 
-  .[par_names] %>% unlist() %>% 
-  data.frame(param_indx = gsub("(\\d)", "[\\1]", names(.)), value = ., row.names = NULL) %>% 
-  mutate(param_indx = factor(param_indx, levels = levels(postdf1pop$param_indx)))
-
-# plot
-scales <- post1pop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
-  lapply(function(x) scale_x_continuous(limits = range(x)))
-
-postdf1pop %>%   
-  ggplot(aes(x = value)) + 
-  geom_histogram(aes(y = after_stat(density)), color = "white", fill = "slategray4", alpha = 0.5) +
-  stat_slab(data = priordf1pop, aes(xdist = prior), inherit.aes = FALSE,
-            normalize = "none", col = "black", lwd = 0.8, fill = NA) +
-  geom_vline(data = true1pop, aes(xintercept = value), lwd = 0.8, lty = 2) +
-  facet_wrap(~ param_indx, scales = "free", strip.position = "bottom") + 
-  facetted_pos_scales(x = scales) + theme_classic() + 
-  theme(strip.placement = "outside", strip.background = element_blank(), 
-        strip.text = element_text(size = 11, margin = margin(b = 3, t = 0)), 
-        axis.line.y = element_blank(), axis.ticks.y = element_blank(),
-        axis.text = element_text(size = 10), axis.text.y = element_blank()) +
-  labs(x = "", y = "")
+plot_prior_posterior(fit1pop, true = sim1pop$pars_out)
 ## @knitr
 
 #-----------------------------------------------------
@@ -370,3 +321,13 @@ points(1:N_pop, log(simNpop$pars_out$Rmax_W) - log(simNpop$pars_out$Rmax_W),
        pch = 16, cex = 1.5)
 mtext(c("Population","delta_Rmax"), side = 1:2, line = 2.5, cex = 1.5)
 ## @knitr
+
+#----------------------------------------------------------
+# Plot hyperparameter posteriors, priors, and true values
+# for partial population pooling model
+#----------------------------------------------------------
+
+## @knitr multipop_posteriors
+plot_prior_posterior(fitNpp, true = simNpop$pars_out)
+## @knitr
+
