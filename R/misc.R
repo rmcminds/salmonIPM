@@ -18,8 +18,8 @@ stan_mean <- function(object, pars) {
 #'
 #' Wrapper for [extract()] applied to the `stanfit` component of a fitted [salmonIPMfit] object.
 #' Unlike [extract()], only returns the first element, not a named list. This is useful for
-#' obtaining the samples for a single parameter (of any dimension), though usually equivalent
-#' to `as.matrix(object, par)`.
+#' obtaining the samples for a single parameter (of any dimension), though generally
+#' `as.matrix(object, par)` is preferred.
 #' 
 #' @param object An object of class [salmonIPMfit].
 #' @param par Character string giving quantity to return.

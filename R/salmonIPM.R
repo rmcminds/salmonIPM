@@ -315,14 +315,10 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
-  RRS_check <- RRS %in% c("none", stan_pars(stan_model))
-  if(!all(RRS_check))
-    stop("Error in RRS: ", RRS[!RRS_check], " is not a SR_fun parameter in ", stan_model, 
-         ".\n  See pars in stan_pars('", stan_model, "', ", 
-         ifelse(pool_pops, "'group'", "'hyper'"), ") that can take 'W' and 'H' subscripts.")
+  validate_RRS(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS)
   
   .call <- as.list(match.call(expand.dots = TRUE))
-  for(n in names(.call)[!grepl("_data", names(.call))]) .call[[n]] <- eval(.call[[n]])
+  for(n in grep("_data", names(.call), value = TRUE, invert = TRUE)) .call[[n]] <- eval(.call[[n]])
   .call <- as.call(.call)
   
   dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages, 
@@ -336,9 +332,8 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun, 
                      RRS = RRS, par_models = par_models)
   prior.info <- get_prior_info(stan_data = dat, stanmodel = stanmodels[[stanmodel]], pars = hyper)
-  
-  if(is.null(init))
-    init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
+
+  if(is.null(init)) init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95
   
   stanfit <- rstan::sampling(stanmodels[[stanmodel]], 
