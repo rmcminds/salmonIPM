@@ -6,15 +6,15 @@ functions {
 data {
   int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
   int<lower=1> N;               // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];  // population index
-  int<lower=1,upper=N> year[N]; // brood year index
+  array[N] int<lower=1,upper=N> pop;  // population index
+  array[N] int<lower=1,upper=N> year; // brood year index
   int<lower=1,upper=N> N_fit;   // number of cases used in fitting (non-missing S_obs and R_obs)
-  int<lower=1,upper=N> which_fit[N_fit]; // cases used in fitting
+  array[N_fit] int<lower=1,upper=N> which_fit; // cases used in fitting
   vector<lower=0>[N] S_obs;     // observed annual total spawner abundance (not density)
   vector<lower=0>[N] R_obs;     // total natural recruit abundance (not density), including harvest and broodstock removals
   vector[N] A;                  // habitat area associated with each spawner abundance obs
-  int<lower=0,upper=1> S_NA[N]; // logical indicating whether S_obs is missing and should be simulated
-  int<lower=0,upper=1> R_NA[N]; // logical indicating whether R_obs is missing and should be simulated
+  array[N] int<lower=0,upper=1> S_NA; // logical indicating whether S_obs is missing and should be simulated
+  array[N] int<lower=0,upper=1> R_NA; // logical indicating whether R_obs is missing and should be simulated
   int<lower=2> N_age;           // number of adult age classes
   int<lower=2> max_age;         // maximum adult age
   matrix<lower=0,upper=1>[max(pop),N_age] p_pop_obs;  // average recruit age distributions for each pop 
@@ -23,7 +23,7 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
-  int<lower=2> ages[N_age];                // adult ages
+  array[N_age] int<lower=2> ages;          // adult ages
   real mu_Rmax = max(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-mean of Rmax
   real sigma_Rmax = sd(log(R_obs[which_fit] ./ A[which_fit]));  // prior log-SD of Rmax
   

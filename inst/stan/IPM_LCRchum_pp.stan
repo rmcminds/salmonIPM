@@ -9,67 +9,67 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                      // total number of cases in all natural pops and years
-  int<lower=1,upper=N> pop[N];         // natural population ID
-  int<lower=1,upper=N> year[N];        // natural calendar year ID
+  array[N] int<lower=1,upper=N> pop;   // natural population ID
+  array[N] int<lower=1,upper=N> year;  // natural calendar year ID
   // fecundity
   int<lower=0> N_E;                    // number of fecundity observations
-  int<lower=1> age_E[N_E];             // female age (years) for fecundity observations
+  array[N_E] int<lower=1> age_E;       // female age (years) for fecundity observations
   vector<lower=0>[N_E] E_obs;          // observed fecundity
   // spawner-smolt productivity
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  int<lower=0,upper=1> RRS[2];         // fit W vs. H {alpha, Mmax} (1) or not (0)?
+  array[2] int<lower=0,upper=1> RRS;   // fit W vs. H {alpha, Mmax} (1) or not (0)?
   vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=1> smolt_age;              // smolt age
   int<lower=0> K_psi;                  // number of egg-to-smolt survival covariates
   matrix[N,K_psi] X_psi;               // egg-to-smolt survival covariates
-  real prior_mu_psi[2];                // prior a, b for hyper-mean egg-to-smolt survival
-  real prior_mu_psi_W[2];              // prior a, b for hyper-mean W egg-to-smolt survival
-  real prior_mu_psi_H[2];              // prior a, b for hyper-mean H egg-to-smolt survival
+  array[2] real prior_mu_psi;          // prior a, b for hyper-mean egg-to-smolt survival
+  array[2] real prior_mu_psi_W;        // prior a, b for hyper-mean W egg-to-smolt survival
+  array[2] real prior_mu_psi_H;        // prior a, b for hyper-mean H egg-to-smolt survival
   int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
-  real prior_mu_Mmax[2];               // prior mean, sd for hyper-mean log maximum smolt recruitment
-  real prior_mu_Mmax_W[2];             // prior mean, sd for hyper-mean W log maximum smolt recruitment
-  real prior_mu_Mmax_H[2];             // prior mean, sd for hyper-mean H log maximum smolt recruitment
+  array[2] real prior_mu_Mmax;         // prior mean, sd for hyper-mean log maximum smolt recruitment
+  array[2] real prior_mu_Mmax_W;       // prior mean, sd for hyper-mean W log maximum smolt recruitment
+  array[2] real prior_mu_Mmax_H;       // prior mean, sd for hyper-mean H log maximum smolt recruitment
   int<lower=0> K_M;                    // number of smolt recruitment covariates
-  row_vector[K_M] X_M[N];              // smolt recruitment covariates
+  array[N] row_vector[K_M] X_M;        // smolt recruitment covariates
   // smolt abundance and observation error
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
-  int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
+  array[N_M_obs] int<lower=1,upper=N> which_M_obs; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;            // observed annual natural smolt abundance (not density)
   int<lower=1,upper=N> N_tau_M_obs;    // number of cases with known smolt observation error SD
-  int<lower=1,upper=N> which_tau_M_obs[N_tau_M_obs]; // cases with known smolt observation error SD
+  array[N_tau_M_obs] int<lower=1,upper=N> which_tau_M_obs; // cases with known smolt observation error SD
   vector<lower=0>[N] tau_M_obs;        // known smolt observation error SDs
   int<lower=0,upper=N> N_upstream;     // number of smolt obs upstream of a trap in another pop
-  int<lower=1,upper=N> which_upstream[N_upstream]; // smolt obs upstream of a trap in another pop
-  int<lower=1,upper=N> downstream_trap[N_upstream]; // row index for the downstream trap
+  array[N_upstream] int<lower=1,upper=N> which_upstream;  // smolt obs upstream of a trap in another pop
+  array[N_upstream] int<lower=1,upper=N> downstream_trap; // row index for the downstream trap
   // SAR (smolt-spawner survival)
   int<lower=0> K_MS;                   // number of SAR covariates
   matrix[N,K_MS] X_MS;                 // SAR covariates
-  real prior_mu_MS[2];                 // prior a, b for mean SAR
+  array[2] real prior_mu_MS;           // prior a, b for mean SAR
   // spawner abundance and observation error
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
-  int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
+  array[N_S_obs] int<lower=1,upper=N> which_S_obs; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
   int<lower=1,upper=N> N_tau_S_obs;    // number of cases with known spawner observation error SD
-  int<lower=1,upper=N> which_tau_S_obs[N_tau_S_obs]; // cases with known spawner observation error SD
+  array[N_S_obs] int<lower=1,upper=N> which_tau_S_obs; // cases with known spawner observation error SD
   vector<lower=0>[N] tau_S_obs;        // known spawner observation error SDs
   // spawner age structure and sex ratio
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
   matrix<lower=0>[N,N_age] n_age_obs;  // observed wild spawner age frequencies (all zero row = NA)  
   vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
-  int<lower=0> n_M_obs[N];             // observed count of male spawners
-  int<lower=0> n_F_obs[N];             // observed count of female spawners
+  array[N] int<lower=0> n_M_obs;       // observed count of male spawners
+  array[N] int<lower=0> n_F_obs;       // observed count of female spawners
   vector<lower=0,upper=1>[N] p_G_obs;  // proportion green (fully fecund) females
   // origin composition
   int<lower=0> N_H_pop;                // number of hatchery pops
-  int<lower=1,upper=max(pop)> which_H_pop[N_H_pop]; // hatchery pop IDs
+  array[N_H_pop] int<lower=1,upper=max(pop)> which_H_pop; // hatchery pop IDs
   matrix<lower=0>[N,1+N_H_pop] n_O_obs; // observed spawner origin frequencies (1st col is NOR)
   // fishery and hatchery removals and translocations
   vector[N] F_rate;                    // fishing mortality rate of wild adults
   vector<lower=0,upper=1>[N_age] age_F; // is age a (non)selected (0/1) by fishery?
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
+  array[N_B] int<lower=1,upper=N> which_B; // years with B_take > 0
   vector[N_B] B_take_obs;              // observed broodstock take of wild adults
   vector<lower=0,upper=1>[N_age] age_B; // is age a (non)selected (0/1) in broodstock?
   vector<lower=0>[N] S_add_obs;        // number of translocated spawners added to population
@@ -78,18 +78,18 @@ data {
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
-  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
-  int<lower=0,upper=N_pop> N_W_pop = N_pop - N_H_pop; // number of natural (wild) pops
-  int<lower=1,upper=N_pop> which_W_pop[N_W_pop]; // wild pop IDs
+  array[N] int<lower=1> pop_year;          // index of years within each pop, starting at 1
+  int<lower=0,upper=N_pop> N_W_pop = N_pop - N_H_pop;  // number of natural (wild) pops
+  array[N_W_pop] int<lower=1,upper=N_pop> which_W_pop; // wild pop IDs
   vector<lower=0,upper=1>[N] indx_H;       // is case from a hatchery (1) or wild (0) pop?
-  int<lower=0> ocean_ages[N_age];          // ocean ages
+  array[N_age] int<lower=0> ocean_ages;    // ocean ages
   vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
   vector[N] ones_N = rep_vector(1,N);      // for elementwise inverse of rowsums 
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   int<lower=1> min_age = max_age - N_age + 1; // minimum adult age
-  int<lower=1> a_E[N_E];                   // female age index for fecundity observations
-  int<lower=0> n_MF_obs[N];                // total sample sizes for sex frequencies
+  array[N_E] int<lower=1> a_E;             // female age index for fecundity observations
+  array[N] int<lower=0> n_MF_obs;          // total sample sizes for sex frequencies
   vector<lower=0,upper=1>[N] p_NG_obs = 1 - p_G_obs; // proportion non-green females
   real mu_mu_Mmax = max(log(M_obs[which_M_obs] ./ A[which_M_obs])); // prior mean of mu_Mmax
   real sigma_mu_Mmax = sd(log(M_obs[which_M_obs])); // prior SD of mu_Mmax
@@ -206,12 +206,12 @@ parameters {
   real<lower=0> sigma_F;                 // annual SD of logit proportion female
   vector[N] zeta_F;                      // logit proportion females by outmigration year (Z-scores)
   // origin composition, removals
-  simplex[N_W_pop] P_D[N_H_pop];         // P(dispersal from hatchery h to wild pop j) 
+  array[N_H_pop] simplex[N_W_pop] P_D;   // P(dispersal from hatchery h to wild pop j) 
   vector<lower=0,upper=1>[N_B] B_rate;   // true broodstock take rate when B_take > 0
   // initial states and observation error
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
   vector<lower=0>[max_ocean_age*N_pop] S_init; // true total spawner abundance in years 1:max_ocean_age
-  simplex[N_age] q_init[max_ocean_age*N_pop];  // true wild spawner age distributions in years 1:max_ocean_age
+  array[max_ocean_age*N_pop] simplex[N_age] q_init; // true wild spawner age distributions in years 1:max_ocean_age
   vector<lower=0,upper=1>[max_ocean_age*N_pop] q_F_init; // true proportion females in years 1:max_ocean_age
   real<lower=0> mu_tau_M;                // median smolt observation error SD
   real<lower=0> sigma_tau_M;             // log-SD of smolt observation error SDs
@@ -250,9 +250,9 @@ transformed parameters {
   vector<lower=0>[N] S_W = rep_vector(0,N); // true total wild spawner abundance
   vector<lower=0>[N] S_H = rep_vector(0,N); // true total hatchery-origin spawner abundance
   vector<lower=0>[N] S = rep_vector(0,N);   // true total spawner abundance
-  vector[N_W_pop] P_D_all[N_pop];        // dispersal matrix padded with zeros 
-  matrix[N_pop,N_pop] S_O[N_year] = rep_array(rep_matrix(0,N_pop,N_pop), 
-                                              N_year); // true spawners by origin and return location
+  array[N_pop] vector[N_W_pop] P_D_all;     // dispersal matrix padded with zeros 
+  array[N_year] matrix[N_pop,N_pop] S_O = 
+    rep_array(rep_matrix(0,N_pop,N_pop), N_year); // true spawners by origin and return location
   matrix[N,1+N_H_pop] q_O = rep_matrix(1,N,1+N_H_pop); // true origin distns (col 1: unknown / natural)
   vector<lower=0,upper=1>[N] B_rate_all; // broodstock take rate in all years
   // spawner age structure
@@ -334,7 +334,7 @@ transformed parameters {
   p_F = inv_logit(logit(mu_F) + sigma_pop_F*zeta_pop_F[pop] + sigma_F*zeta_F);
   
   // Pad straying matrix
-  P_D_all = rep_array(rep_vector(0,N_W_pop), N_pop);
+  P_D_all = rep_array(rep_vector(0, N_W_pop), N_pop);
   P_D_all[which_H_pop] = P_D;
 
   // Calculate true hatchery spawners by origin and return location in return year i

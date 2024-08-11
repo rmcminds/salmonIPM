@@ -10,41 +10,41 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                       // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];          // population index
-  int<lower=1,upper=N> year[N];         // calendar year index
+  array[N] int<lower=1,upper=N> pop;    // population index
+  array[N] int<lower=1,upper=N> year;   // calendar year index
   // smolt production
   int<lower=1> SR_fun;                  // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  int<lower=0,upper=1> RRS[2];          // fit H vs. W {alpha, Rmax} (1) or not (0)?
+  array[2] int<lower=0,upper=1> RRS;    // fit H vs. W {alpha, Rmax} (1) or not (0)?
   vector[N] A;                          // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                 // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;            // intrinsic productivity covariates
-  real prior_alpha[2];                  // prior meanlog, sdlog for intrinsic productivity
-  real prior_alpha_W[2];                // prior meanlog, sdlog for W intrinsic productivity
-  real prior_alpha_H[2];                // prior meanlog, sdlog for H intrinsic productivity
+  array[2] real prior_alpha;            // prior meanlog, sdlog for intrinsic productivity
+  array[2] real prior_alpha_W;          // prior meanlog, sdlog for W intrinsic productivity
+  array[2] real prior_alpha_H;          // prior meanlog, sdlog for H intrinsic productivity
   int<lower=0> K_Mmax;                  // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;              // maximum smolt recruitment covariates
-  real prior_Mmax[2];                   // prior meanlog, sdlog for maximum smolt recruitment
-  real prior_Mmax_W[2];                 // prior meanlog, sdlog for W maximum smolt recruitment
-  real prior_Mmax_H[2];                 // prior meanlog, sdlog for H maximum smolt recruitment
+  array[2] real prior_Mmax;             // prior meanlog, sdlog for maximum smolt recruitment
+  array[2] real prior_Mmax_W;           // prior meanlog, sdlog for W maximum smolt recruitment
+  array[2] real prior_Mmax_H;           // prior meanlog, sdlog for H maximum smolt recruitment
   int<lower=0> K_M;                     // number of smolt recruitment covariates
-  row_vector[K_M] X_M[N];               // smolt recruitment covariates
+  array[N] row_vector[K_M] X_M;         // smolt recruitment covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;         // number of cases with non-missing smolt abundance obs 
-  int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
+  array[N_M_obs] int<lower=1,upper=N> which_M_obs; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;             // observed annual smolt abundance (not density)
-  real prior_tau_M[3];                  // prior mean, scale, shape for smolt observation error SD
+  array[3] real prior_tau_M;            // prior mean, scale, shape for smolt observation error SD
   // smolt age structure
   int<lower=2> N_Mage;                  // number of smolt age classes
   int<lower=2> max_Mage;                // maximum smolt age
   matrix<lower=0>[N,N_Mage] n_Mage_obs; // observed smolt age frequencies (all zero row = NA)  
   // SAR (sMolt-Spawner survival)
   int<lower=0> K_MS;                    // number of SAR covariates
-  row_vector[K_MS] X_MS[N];             // SAR covariates
+  array[N] row_vector[K_MS] X_MS;       // SAR covariates
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;         // number of cases with non-missing spawner abundance obs 
-  int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
+  array[N_S_obs] int<lower=1,upper=N> which_S_obs; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;             // observed annual total spawner abundance (not density)
-  real prior_tau_S[3];                  // prior mean, scale, shape for spawner observation error SD
+  array[3] real prior_tau_S;            // prior mean, scale, shape for spawner observation error SD
   // spawner ocean age and Gilbert-Rich age structure
   int<lower=2> N_MSage;                 // number of ocean age classes
   int<lower=1> max_MSage;               // maximum ocean age
@@ -53,14 +53,14 @@ data {
   int<lower=0,upper=1> conditionGRonMS; // is n_GRage_obs unconditional (0) or conditioned on ocean age totals (1)?
   // H/W composition
   int<lower=0,upper=N> N_H;             // number of years with p_HOS > 0
-  int<lower=1,upper=N> which_H[N_H];    // years with p_HOS > 0
-  int<lower=0> n_W_obs[N_H];            // count of wild spawners in samples
-  int<lower=0> n_H_obs[N_H];            // count of hatchery spawners in samples
+  array[N_H] int<lower=1,upper=N> which_H; // years with p_HOS > 0
+  array[N_H] int<lower=0> n_W_obs;     // count of wild spawners in samples
+  array[N_H] int<lower=0> n_H_obs;     // count of hatchery spawners in samples
   // fishery and hatchery removals
   vector[N] F_rate;                    // fishing mortality rate of wild adults
   vector<lower=0,upper=1>[N_MSage] MSage_F; // is ocean age a (non)selected (0/1) by fishery?
   int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
+  array[N_B] int<lower=1,upper=N> which_B; // years with B_take > 0
   vector[N_B] B_take_obs;              // observed broodstock take of wild adults
   vector<lower=0,upper=1>[N_MSage] MSage_B; // is ocean age a (non)selected (0/1) in broodstock?
 }
@@ -69,13 +69,13 @@ transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
   int<lower=1> min_Mage = max_Mage - N_Mage + 1; // minimum smolt age
-  int<lower=0> Mages[N_Mage] = seq(min_Mage, max_Mage); // smolt ages
+  array[N_Mage] int<lower=0> Mages = seq(min_Mage, max_Mage); // smolt ages
   int<lower=0> min_MSage = max_MSage - N_MSage + 1; // minimum ocean age
-  int<lower=0> MSages[N_MSage] = seq(min_MSage, max_MSage); // ocean ages
+  array[N_MSage] int<lower=0> MSages = seq(min_MSage, max_MSage); // ocean ages
   int<lower=2> max_age = max_Mage + max_MSage; // maximum adult age
   int<lower=2> N_GRage = N_Mage*N_MSage;   // number of Gilbert-Rich age classes
-  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
-  int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
+  array[N] int<lower=1> pop_year;          // index of years within each pop, starting at 1
+  array[N_H] int<lower=0> n_HW_obs;        // total sample sizes for H/W frequencies
   vector[max_Mage*N_pop] mu_M_init;        // prior mean of total smolt abundance in years 1:max_Mage
   real sigma_M_init = sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:max_Mage
   matrix[N_Mage,max_Mage*N_pop] mu_q_M_init; // prior counts of smolt age distns in years 1:max_Mage
@@ -147,30 +147,30 @@ parameters {
   vector<lower=0>[N_pop] sigma_M;             // spawner-smolt process error SDs
   vector[N] zeta_M;                           // smolt recruitment process errors (z-scored)
   // smolt age structure
-  simplex[N_Mage] mu_p_M[N_pop];              // population mean smolt age distributions
+  array[N_pop] simplex[N_Mage] mu_p_M;        // population mean smolt age distributions
   matrix<lower=0>[N_pop,N_Mage-1] sigma_p_M;  //?// log-ratio cohort smolt age distribution SDs
-  cholesky_factor_corr[N_Mage-1] L_p_M[N_pop]; // Cholesky-factored corr matrices of log-ratio smolt age distns
+  array[N_pop] cholesky_factor_corr[N_Mage-1] L_p_M; // Cholesky-factored corr matrices of log-ratio smolt age distns
   matrix[N,N_Mage-1] zeta_p_M;                //?// log-ratio cohort smolt age distn errors (Z-scored)
   // SAR
   matrix<lower=0,upper=1>[N_pop,N_Mage] mu_MS; //?// mean SAR for each smolt age
   matrix[N_pop,K_MS] beta_MS;                 //?// regression coefs for SAR (independent of smolt age)  
   matrix<lower=-1,upper=1>[N_pop,N_Mage] rho_MS; //?// AR(1) coefs of SAR for each smolt age
   matrix<lower=0>[N_pop,N_Mage] sigma_MS;     //?// SAR process error SDs for each smolt age
-  cholesky_factor_corr[N_Mage] L_MS[N_pop];   // Cholesky-factored corr matrices of SAR across smolt ages
+  array[N_pop] cholesky_factor_corr[N_Mage] L_MS; // Cholesky-factored corr matrices of SAR across smolt ages
   matrix[N,N_Mage] zeta_MS;                   //?// SAR process errors for each smolt age (z-scored)
   // ocean age structure
-  simplex[N_MSage] mu_p_MS[N_pop,N_Mage];     // pop mean ocean age distributions for each smolt age
-  vector<lower=0>[N_MSage-1] sigma_p_MS[N_pop,N_Mage]; // log-ratio ocean age SDs for each smolt age
-  cholesky_factor_corr[N_Mage*(N_MSage-1)] L_p_MS[N_pop]; // Cholesky-factored corr matrices of log-ratio ocean age
+  array[N_pop,N_Mage] simplex[N_MSage] mu_p_MS; // pop mean ocean age distributions for each smolt age
+  array[N_pop,N_Mage] vector<lower=0>[N_MSage-1] sigma_p_MS; // log-ratio ocean age SDs for each smolt age
+  array[N_pop] cholesky_factor_corr[N_Mage*(N_MSage-1)] L_p_MS; // Cholesky-factored corr matrices of log-ratio ocean age
   matrix[N,N_Mage*(N_MSage-1)] zeta_p_MS;     //?// log-ratio ocean age errors (Z-scored)
   // H/W composition, removals
   vector<lower=0,upper=1>[N_H] p_HOS;         // true p_HOS in years which_H
   vector<lower=0,upper=1>[N_B] B_rate;        // true broodstock take rate when B_take > 0
   // initial states, observation error
   vector<lower=0>[max_Mage*N_pop] M_init;     // true smolt abundance in years 1:max_Mage
-  simplex[N_Mage] q_M_init[max_Mage*N_pop];   // true smolt age distns in years 1:max_Mage
+  array[max_Mage*N_pop] simplex[N_Mage] q_M_init; // true smolt age distns in years 1:max_Mage
   vector<lower=0>[max_MSage*N_pop] S_init;    // true total spawner abundance in years 1:max_MSage
-  simplex[N_GRage] q_GR_init[max_MSage*N_pop]; // true wild spawner age distns in years 1:max_MSage
+  array[max_MSage*N_pop] simplex[N_GRage] q_GR_init; // true wild spawner age distns in years 1:max_MSage
   vector<lower=0>[N_pop] tau_M;               // smolt observation error SDs
   vector<lower=0>[N_pop] tau_S;               // spawner observation error SDs
 }
@@ -189,14 +189,14 @@ transformed parameters {
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
   vector<lower=0>[N] M;                  // true smolt abundance (not density) by outmigration year
   // smolt age structure
-  vector[N_Mage-1] mu_alr_p_M[N_pop];    // population mean log ratio smolt age distributions
-  simplex[N_Mage] p_M[N];                // true smolt age distributions by brood year
+  array[N_pop] vector[N_Mage-1] mu_alr_p_M; // population mean log ratio smolt age distributions
+  array[N] simplex[N_Mage] p_M;          // true smolt age distributions by brood year
   matrix<lower=0,upper=1>[N,N_Mage] q_M; // true smolt age distributions by calendar year
   // SAR
   matrix[N,N_Mage] epsilon_MS;           //?// SAR process errors by smolt age and outmigration year
   matrix<lower=0,upper=1>[N,N_Mage] s_MS; //?// true SAR by smolt age and outmigration year
-  vector[N_MSage-1] mu_alr_p_MS[N_pop,N_Mage]; // population mean log ratio age distributions
-  simplex[N_MSage] p_MS[N,N_Mage];       // true ocean age distns by outmigration year
+  array[N_pop,N_Mage] vector[N_MSage-1] mu_alr_p_MS; // population mean log ratio age distributions
+  array[N,N_Mage] simplex[N_MSage] p_MS; // true ocean age distns by outmigration year
   // H/W spawner abundance, removals
   vector[N] p_HOS_all;                   // true p_HOS in all years (can == 0)
   vector<lower=0>[N] S_W;                // true total wild spawner abundance
@@ -452,8 +452,8 @@ model {
 generated quantities {
   vector[RRS[1]*N_pop] delta_alpha;   // H vs. W discount in log intrinsic productivity
   vector[RRS[2]*N_pop] delta_Mmax;    // H vs. W discount in log maximum recruitment
-  corr_matrix[N_Mage-1] R_p_M[N_pop]; // correlation matrices of log-ratio smolt age distns
-  corr_matrix[N_Mage] R_MS[N_pop];    // correlation matrices of logit SAR by smolt age
+  array[N_pop] corr_matrix[N_Mage-1] R_p_M; // correlation matrices of log-ratio smolt age distns
+  array[N_pop] corr_matrix[N_Mage] R_MS; // correlation matrices of logit SAR by smolt age
   corr_matrix[N_Mage*(N_MSage-1)] R_p_MS[N_pop]; // correlation matrices of log-ratio ocean age distns
   vector[N] LL_M_obs;        // pointwise log-likelihood of smolts
   vector[N] LL_n_Mage_obs;   // pointwise log-likelihood of smolt age frequencies
