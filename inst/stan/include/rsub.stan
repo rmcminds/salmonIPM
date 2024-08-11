@@ -1,5 +1,5 @@
 // R-style conditional subsetting
-int[] rsub(int[] x, int[] cond) {
+array[] int rsub(array[] int x, array[] int cond) {
   int xsub[sum(cond)];
   int pos;
   pos = 1;
