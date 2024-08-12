@@ -7,17 +7,17 @@
 #'
 #' @param object An object of class [salmonIPMfit] with prior information stored
 #'   in `prior.info`.
-#' @param pars Character vector specifying hyperparameters to plot. The
-#'   default is all top-level hyperparameters, i.e. those parameters that are
-#'   given priors.
+#' @param pars Character vector specifying hyperparameters to plot. The default
+#'   is all top-level hyperparameters, i.e. those parameters that are given
+#'   priors.
 #' @param include Logical scalar defaulting to `TRUE` indicating whether to
 #'   include or exclude the parameters given by `pars`. If `FALSE`, only entire
 #'   multidimensional parameters can be excluded, rather than particular
 #'   elements of them. This is most likely to be useful for excluding large
 #'   correlation matrices from the plot.
-#' @param true Named list containing true hyperparameter values used to
-#'   generate the pseudo-data to which `object` was fitted. See the `pars`
-#'   argument to [simIPM()] for the structure of this list.
+#' @param true Named list containing true hyperparameter values used to generate
+#'   the pseudo-data to which `object` was fitted. See the `pars` argument to
+#'   [simIPM()] for the structure of this list.
 #'
 #' @return A [ggplot] object. If the result is not assigned to an object, it
 #'   will be automatically plotted.
@@ -29,14 +29,16 @@
 #'
 #' @seealso [prior_summary()], [priors], [salmonIPM()], [salmonIPMfit]
 #'
-#' @importFrom dplyr %>% select mutate reframe group_by
-#' @importFrom tidyr pivot_longer 
+#' @importFrom dplyr %>% select mutate across matches rename_with reframe group_by
+#' @importFrom tidyr pivot_longer replace_na
 #' @importFrom posterior as_rvar mutate_variables
 #' @importFrom distributional dist_normal dist_lognormal dist_beta dist_uniform
-#' @importFrom ggplot2 ggplot aes after_stat geom_histogram geom_line geom_vline 
-#' @importFrom ggplot2 scale_x_continuous labs alpha margin
-#' @importFrom ggplot2 element_blank element_text facet_wrap vars theme theme_classic
-#' @importFrom ggdist dlkjcorr_marginal rlkjcorr_marginal plkjcorr_marginal qlkjcorr_marginal
+#'   dist_truncated
+#' @importFrom ggplot2 ggplot aes after_stat geom_histogram geom_line geom_vline
+#'   scale_x_continuous labs alpha margin element_blank element_text facet_wrap
+#'   vars theme theme_classic
+#' @importFrom ggdist dlkjcorr_marginal rlkjcorr_marginal plkjcorr_marginal
+#'   qlkjcorr_marginal
 #' @export
 
 plot_prior_posterior <- function(object, pars = NULL, include = TRUE, true = NULL) {
@@ -50,6 +52,8 @@ plot_prior_posterior <- function(object, pars = NULL, include = TRUE, true = NUL
 
   # Posterior
   drf <- as_draws_df(object, pars = pars) %>% as.data.frame() %>% 
+    rename_with(~ sub("(^alpha.+|^Rmax.+|^Mmax.+)", "log(\\1)", .x)) %>%
+    mutate(across(contains("log("), log)) %>%
     draws_df_lower_tri()  # only lower triangle of correlation matrices
 
   post <- drf %>% 
@@ -58,7 +62,7 @@ plot_prior_posterior <- function(object, pars = NULL, include = TRUE, true = NUL
 
   # Priors
   priors <- lapply(levels(post$par), function(par) {
-    .par <- gsub("\\[.*\\]", "", par)
+    .par <- gsub("log\\((.+)\\)", "\\1", gsub("\\[.*\\]", "", par))
     .indx <- suppressWarnings(as.numeric(gsub(".+\\[.*(\\d+)\\]", "\\1", par)))
     prinfo <- prior.info[[.par]]
     dist <- prinfo$dist
@@ -71,8 +75,12 @@ plot_prior_posterior <- function(object, pars = NULL, include = TRUE, true = NUL
                                shape2 = sum(args$concentration[-.indx])),
                    lkj_corr = c(args, K = object$stanfit@par_dims[[.par]][2]),
                    args)
-    dist <- switch(dist, dirichlet = "beta", lkj_corr = "lkjcorr_marginal", dist)
-    do.call(paste0("dist_", dist), args)
+    dist <- switch(dist, lognormal = "normal", dirichlet = "beta", 
+                   lkj_corr = "lkjcorr_marginal", dist)
+    pr <- do.call(paste0("dist_", dist), args)
+    bounds <- replace_na(attr(prinfo, "bounds"), Inf)
+    if(!is.null(bounds)) pr <- dist_truncated(pr, lower = bounds[1], upper = bounds[2])
+    return(pr)
   })
   
   priors <- data.frame(par = unique(post$par), prior = do.call("c", priors)) %>% 
@@ -83,8 +91,11 @@ plot_prior_posterior <- function(object, pars = NULL, include = TRUE, true = NUL
   if(is.null(true)) {
     true <- data.frame(par = unique(post$par), value = as.numeric(NA))
   } else {
+    if("sigma_R" %in% pars && !object$pool_pops && !is.null(true$sigma_year_R)) 
+      true$sigma_R <- true$sigma_year_R
     true <- lapply(true[pars], as_rvar) %>% as_draws_df() %>% as.data.frame() %>%
       draws_df_lower_tri() %>% setNames(names(drf)) %>%
+      mutate(across(contains("log("), log)) %>%
       pivot_longer(!starts_with("."), names_to = "par", values_to = "value") %>%
       mutate(par = factor(par, levels = unique(par)))
   }
