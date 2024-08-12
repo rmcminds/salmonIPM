@@ -1,6 +1,10 @@
 #' Fit an IPM or run-reconstruction regression model
 #'
-#' Add description...
+#' Fits integrated population models (IPMs) or run-reconstruction regressions for anadromous 
+#' Pacific salmonid population dynamics using a hierarchical Bayesian framework 
+#' implemented in Stan. Various models are available, representing alternative 
+#' life-history structures and independent or hierarchically pooled populations.
+#' Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 #'
 #' @param stan_model Character string specifying the **salmonIPM** model to be
 #'   fit. A more concise alternative to specifying `model`, `life_cycle`, and

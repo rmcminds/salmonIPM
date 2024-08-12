@@ -149,19 +149,19 @@ parameters {
   // smolt age structure
   array[N_pop] simplex[N_Mage] mu_p_M;        // population mean smolt age distributions
   matrix<lower=0>[N_pop,N_Mage-1] sigma_p_M;  //?// log-ratio cohort smolt age distribution SDs
-  array[N_pop] cholesky_factor_corr[N_Mage-1] L_p_M; // Cholesky-factored corr matrices of log-ratio smolt age distns
+  array[N_pop] cholesky_factor_corr[N_Mage-1] L_p_M; // Cholesky factors of corr matrices of log-ratio smolt age distns
   matrix[N,N_Mage-1] zeta_p_M;                //?// log-ratio cohort smolt age distn errors (Z-scored)
   // SAR
   matrix<lower=0,upper=1>[N_pop,N_Mage] mu_MS; //?// mean SAR for each smolt age
   matrix[N_pop,K_MS] beta_MS;                 //?// regression coefs for SAR (independent of smolt age)  
   matrix<lower=-1,upper=1>[N_pop,N_Mage] rho_MS; //?// AR(1) coefs of SAR for each smolt age
   matrix<lower=0>[N_pop,N_Mage] sigma_MS;     //?// SAR process error SDs for each smolt age
-  array[N_pop] cholesky_factor_corr[N_Mage] L_MS; // Cholesky-factored corr matrices of SAR across smolt ages
+  array[N_pop] cholesky_factor_corr[N_Mage] L_MS; // Cholesky factors of corr matrices of SAR across smolt ages
   matrix[N,N_Mage] zeta_MS;                   //?// SAR process errors for each smolt age (z-scored)
   // ocean age structure
   array[N_pop,N_Mage] simplex[N_MSage] mu_p_MS; // pop mean ocean age distributions for each smolt age
   array[N_pop,N_Mage] vector<lower=0>[N_MSage-1] sigma_p_MS; // log-ratio ocean age SDs for each smolt age
-  array[N_pop] cholesky_factor_corr[N_Mage*(N_MSage-1)] L_p_MS; // Cholesky-factored corr matrices of log-ratio ocean age
+  array[N_pop] cholesky_factor_corr[N_Mage*(N_MSage-1)] L_p_MS; // Cholesky factors of corr matrices of log-ratio ocean age
   matrix[N,N_Mage*(N_MSage-1)] zeta_p_MS;     //?// log-ratio ocean age errors (Z-scored)
   // H/W composition, removals
   vector<lower=0,upper=1>[N_H] p_HOS;         // true p_HOS in years which_H
