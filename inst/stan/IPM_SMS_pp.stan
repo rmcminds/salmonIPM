@@ -7,39 +7,39 @@ functions {
 data {
   // info for observed data
   int<lower=1> N;                      // total number of cases in all pops and years
-  int<lower=1,upper=N> pop[N];         // population index
-  int<lower=1,upper=N> year[N];        // calendar year index
+  array[N] int<lower=1,upper=N> pop;   // population index
+  array[N] int<lower=1,upper=N> year;  // calendar year index
   // smolt production
   int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
-  int<lower=0,upper=1> RRS[2];         // fit W vs. H {alpha, Mmax} (1) or not (0)?
+  array[2] int<lower=0,upper=1> RRS;   // fit W vs. H {alpha, Mmax} (1) or not (0)?
   int<lower=1> smolt_age;              // smolt age
   vector[N] A;                         // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
   matrix[N,K_alpha] X_alpha;           // intrinsic productivity covariates
-  real prior_mu_alpha[2];              // prior mean, sd for hyper-mean log intrinsic productivity
-  real prior_mu_alpha_W[2];            // prior mean, sd for hyper-mean log W intrinsic productivity
-  real prior_mu_alpha_H[2];            // prior mean, sd for hyper-mean log H intrinsic productivity
+  array[2] real prior_mu_alpha;        // prior mean, sd for hyper-mean log intrinsic productivity
+  array[2] real prior_mu_alpha_W;      // prior mean, sd for hyper-mean log W intrinsic productivity
+  array[2] real prior_mu_alpha_H;      // prior mean, sd for hyper-mean log H intrinsic productivity
   int<lower=0> K_Mmax;                 // number of maximum smolt recruitment covariates
   matrix[N,K_Mmax] X_Mmax;             // maximum smolt recruitment covariates
-  real prior_mu_Mmax[2];               // prior mean, sd for hyper-mean log maximum smolt recruitment
-  real prior_mu_Mmax_W[2];             // prior mean, sd for hyper-mean log W maximum smolt recruitment
-  real prior_mu_Mmax_H[2];             // prior mean, sd for hyper-mean log H maximum smolt recruitment
+  array[2] real prior_mu_Mmax;         // prior mean, sd for hyper-mean log maximum smolt recruitment
+  array[2] real prior_mu_Mmax_W;       // prior mean, sd for hyper-mean log W maximum smolt recruitment
+  array[2] real prior_mu_Mmax_H;       // prior mean, sd for hyper-mean log H maximum smolt recruitment
   int<lower=0> K_M;                    // number of smolt recruitment covariates
-  row_vector[K_M] X_M[N];              // smolt recruitment covariates
+  array[N] row_vector[K_M] X_M;        // smolt recruitment covariates
   // smolt abundance
   int<lower=1,upper=N> N_M_obs;        // number of cases with non-missing smolt abundance obs 
-  int<lower=1,upper=N> which_M_obs[N_M_obs]; // cases with non-missing smolt abundance obs
+  array[N_M_obs] int<lower=1,upper=N> which_M_obs; // cases with non-missing smolt abundance obs
   vector<lower=0>[N] M_obs;            // observed annual smolt abundance (not density)
-  real prior_tau_M[3];                 // prior mean, scale, shape for smolt observation error SD
+  array[3] real prior_tau_M;           // prior mean, scale, shape for smolt observation error SD
   // SAR (sMolt-Spawner survival)
   int<lower=0> K_MS;                   // number of SAR covariates
   matrix[N,K_MS] X_MS;                 // SAR covariates
-  real prior_mu_MS[2];                 // prior a, b for mean SAR
+  array[2] real prior_mu_MS;           // prior a, b for mean SAR
   // spawner abundance
   int<lower=1,upper=N> N_S_obs;        // number of cases with non-missing spawner abundance obs 
-  int<lower=1,upper=N> which_S_obs[N_S_obs]; // cases with non-missing spawner abundance obs
+  array[N_S_obs] int<lower=1,upper=N> which_S_obs; // cases with non-missing spawner abundance obs
   vector<lower=0>[N] S_obs;            // observed annual total spawner abundance (not density)
-  real prior_tau_S[3];                 // prior mean, scale, shape for spawner observation error SD
+  array[3] real prior_tau_S;           // prior mean, scale, shape for spawner observation error SD
   // spawner age structure
   int<lower=2> N_age;                  // number of adult age classes
   int<lower=2> max_age;                // maximum adult age
@@ -47,28 +47,28 @@ data {
   vector<lower=0>[N_age] prior_mu_p;   // prior concentration for mean age distribution
   // H/W composition
   int<lower=0,upper=N> N_H;            // number of years with p_HOS > 0
-  int<lower=1,upper=N> which_H[N_H];   // years with p_HOS > 0
-  int<lower=0> n_W_obs[N_H];           // count of wild spawners in samples
-  int<lower=0> n_H_obs[N_H];           // count of hatchery spawners in samples
+  array[N_H] int<lower=1,upper=N> which_H; // years with p_HOS > 0
+  array[N_H] int<lower=0> n_W_obs;     // count of wild spawners in samples
+  array[N_H] int<lower=0> n_H_obs;     // count of hatchery spawners in samples
   // fishery and hatchery removals
-  vector[N] F_rate;                    // fishing mortality rate of wild adults
+  vector[N] F_rate;                     // fishing mortality rate of wild adults
   vector<lower=0,upper=1>[N_age] age_F; // is age a (non)selected (0/1) by fishery?
-  int<lower=0,upper=N> N_B;            // number of years with B_take > 0
-  int<lower=1,upper=N> which_B[N_B];   // years with B_take > 0
-  vector[N_B] B_take_obs;              // observed broodstock take of wild adults
+  int<lower=0,upper=N> N_B;             // number of years with B_take > 0
+  array[N_B] int<lower=1,upper=N> which_B; // years with B_take > 0
+  vector[N_B] B_take_obs;               // observed broodstock take of wild adults
   vector<lower=0,upper=1>[N_age] age_B; // is age a (non)selected (0/1) in broodstock?
 }
 
 transformed data {
   int<lower=1,upper=N> N_pop = max(pop);   // number of populations
   int<lower=1,upper=N> N_year = max(year); // number of years
-  int<lower=1> pop_year[N];                // index of years within each pop, starting at 1
-  int<lower=0> ocean_ages[N_age];          // ocean ages
+  array[N] int<lower=1> pop_year;          // index of years within each pop, starting at 1
+  array[N_age] int<lower=0> ocean_ages;    // ocean ages
   int<lower=1> max_ocean_age = max_age - smolt_age; // maximum ocean age
   int<lower=1> min_ocean_age = max_ocean_age - N_age + 1; // minimum ocean age
   vector[N_age] ones_N_age = rep_vector(1,N_age); // for rowsums of p matrix 
   vector[N] ones_N = rep_vector(1,N);      // for elementwise inverse of rowsums 
-  int<lower=0> n_HW_obs[N_H];              // total sample sizes for H/W frequencies
+  array[N_H] int<lower=0> n_HW_obs;        // total sample sizes for H/W frequencies
   real mu_M_init = mean(log(M_obs[which_M_obs])); // prior log-mean of smolt abundance in years 1:smolt_age
   real sigma_M_init = sd(log(M_obs[which_M_obs])); // prior log-SD of smolt abundance in years 1:smolt_age
   vector[max_ocean_age*N_pop] mu_S_init;   // prior mean of total spawner abundance in years 1:max_ocean_age
@@ -164,7 +164,7 @@ parameters {
   // initial states, observation error
   vector<lower=0>[smolt_age*N_pop] M_init; // true smolt abundance in years 1:smolt_age
   vector<lower=0>[max_ocean_age*N_pop] S_init; // true total spawner abundance in years 1:max_ocean_age
-  simplex[N_age] q_init[max_ocean_age*N_pop];  // true wild spawner age distributions in years 1:max_ocean_age
+  array[max_ocean_age*N_pop] simplex[N_age] q_init; // true wild spawner age distributions in years 1:max_ocean_age
   real<lower=0> tau_M;                   // smolt observation error SDs
   real<lower=0> tau_S;                   // spawner observation error SDs
 }
@@ -330,6 +330,7 @@ model {
   beta_Mmax ~ normal(0,5);
   sigma_Mmax ~ normal(0,3);
   append_row(zeta_Mmax, append_row(zeta_Mmax_W, zeta_Mmax_H)) ~ std_normal();
+  L_alphaMmax ~ lkj_corr_cholesky(1);
   beta_M ~ normal(0,5);
   rho_M ~ gnormal(0,0.85,30);  // mildly regularize to ensure stationarity
   sigma_year_M ~ normal(0,3);

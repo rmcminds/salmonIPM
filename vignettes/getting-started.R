@@ -25,7 +25,6 @@ library(posterior)       # working with posterior samples
 library(ggplot2)         # plotting
 library(distributional)  # plotting priors
 library(ggdist)
-library(ggh4x)
 library(vioplot)         # posterior violin plots
 library(shinystan)       # interactive exploration of posterior
 library(here)            # file system paths
@@ -37,9 +36,6 @@ theme_update(panel.grid = element_blank(),
              strip.text = element_text(margin = margin(b = 3, t = 3)),
              legend.background = element_blank())
 library(bayesplot)      # Bayesian graphics
-
-## @knitr multicore 
-options(mc.cores = parallel::detectCores(logical = FALSE))
 ## @knitr
 
 #===========================================================================
@@ -103,12 +99,14 @@ format(head(sim1pop$sim_dat, 10), digits = 2)
 #-----------------------------------------------------
 
 ## @knitr singlepop_fit
-fit1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
-                     fish_data = sim1pop$sim_dat, 
-                     chains = 4, iter = 2000, warmup = 1000, 
-                     seed = 123)
+fit1pop <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
+                     fish_data = sim1pop$sim_dat, seed = 123)
 
-print(fit1pop, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+## @knitr singlepop_print
+print(fit1pop)
+
+## @knitr singlepop_prior_summary
+prior_summary(fit1pop)
 ## @knitr
 
 #-----------------------------------------------------
@@ -116,57 +114,8 @@ print(fit1pop, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.97
 #-----------------------------------------------------
 
 ## @knitr singlepop_posteriors
-par_names <- c("log(alpha)","log(Rmax)","rho_R","sigma_R","mu_p","sigma_p","rho_p","tau")
-
-# extract and transform draws using posterior package
-post1pop <- as_draws_rvars(fit1pop) %>% 
-  mutate_variables(`log(alpha)` = log(alpha), `log(Rmax)` = log(Rmax),
-                   mu_p = as.vector(mu_p), sigma_p = as.vector(sigma_p), 
-                   rho_p = as.vector(R_p[1,2,1])) %>% 
-  .[par_names]
-
-postdf1pop <- post1pop %>% as_draws_df() %>% as.data.frame() %>% 
-  pivot_longer(cols = !starts_with("."), names_to = "param_indx", values_to = "value") %>% 
-  mutate(param_indx = factor(param_indx, levels = unique(param_indx)))
-
-# specify priors using distributional package
-log_S_obs <- log(sim1pop$sim_dat$S_obs)
-prior1pop <- c(`log(alpha)` = dist_normal(2,2),
-               `log(Rmax)` = dist_normal(max(log_S_obs), sd(log_S_obs)),
-               rho_R = dist_wrap("gnorm", 0, 0.85, 20),
-               sigma_R = dist_normal(0,5),
-               mu_p = dist_beta(1, N_age - 1),
-               sigma_p = dist_normal(0,5),
-               rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
-               tau = dist_wrap("gnorm", 1, 0.85, 30))
-
-priordf1pop <- data.frame(param_indx = unique(postdf1pop$param_indx)) %>% 
-  mutate(param = gsub("\\[.\\]", "", param_indx), prior = prior1pop[param])
-
-# true parameter values
-true1pop <- sim1pop$pars_out %>% replace("sigma_R", .$sigma_year_R) %>% 
-  c(`log(alpha)` = log(.$alpha), `log(Rmax)` = log(.$Rmax), rho_p = .$R_p[2,1]) %>% 
-  .[par_names] %>% unlist() %>% 
-  data.frame(param_indx = gsub("(\\d)", "[\\1]", names(.)), value = ., row.names = NULL) %>% 
-  mutate(param_indx = factor(param_indx, levels = levels(postdf1pop$param_indx)))
-
-# plot
-scales <- post1pop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
-  lapply(function(x) scale_x_continuous(limits = range(x)))
-
-postdf1pop %>%   
-  ggplot(aes(x = value)) + 
-  geom_histogram(aes(y = after_stat(density)), color = "white", fill = "slategray4", alpha = 0.5) +
-  stat_slab(data = priordf1pop, aes(xdist = prior), inherit.aes = FALSE,
-            normalize = "none", col = "black", lwd = 0.8, fill = NA) +
-  geom_vline(data = true1pop, aes(xintercept = value), lwd = 0.8, lty = 2) +
-  facet_wrap(~ param_indx, scales = "free", strip.position = "bottom") + 
-  facetted_pos_scales(x = scales) + theme_classic() + 
-  theme(strip.placement = "outside", strip.background = element_blank(), 
-        strip.text = element_text(size = 11, margin = margin(b = 3, t = 0)), 
-        axis.line.y = element_blank(), axis.ticks.y = element_blank(),
-        axis.text = element_text(size = 10), axis.text.y = element_blank()) +
-  labs(x = "", y = "")
+plot_prior_posterior(fit1pop, true = sim1pop$pars_out)
+## @knitr
 
 #-----------------------------------------------------
 # Plot true S-R curve, obs, states and fitted draws
@@ -321,7 +270,7 @@ df1pop$X2 <- rnorm(N,0,1)
 #------------------------------
 
 ## @knitr singlepop_covariate_pars
-pars1pop$beta_Rmax <- 0.5
+pars1pop$beta_Rmax <- 1
 pars1pop$beta_R <- -0.5
 ## @knitr
 
@@ -343,13 +292,11 @@ format(head(simX1pop$sim_dat, 10), digits = 2)
 #-----------------------------------------------------
 
 ## @knitr singlepop_covariate_fit
-fitX1pop <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
+fitX1pop <- salmonIPM(life_cycle = "SS", SR_fun = "BH", 
                       par_models = list(Rmax ~ X1, R ~ X2),
-                      fish_data = simX1pop$sim_dat, 
-                      chains = 4, iter = 2000, warmup = 1000, 
-                      seed = 123)
+                      fish_data = simX1pop$sim_dat, seed = 123)
 
-print(fitX1pop, pars = c("beta_Rmax","beta_R"), prob = c(0.025, 0.5, 0.975))
+print(fitX1pop, pars = c("beta_Rmax","beta_R"))
 ## @knitr
 
 
@@ -421,11 +368,9 @@ format(head(simNpop$sim_dat, 10), digits = 2)
 
 ## @knitr fit_np
 fitNnp <- salmonIPM(life_cycle = "SS", pool_pops = FALSE, SR_fun = "BH", 
-                    fish_data = simNpop$sim_dat,
-                    chains = 4, iter = 2000, warmup = 1000, 
-                    seed = 321)
+                    fish_data = simNpop$sim_dat, seed = 321)
 
-print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNnp)
 ## @knitr
 
 #-----------------------------------------------------
@@ -433,12 +378,10 @@ print(fitNnp, pars = stan_pars("IPM_SS_np", "hyper"), prob = c(0.025, 0.5, 0.975
 #-----------------------------------------------------
 
 ## @knitr fit_pp
-fitNpp <- salmonIPM(life_cycle = "SS", pool_pops = TRUE, SR_fun = "BH",
-                    fish_data = simNpop$sim_dat,
-                    chains = 4, iter = 2000, warmup = 1000, 
-                    seed = 321)
+fitNpp <- salmonIPM(life_cycle = "SS", SR_fun = "BH",
+                    fish_data = simNpop$sim_dat, seed = 321)
 
-print(fitNpp, pars = stan_pars("IPM_SS_pp", "hyper"), prob = c(0.025, 0.5, 0.975))
+print(fitNpp)
 ## @knitr
 
 #----------------------------------------------------------
@@ -477,59 +420,5 @@ mtext(c("Population","log(Rmax)"), side = 1:2, line = 2.5, cex = 1.5)
 #----------------------------------------------------------
 
 ## @knitr multipop_posteriors
-par_names <- c("mu_alpha","mu_Rmax","sigma_year_R","rho_R","sigma_R",
-               "mu_p","sigma_pop_p","rho_pop_p","sigma_p","rho_p","tau")
-
-# extract and transform draws using posterior package
-postNpop <- as_draws_rvars(fitNpp) %>%
-  mutate_variables(mu_p = as.vector(mu_p), sigma_pop_p = as.vector(sigma_pop_p),
-                   rho_pop_p = as.vector(R_pop_p[2,1]), sigma_p = as.vector(sigma_p),
-                   rho_p = as.vector(R_p[2,1])) %>%
-  .[par_names]
-
-postdfNpop <- postNpop %>% as_draws_df() %>% as.data.frame() %>% 
-  pivot_longer(cols = !starts_with("."), names_to = "param_indx", values_to = "value") %>% 
-  mutate(param_indx = factor(param_indx, levels = unique(param_indx)))
-
-# specify priors using distributional package
-log_S_obs <- na.omit(log(simNpop$sim_dat$S_obs))
-priorNpop <- c(mu_alpha = dist_normal(2,2),
-               mu_Rmax = dist_normal(max(log_S_obs), sd(log_S_obs)),
-               sigma_year_R = dist_normal(0,3),
-               rho_R = dist_wrap("gnorm", 0, 0.85, 20),
-               sigma_R = dist_normal(0,3),
-               mu_p = dist_beta(1, N_age - 1),
-               sigma_pop_p = dist_normal(0,2),
-               rho_pop_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
-               sigma_p = dist_normal(0,2),
-               rho_p = 2*dist_beta((N_age - 1)/2, (N_age - 1)/2) - 1, # LKJ
-               tau = dist_normal(0,1))
-
-priordfNpop <- data.frame(param_indx = unique(postdfNpop$param_indx)) %>% 
-  mutate(param = gsub("\\[.\\]", "", param_indx), prior = priorNpop[param])
-
-# true parameter values
-trueNpop <- simNpop$pars_out %>%
-  c(rho_pop_p = .$R_pop_p[2,1], rho_p = .$R_p[2,1]) %>%
-  .[par_names] %>% unlist() %>% 
-  data.frame(param_indx = gsub("(\\d)", "[\\1]", names(.)), value = ., row.names = NULL) %>% 
-  mutate(param_indx = factor(param_indx, levels = levels(postdfNpop$param_indx)))
-
-# plot
-scales <- postNpop %>% as_draws_df() %>% as.data.frame() %>% select(!starts_with(".")) %>% 
-  lapply(function(x) scale_x_continuous(limits = range(x)))
-
-postdfNpop %>%   
-  ggplot(aes(x = value)) + 
-  geom_histogram(aes(y = after_stat(density)), color = "white", fill = "slategray4", alpha = 0.5) +
-  stat_slab(data = priordfNpop, aes(xdist = prior), inherit.aes = FALSE,
-            normalize = "none", col = "black", lwd = 0.8, fill = NA) +
-  geom_vline(data = trueNpop, aes(xintercept = value), lwd = 0.8, lty = 2) +
-  facet_wrap(~ param_indx, scales = "free", strip.position = "bottom") + 
-  facetted_pos_scales(x = scales) + theme_classic() + 
-  theme(strip.placement = "outside", strip.background = element_blank(), 
-        strip.text = element_text(size = 11, margin = margin(b = 3, t = 0)), 
-        axis.line.y = element_blank(), axis.ticks.y = element_blank(),
-        axis.text = element_text(size = 10), axis.text.y = element_blank()) +
-  labs(x = "", y = "")
+plot_prior_posterior(fitNpp, true = simNpop$pars_out)
 ## @knitr

@@ -10,3 +10,4 @@
 **/*.cpp
 **/*.dll
 inst/doc
+**/*.Rd

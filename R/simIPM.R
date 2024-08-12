@@ -165,24 +165,25 @@ simIPM <- function(life_cycle = c("SS","SSiter","SMS"),
   
   # Simulate correlated pop-specific intrinsic productivity and max recruitment
   R_names <- c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","Mmax","Mmax_W","Mmax_H")
-  mu <- unlist(pars[paste0("mu_", R_names)])
-  names(mu) <- gsub("mu_", "", names(mu))
-  R <- matrix(1, nrow = length(R_names), ncol = length(R_names), dimnames = list(R_names, R_names))
-  for(i in rownames(R))
-    for(j in colnames(R))
+  mu_alphaRmax <- unlist(pars[paste0("mu_", R_names)])
+  names(mu_alphaRmax) <- gsub("mu_", "", names(mu_alphaRmax))
+  R_alphaRmax <- matrix(1, nrow = length(R_names), ncol = length(R_names), 
+                        dimnames = list(R_names, R_names))
+  for(i in rownames(R_alphaRmax))
+    for(j in colnames(R_alphaRmax))
     {
       if(grepl("alpha",i) & grepl("Rmax",j) | grepl("Rmax",i) & grepl("alpha",j)) 
-        R[i,j] <- R[i,j]*rho_alphaRmax 
+        R_alphaRmax[i,j] <- R_alphaRmax[i,j]*rho_alphaRmax 
       if(grepl("alpha",i) & grepl("Mmax",j) | grepl("Mmax",i) & grepl("alpha",j)) 
-        R[i,j] <- R[i,j]*rho_alphaMmax
+        R_alphaRmax[i,j] <- R_alphaRmax[i,j]*rho_alphaMmax
       if(grepl("_W",i) & grepl("_H",j) | grepl("_H",i) & grepl("_W",j))
-        R[i,j] <- R[i,j]*rho_WH
+        R_alphaRmax[i,j] <- R_alphaRmax[i,j]*rho_WH
     }
-  R <- R[names(mu), names(mu), drop = FALSE]
-  sigma <- unlist(pars[paste0("sigma_", gsub("mu_|_W|_H", "", names(mu)))])
-  D <- diag(sigma, nrow = length(sigma))
-  Sigma <- D %*% R %*% D
-  alphaRmax <- data.frame(exp(rmvnorm(N_pop, mu, Sigma)))
+  R_alphaRmax <- R_alphaRmax[names(mu_alphaRmax), names(mu_alphaRmax), drop = FALSE]
+  sigma_alphaRmax <- unlist(pars[paste0("sigma_", gsub("mu_|_W|_H", "", names(mu_alphaRmax)))])
+  D_alphaRmax <- diag(sigma_alphaRmax, nrow = length(sigma_alphaRmax))
+  Sigma_alphaRmax <- D_alphaRmax %*% R_alphaRmax %*% D_alphaRmax
+  alphaRmax <- data.frame(exp(rmvnorm(N_pop, mu_alphaRmax, Sigma_alphaRmax)))
   for(n in R_names) assign(n, alphaRmax[[n]])
   
   # Covariate model matrices
@@ -457,7 +458,8 @@ simIPM <- function(life_cycle = c("SS","SSiter","SMS"),
       fish_data[, names(fish_data) %in% unlist(lapply(par_models, all.vars)), drop = FALSE]
     ),
     pars_out = c(pars, 
-                 list(M = switch(life_cycle, SMS = M, NULL), 
+                 list(R_alphaRmax = unname(R_alphaRmax),
+                      M = switch(life_cycle, SMS = M, NULL), 
                       S = S, S_W_a = S_W_a, 
                       q = switch(life_cycle, SSiter = NULL, q),
                       q_MK = switch(life_cycle, SSiter = q_MK, NULL),

@@ -38,7 +38,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                                      "IPM_LCRchum_pp","RR_SS_np","RR_SS_pp"), 
                       SR_fun = "BH", RRS = "none", ages = NULL, 
                       par_models = NULL, center = TRUE, scale = TRUE, 
-                      prior = NULL, fish_data, age_F = NULL, age_B = NULL, 
+                      priors = NULL, fish_data, age_F = NULL, age_B = NULL, 
                       age_S_obs = NULL, age_S_eff = NULL, conditionGRonMS = FALSE, 
                       fecundity_data = NULL)
 {
@@ -68,12 +68,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   model_life_cycle <- paste(strsplit(stan_model, "_")[[1]][1], 
                             gsub("iter", "", life_cycle), # same Stan code for iteroparity
                             sep = "_")
-  RRS_check <- RRS %in% c("none", stan_pars(stan_model, pars = "hyper"))
-  if(!all(RRS_check))
-    stop("Error in RRS: ", paste(RRS[!RRS_check], collapse = " "), 
-         " is not a SR_fun parameter in ", stan_model, ".\n  See stan_pars('", 
-         stan_model, "', ", ifelse(pool_pops, "'group'", "'hyper'"), 
-         ") for pars that can take 'W' and 'H' subscripts.")
+  validate_RRS(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS)
   X <- par_model_matrix(par_models = par_models, fish_data = fish_data, 
                         center = center, scale = scale)
   
@@ -184,36 +179,30 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   }
   
   # Priors
-  if(is.null(prior)) {
-    prior <- list()
+  if(is.null(priors)) {
+    priors <- list()
   } else {   # formulas must be 2-sided
-    stopifnot(all(sapply(prior, function(f) attr(terms(f), "response"))))
+    stopifnot(all(sapply(priors, function(f) attr(terms(f), "response"))))
   }
-  pars <- unlist(sapply(prior, function(f) as.character(f[[2]])))
-  pdfs <- lapply(prior, function(f) f[[3]])
+  pars <- unlist(sapply(priors, function(f) as.character(f[[2]])))
+  pdfs <- lapply(priors, function(f) f[[3]])
   names(pdfs) <- pars
   stopifnot(all(sapply(pdfs, is.call)))
   
   if(stan_model %in% c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp")) {
     # autoscale Rmax to data
     log_RA <- log((S_obs + B_take_obs)/((1 - F_rate)*A)) 
-    prior_Rmax_mean <- quantile(log_RA, 0.8, na.rm = TRUE)
+    prior_Rmax_mean <- quantile(log_RA, 0.8, na.rm = TRUE, names = FALSE)
     prior_Rmax_sd <- 2*sd(log_RA, na.rm = TRUE)
     
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","alpha_W","alpha_H","Rmax","Rmax_W","Rmax_H","mu_p","mu_SS","tau"), several.ok = TRUE)
-      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(2,2)), 
-                           dim = ifelse("alpha" %in% RRS, 0, 2))
-      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(2,2)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(2,2)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_Rmax <- array(stan_prior(pdfs$Rmax, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
-                          dim = ifelse("Rmax" %in% RRS, 0, 2))
-      prior_Rmax_W <- array(stan_prior(pdfs$Rmax_W, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
-                            dim = ifelse("Rmax" %in% RRS, 2, 0))
-      prior_Rmax_H <- array(stan_prior(pdfs$Rmax_H, lognormal(prior_Rmax_mean, prior_Rmax_sd)),
-                            dim = ifelse("Rmax" %in% RRS, 2, 0))
+      prior_alpha <- stan_prior(pdfs$alpha, lognormal(2,2))
+      prior_alpha_W <- stan_prior(pdfs$alpha_W, lognormal(2,2)) 
+      prior_alpha_H <- stan_prior(pdfs$alpha_H, lognormal(2,2))
+      prior_Rmax <- stan_prior(pdfs$Rmax, lognormal(prior_Rmax_mean, prior_Rmax_sd))
+      prior_Rmax_W <- stan_prior(pdfs$Rmax_W, lognormal(prior_Rmax_mean, prior_Rmax_sd))
+      prior_Rmax_H <- stan_prior(pdfs$Rmax_H, lognormal(prior_Rmax_mean, prior_Rmax_sd))
       prior_tau <- stan_prior(pdfs$tau, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
     }
     
@@ -242,23 +231,17 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
       # autoscale Mmax to smolt data
       log_MA <- log(M_obs/A)
     }
-    prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
+    prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE, names = FALSE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
     
     if(grepl("_np", stan_model)) {
       pars <- match.arg(pars, c("alpha","Mmax","mu_MS","mu_p","tau_M","tau_S"), several.ok = TRUE)
-      prior_alpha <- array(stan_prior(pdfs$alpha, lognormal(5,5)), 
-                           dim = ifelse("alpha" %in% RRS, 0, 2))
-      prior_alpha_W <- array(stan_prior(pdfs$alpha_W, lognormal(5,5)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_alpha_H <- array(stan_prior(pdfs$alpha_H, lognormal(5,5)),
-                             dim = ifelse("alpha" %in% RRS, 2, 0))
-      prior_Mmax <- array(stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
-                          dim = ifelse("Mmax" %in% RRS, 0, 2))
-      prior_Mmax_W <- array(stan_prior(pdfs$Mmax_W, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
-                            dim = ifelse("Mmax" %in% RRS, 2, 0))
-      prior_Mmax_H <- array(stan_prior(pdfs$Mmax_H, lognormal(prior_Mmax_mean, prior_Mmax_sd)),
-                            dim = ifelse("Mmax" %in% RRS, 2, 0))
+      prior_alpha <- stan_prior(pdfs$alpha, lognormal(5,5))
+      prior_alpha_W <- stan_prior(pdfs$alpha_W, lognormal(5,5))
+      prior_alpha_H <- stan_prior(pdfs$alpha_H, lognormal(5,5))
+      prior_Mmax <- stan_prior(pdfs$Mmax, lognormal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_Mmax_W <- stan_prior(pdfs$Mmax_W, lognormal(prior_Mmax_mean, prior_Mmax_sd))
+      prior_Mmax_H <- stan_prior(pdfs$Mmax_H, lognormal(prior_Mmax_mean, prior_Mmax_sd))
       prior_tau_M <- stan_prior(pdfs$tau_M, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
       prior_tau_S <- stan_prior(pdfs$tau_S, gnormal(1, 0.85, 30)) # squash tau < 0.1 to avoid divergences
     }
@@ -284,7 +267,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
   if(stan_model == "IPM_LCRchum_pp") {
     # autoscale Mmax to smolt data (can == 0 for hatcheries)
     log_MA <- log(replace(M_obs, M_obs == 0, NA)/A) 
-    prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE)
+    prior_Mmax_mean <- quantile(log_MA, 0.8, na.rm = TRUE, names = FALSE)
     prior_Mmax_sd <- 2*sd(log_MA, na.rm = TRUE)
     
     pars <- match.arg(pars, c("mu_psi","mu_Mmax","mu_MS","mu_p"), several.ok = TRUE)

@@ -1,9 +1,9 @@
 Package: salmonIPM
 Title: Integrated Population Models for Pacific Salmonids
-Version: 1.5.1.9000
+Version: 1.6.0.9000
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
-    "Mark Scheuerell <mark.scheuerell@noaa.gov> [aut]"
+    "Mark Scheuerell <scheuerl@uw.edu> [aut]"
   ))
 Description: Fits integrated population models (IPMs) or run-reconstruction regressions for anadromous 
     Pacific salmonid population dynamics using a hierarchical Bayesian framework 
@@ -12,16 +12,24 @@ Description: Fits integrated population models (IPMs) or run-reconstruction regr
     Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 Depends:
     R (>= 4.2),
-    rstan (>= 2.32.0),
-    stats,
-    gnorm
-Imports:
     methods,
-    Rcpp (>= 0.12.0),
+    Rcpp (>= 0.12.0)
+Imports:
     RcppParallel,
     parallel,
+    rstan (>= 2.32.0),
+    rstantools (>= 2.4.0),
     posterior,
-    mvtnorm
+    distributional,
+    loo,
+    shinystan,
+    stats,
+    gnorm,
+    mvtnorm,
+    dplyr (>= 1.0.0),
+    tidyr,
+    ggplot2,
+    ggdist
 LinkingTo: 
     BH (>= 1.84.0),
     Rcpp (>= 1.0.0),
@@ -34,9 +42,7 @@ Encoding: UTF-8
 LazyData: true
 Biarch: true
 Suggests:
-    rstantools (>= 2.4.0),
-    loo,
-    shinystan,
+    bayesplot,
     lifecycle,
     knitr,
     rmarkdown

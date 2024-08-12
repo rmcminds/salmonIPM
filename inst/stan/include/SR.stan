@@ -1,5 +1,5 @@
 // spawner-recruit functions
-real SR(int SR_fun, int[] RRS, real alpha, real alpha_W, real alpha_H, 
+real SR(int SR_fun, array[] int RRS, real alpha, real alpha_W, real alpha_H, 
         real Rmax, real Rmax_W, real Rmax_H, real S, real S_W, real S_H, real A) {
   real R;
   

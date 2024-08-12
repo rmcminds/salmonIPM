@@ -1,104 +1,60 @@
-#' Returns a table of the parameters and their descriptions, as returned by
-#' default for the specified model.
+#' Definitions of parameters and states in a **salmonIPM** model
 #'
-#' @param stan_model Either a character string giving the name of the Stan model being fit
-#'   (without the `".stan"` filetype extension) or an object of class `stanfit`
-#'   as returned by a call to [salmonIPM()]. The default value returns a list of 
-#'   all parameters returned by default, across all model forms.
+#' Returns a data frame of parameters with their types, dimensions and
+#' definitions in the specified model.
 #'
-#' @return Data frame with 3 columns listing the parameters, their dimensions,
-#' and their definitions.
-#' 
+#' @param stan_model Character string giving the name of the model. See
+#'   [salmonIPM()] for details.
+#' @param pars An optional character vector specifying one or more hierarchical
+#'   levels of parameters. Options are `"all"` (the default), `"hyper"`
+#'   (top-level hyperparameters that are given priors), `"group"` (`pop`- or
+#'   `year`-level parameters shared by multiple states), `"states"` (the lowest
+#'   level, corresponding to unique rows in `fish_data`), and `"ppd"` (only if
+#'   `model == "RR"`, observation-level predictions drawn from the posterior
+#'   predictive distribution).
+#' @param object A [salmonIPMfit] object. If this is provided then `SR_fun`,
+#'   `RRS` and `par_models` are not needed and will be ignored; their values are
+#'   extracted from `object`.
+#' @inheritParams salmonIPM
+#'
+#' @return Data frame with columns listing the parameters and/or states and
+#'   their definitions, types and dimensions.
+#'
+#' @importFrom dplyr tibble
+#'
 #' @export
-par_defs <- function(stan_model = NULL) {
-  par_list <- list(
-    c("alpha", "N_pop x 1", "Intrinsic productivity"),
-    c("mu_alpha", "scalar", "Hyper-mean of log intrinsic productivity"),
-    c("sigma_alpha", "scalar", "Hyper-SD of log intrinsic productivity"),
-    c("Rmax", "N_pop x 1", "Asymptotic recruitment"),
-    c("mu_Rmax", "scalar", "Hyper-mean of log asymptotic recruitment"),
-    c("sigma_Rmax", "scalar", "Hyper-SD of log asymptotic recruitment"),
-    c("rho_alphaRmax", "scalar", "Correlation between log(alpha) and log(Rmax)"),
-    c("beta", "N_pop x N_X", "Regression coefs for log productivity anomalies"),
-    c("rho", "N_pop x 1", "AR(1) coefs for log productivity anomalies"),
-    c("sigma", "N_pop x 1", "SD of process errors"),
-    c("mu_p", "N_pop x 1", "Mean age distribution of the popn"),
-    c("sigma_p", "N_pop x (N_age-1)", "SDs of log-ratio cohort age distribution"),
-    c("R_p", "N_pop x N_pop", "Correlation matrix of within-popn cohort log-ratio age distns"),
-    c("p", "N x N_age", "Year-specific cohort age distributions"),
-    c("p_HOS", "N_H x 1", "True prop of hatchery-origin spawners (HOS) in years with H fish present"),
-    c("B_rate_all", "N x 1", "True broodstock take rate in all years"),
-    c("tau", "N x 1", "SD of observation errors of total spawners"),
-    c("S", "N x 1", "True total spawner abundance"),
-    c("R", "N x 1", "True recruit abundance (not density) by brood year"),
-    c("q", "N x N_age", "True spawner age distributions"),
-    c("beta_phi", "N_X x 1", "Regression coefs for log productivity anomalies"),
-    c("sigma_phi", "scalar", "Hyper-SD of brood year log productivity anomalies"),
-    c("rho_phi", "scalar", "AR(1) coef for log productivity anomalies"),
-    c("sigma_gamma", "(N_age-1) x 1", "Among-pop SD of mean log-ratio age distributions"),
-    c("R_gamma", "(N_age-1) x (N_age-1)", "Among-pop correlation matrix of mean log-ratio age distns"),
-    c("beta_M", "N_pop x N_X_M", "Regression coefs for spawner-smolt productivity"),
-    c("rho_M", "N_pop x 1", "AR(1) coefs for spawner-smolt productivity"),
-    c("sigma_M", "N_pop x 1", "SD of spawner-smolt process error"),
-    c("mu_MS", "N_pop x 1", "Mean smolt-to-adult return (SAR)"),
-    c("beta_MS", "N_pop x N_X_MS", "Regression coefs for SAR"),
-    c("rho_MS", "N_pop x 1", "AR(1) coefs for SAR"),
-    c("sigma_MS", "N_pop x 1", "SD of SAR process error"),
-    c("s_MS", "N x 1", "True SAR by outmigration year"),
-    c("tau_M", "N_pop x 1", "SD of smolt observation error"),
-    c("tau_S", "N_pop x 1", "SD of spawner observation error"),
-    c("M", "N x 1", "True smolt abundance (not density) by outmigration year"),
-    c("mu_p_M", "N_Mage x N_pop", "Popn mean smolt age distributions"),
-    c("sigma_p_M", "N_pop x (N_Mage-1)", "SDs of log-ratio cohort smolt age distribution"),
-    c("R_p_M", "[(N_Mage-1) x (N_Mage-1)] x N_pop", "Correlation matrices of log-ratio smolt age distns"),
-    c("p_M", "N x N_Mage", "True smolt age distributions by brood year"),
-    c("q_M", "N x N_Mage", "True smolt age distributions by calendar year"),
-    c("R_MS", "(N_Mage x N_Mage) x N_pop", "Correlation matrices of logit SAR by smolt age"),
-    c("mu_p_MS", "N_MSage x N_pop x N_Mage", "Popn mean ocean age distributions for each smolt age"),
-    c("sigma_p_MS", "(N_MSage-1) x N_pop x N_Mage", "SDs of log-ratio ocean age for each smolt age"),
-    c("R_p_MS", "[(N_Mage*(N_MSage-1)) x (N_Mage*(N_MSage-1))] x N_pop", "Correlation matrices of log-ratio ocean age distns"),
-    c("p_MS", "N_MSage x N x N_Mage", "True ocean age distns by outmigration year"),
-    c("q_MS", "N x N_MSage", "True ocean age distns of spawners"),
-    c("q_GR", "N x N_MSage", "true Gilbert-Rich age distns of spawners"),
-    c("R_hat", "N x 1", "Expected recruit abundance (not density) by brood year"),
-    c("S_sim", "N x 1", "Simulated number of spawners"),
-    c("R_sim", "N x 1", "Simulated number of recruits"),
-    c("gamma", "N_pop x (N_age-1)", "Popn mean log-ratio age distributions"),
-    c("phi", "N_year_all x 1", "log of productivity anomalies by brood year"),
-    c("mu_D", "scalar", "Mean logit downstream juvenile survival"),
-    c("beta_D", "N_X_D x 1", "Regression coefs for logit downstream juvenile survival"),
-    c("rho_D", "scalar", "AR(1) coef for logit downstream juvenile survival"),
-    c("sigma_D", "scalar", "Process error SD of logit downstream juvenile survival"),
-    c("s_D", "N_year_all x 1", "Downstream survival by outmigration year"),
-    c("mu_SAR", "scalar", "Mean logit smolt-to-adult survival"),
-    c("beta_SAR", "N_X_SAR x 1", "Regression coefs for logit smolt-to-adult survival"),
-    c("rho_SAR", "scalar", "AR(1) coef for logit smolt-to-adult survival"),
-    c("sigma_SAR", "scalar", "Process error SD of logit smolt-to-adult survival"),
-    c("s_SAR", "N_year_all x 1", "Smolt-to-adult survival by outmigration year"),
-    c("mu_U", "scalar", "Mean logit upstream juvenile survival"),
-    c("beta_U", "N_X_U x 1", "Regression coefs for logit upstream juvenile survival"),
-    c("rho_U", "scalar", "AR(1) coef for logit upstream juvenile survival"),
-    c("sigma_U", "scalar", "Process error SD of logit upstream juvenile survival"),
-    c("s_U", "N_year_all x 1", "Upstream survival by outmigration year")
-  )
-  full_tbl <- do.call(rbind, par_list)
-  colnames(full_tbl) <- c("Parameter/state", "Dimensions", "Definition")
-  if(is.null(stan_model)) {
-    full_tbl <- full_tbl
+par_defs <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
+                                    "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
+                                    "IPM_LCRchum_pp","RR_SS_np","RR_SS_pp"), 
+                     pars = c("all","hyper","group","states","ppd"), 
+                     SR_fun = "BH", RRS = "none", par_models = NULL, object = NULL) 
+{
+  if(!is.null(object)) {
+    stopifnot("salmonIPMfit" %in% class(object))
+    stan_model <- object$stan_model
   } else {
-    cls <- class(stan_model)
-    if(cls == "character") {
-      idx <- full_tbl[,"Parameter/state"] %in% stan_pars(stan_model)
-    } else {
-      if(cls == "stanfit") {
-        idx <- full_tbl[,"Parameter/state"] %in% stan_pars(stan_model@model_name)
-      } else {
-        stop("stan_model must be a character string or stanfit object, but was ",
-             capture.output(dput(cls)),
-             call. = TRUE)
-      }
-    }
-    full_tbl <- full_tbl[idx,]
+    stan_model <- match.arg(stan_model)
   }
-  return(print(full_tbl, quote = FALSE))
+  pars <- stan_pars(stan_model = stan_model, pars = pars, SR_fun = SR_fun, RRS = RRS,
+                    par_models = par_models, object = object)
+  stanmodel <- gsub("iter", "", stan_model)  # same Stan code for iteroparity
+  
+  # Parse model code and extract parameter declarations
+  smtext <- strsplit(stanmodels[[stanmodel]]@model_code, "\\n")[[1]]
+  pd <- data.frame(par = pars, def = NA, type = NA)
+
+  for(.par in pars) {
+    # .+           leading space(s) and type declaration, then space before .par
+    # (?: = .+)?   optional ")?" non-capturing group "(?:" for declaration-assignment
+    # ; +.*        end of statement, one or more spaces, zero or more other chars e.g. "//?"
+    # // (.+)      capture group for comment 
+    dregex <- paste0(".+ ", .par, "(?: = .+)?; +.*// (.+)")
+    pd$def[pd$par == .par] <- gsub(dregex, "\\1", grep(dregex, smtext, value = TRUE)[1])
+    #  *    leading space(s) 
+    # (.+)  capture group for type declaration, then space before .par
+    tregex <- paste0(" *(.+) ", .par, "(?: = .+)?;.+")
+    pd$type[pd$par == .par] <- gsub(tregex, "\\1", grep(tregex, smtext, value = TRUE)[1])
+  }
+  
+  return(tibble(pd))
 }

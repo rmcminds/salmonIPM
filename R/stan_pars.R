@@ -1,66 +1,54 @@
 #' Return the (hyper)parameters and states in a specified **salmonIPM** model
 #'
-#' @param stan_model Character string giving the name of the model.
-#'  See [salmonIPM()] for details.
-#' @param pars An optional character vector specifying one or more hierarchical levels 
-#' of parameters. Options are `"all"` (the default), `"hyper"` (top-level parameters that
-#' are given priors), `"group"` (`pop`- or `year`-level parameters shared by multiple states),
-#' `"states"` (the lowest level, corresponding to unique rows in `fish_data`), and
-#' `"ppd"` (only if `model == "RR"`, observation-level predictions drawn from the posterior
-#' predictive distribution).
+#' @param stan_model Character string giving the name of the model. See
+#'   [salmonIPM()] for details.
+#' @param pars An optional character vector specifying one or more hierarchical
+#'   levels of parameters. Options are `"all"` (the default), `"hyper"`
+#'   (top-level hyperparameters that are given priors), `"group"` (`pop`- or
+#'   `year`-level parameters shared by multiple states), `"states"` (the lowest
+#'   level, corresponding to unique rows in `fish_data`), and `"ppd"` (only if
+#'   `model == "RR"`, observation-level predictions drawn from the posterior
+#'   predictive distribution).
+#' @param object A [salmonIPMfit] object. If this is provided then `SR_fun`,
+#'   `RRS` and `par_models` are not needed and will be ignored; their values
+#'   are extracted from `object`.
 #' @inheritParams salmonIPM
-#' 
+#'
 #' @return Character vector with names of selected parameters and states
-#' 
+#'
 #' @export
 
 stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IPM_SSiter_pp",
                                      "IPM_SMS_np","IPM_SMS_pp","IPM_SMaS_np",
                                      "IPM_LCRchum_pp","RR_SS_np","RR_SS_pp"), 
                       pars = c("all","hyper","group","states","ppd"), 
-                      SR_fun = "BH", RRS = "none")
+                      SR_fun = "BH", RRS = "none", par_models = NULL, object = NULL)
 {
-  stan_model <- match.arg(stan_model)
+  if(!is.null(object)) {
+    stopifnot("salmonIPMfit" %in% class(object))
+    stan_model <- object$stan_model
+    SR_fun <- object$SR_fun
+    RRS <- object$RRS
+    par_models <- object$par_models
+  } else {
+    stan_model <- match.arg(stan_model)
+  }
+  stanmodel <- gsub("iter", "", stan_model)  # same Stan code for iteroparity
   pars <- match.arg(pars, several.ok = TRUE)
-  
+
   par_list <- list( 
     IPM_SS_np = list(
       hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
-                switch(SR_fun, exp = NULL, c("Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax")),
-                "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p","tau"),
-      states = c("R","p","S","q","p_HOS")
-    ),
-    
-    IPM_SSiter_np = list(
-      hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
-                switch(SR_fun, exp = NULL, c("Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax")),
+                "Rmax","Rmax_W","Rmax_H","delta_Rmax","beta_Rmax",
                 "beta_R","rho_R","sigma_R","mu_p","sigma_p","R_p",
                 "mu_SS","beta_SS","rho_SS","sigma_SS","tau"),
       states = c("R","p","s_SS","S","q","p_HOS")
     ),
     
     IPM_SS_pp = list(
-      hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
-                "beta_alpha","sigma_alpha",
-                switch(SR_fun, exp = NULL,
-                       c(if("mu_Rmax" %in% RRS) c("mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax") else "mu_Rmax",
-                         "beta_Rmax","sigma_Rmax")),
-                ifelse(identical(RRS, "none"), "rho_alphaRmax", "R_alphaRmax"),
-                "beta_R","sigma_year_R","rho_R","sigma_R",
-                "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau"),
-      group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
-                "eta_year_R","mu_pop_alr_p"),
-      states = c("R","p","S","q","p_HOS")
-    ),
-    
-    IPM_SSiter_pp = list(
-      hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
-                "beta_alpha","sigma_alpha",
-                switch(SR_fun, exp = NULL,
-                       c(if("mu_Rmax" %in% RRS) c("mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax") else "mu_Rmax",
-                         "beta_Rmax","sigma_Rmax")),
-                ifelse(identical(RRS, "none"), "rho_alphaRmax", "R_alphaRmax"),
-                "beta_R","sigma_year_R","rho_R","sigma_R",
+      hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
+                "mu_Rmax","mu_Rmax_W","mu_Rmax_H","delta_mu_Rmax","beta_Rmax","sigma_Rmax",
+                "rho_alphaRmax","R_alphaRmax","beta_R","sigma_year_R","rho_R","sigma_R",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p",
                 "mu_SS","beta_SS","rho_SS","sigma_year_SS","sigma_SS","tau"),
       group = c("alpha","alpha_W","alpha_H","delta_alpha","Rmax","Rmax_W","Rmax_H","delta_Rmax",
@@ -70,20 +58,16 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     IPM_SMS_np = list(
       hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
-                switch(SR_fun, exp = NULL, c("Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax")),
+                "Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax",
                 "beta_M","rho_M","sigma_M","mu_MS","beta_MS","rho_MS","sigma_MS",
                 "mu_p","sigma_p","R_p","tau_M","tau_S"),
       states = c("M","s_MS","p","S","q","p_HOS")
     ),
     
     IPM_SMS_pp = list(
-      hyper = c(if("mu_alpha" %in% RRS) c("mu_alpha_W","mu_alpha_H","delta_mu_alpha") else "mu_alpha",
-                "beta_alpha","sigma_alpha",
-                switch(SR_fun, exp = NULL,
-                       c(if("mu_Mmax" %in% RRS) c("mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax") else "mu_Mmax",
-                         "beta_Mmax","sigma_Mmax")),
-                ifelse(identical(RRS, "none"), "rho_alphaMmax", "R_alphaMmax"),
-                "beta_M","rho_M","sigma_year_M","sigma_M","tau_M",
+      hyper = c("mu_alpha","mu_alpha_W","mu_alpha_H","delta_mu_alpha","beta_alpha","sigma_alpha",
+                "mu_Mmax","mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax","beta_Mmax","sigma_Mmax",
+                "rho_alphaMmax","R_alphaMmax","beta_M","rho_M","sigma_year_M","sigma_M","tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_year_MS","sigma_MS",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p","tau_S"),
       group = c("alpha","alpha_W","alpha_H","delta_alpha","Mmax","Mmax_W","Mmax_H","delta_Mmax",
@@ -93,7 +77,7 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     IPM_SMaS_np = list(
       hyper = c("alpha","alpha_W","alpha_H","delta_alpha","beta_alpha",
-                switch(SR_fun, exp = NULL, c("Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax")),
+                "Mmax","Mmax_W","Mmax_H","delta_Mmax","beta_Mmax",
                 "beta_M","rho_M","sigma_M","mu_p_M","sigma_p_M","R_p_M","tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_MS","R_MS",
                 "mu_p_MS","sigma_p_MS","R_p_MS","tau_S"),
@@ -117,11 +101,8 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     
     IPM_LCRchum_pp = list(
       hyper = c("mu_E","sigma_E","delta_NG",
-                if("mu_psi" %in% RRS) c("mu_psi_W","mu_psi_H","delta_mu_psi") else "mu_psi",
-                "beta_psi","sigma_psi",
-                switch(SR_fun, exp = NULL,
-                       c(if("mu_Mmax" %in% RRS) c("mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax") else "mu_Mmax",
-                         "beta_Mmax","sigma_Mmax")),
+                "mu_psi","mu_psi_W","mu_psi_H","delta_mu_psi","beta_psi","sigma_psi",
+                "mu_Mmax","mu_Mmax_W","mu_Mmax_H","delta_mu_Mmax","beta_Mmax","sigma_Mmax",
                 "beta_M","rho_M","sigma_year_M","sigma_M","mu_tau_M","sigma_tau_M",
                 "mu_MS","beta_MS","rho_MS","sigma_year_MS","sigma_MS",
                 "mu_p","sigma_pop_p","R_pop_p","sigma_p","R_p",
@@ -144,9 +125,36 @@ stan_pars <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
     )
   )
   
-  if(identical(pars, "all")) {
-    return(unlist(par_list[[stan_model]]))
+  pars_out <- if(identical(pars, "all")) {
+    unlist(par_list[[stanmodel]])
   } else {
-    return(unlist(par_list[[stan_model]][pars]))
+    unlist(par_list[[stanmodel]][pars])
   }
+  
+  # drop unused pars based on RRS
+  RRS_opts <- unique(gsub('(.+)_[WH]$', '\\1', grep('_[WH]$', pars_out, value = TRUE)))
+  not_RRS <- RRS_opts[!grepl(paste(RRS, collapse = "|"), RRS_opts)]
+  RRS_hyper_opts <- intersect(RRS_opts, par_list[[stanmodel]]$hyper)
+  RRS_hyper <- grep(paste(RRS, collapse = "|"), RRS_hyper_opts, value = TRUE)
+  drop_pars <- c(RRS, RRS_hyper, # if base param is in RRS, drop it and keep H/W versions
+                 paste0(not_RRS, "_W"), paste0(not_RRS, "_H"), paste0("delta_", not_RRS),
+                 paste0(ifelse(identical(RRS, "none"), "R_", "rho_"), 
+                        paste(gsub("mu_", "", RRS_hyper_opts), collapse = "")))
+
+  # drop maximum recruitment for density-independent S-R function
+  if(SR_fun %in% c("exp","DI")) 
+    drop_pars <- c(drop_pars, grep("max", pars_out, value = TRUE))
+  
+  # drop unused iteroparity pars
+  if(!grepl("iter", stan_model))
+    drop_pars <- c(drop_pars, grep("_SS", pars_out, value = TRUE))
+  
+  # drop unused betas based on par_models 
+  betas <- grep("beta_", pars_out, value = TRUE)
+  modeled_pars <- sapply(par_models, function(f) all.vars(f)[1])
+  modeled_pars <- gsub("s_", "", modeled_pars)  # hack to deal with s_SS, s_MS
+  drop_pars <- c(drop_pars, setdiff(betas, paste0("beta_", modeled_pars)))
+  
+  pars_out <- setdiff(pars_out, drop_pars)
+  return(pars_out)
 }
