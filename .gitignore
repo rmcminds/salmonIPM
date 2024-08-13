@@ -11,3 +11,4 @@
 **/*.dll
 inst/doc
 **/*.Rd
+docs
