@@ -1,3 +1,3 @@
 # salmonIPM 1.6.0
 
-* Initial release.
+* Add `salmonIPMfit` object class and associated S3 methods and other functionality (#61).
