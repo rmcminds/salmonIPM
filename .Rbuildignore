@@ -1,3 +1,7 @@
 ^salmonIPM\.Rproj$
 ^\.Rproj\.user$
 ^inst/stan/IPM_ICchinook_pp.stan.ignore
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$

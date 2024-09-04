@@ -1,6 +1,6 @@
 Package: salmonIPM
 Title: Integrated Population Models for Pacific Salmonids
-Version: 1.6.0
+Version: 1.6.1
 Authors@R: as.person(c(
     "Eric Buhle <eric.buhle@noaa.gov> [aut, cre]", 
     "Mark Scheuerell <scheuerl@uw.edu> [aut]"
@@ -47,7 +47,8 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 NeedsCompilation: yes
 SystemRequirements: GNU make
+URL: https://ebuhle.github.io/salmonIPM/
