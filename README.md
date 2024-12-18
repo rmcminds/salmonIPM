@@ -14,3 +14,11 @@ devtools::install_github("ebuhle/salmonIPM", auth_token = "my_PAT")
 ```
 
 We recommend using multiple cores if available when installing **salmonIPM** to reduce compilation time. You can do this by setting the R environment variable `MAKEFLAGS` to `-jX`, where `X` is the number of cores. This can be done interactively using `Sys.setenv(MAKEFLAGS = "-jX")` or it can be specified in `.Renviron`.
+
+## Citing **salmonIPM**
+
+Buhle, E. R, and M. D. Scheuerell. 2024. salmonIPM: Integrated Population Models for Pacific Salmonids version [x.x.x]. Zenodo. https://doi.org/10.5281/zenodo.14511464
+
+Buhle, E. R., M. D. Scheuerell, T. D. Cooney, M. J. Ford, R. W. Zabel, and J. T. Thorson. 2018. Using integrated population models to evaluate fishery and environmental impacts on Pacific salmon viability. U.S. Department of Commerce, NOAA Technical Memorandum, NMFS‐NWFSC‐14. http://doi.org/10.7289/V5/TM-NWFSC-140
+
+[![DOI](https://zenodo.org/badge/84359284.svg)](https://doi.org/10.5281/zenodo.14511463)
