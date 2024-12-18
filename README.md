@@ -17,7 +17,7 @@ We recommend using multiple cores if available when installing **salmonIPM** to 
 
 ## Citing **salmonIPM**
 
-Buhle, E. R, and M. D. Scheuerell. 2024. salmonIPM: Integrated Population Models for Pacific Salmonids version [x.x.x]. Zenodo. https://doi.org/10.5281/zenodo.14511464
+Buhle, E. R and M. D. Scheuerell. 2024. salmonIPM: Integrated population models for Pacific salmonids version [x.x.x]. Zenodo. https://doi.org/10.5281/zenodo.14511464
 
 Buhle, E. R., M. D. Scheuerell, T. D. Cooney, M. J. Ford, R. W. Zabel, and J. T. Thorson. 2018. Using integrated population models to evaluate fishery and environmental impacts on Pacific salmon viability. U.S. Department of Commerce, NOAA Technical Memorandum, NMFS‐NWFSC‐14. http://doi.org/10.7289/V5/TM-NWFSC-140
 
