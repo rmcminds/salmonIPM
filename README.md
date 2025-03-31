@@ -21,4 +21,8 @@ Buhle, E. R. and M. D. Scheuerell. 2024. salmonIPM: Integrated population models
 
 Buhle, E. R., M. D. Scheuerell, T. D. Cooney, M. J. Ford, R. W. Zabel, and J. T. Thorson. 2018. Using integrated population models to evaluate fishery and environmental impacts on Pacific salmon viability. U.S. Department of Commerce, NOAA Technical Memorandum, NMFS‐NWFSC‐14. http://doi.org/10.7289/V5/TM-NWFSC-140
 
+Ohlberger, J., E. R. Buhle, T. W. Buehrens, N. W. Kendall, T. Harbison, A. M. Claiborne, J. P. Losee, J. Whitney, and M. D. Scheuerell. 2025. Declining marine survival of steelhead trout linked to climate and ecosystem change. Fish and Fisheries x:x-x. https://doi.org/10.1111/faf.12878
+
+Buonanduci, M. S., E. R. Buhle, M. J. Case, E. R. Howe, J. C. Robertson, N. VanBuskirk, and A. K. Ettinger. 2025. Forest restoration can bolster salmon population persistence under climate change. Biological Conservation 305: 111099. https://doi.org/10.1016/j.biocon.2025.111099
+
 [![DOI](https://zenodo.org/badge/84359284.svg)](https://doi.org/10.5281/zenodo.14511463)
