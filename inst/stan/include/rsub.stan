@@ -1,6 +1,6 @@
 // R-style conditional subsetting
 array[] int rsub(array[] int x, array[] int cond) {
-  int xsub[sum(cond)];
+  array[sum(cond)] int xsub;
   int pos;
   pos = 1;
   for (i in 1:size(x))
