@@ -33,8 +33,8 @@
 #'   because in that case smolt age structure is provided in `fish_data`.
 #' @param SR_fun One of `"exp"` (density-independent discrete exponential),
 #'   `"BH"` (Beverton-Holt, the default), or `"Ricker"`, indicating which
-#'   spawner-recruit function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"`
-#'   and `"ricker"` are accepted.
+#'   spawner-recruit function to fit. Synonyms `"DI"`, `"B-H"`, `"bh"`, `"b-h"`,
+#'  `"ricker"`, and `"Hassell"` are accepted.
 #' @param RRS A character string or vector of strings naming parameters of the
 #'   function specified by `SR_fun` that differ between wild- and
 #'   hatchery-origin spawners, such that the relative reproductive success of

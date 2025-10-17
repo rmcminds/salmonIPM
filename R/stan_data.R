@@ -327,7 +327,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   pop = pop, 
                   year = year,
                   # recruitment
-                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3, Hassell = 4),
                   RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Rmax", RRS)))),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
@@ -385,7 +385,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   pop = pop, 
                   year = year,
                   # smolt production
-                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3, Hassell = 4),
                   RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Mmax", RRS)))),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
@@ -446,7 +446,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   pop = pop, 
                   year = year,
                   # smolt production
-                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3, Hassell = 4),
                   RRS = array(c(any(grepl("alpha", RRS)), any(grepl("Mmax", RRS)))),
                   A = A,
                   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
@@ -504,7 +504,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                   pop = pop, 
                   year = year,
                   # egg deposition
-                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3, Hassell = 4),
                   RRS = array(c(any(grepl("psi", RRS)), any(grepl("Mmax", RRS)))),
                   A = A,
                   N_E = nrow(fecundity_data),
@@ -581,7 +581,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                 #   F_rate_fwd = as.vector(fish_data_fwd$F_rate),
                 #   p_HOS_fwd = as.vector(fish_data_fwd$p_HOS),
                 #   # recruitment
-                #   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                #   SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3, Hassell = 4),
                 #   smolt_age = ages$M,
                 #   A = A,
                 #   K_alpha = ifelse(is.null(X$alpha), 0, ncol(X$alpha)), 
@@ -636,7 +636,7 @@ stan_data <- function(stan_model = c("IPM_SS_np","IPM_SSiter_np","IPM_SS_pp","IP
                 # ),
                 
                 RR_SS = list(
-                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3),
+                  SR_fun = switch(SR_fun, exp = 1, BH = 2, Ricker = 3, Hassell = 4),
                   N = length(S_obs),
                   pop = pop, 
                   year = year,

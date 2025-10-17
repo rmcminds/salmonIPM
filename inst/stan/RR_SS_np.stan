@@ -4,7 +4,7 @@ functions {
 }
 
 data {
-  int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker, 4 = Hassell
   int<lower=1> N;               // total number of cases in all pops and years
   array[N] int<lower=1,upper=N> pop;  // population index
   array[N] int<lower=1,upper=N> year; // brood year index
@@ -32,10 +32,11 @@ transformed data {
 }
 
 parameters {
-  vector<lower=0>[N_pop] alpha;          // intrinsic productivity
-  vector<lower=0>[N_pop] Rmax;           // maximum recruitment
-  vector<lower=-1,upper=1>[N_pop] rho_R; // AR(1) coefs of recruitmentresiduals
-  vector<lower=0>[N_pop] sigma_R;        // recruitment residual error SD
+  vector<lower=0>[N_pop] alpha;           // intrinsic productivity
+  vector<lower=0>[N_pop] Rmax;            // maximum recruitment
+  vector<lower=-1,upper=1>[N_pop] rho_R;  // AR(1) coefs of recruitmentresiduals
+  vector<lower=0>[N_pop] sigma_R;         // recruitment residual error SD
+  vector<lower=0>[SR_fun == 4 ? 1 : 0] b; // Hassell shape parameter
 }
 
 transformed parameters {
@@ -54,7 +55,7 @@ transformed parameters {
     int il = which_fit[i-1];
     
     R_hat[ii] = SR(SR_fun, {0,0}, alpha[pop[ii]], 0, 0, Rmax[pop[ii]], 0, 0, 
-                   S_obs[ii], 0, 0, A[ii]);
+                   S_obs[ii], 0, 0, A[ii], b);
     if(i==1 || pop[il] != pop[ii])
     {
       R_ar1[ii] = R_hat[ii];
@@ -84,6 +85,7 @@ model {
   Rmax ~ lognormal(mu_Rmax, sigma_Rmax);
   rho_R ~ gnormal(0,0.85,20);   // mildly regularize rho_R to ensure stationarity
   sigma_R ~ normal(0,3);
+  b ~ exponential(1);
 
   // Likelihood
   R_obs[which_fit] ~ lognormal(log(R_ar1[which_fit]), sigma_ar1[which_fit]);
@@ -117,6 +119,6 @@ generated quantities {
     
     if(R_NA[i] == 1)
       R_sim[i] = SR(SR_fun, {0,0}, alpha[pop[i]], 0, 0, Rmax[pop[i]], 0, 0,
-                    S_sim[i], 0, 0, A[i]) * exp(err_sim[i]);
+                    S_sim[i], 0, 0, A[i], b) * exp(err_sim[i]);
   }
 }

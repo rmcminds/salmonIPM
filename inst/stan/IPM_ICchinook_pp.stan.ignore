@@ -22,7 +22,7 @@ data {
   vector<lower=0,upper=1>[N_fwd] B_rate_fwd; // broodstock take rate for forward simulations
   vector<lower=0,upper=1>[N_fwd] p_HOS_fwd;  // p_HOS for forward simulations
   // smolt production
-  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker, 4 = Hassell
   int<lower=1> smolt_age;              // smolt age
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
@@ -198,6 +198,7 @@ transformed parameters {
   vector[N] epsilon_M;                   // process error in smolt abundance by brood year 
   vector<lower=0>[N] M0;                 // true smolt abundance (not density) by brood year
   vector<lower=0>[N] M;                  // true smolt abundance (not density) by outmigration year
+  vector<lower=0>[SR_fun == 4 ? 1 : 0] b;// Hassell shape parameter
   // downstream, SAR, upstream survival
   vector[N_year_all] epsilon_D;          // process error in downstream survival by outmigration year
   vector[N_year_all] s_D;                // true downstream survival by outmigration year
@@ -318,7 +319,7 @@ transformed parameters {
     q[i,] = S_W_a/S_W[i];
 
     // Smolt production from brood year i
-    M_hat[i] = SR(SR_fun, alpha_Xbeta[i], Mmax_Xbeta[i], S[i], A[i]);
+    M_hat[i] = SR(SR_fun, alpha_Xbeta[i], Mmax_Xbeta[i], S[i], A[i], b);
     M0[i] = M_hat[i] * exp(dot_product(X_M[i], beta_M) + epsilon_M[i]); 
   }
 }
@@ -342,6 +343,7 @@ model {
   rho_M ~ gnormal(0,0.85,50);   // mildly regularize to ensure stationarity
   sigma_M ~ normal(0,3);
   zeta_M ~ std_normal();     // epsilon_M ~ AR1(rho_M, sigma_M)
+  b ~ exponential(1.0);
 
   // downstream, SAR, upstream survival
   // prior on logit-intercepts implies Unif(0,1) prior on intercept when
@@ -453,7 +455,7 @@ generated quantities {
   //   S_H_fwd[i] = S_W_fwd[i]*p_HOS_fwd[i]/(1 - p_HOS_fwd[i]);
   //   q_fwd[i,] = S_W_a_fwd/S_W_fwd[i];
   //   S_fwd[i] = S_W_fwd[i] + S_H_fwd[i];
-  //   R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Mmax[pop_fwd[i]], S_fwd[i], A_fwd[i]);
+  //   R_hat_fwd[i] = SR(SR_fun, alpha[pop_fwd[i]], Mmax[pop_fwd[i]], S_fwd[i], A_fwd[i], b);
   //   R_fwd[i] = lognormal_rng(log(R_hat_fwd[i]) + phi[year_fwd[i]], sigma);
   // }
   

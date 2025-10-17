@@ -4,7 +4,7 @@ functions {
 }
 
 data {
-  int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=1> SR_fun;          // S-R model: 1 = exponential, 2 = BH, 3 = Ricker, 4 = Hassell
   int<lower=1> N;               // total number of cases in all pops and years
   array[N] int<lower=1,upper=N> pop;  // population index
   array[N] int<lower=1,upper=N> year; // brood year index
@@ -34,17 +34,18 @@ transformed data {
 }
 
 parameters {
-  real mu_alpha;                        // hyper-mean log intrinsic productivity of wild spawners
-  real<lower=0> sigma_alpha;            // hyper-SD log intrinsic productivity
-  vector[N_pop] zeta_alpha;             // log intrinsic prod of wild spawners (Z-scores)
-  real mu_Rmax;                         // hyper-mean log maximum recruitment
-  real<lower=0> sigma_Rmax;             // hyper-SD log maximum recruitment
-  vector[N_pop] zeta_Rmax;              // log maximum recruitment (Z-scores)
-  real<lower=-1,upper=1> rho_alphaRmax; // correlation between log(alpha) and log(Rmax)
-  real<lower=-1,upper=1> rho_R;         // AR(1) coef for brood year log productivity anomalies
-  real<lower=0> sigma_year_R;           // hyper-SD of brood year log productivity anomalies
-  vector[max(year)] zeta_year;          // log brood year productivity anomalies (Z-scores)
-  real<lower=0> sigma_R;                // residual error SD
+  real mu_alpha;                          // hyper-mean log intrinsic productivity of wild spawners
+  real<lower=0> sigma_alpha;              // hyper-SD log intrinsic productivity
+  vector[N_pop] zeta_alpha;               // log intrinsic prod of wild spawners (Z-scores)
+  real mu_Rmax;                           // hyper-mean log maximum recruitment
+  real<lower=0> sigma_Rmax;               // hyper-SD log maximum recruitment
+  vector[N_pop] zeta_Rmax;                // log maximum recruitment (Z-scores)
+  real<lower=-1,upper=1> rho_alphaRmax;   // correlation between log(alpha) and log(Rmax)
+  real<lower=-1,upper=1> rho_R;           // AR(1) coef for brood year log productivity anomalies
+  real<lower=0> sigma_year_R;             // hyper-SD of brood year log productivity anomalies
+  vector[max(year)] zeta_year;            // log brood year productivity anomalies (Z-scores)
+  real<lower=0> sigma_R;                  // residual error SD
+  vector<lower=0>[SR_fun == 4 ? 1 : 0] b; // Hassell shape parameter
 }
 
 transformed parameters {
@@ -83,7 +84,7 @@ transformed parameters {
   for(i in 1:N_fit)
     R_hat[which_fit[i]] = SR(SR_fun, {0,0}, alpha[pop[which_fit[i]]], 0, 0,
                              Rmax[pop[which_fit[i]]], 0, 0,
-                             S_obs[which_fit[i]], 0, 0, A[which_fit[i]]);
+                             S_obs[which_fit[i]], 0, 0, A[which_fit[i]], b);
 }
 
 model {
@@ -95,7 +96,8 @@ model {
   rho_R ~ gnormal(0,0.85,50);  // mildly regularize to ensure stationarity
   sigma_year_R ~ normal(0,3);
   sigma_R ~ normal(0,2);
-  
+  b ~ exponential(1);
+
   // Hierarchical priors
   // [log(alpha), log(Rmax)] ~ MVN(0, D*R_log_aRmax*D), where D = diag_matrix(sigma_alpha, sigma_Rmax)
   zeta_alpha ~ std_normal();
@@ -127,6 +129,6 @@ generated quantities {
 
     if(R_NA[i] == 1)
       R_sim[i] = SR(SR_fun, {0,0}, alpha[pop[i]], 0, 0, Rmax[pop[i]], 0, 0, 
-                    S_sim[i], 0, 0, A[i]) * lognormal_rng(eta_year_R[year[i]], sigma_R);
+                    S_sim[i], 0, 0, A[i], b) * lognormal_rng(eta_year_R[year[i]], sigma_R);
   }
 }

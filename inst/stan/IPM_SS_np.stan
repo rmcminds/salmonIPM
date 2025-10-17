@@ -9,7 +9,7 @@ data {
   array[N] int<lower=1,upper=N> pop;   // population index
   array[N] int<lower=1,upper=N> year;  // brood year index
   // recruitment
-  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker
+  int<lower=1> SR_fun;                 // S-R model: 1 = exponential, 2 = BH, 3 = Ricker, 4 = Hassell
   array[2] int<lower=0,upper=1> RRS;   // fit W vs. H {alpha, Rmax} (1) or not (0)?
   vector<lower=0>[N] A;                // habitat area associated with each spawner abundance obs
   int<lower=0> K_alpha;                // number of intrinsic productivity covariates
@@ -108,6 +108,7 @@ parameters {
   vector<lower=-1,upper=1>[N_pop] rho_R;  // AR(1) coefs for log productivity anomalies
   vector<lower=0>[N_pop] sigma_R;         // process error SDs
   vector[N] zeta_R;                       // recruitment process errors (Z-scored)
+  vector<lower=0>[SR_fun == 4 ? 1 : 0] b; // Hassell shape parameter
   // (maiden) spawner age structure
   array[N_pop] simplex[N_age] mu_p;       // population mean age distributions
   matrix<lower=0>[N_pop,N_age-1] sigma_p; // log-ratio cohort age distribution SDs
@@ -271,7 +272,7 @@ transformed parameters {
 
     // Recruitment
     R_hat[i] = SR(SR_fun, RRS, alpha_Xbeta[i], alpha_W_Xbeta[i], alpha_H_Xbeta[i],
-                  Rmax_Xbeta[i], Rmax_W_Xbeta[i], Rmax_H_Xbeta[i], S[i], S_W[i], S_H[i], A[i]);
+                  Rmax_Xbeta[i], Rmax_W_Xbeta[i], Rmax_H_Xbeta[i], S[i], S_W[i], S_H[i], A[i], b);
     R[i] = R_hat[i] * exp(dot_product(X_R[i], beta_R[pop[i],]) + epsilon_R[i]);
   }
 }
@@ -300,7 +301,8 @@ model {
   rho_R ~ gnormal(0,0.85,20); // mildly regularize to ensure stationarity
   sigma_R ~ normal(0,5);
   zeta_R ~ std_normal();   // total recruits: R ~ lognormal(log(R_hat), sigma_R)
-
+  b ~ exponential(1);
+  
   // kelt survival
   if(iter)
   {
