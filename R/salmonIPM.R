@@ -1,8 +1,8 @@
 #' Fit an IPM or run-reconstruction regression model
 #'
-#' Fits integrated population models (IPMs) or run-reconstruction regressions for anadromous 
-#' Pacific salmonid population dynamics using a hierarchical Bayesian framework 
-#' implemented in Stan. Various models are available, representing alternative 
+#' Fits integrated population models (IPMs) or run-reconstruction regressions for anadromous
+#' Pacific salmonid population dynamics using a hierarchical Bayesian framework
+#' implemented in Stan. Various models are available, representing alternative
 #' life-history structures and independent or hierarchically pooled populations.
 #' Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
 #'
@@ -140,9 +140,9 @@
 #'   * `n_age[min_age]_obs ... n_age[max_age]_obs`  Integer columns of
 #'   observed spawner age sample frequencies (counts), where `[min_age]` and
 #'   `[max_age]` are the numeral age in years (total, not ocean age) of the
-#'   youngest and oldest spawners. Required unless `life_cycle %in% c("SSiter","SMaS")`, 
-#'   in which case it is ignored. Note that `n_age_obs` and all other compositional 
-#'   data types must not contain `NA`. If the sample included no individuals of a 
+#'   youngest and oldest spawners. Required unless `life_cycle %in% c("SSiter","SMaS")`,
+#'   in which case it is ignored. Note that `n_age_obs` and all other compositional
+#'   data types must not contain `NA`. If the sample included no individuals of a
 #'   given category or if no samples were collected, the observed frequency is 0.
 #'   * `n_age[min_age]M_obs ... n_age[max_age]M_obs n_age[min_age + 1]K_obs ... n_age[max_age + 1]K_obs`,
 #'   If `life_cycle == "SSiter"`, integer columns of observed first-time
@@ -204,7 +204,7 @@
 #'   female spawners.
 #'   * `p_G_obs`  If `life_cycle == "LCRchum"`, observed proportion (assumed known
 #'   without error) of female spawners that are "green", i.e. fully fecund.
-#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish. Required for 
+#'   * `F_rate`  Total harvest rate (proportion) of natural-origin fish. Required for
 #'   all models, even if all values are 0.
 #'   * `B_take_obs`  Number of adults taken for hatchery broodstock. Required
 #'   for all models, even if all values are 0.
@@ -272,39 +272,39 @@
 #'   are estimable given the design matrix. For example, the effect of a
 #'   spatially varying but time-invariant predictor would not be identifiable in
 #'   a `np` model because populations are modeled independently.
-#' 
+#'
 #' |                    |                         |                             |                        | **Response (family)**  |                    |                     |                              |                              |
-#' |:-------------------|:-----------------------:|:---------------------------:|:----------------------:|:----------------------:|:------------------:|:-------------------:|:----------------------------:|:----------------------------:|    
+#' |:-------------------|:-----------------------:|:---------------------------:|:----------------------:|:----------------------:|:------------------:|:-------------------:|:----------------------------:|:----------------------------:|
 #' | Model              | `alpha` \cr (lognormal) | `psi` \cr (logistic normal) | `Rmax` \cr (lognormal) | `Mmax` \cr (lognormal) | `R` \cr (lognormal)| `M` \cr (lognormal) | `s_MS` \cr (logistic normal) | `s_SS` \cr (logistic normal) |
-#' | `IPM_SS_np`        | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2610;                     | 
-#' | `IPM_SSiter_np`    | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2611;                     | 
-#' | `IPM_SS_pp`        | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2610;                     | 
-#' | `IPM_SSiter_pp`    | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2611;                     | 
-#' | `IPM_SMS_np`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
-#' | `IPM_SMS_pp`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
-#' | `IPM_SMaS_np`      | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
-#' | `IPM_LCRchum_pp`   | &#x2610;                | &#x2611;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     | 
+#' | `IPM_SS_np`        | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2610;                     |
+#' | `IPM_SSiter_np`    | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2611;                     |
+#' | `IPM_SS_pp`        | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2610;                     |
+#' | `IPM_SSiter_pp`    | &#x2611;                | &#x2610;                    | &#x2611;               | &#x2610;               | &#x2611;           | &#x2610;            | &#x2610;                     | &#x2611;                     |
+#' | `IPM_SMS_np`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     |
+#' | `IPM_SMS_pp`       | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     |
+#' | `IPM_SMaS_np`      | &#x2611;                | &#x2610;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     |
+#' | `IPM_LCRchum_pp`   | &#x2610;                | &#x2611;                    | &#x2610;               | &#x2611;               | &#x2610;           | &#x2611;            | &#x2611;                     | &#x2610;                     |
 #'
 #' @return An object of class `salmonIPMfit` representing the fitted model. See
 #'   [`salmonIPMfit-class`] for details.
 #'
 #' @importFrom rstan sampling get_elapsed_time
-#' @importFrom utils packageVersion 
+#' @importFrom utils packageVersion
 #' @export
 #' @encoding UTF-8
 
-salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"), 
-                      model = c("IPM","RR"), 
-                      life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum"), 
-                      ages = NULL, pool_pops = nlevels(factor(fish_data$pop)) > 1, 
-                      SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp"), RRS = "none", 
-                      par_models = NULL, center = TRUE, scale = TRUE, 
-                      age_F = NULL, age_B = NULL, age_S_obs = NULL, age_S_eff = NULL, 
-                      conditionGRonMS = FALSE, priors = NULL, 
-                      fish_data, fecundity_data = NULL, 
-                      pars = "all", include = TRUE, log_lik = FALSE, 
-                      init = NULL, chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1, 
-                      cores = parallel::detectCores(logical = FALSE), 
+salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "pp", "np"), sep = "_"),
+                      model = c("IPM","RR"),
+                      life_cycle = c("SS","SSiter","SMS","SMaS","LCRchum"),
+                      ages = NULL, pool_pops = nlevels(factor(fish_data$pop)) > 1,
+                      SR_fun = c("BH","B-H","bh","b-h","Ricker","ricker","exp","Hassell"), RRS = "none",
+                      par_models = NULL, center = TRUE, scale = TRUE,
+                      age_F = NULL, age_B = NULL, age_S_obs = NULL, age_S_eff = NULL,
+                      conditionGRonMS = FALSE, priors = NULL,
+                      fish_data, fecundity_data = NULL,
+                      pars = "all", include = TRUE, log_lik = FALSE,
+                      init = NULL, chains = 4, iter = 2000, warmup = floor(iter/2), thin = 1,
+                      cores = parallel::detectCores(logical = FALSE),
                       control = NULL, save_data = FALSE, ...)
 {
   model <- match.arg(model)
@@ -314,49 +314,49 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   model <- mlp[1]                           # override args if stan_model is specified
   life_cycle <- mlp[2]
   pool_pops <- mlp[3] == "pp"
-  stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity 
+  stanmodel <- gsub("iter", "", stan_model) # the same Stan code handles semel/iteroparity
   SR_fun <- match.arg(SR_fun)
   if(SR_fun == "DI") SR_fun <- "exp"
   if(SR_fun %in% c("B-H","bh","b-h")) SR_fun <- "BH"
   if(SR_fun == "ricker") SR_fun <- "Ricker"
   validate_RRS(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS)
-  
+
   .call <- as.list(match.call(expand.dots = TRUE))
   for(n in grep("_data", names(.call), value = TRUE, invert = TRUE)) .call[[n]] <- eval(.call[[n]])
   .call <- as.call(.call)
-  
-  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages, 
-                   par_models = par_models, center = center, scale = scale, priors = priors, 
-                   fish_data = fish_data, age_F = age_F, age_B = age_B, 
-                   age_S_obs = age_S_obs, age_S_eff = age_S_eff, 
+
+  dat <- stan_data(stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, ages = ages,
+                   par_models = par_models, center = center, scale = scale, priors = priors,
+                   fish_data = fish_data, age_F = age_F, age_B = age_B,
+                   age_S_obs = age_S_obs, age_S_eff = age_S_eff,
                    conditionGRonMS = conditionGRonMS, fecundity_data = fecundity_data)
-  
-  pars <- include_pars(pars = pars, stan_model = stan_model, SR_fun = SR_fun, RRS = RRS, 
+
+  pars <- include_pars(pars = pars, stan_model = stan_model, SR_fun = SR_fun, RRS = RRS,
                        par_models = par_models, include = include, log_lik = log_lik)
-  hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun, 
+  hyper <- stan_pars(stan_model = stan_model, pars = "hyper", SR_fun = SR_fun,
                      RRS = RRS, par_models = par_models)
   prior.info <- get_prior_info(stan_data = dat, stanmodel = stanmodels[[stanmodel]], pars = hyper)
 
   if(is.null(init)) init <- stan_init(stan_model = stan_model, stan_data = dat, chains = chains)
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95
-  
-  stanfit <- rstan::sampling(stanmodels[[stanmodel]], 
+
+  stanfit <- rstan::sampling(stanmodels[[stanmodel]],
                              data = dat, init = init, pars = pars,
-                             chains = chains, cores = cores, 
-                             iter = iter, warmup = warmup, thin = thin, 
+                             chains = chains, cores = cores,
+                             iter = iter, warmup = warmup, thin = thin,
                              control = control, ...)
-  
+
   out <- salmonIPMfit(stanfit = stanfit, call = .call, stan_model = stan_model,
-                      model = model, life_cycle = life_cycle, ages = ages, 
-                      pool_pops = pool_pops, SR_fun = SR_fun, RRS = RRS, 
-                      par_models = par_models, center = center, scale = scale, 
-                      prior.info = prior.info, age_S_obs = age_S_obs, 
+                      model = model, life_cycle = life_cycle, ages = ages,
+                      pool_pops = pool_pops, SR_fun = SR_fun, RRS = RRS,
+                      par_models = par_models, center = center, scale = scale,
+                      prior.info = prior.info, age_S_obs = age_S_obs,
                       age_S_eff = age_S_eff, conditionGRonMS = conditionGRonMS,
                       stan_data = if(save_data) dat else NULL,
                       dims = list(N = dat$N, N_pop = max(dat$pop), N_year = max(dat$year)),
                       pops = levels(factor(fish_data$pop)),
                       elapsed_time = get_elapsed_time(stanfit),
                       salmonIPM_version = packageVersion("salmonIPM"))
-  
+
   return(out)
 }
