@@ -341,7 +341,7 @@ salmonIPM <- function(stan_model = paste(model, life_cycle, ifelse(pool_pops, "p
   if(is.null(control$adapt_delta)) control$adapt_delta <- 0.95
 
   stanfit <- rstan::sampling(stanmodels[[stanmodel]],
-                             data = dat, init = init, pars = pars,
+                             data = dat, init = init, pars = c(pars,'b'),
                              chains = chains, cores = cores,
                              iter = iter, warmup = warmup, thin = thin,
                              control = control, ...)

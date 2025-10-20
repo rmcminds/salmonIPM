@@ -139,7 +139,7 @@ parameters {
   vector[N_year] zeta_year_R;        // log brood year productivity anomalies (Z-scores)
   real<lower=0> sigma_R;                 // unique process error SD
   vector[N] zeta_R;                      // log true recruit abundance (not density) by brood year (z-scores)
-  vector<lower=0>[SR_fun == 4 ? 1 : 0] b;// Hassell S-R shape parameter
+  vector<lower=1>[SR_fun == 4 ? 1 : 0] b;// Hassell S-R shape parameter
   // (maiden) spawner age structure
   simplex[N_age] mu_p;                   // among-pop mean of age distributions
   vector<lower=0>[N_age-1] sigma_pop_p;  // among-pop SD of mean log-ratio age distributions
@@ -349,7 +349,7 @@ transformed parameters {
                       any_RRS ? 0 : S[i]*(q[i,:N_age] + q[i,2:])*age_S_eff,
                       any_RRS ? S_W[i]*(q[i,:N_age] + q[i,2:])*age_S_eff : 0,
                       any_RRS ? S_H[i]*(q[i,:N_age] + q[i,2:])*age_S_eff : 0,
-                      A[i]
+                      A[i],
                       b);
       } else {
         R_hat[i] = SR(SR_fun, RRS, alpha_Xbeta[i], alpha_W_Xbeta[i], alpha_H_Xbeta[i],
@@ -389,7 +389,7 @@ model {
   zeta_year_R ~ std_normal(); // eta_year_R[i] ~ N(rho_R*eta_year_R[i-1], sigma_year_R)
   sigma_R ~ normal(0,3);
   zeta_R ~ std_normal();      // total recruits: R ~ lognormal(log(R_hat), sigma_R)
-  b ~ exponential(1.0);        // Hassell S-R shape parameter
+  b ~ pareto(1.0,1.0);        // Hassell S-R shape parameter
 
   // kelt survival
   if(iter)
