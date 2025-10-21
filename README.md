@@ -1,3 +1,5 @@
+**note that this fork contains experimental features by rmcminds**
+
 # salmonIPM
 
 This is the development repo for a fork of **salmonIPM**, an R package that fits integrated population models to data from anadromous Pacific salmonid populations using a hierarchical Bayesian framework implemented in [Stan](https://mc-stan.org/). Various models are available, representing alternative life histories and data structures as well as independent or hierarchically pooled populations. Users can specify stage-specific covariate effects and hyper-priors using formula syntax.
@@ -16,8 +18,6 @@ devtools::install_github("rmcminds/salmonIPM")
 We recommend using multiple cores if available when installing **salmonIPM** to reduce compilation time. You can do this by setting the R environment variable `MAKEFLAGS` to `-jX`, where `X` is the number of cores. This can be done interactively using `Sys.setenv(MAKEFLAGS = "-jX")` or it can be specified in `.Renviron`.
 
 ## Citing **salmonIPM**
-
-**note that this fork may contain experimental features by rmcminds**
 
 Buhle, E. R. and M. D. Scheuerell. 2024. salmonIPM: Integrated population models for Pacific salmonids (version x.x.x). https://doi.org/10.5281/zenodo.14511463
 
